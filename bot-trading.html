@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Bot Trading</title>
+    <link rel="icon" type="APP-Logo.png" href="APP-logo.png" />
+    <meta
+      name="description"
+      content="BillionairesXchange Bot Trading - Automated trading with customizable settings, stop-loss, and take-profits"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+         <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading & Investment</small>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="index.html#trade">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="index.html#wallet">Treasury/Wallet</a>
+        <a href="index.html#create-coin">Create Coin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="bot-section section-shell" id="bot-trading">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Autonomous trading</span>
+            <h2>Real-time trading bot</h2>
+          </div>
+          <div class="bot-status">
+            <span class="dot"></span>
+            Bot running live
+          </div>
+        </div>
+
+        <section class="favorite-panel card-glass" aria-labelledby="favoriteCoinsTitle">
+          <div class="favorite-panel-head">
+            <div>
+              <span class="eyebrow">Market watchlist</span>
+              <h3 id="favoriteCoinsTitle">Favorite coins for AI analysis</h3>
+              <p>Choose coins the bot should watch. Market cap and live market signals guide its settings.</p>
+            </div>
+            <div class="favorite-add-control">
+              <label for="favoriteCoinSelect">Add favorite</label>
+              <div class="favorite-add-row">
+                <select id="favoriteCoinSelect">
+                  <option value="">Choose a coin</option>
+                  <option value="BTC">Bitcoin (BTC)</option>
+                  <option value="ETH">Ethereum (ETH)</option>
+                  <option value="XRP">XRP (XRP)</option>
+                  <option value="SOL">Solana (SOL)</option>
+                  <option value="ADA">Cardano (ADA)</option>
+                  <option value="DOT">Polkadot (DOT)</option>
+                  <option value="DOGE">Dogecoin (DOGE)</option>
+                  <option value="USDT">Tether (USDT)</option>
+                </select>
+                <button class="btn btn-primary" type="button" id="addFavoriteBtn">Add</button>
+              </div>
+            </div>
+          </div>
+          <div class="favorite-slider">
+            <button class="favorite-slide-btn" type="button" id="favoritePrevBtn" aria-label="Show previous favorite coins">&#8592;</button>
+            <div class="favorite-cards" id="favoriteCards" aria-live="polite"></div>
+            <button class="favorite-slide-btn" type="button" id="favoriteNextBtn" aria-label="Show next favorite coins">&#8594;</button>
+          </div>
+          <p class="favorite-analysis-status" id="favoriteAnalysisStatus">Add a favorite coin to start personalized market analysis.</p>
+        </section>
+
+        <div class="bot-layout">
+          <div class="card-glass bot-controls">
+            <h3>Bot Settings</h3>
+            
+            <label>
+              Risk level
+              <select id="riskLevel">
+                <option>Conservative</option>
+                <option selected>Balanced</option>
+                <option>Aggressive</option>
+              </select>
+            </label>
+
+            <label>
+              Strategy
+              <select id="strategy">
+                <option>Momentum</option>
+                <option>Scalp</option>
+                <option>Arbitrage</option>
+                <option>Dollar-cost averaging</option>
+              </select>
+            </label>
+
+            <label>
+              Select Coin to Trade
+              <select id="coinSelect" required>
+                <option value="">Choose a coin</option>
+                <option value="BTC">Bitcoin (BTC)</option>
+                <option value="ETH">Ethereum (ETH)</option>
+                <option value="XRP">XRP (XRP)</option>
+                <option value="SOL">Solana (SOL)</option>
+                <option value="ADA">Cardano (ADA)</option>
+                <option value="DOT">Polkadot (DOT)</option>
+                <option value="DOGE">Dogecoin (DOGE)</option>
+                <option value="USDT">Tether (USDT)</option>
+              </select>
+            </label>
+
+            <label>
+              Trading Duration
+              <select id="tradingDuration" required>
+                <option value="">Select duration</option>
+                <option value="1h">1 Hour</option>
+                <option value="4h">4 Hours</option>
+                <option value="12h">12 Hours</option>
+                <option value="24h">24 Hours</option>
+                <option value="7d">7 Days</option>
+                <option value="30d">30 Days</option>
+                <option value="continuous">Continuous</option>
+              </select>
+            </label>
+
+            <div class="risk-management">
+              <h4>Risk Management</h4>
+              
+              <label>
+                Stop-Loss (%)
+                <input type="number" id="stopLoss" placeholder="e.g., 5" min="0" max="100" step="0.1" />
+              </label>
+
+              <label>
+                Take-Profit (%)
+                <input type="number" id="takeProfit" placeholder="e.g., 10" min="0" max="500" step="0.1" />
+              </label>
+
+              <label>
+                Maximum Trade Amount ($)
+                <input type="number" id="maxTradeAmount" placeholder="e.g., 1000" min="0" step="50" />
+              </label>
+            </div>
+
+            <div class="manual-trading">
+              <h4>Manual Trade Controls</h4>
+              <p class="ai-trade-rule">Manual orders follow the AI recommendation only.</p>
+              <label>
+                Order size (coin units)
+                <input type="number" id="manualOrderSize" min="0.01" step="0.01" value="0.5" />
+              </label>
+              <div class="manual-actions">
+                <button class="btn btn-primary" type="button" id="manualBuyBtn">Buy now</button>
+                <button class="btn btn-ghost" type="button" id="manualSellBtn">Sell now</button>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="card-glass bot-stream">
+            <h3>Bot Configuration Summary</h3>
+            <div class="config-summary">
+              <div class="summary-item">
+                <span>Selected Coin:</span>
+                <strong id="summarycoin">None</strong>
+              </div>
+              <div class="summary-item">
+                <span>Trading Duration:</span>
+                <strong id="summaryDuration">None</strong>
+              </div>
+              <div class="summary-item">
+                <span>Stop-Loss:</span>
+                <strong id="summarySL">None</strong>
+              </div>
+              <div class="summary-item">
+                <span>Take-Profit:</span>
+                <strong id="summaryTP">None</strong>
+              </div>
+              <div class="summary-item">
+                <span>Risk Level:</span>
+                <strong id="summaryRisk">Balanced</strong>
+              </div>
+              <div class="summary-item">
+                <span>Strategy:</span>
+                <strong id="summaryStrategy">Momentum</strong>
+              </div>
+            </div>
+
+            <div class="ai-analyst" aria-live="polite">
+              <div class="ai-analyst-heading">
+                <div>
+                  <span class="eyebrow">Built-in AI market analyst</span>
+                  <h3 id="aiRecommendation">Waiting for market data</h3>
+                </div>
+                <span class="ai-confidence" id="aiConfidence">--</span>
+              </div>
+              <p id="aiReason">Select a coin to receive a technical market analysis.</p>
+              <div class="ai-signal-grid">
+                <span>Momentum <strong id="aiMomentum">--</strong></span>
+                <span>Trend <strong id="aiTrend">--</strong></span>
+                <span>Volatility <strong id="aiVolatility">--</strong></span>
+              </div>
+              <small id="aiUpdated">Analysis updates every bot cycle.</small>
+            </div>
+
+            <div class="bot-performance">
+              <h4>Bot Performance</h4>
+              <div class="bot-metrics">
+                <div>
+                  <span>Portfolio</span>
+                  <strong id="botBalance">$25,000.00</strong>
+                </div>
+                <div>
+                  <span>P/L</span>
+                  <strong id="botPnl">$0.00</strong>
+                </div>
+                <div>
+                  <span>Win rate</span>
+                  <strong id="botWinRate">0%</strong>
+                </div>
+                <div>
+                  <span>Trades</span>
+                  <strong id="botTrades">0</strong>
+                </div>
+              </div>
+              <div class="bot-chart-wrap">
+                <canvas id="botCanvas" width="600" height="320" aria-label="BillionairesXchange live trading bot candlestick chart"></canvas>
+                <button class="bot-chart-resizer" id="botChartResizer" type="button" aria-label="Resize bot chart" title="Drag to resize chart"></button>
+              </div>
+              <div class="bot-actions">
+                <button class="btn btn-primary" type="button" id="startBotBtn">Start bot</button>
+                <button class="btn btn-ghost" type="button" id="pauseBotBtn">Pause bot</button>
+              </div>
+              <p id="botMarketStatus" class="bot-market-status">Select a coin to connect its live spot market.</p>
+            </div>
+
+            <div class="bot-positions-panel">
+              <div class="bot-positions-heading">
+                <div>
+                  <span class="eyebrow">Positions</span>
+                  <h4>Open positions</h4>
+                </div>
+                <span class="bot-positions-count" id="botPositionsCount">0 active</span>
+              </div>
+              <div class="bot-positions-list" id="botPositionsList" aria-live="polite"></div>
+            </div>
+
+            <div class="leaderboard-wrap">
+              <h4>Strategy leaderboard</h4>
+              <ul id="leaderboardList" class="leaderboard-list"></ul>
+            </div>
+
+            <h4>Recent Trades</h4>
+            <ul class="trade-feed" id="tradeFeed">
+              <li>BTC buy order triggered at $66,940.</li>
+              <li>ETH breakout detected on 15m chart.</li>
+              <li>USDT hedge added for volatility protection.</li>
+              <li>SOL position closed with 8.5% profit.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="bot-info card-glass">
+          <h3>How Bot Trading Works</h3>
+          <div class="info-grid">
+            <div class="info-card">
+              <h4>1. Configure Settings</h4>
+              <p>Select your preferred coin, set your risk level, and choose a trading strategy that suits your investment goals.</p>
+            </div>
+            <div class="info-card">
+              <h4>2. Set Risk Management</h4>
+              <p>Define your stop-loss to limit losses and take-profit to secure gains. The bot will automatically close positions at these levels.</p>
+            </div>
+            <div class="info-card">
+              <h4>3. Choose Duration</h4>
+              <p>Select how long the bot should trade - from quick 1-hour sessions to continuous 24/7 automated trading.</p>
+            </div>
+            <div class="info-card">
+              <h4>4. Monitor & Adjust</h4>
+              <p>Watch your bot in real-time, receive notifications on trades, and adjust settings as market conditions change.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
+    </footer>
+
+    <div id="toast" class="toast" aria-live="polite">Welcome to Makings Bot Trading.</div>
+
+    <script>
+      const coinSelect = document.getElementById('coinSelect');
+      const durationSelect = document.getElementById('tradingDuration');
+      const stopLossInput = document.getElementById('stopLoss');
+      const takeProfitInput = document.getElementById('takeProfit');
+      const riskLevel = document.getElementById('riskLevel');
+      const strategy = document.getElementById('strategy');
+      const toast = document.getElementById('toast');
+      const botCanvas = document.getElementById('botCanvas');
+      const botChartWrap = document.querySelector('.bot-chart-wrap');
+      const botChartResizer = document.getElementById('botChartResizer');
+      const tradeFeed = document.getElementById('tradeFeed');
+      const botPnl = document.getElementById('botPnl');
+      const botBalance = document.getElementById('botBalance');
+      const botWinRate = document.getElementById('botWinRate');
+      const botTrades = document.getElementById('botTrades');
+      const botStatus = document.querySelector('.bot-status');
+      const leaderboardList = document.getElementById('leaderboardList');
+      const manualOrderSize = document.getElementById('manualOrderSize');
+      const manualBuyBtn = document.getElementById('manualBuyBtn');
+      const manualSellBtn = document.getElementById('manualSellBtn');
+      const botMarketStatus = document.getElementById('botMarketStatus');
+      const aiRecommendation = document.getElementById('aiRecommendation');
+      const aiConfidence = document.getElementById('aiConfidence');
+      const aiReason = document.getElementById('aiReason');
+      const aiMomentum = document.getElementById('aiMomentum');
+      const aiTrend = document.getElementById('aiTrend');
+      const aiVolatility = document.getElementById('aiVolatility');
+      const aiUpdated = document.getElementById('aiUpdated');
+      const favoriteCoinSelect = document.getElementById('favoriteCoinSelect');
+      const addFavoriteBtn = document.getElementById('addFavoriteBtn');
+      const favoriteCards = document.getElementById('favoriteCards');
+      const favoritePrevBtn = document.getElementById('favoritePrevBtn');
+      const favoriteNextBtn = document.getElementById('favoriteNextBtn');
+      const favoriteAnalysisStatus = document.getElementById('favoriteAnalysisStatus');
+
+      manualBuyBtn.disabled = true;
+      manualSellBtn.disabled = true;
+
+      const botState = {
+        running: false,
+        intervalId: null,
+        balance: 25000,
+        pnl: 0,
+        trades: 0,
+        wins: 0,
+        losses: 0,
+        position: null,
+        analysis: null,
+        marketSocket: null,
+        marketSymbol: null,
+        history: [65000, 65750, 66100, 66420, 66380, 66940, 67150],
+        positionRecords: JSON.parse(localStorage.getItem('botPositionRecords') || '[]')
+      };
+
+      const coinPrices = {
+        BTC: 66940,
+        ETH: 3520,
+        XRP: 0.62,
+        SOL: 158.4,
+        ADA: 0.77,
+        DOT: 8.4,
+        DOGE: 0.18,
+        USDT: 1
+      };
+
+      const marketPairs = { BTC: 'BTCUSDT', ETH: 'ETHUSDT', XRP: 'XRPUSDT', SOL: 'SOLUSDT', ADA: 'ADAUSDT', DOT: 'DOTUSDT', DOGE: 'DOGEUSDT' };
+
+      function getCustomCoins() {
+        const savedCoins = JSON.parse(localStorage.getItem('customCoins') || '[]');
+        const legacyCoin = JSON.parse(localStorage.getItem('createdCoin') || 'null');
+        const coins = legacyCoin && !savedCoins.some((coin) => coin.symbol === legacyCoin.symbol)
+          ? [...savedCoins, legacyCoin]
+          : savedCoins;
+        return coins.filter((coin) => coin.name && /^[A-Z0-9]{2,8}$/.test(coin.symbol));
+      }
+
+      function createCustomMarketData(coin) {
+        const seed = [...(coin.symbol + coin.name)].reduce((total, character) => total + character.charCodeAt(0), 0);
+        return {
+          marketCap: Math.max(250000, (seed % 8000) * 1250),
+          change24h: ((seed % 170) - 85) / 10,
+          currentPrice: Math.max(0.01, (seed % 9000) / 100 + 1),
+          custom: true
+        };
+      }
+
+      const coinMarketIds = {
+        BTC: 'bitcoin',
+        ETH: 'ethereum',
+        XRP: 'ripple',
+        SOL: 'solana',
+        ADA: 'cardano',
+        DOT: 'polkadot',
+        DOGE: 'dogecoin',
+        USDT: 'tether'
+      };
+
+      const fallbackMarketData = {
+        BTC: { marketCap: 1.3e12, change24h: 0 },
+        ETH: { marketCap: 4.1e11, change24h: 0 },
+        XRP: { marketCap: 3.4e10, change24h: 0 },
+        SOL: { marketCap: 7.4e10, change24h: 0 },
+        ADA: { marketCap: 2.7e10, change24h: 0 },
+        DOT: { marketCap: 1.2e10, change24h: 0 },
+        DOGE: { marketCap: 2.6e10, change24h: 0 },
+        USDT: { marketCap: 1.2e11, change24h: 0 }
+      };
+
+      const favoriteState = {
+        favorites: JSON.parse(localStorage.getItem('botFavoriteCoins') || '[]'),
+        marketData: {}
+      };
+
+      getCustomCoins().forEach((coin) => {
+        const market = createCustomMarketData(coin);
+        coinPrices[coin.symbol] = market.currentPrice;
+        favoriteState.marketData[coin.symbol] = market;
+        coinMarketIds[coin.symbol] = null;
+        const option = document.createElement('option');
+        option.value = coin.symbol;
+        option.textContent = `${coin.name} (${coin.symbol})`;
+        coinSelect.appendChild(option);
+        const favoriteOption = option.cloneNode(true);
+        favoriteCoinSelect.appendChild(favoriteOption);
+      });
+
+      function savePositionRecords() {
+        localStorage.setItem('botPositionRecords', JSON.stringify(botState.positionRecords));
+      }
+
+      function formatPositionTime(timestamp) {
+        return timestamp ? new Date(timestamp).toLocaleString() : '--';
+      }
+
+      function getPositionMarketCap(symbol) {
+        return getFavoriteMarketData(symbol).marketCap || 0;
+      }
+
+      function renderPositionRecords() {
+        const list = document.getElementById('botPositionsList');
+        const count = document.getElementById('botPositionsCount');
+        const active = botState.positionRecords.filter((record) => record.status === 'OPEN').length;
+        count.textContent = `${active} active`;
+        list.replaceChildren();
+
+        if (!botState.positionRecords.length) {
+          const empty = document.createElement('p');
+          empty.className = 'bot-positions-empty';
+          empty.textContent = 'AI buy and sell positions will appear here.';
+          list.appendChild(empty);
+          return;
+        }
+
+        [...botState.positionRecords].reverse().forEach((record) => {
+          const item = document.createElement('article');
+          item.className = 'bot-position-record';
+          const status = record.status === 'OPEN' ? 'OPEN' : 'CLOSED';
+          item.innerHTML = `
+            <div class="bot-position-title"><strong>${record.symbol}</strong><span class="bot-position-status ${status.toLowerCase()}">${status}</span></div>
+            <div class="bot-position-grid">
+              <span>Amount<strong>${formatMoney(record.amount)}</strong></span>
+              <span>Quantity<strong>${record.quantity}</strong></span>
+              <span>Market cap<strong>${formatCompactMoney(record.marketCap)}</strong></span>
+              <span>Open price<strong>${formatMoney(record.openPrice)}</strong></span>
+              <span>Open time<strong>${formatPositionTime(record.openedAt)}</strong></span>
+              <span>Close price<strong>${record.closePrice ? formatMoney(record.closePrice) : '--'}</strong></span>
+              <span>Close time<strong>${formatPositionTime(record.closedAt)}</strong></span>
+            </div>
+          `;
+          list.appendChild(item);
+        });
+      }
+
+      function openPositionRecord(symbol, quantity, price, source = 'AI') {
+        const record = {
+          id: `${symbol}-${Date.now()}`,
+          symbol,
+          quantity,
+          amount: quantity * price,
+          marketCap: getPositionMarketCap(symbol),
+          openPrice: price,
+          openedAt: Date.now(),
+          closePrice: null,
+          closedAt: null,
+          status: 'OPEN',
+          source
+        };
+        botState.positionRecords.push(record);
+        savePositionRecords();
+        renderPositionRecords();
+        return record;
+      }
+
+      function closePositionRecord(symbol, price, quantity = null) {
+        const record = [...botState.positionRecords].reverse().find((item) => item.symbol === symbol && item.status === 'OPEN' && (!quantity || item.quantity >= quantity));
+        if (!record) return null;
+        record.closePrice = price;
+        record.closedAt = Date.now();
+        record.status = 'CLOSED';
+        savePositionRecords();
+        renderPositionRecords();
+        return record;
+      }
+
+      const leaderboardScores = {
+        Momentum: 86,
+        Scalp: 72,
+        Arbitrage: 80,
+        'Dollar-cost averaging': 68
+      };
+
+      function showToast(message, type = 'info') {
+        toast.textContent = message;
+        toast.className = 'toast show';
+        if (type === 'success') toast.classList.add('success');
+        if (type === 'loss') toast.classList.add('loss');
+        if (type === 'warning') toast.classList.add('warning');
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => {
+          toast.className = 'toast';
+        }, 3200);
+      }
+
+      function formatMoney(value) {
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          maximumFractionDigits: value >= 1000 ? 2 : 4
+        }).format(value);
+      }
+
+      function formatCompactMoney(value) {
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          notation: 'compact',
+          maximumFractionDigits: 1
+        }).format(value);
+      }
+
+      function getFavoriteMarketData(symbol) {
+        return favoriteState.marketData[symbol] || fallbackMarketData[symbol] || { marketCap: 0, change24h: 0 };
+      }
+
+      function saveFavorites() {
+        localStorage.setItem('botFavoriteCoins', JSON.stringify(favoriteState.favorites));
+      }
+
+      function getAutomaticSettings(symbol) {
+        const market = getFavoriteMarketData(symbol);
+        const marketCap = market.marketCap;
+        let settings = marketCap >= 300e9
+          ? { risk: 'Balanced', strategy: 'Momentum', duration: '24h', stopLoss: 4, takeProfit: 8 }
+          : marketCap >= 25e9
+            ? { risk: 'Balanced', strategy: 'Momentum', duration: '12h', stopLoss: 5, takeProfit: 10 }
+            : { risk: 'Aggressive', strategy: 'Scalp', duration: '4h', stopLoss: 3, takeProfit: 12 };
+
+        if (symbol === 'USDT') {
+          settings = { risk: 'Conservative', strategy: 'Dollar-cost averaging', duration: '7d', stopLoss: 1, takeProfit: 2 };
+        } else if (market.change24h <= -5) {
+          settings = { risk: 'Conservative', strategy: 'Dollar-cost averaging', duration: '24h', stopLoss: 3, takeProfit: 6 };
+        } else if (market.change24h >= 8) {
+          settings = { risk: 'Aggressive', strategy: 'Momentum', duration: '4h', stopLoss: 5, takeProfit: 15 };
+        }
+
+        return settings;
+      }
+
+      function applyAutomaticSettings(symbol) {
+        const settings = getAutomaticSettings(symbol);
+        riskLevel.value = settings.risk;
+        strategy.value = settings.strategy;
+        durationSelect.value = settings.duration;
+        stopLossInput.value = settings.stopLoss;
+        takeProfitInput.value = settings.takeProfit;
+        updateSummary();
+        favoriteAnalysisStatus.textContent = `AI profile for ${symbol}: ${settings.risk} risk, ${settings.strategy}, ${settings.duration} trading window.`;
+      }
+
+      function renderFavoriteCards() {
+        if (!favoriteState.favorites.length) {
+          favoriteCards.innerHTML = '<p class="favorite-empty">No favorite coins yet. Add one to begin automatic analysis.</p>';
+          favoritePrevBtn.disabled = true;
+          favoriteNextBtn.disabled = true;
+          return;
+        }
+
+        const activeSymbol = coinSelect.value;
+        favoriteCards.innerHTML = favoriteState.favorites.map((symbol) => {
+          const market = getFavoriteMarketData(symbol);
+          const change = Number(market.change24h) || 0;
+          const changeClass = change >= 0 ? 'positive' : 'negative';
+          const price = coinPrices[symbol] || market.currentPrice || 0;
+          return `
+            <div class="favorite-card${activeSymbol === symbol ? ' is-active' : ''}" data-symbol="${symbol}" role="button" tabindex="0" aria-label="Analyze ${symbol}">
+              <div class="favorite-card-top">
+                <strong>${symbol}</strong>
+                <span>${formatMoney(price)}</span>
+              </div>
+              <div class="favorite-card-value">
+                <span class="favorite-card-label">Market cap</span>
+                <strong>${formatCompactMoney(market.marketCap)}</strong>
+              </div>
+              <span class="favorite-card-change ${changeClass}">${change >= 0 ? '+' : ''}${change.toFixed(2)}% today</span>
+              <button class="favorite-remove" type="button" data-remove="${symbol}" aria-label="Remove ${symbol} from favorites">Remove</button>
+            </div>
+          `;
+        }).join('');
+
+        favoriteCards.querySelectorAll('.favorite-card').forEach((card) => {
+          const selectCard = () => selectFavorite(card.dataset.symbol);
+          card.addEventListener('click', (event) => {
+            if (!event.target.closest('.favorite-remove')) selectCard();
+          });
+          card.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              selectCard();
+            }
+          });
+        });
+
+        favoriteCards.querySelectorAll('[data-remove]').forEach((button) => {
+          button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const symbol = button.dataset.remove;
+            favoriteState.favorites = favoriteState.favorites.filter((favorite) => favorite !== symbol);
+            saveFavorites();
+            renderFavoriteCards();
+            if (coinSelect.value === symbol) {
+              coinSelect.value = '';
+              botMarketStatus.textContent = 'Select a favorite coin to connect its live spot market.';
+              updateSummary();
+            }
+          });
+        });
+
+        favoritePrevBtn.disabled = false;
+        favoriteNextBtn.disabled = false;
+      }
+
+      function selectFavorite(symbol) {
+        if (!coinMarketIds[symbol] && !favoriteState.marketData[symbol]?.custom) return;
+        applyAutomaticSettings(symbol);
+        coinSelect.value = symbol;
+        coinSelect.dispatchEvent(new Event('change'));
+        renderFavoriteCards();
+      }
+
+      async function refreshFavoriteMarketData() {
+        if (!favoriteState.favorites.length) return;
+        const ids = favoriteState.favorites.map((symbol) => coinMarketIds[symbol]).filter(Boolean).join(',');
+        if (!ids) {
+          renderFavoriteCards();
+          if (coinSelect.value) applyAutomaticSettings(coinSelect.value);
+          favoriteAnalysisStatus.textContent = 'Custom coin market data refreshed. The AI profile is using its local market feed.';
+          return;
+        }
+        try {
+          const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=20&page=1&sparkline=false&price_change_percentage=24h`);
+          if (!response.ok) throw new Error('Market cap data unavailable');
+          const markets = await response.json();
+          markets.forEach((market) => {
+            const symbol = Object.keys(coinMarketIds).find((key) => coinMarketIds[key] === market.id);
+            if (!symbol) return;
+            favoriteState.marketData[symbol] = {
+              marketCap: market.market_cap || 0,
+              change24h: market.price_change_percentage_24h || 0,
+              currentPrice: market.current_price || coinPrices[symbol]
+            };
+            coinPrices[symbol] = market.current_price || coinPrices[symbol];
+          });
+          renderFavoriteCards();
+          if (coinSelect.value) applyAutomaticSettings(coinSelect.value);
+          favoriteAnalysisStatus.textContent = `Market data refreshed at ${new Date().toLocaleTimeString()}. The AI profile updates with each refresh.`;
+        } catch (error) {
+          favoriteAnalysisStatus.textContent = 'Live market-cap data is temporarily unavailable. Using the latest available profile.';
+          renderFavoriteCards();
+        }
+      }
+
+      function updateSummary() {
+        document.getElementById('summarycoin').textContent = coinSelect.value || 'None';
+        document.getElementById('summaryDuration').textContent = durationSelect.value || 'None';
+        document.getElementById('summarySL').textContent = stopLossInput.value ? stopLossInput.value + '%' : 'None';
+        document.getElementById('summaryTP').textContent = takeProfitInput.value ? takeProfitInput.value + '%' : 'None';
+        document.getElementById('summaryRisk').textContent = riskLevel.value;
+        document.getElementById('summaryStrategy').textContent = strategy.value;
+      }
+
+      function updatePerformancePanel() {
+        const winRate = botState.trades ? (botState.wins / botState.trades) * 100 : 0;
+        botPnl.textContent = formatMoney(botState.pnl);
+        botBalance.textContent = formatMoney(botState.balance);
+        botWinRate.textContent = `${winRate.toFixed(1)}%`;
+        botTrades.textContent = String(botState.trades);
+      }
+
+      function updateLeaderboard() {
+        if (!leaderboardList) return;
+
+        const entries = Object.entries(leaderboardScores)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 4);
+
+        leaderboardList.innerHTML = entries
+          .map(([label, score], index) => `
+            <li>
+              <span>#${index + 1} ${label}</span>
+              <strong>${score}</strong>
+            </li>
+          `)
+          .join('');
+      }
+
+      function addFeedItem(message) {
+        const item = document.createElement('li');
+        item.textContent = message;
+        tradeFeed.prepend(item);
+        while (tradeFeed.children.length > 6) {
+          tradeFeed.removeChild(tradeFeed.lastChild);
+        }
+      }
+
+      function notifyTrade(message, type = 'success') {
+        addFeedItem(message);
+        showToast(message, type);
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Makings AI trading bot', { body: message });
+        }
+      }
+
+      function analyzeMarket(symbol, price) {
+        const history = botState.history;
+        const recent = history.slice(-6);
+        const previous = history.slice(-12, -6);
+        const shortAverage = recent.reduce((sum, value) => sum + value, 0) / recent.length;
+        const longAverage = history.slice(-20).reduce((sum, value) => sum + value, 0) / Math.min(history.length, 20);
+        const momentum = ((recent[recent.length - 1] - recent[0]) / recent[0]) * 100;
+        const priorMomentum = previous.length ? ((previous[previous.length - 1] - previous[0]) / previous[0]) * 100 : 0;
+        const trend = ((shortAverage - longAverage) / longAverage) * 100;
+        const volatility = (Math.max(...recent) - Math.min(...recent)) / price * 100;
+        const score = (momentum * 4) + (trend * 3) + ((momentum - priorMomentum) * 2);
+        const action = score >= 0 ? 'BUY' : 'SELL';
+        const confidence = Math.min(96, Math.max(55, 55 + Math.abs(score) * 8));
+        const reason = `${symbol} shows ${momentum >= 0 ? 'positive' : 'negative'} momentum, a ${trend >= 0 ? 'rising' : 'falling'} short-term trend, and ${volatility.toFixed(2)}% recent volatility.`;
+
+        botState.analysis = { action, confidence, momentum, trend, volatility, reason, price };
+        aiRecommendation.textContent = `${action} only`;
+        aiRecommendation.className = action === 'BUY' ? 'ai-buy' : 'ai-sell';
+        aiConfidence.textContent = `${confidence.toFixed(0)}% confidence`;
+        aiReason.textContent = reason;
+        aiMomentum.textContent = `${momentum >= 0 ? '+' : ''}${momentum.toFixed(2)}%`;
+        aiTrend.textContent = trend >= 0 ? 'Bullish' : 'Bearish';
+        aiVolatility.textContent = `${volatility.toFixed(2)}%`;
+        aiUpdated.textContent = `Analyzed at ${new Date().toLocaleTimeString()}. The bot will take ${action} trades only.`;
+        manualBuyBtn.disabled = action !== 'BUY';
+        manualSellBtn.disabled = action !== 'SELL';
+        manualBuyBtn.textContent = action === 'BUY' ? 'AI Buy now' : 'Buy blocked by AI';
+        manualSellBtn.textContent = action === 'SELL' ? 'AI Sell now' : 'Sell blocked by AI';
+        return botState.analysis;
+      }
+
+      function renderBotChart() {
+        if (!botState.history.length) return;
+        const ctx = botCanvas.getContext('2d');
+        const bounds = botCanvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        const width = Math.max(320, bounds.width);
+        const height = 320;
+        botCanvas.width = width * ratio;
+        botCanvas.height = height * ratio;
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        const history = botState.history.slice(-36);
+        const candles = history.map((close, index) => {
+          const open = index ? history[index - 1] : close;
+          const spread = Math.max(close * .006, .000001);
+          return { time: Date.now() - (history.length - index) * 60000, open, close, high: Math.max(open, close) + spread, low: Math.max(.000001, Math.min(open, close) - spread) };
+        });
+        const padding = { top: 18, right: 76, bottom: 38, left: 12 };
+        const prices = candles.flatMap((candle) => [candle.high, candle.low]);
+        const min = Math.min(...prices) * .997;
+        const max = Math.max(...prices) * 1.003;
+        const xStep = (width - padding.left - padding.right) / Math.max(candles.length - 1, 1);
+        const y = (value) => padding.top + ((max - value) / (max - min || 1)) * (height - padding.top - padding.bottom);
+        const formatPrice = (value) => '$' + value.toLocaleString('en-US', { maximumFractionDigits: value < 1 ? 6 : 2 });
+        const formatTime = (time) => new Date(time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = 'rgba(0, 0, 0, .2)';
+        ctx.fillRect(0, 0, width, height);
+        ctx.font = '11px Inter, sans-serif';
+        ctx.strokeStyle = 'rgba(212, 175, 55, .12)';
+        ctx.fillStyle = '#cfc5a2';
+        for (let row = 0; row < 5; row += 1) {
+          const value = min + (max - min) * row / 4;
+          const lineY = y(value);
+          ctx.beginPath();
+          ctx.moveTo(padding.left, lineY);
+          ctx.lineTo(width - padding.right, lineY);
+          ctx.stroke();
+          ctx.fillText(formatPrice(value), width - padding.right + 8, lineY + 4);
+        }
+        const candleWidth = Math.max(4, xStep * .58);
+        candles.forEach((candle, index) => {
+          const pointX = padding.left + index * xStep;
+          const color = candle.close >= candle.open ? '#31d598' : '#ff6b7a';
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.moveTo(pointX, y(candle.high));
+          ctx.lineTo(pointX, y(candle.low));
+          ctx.stroke();
+          ctx.fillRect(pointX - candleWidth / 2, y(Math.max(candle.open, candle.close)), candleWidth, Math.max(2, Math.abs(y(candle.open) - y(candle.close))));
+          if (index === 0 || index === candles.length - 1 || index % 9 === 0) ctx.fillText(formatTime(candle.time), pointX - 18, height - 12);
+        });
+      }
+
+      async function connectLiveMarket(symbol) {
+        if (botState.marketSocket) botState.marketSocket.close();
+        const pair = marketPairs[symbol];
+        if (!pair) {
+          const customMarket = favoriteState.marketData[symbol];
+          if (customMarket?.custom) {
+            const seed = Math.round(customMarket.currentPrice * 100);
+            botState.marketSymbol = `CUSTOM_${symbol}`;
+            botState.history = Array.from({ length: 30 }, (_, index) => customMarket.currentPrice * (1 + Math.sin((index + seed) / 3) * .03 + index * .001));
+            botMarketStatus.textContent = `${symbol} local market feed`;
+            analyzeMarket(symbol, customMarket.currentPrice);
+            renderBotChart();
+            return;
+          }
+          botState.marketSymbol = null;
+          botMarketStatus.textContent = 'Live spot data is unavailable for this selection.';
+          return;
+        }
+
+        botState.marketSymbol = pair;
+        botMarketStatus.textContent = `Connecting to BillionairesXchange ${symbol}/USDT spot live...`;
+        try {
+          const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1m&limit=30`);
+          if (!response.ok) throw new Error('Live candles unavailable');
+          const candles = await response.json();
+          botState.history = candles.map((candle) => Number(candle[4]));
+          coinPrices[symbol] = botState.history[botState.history.length - 1];
+          botMarketStatus.textContent = `BillionairesXchange ${symbol}/USDT spot live`;
+          renderBotChart();
+        } catch (error) {
+          botMarketStatus.textContent = 'Live spot data is temporarily unavailable.';
+        }
+
+        botState.marketSocket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair.toLowerCase()}@kline_1m`);
+        botState.marketSocket.onmessage = (event) => {
+          const candle = JSON.parse(event.data).k;
+          if (!candle || botState.marketSymbol !== pair) return;
+          const price = Number(candle.c);
+          coinPrices[symbol] = price;
+          if (candle.x) {
+            botState.history.push(price);
+            if (botState.history.length > 30) botState.history.shift();
+          }
+          analyzeMarket(symbol, price);
+          renderBotChart();
+        };
+        botState.marketSocket.onerror = () => {
+          botMarketStatus.textContent = 'Live spot connection unavailable.';
+        };
+      }
+
+      function updateStatusLabel() {
+        const label = botState.running ? 'Bot running live' : 'Bot paused';
+        botStatus.innerHTML = `<span class="dot" style="background:${botState.running ? '#00ff00' : '#ffb000'}"></span>${label}`;
+      }
+
+      function decideTrade(symbol, tradePrice) {
+        const riskMap = { Conservative: 0.03, Balanced: 0.06, Aggressive: 0.1 };
+        const selectedRisk = riskMap[riskLevel.value] || 0.06;
+        const stopLoss = Number(stopLossInput.value) || 5;
+        const takeProfit = Number(takeProfitInput.value) || 10;
+
+        const analysis = analyzeMarket(symbol, tradePrice);
+
+        if (!botState.position && analysis.action === 'BUY') {
+            const size = Math.min((botState.balance * selectedRisk) / tradePrice, 2.5);
+            botState.position = {
+              symbol,
+              entry: tradePrice,
+              size,
+              stopLoss: stopLoss,
+              takeProfit: takeProfit,
+              strategy: strategy.value
+            };
+            botState.balance -= size * tradePrice;
+            openPositionRecord(symbol, size, tradePrice, 'AI bot');
+            notifyTrade(`AI BUY: ${symbol} at ${formatMoney(tradePrice)} (${analysis.confidence.toFixed(0)}% confidence).`);
+            return;
+        }
+
+        if (botState.position && botState.position.symbol === symbol) {
+          const movePct = ((tradePrice - botState.position.entry) / botState.position.entry) * 100;
+
+          if (analysis.action === 'SELL' || movePct >= botState.position.takeProfit || movePct <= -botState.position.stopLoss) {
+            const exitValue = botState.position.size * tradePrice;
+            const result = exitValue - (botState.position.size * botState.position.entry);
+            botState.pnl += result;
+            botState.balance += exitValue;
+            botState.trades += 1;
+
+            if (result > 0) {
+              botState.wins += 1;
+              notifyTrade(`AI SELL: ${symbol} closed at ${formatMoney(tradePrice)}. Profit ${formatMoney(result)}.`);
+            } else {
+              notifyTrade(`AI SELL: ${symbol} closed at ${formatMoney(tradePrice)}. Loss ${formatMoney(Math.abs(result))}.`, 'loss');
+            }
+
+            closePositionRecord(symbol, tradePrice, botState.position.size);
+            botState.position = null;
+            updatePerformancePanel();
+          }
+        }
+      }
+
+      function tickBot() {
+        if (!botState.running || !coinSelect.value) {
+          return;
+        }
+
+        const symbol = coinSelect.value;
+        const nextPrice = coinPrices[symbol] || 100;
+        if (!botState.marketSymbol && symbol !== 'USDT') return;
+
+        decideTrade(symbol, nextPrice);
+        renderBotChart();
+        updatePerformancePanel();
+      }
+
+      function executeManualTrade(direction) {
+        if (!coinSelect.value) {
+          showToast('Select a coin before placing a trade.', 'warning');
+          return;
+        }
+
+        const symbol = coinSelect.value;
+        const quantity = Number(manualOrderSize.value) || 0.5;
+        const currentPrice = coinPrices[symbol] || 100;
+        const total = currentPrice * quantity;
+
+        const analysis = analyzeMarket(symbol, currentPrice);
+        if (analysis.action.toLowerCase() !== direction) {
+          showToast(`Manual ${direction} blocked. AI recommends ${analysis.action} only.`, 'warning');
+          return;
+        }
+
+        if (direction === 'buy') {
+          if (total > botState.balance) {
+            showToast('Not enough balance for this order.', 'warning');
+            return;
+          }
+
+          botState.balance -= total;
+          botState.trades += 1;
+          botState.wins += 1;
+          botState.pnl += 0;
+          openPositionRecord(symbol, quantity, currentPrice, 'Manual AI buy');
+          addFeedItem(`Manual buy: ${quantity} ${symbol} at ${formatMoney(currentPrice)}.`);
+          notifyTrade(`AI BUY: ${quantity} ${symbol} at ${formatMoney(currentPrice)}.`);
+        }
+
+        if (direction === 'sell') {
+          const marketValue = currentPrice * quantity;
+          botState.balance += marketValue;
+          botState.trades += 1;
+          closePositionRecord(symbol, currentPrice, quantity);
+          addFeedItem(`Manual sell: ${quantity} ${symbol} at ${formatMoney(currentPrice)}.`);
+          notifyTrade(`AI SELL: ${quantity} ${symbol} at ${formatMoney(currentPrice)}.`);
+        }
+
+        updatePerformancePanel();
+      }
+
+      coinSelect.addEventListener('change', updateSummary);
+      coinSelect.addEventListener('change', () => connectLiveMarket(coinSelect.value));
+      durationSelect.addEventListener('change', updateSummary);
+      stopLossInput.addEventListener('input', updateSummary);
+      takeProfitInput.addEventListener('input', updateSummary);
+      riskLevel.addEventListener('change', updateSummary);
+      strategy.addEventListener('change', updateSummary);
+      coinSelect.addEventListener('change', () => {
+        if (coinSelect.value) analyzeMarket(coinSelect.value, coinPrices[coinSelect.value] || 100);
+      });
+
+      addFavoriteBtn.addEventListener('click', () => {
+        const symbol = favoriteCoinSelect.value;
+        if (!symbol) {
+          showToast('Choose a coin to add to your favorites.', 'warning');
+          return;
+        }
+        if (favoriteState.favorites.includes(symbol)) {
+          showToast(`${symbol} is already in your favorites.`, 'warning');
+          selectFavorite(symbol);
+          return;
+        }
+        favoriteState.favorites.push(symbol);
+        saveFavorites();
+        favoriteCoinSelect.value = '';
+        renderFavoriteCards();
+        selectFavorite(symbol);
+        refreshFavoriteMarketData();
+      });
+
+      favoritePrevBtn.addEventListener('click', () => {
+        favoriteCards.scrollBy({ left: -210, behavior: 'smooth' });
+      });
+
+      favoriteNextBtn.addEventListener('click', () => {
+        favoriteCards.scrollBy({ left: 210, behavior: 'smooth' });
+      });
+
+      document.getElementById('startBotBtn').addEventListener('click', function() {
+        if (!coinSelect.value || !durationSelect.value) {
+          showToast('Please choose a coin and trading duration.', 'warning');
+          return;
+        }
+
+        if (botState.running) {
+          showToast('The bot is already running.', 'warning');
+          return;
+        }
+
+        botState.running = true;
+        if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+        updateStatusLabel();
+        this.disabled = true;
+        document.getElementById('pauseBotBtn').disabled = false;
+        showToast('Bot started successfully. Monitoring live market data.', 'success');
+        if (!botState.intervalId) botState.intervalId = setInterval(tickBot, 3000);
+      });
+
+      document.getElementById('pauseBotBtn').addEventListener('click', function() {
+        if (!botState.running) {
+          showToast('Bot is already paused.', 'warning');
+          return;
+        }
+
+        botState.running = false;
+        updateStatusLabel();
+        this.disabled = true;
+        document.getElementById('startBotBtn').disabled = false;
+        showToast('Bot paused.', 'warning');
+      });
+
+      manualBuyBtn.addEventListener('click', () => executeManualTrade('buy'));
+      manualSellBtn.addEventListener('click', () => executeManualTrade('sell'));
+
+      if (botChartResizer && botChartWrap) {
+        botChartResizer.addEventListener('pointerdown', (event) => {
+          event.preventDefault();
+          botChartResizer.setPointerCapture(event.pointerId);
+          const startX = event.clientX;
+          const startY = event.clientY;
+          const startWidth = botChartWrap.getBoundingClientRect().width;
+          const startHeight = botChartWrap.getBoundingClientRect().height;
+          const parentWidth = botChartWrap.parentElement.getBoundingClientRect().width;
+          const resizeChart = (moveEvent) => {
+            const nextWidth = Math.min(parentWidth, Math.max(320, startWidth + moveEvent.clientX - startX));
+            const nextHeight = Math.min(720, Math.max(260, startHeight + moveEvent.clientY - startY));
+            botChartWrap.style.width = `${nextWidth}px`;
+            botChartWrap.style.height = `${nextHeight}px`;
+            renderBotChart();
+          };
+          const stopResize = () => {
+            botChartResizer.removeEventListener('pointermove', resizeChart);
+            botChartResizer.removeEventListener('pointerup', stopResize);
+            botChartResizer.removeEventListener('pointercancel', stopResize);
+          };
+          botChartResizer.addEventListener('pointermove', resizeChart);
+          botChartResizer.addEventListener('pointerup', stopResize);
+          botChartResizer.addEventListener('pointercancel', stopResize);
+        });
+      }
+
+      favoriteState.favorites = favoriteState.favorites.filter((symbol) => coinMarketIds[symbol] || favoriteState.marketData[symbol]?.custom);
+      renderFavoriteCards();
+      if (favoriteState.favorites.length) selectFavorite(favoriteState.favorites[0]);
+      refreshFavoriteMarketData();
+      setInterval(refreshFavoriteMarketData, 60000);
+      updateSummary();
+      updateLeaderboard();
+      updateStatusLabel();
+      updatePerformancePanel();
+      renderPositionRecords();
+      window.addEventListener('resize', renderBotChart);
+      renderBotChart();
+    </script>
+    <script src="script.js"></script>
+    <script src="auth.js"></script>
+  </body>
+</html>

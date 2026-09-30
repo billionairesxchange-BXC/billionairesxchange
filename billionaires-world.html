@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Billionaires World</title>
+    <link rel="icon" type="APP-Logo.png" href="APP-logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+         <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div><p class="brand-name">BillionairesXchange</p><small>Crypto Trading & Investment</small></div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a><a href="trade.html">Trade</a><a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a><a href="treasury.html">Treasury/Wallet</a><a href="create-coin.html">Create Coin</a>
+      </nav>
+      <div class="nav-actions"><a class="btn btn-ghost" href="verification.html">Login</a><a class="btn btn-primary" href="verification.html">Sign Up</a></div>
+    </header>
+
+    <main>
+      <section class="world-page section-shell">
+        <div class="section-head">
+          <div><span class="eyebrow">Private community</span><h1>Billionaires World</h1><p>Connect, share, build groups, and move value with your trading circle.</p></div>
+          <a class="btn btn-ghost" href="index.html#home">Back home</a>
+        </div>
+        <div class="world-page-layout">
+          <aside class="card-glass world-page-sidebar">
+            <div class="world-block">
+              <div class="world-block-heading"><div><span class="eyebrow">People</span><h2>Find and add users</h2></div></div>
+              <input class="world-search" id="worldUserSearch" type="search" placeholder="Search name or handle" aria-label="Search users" />
+              <ul class="world-people-list" id="worldPeopleList"></ul>
+            </div>
+            <div class="world-block">
+              <div class="world-block-heading"><div><span class="eyebrow">Groups</span><h2>Your groups</h2></div><button class="world-icon-button" id="worldCreateGroupButton" type="button" aria-label="Create group">+</button></div>
+              <form class="world-group-form" id="worldGroupForm" hidden><input id="worldGroupName" type="text" placeholder="Group name" maxlength="30" required /><button class="btn btn-primary" type="submit">Create</button></form>
+              <ul class="world-groups-list" id="worldGroupsList"></ul>
+            </div>
+            <div class="world-payment-card"><span class="eyebrow">Selected user</span><strong id="worldSelectedUser">Choose a user</strong><div class="world-payment-actions"><button class="btn btn-primary" id="worldSendPaymentButton" type="button" disabled>Send payment</button><button class="btn btn-ghost" id="worldRequestPaymentButton" type="button" disabled>Request payment</button></div></div>
+          </aside>
+
+          <section class="card-glass world-page-chat" aria-label="Billionaires World chat">
+            <div class="world-chat-header"><div><span class="eyebrow">Conversation</span><h2 id="worldChatTitle">Select a user to start chatting</h2></div><span class="world-chat-status" id="worldChatStatus">Ready</span></div>
+            <div class="world-messages" id="worldMessages" aria-live="polite"></div>
+            <form class="world-message-form" id="worldMessageForm"><textarea id="worldMessageText" placeholder="Write a message..." maxlength="1000" aria-label="Message"></textarea><div class="world-message-actions"><label class="world-media-label" for="worldMediaInput">Photo or video</label><input id="worldMediaInput" type="file" accept="image/*,video/*" /><span id="worldMediaName">No media selected</span><button class="btn btn-primary" type="submit">Send</button></div></form>
+          </section>
+        </div>
+        <section class="card-glass world-feed-panel" aria-labelledby="worldFeedTitle">
+          <div class="world-feed-heading">
+            <div><span class="eyebrow">Community activity</span><h2 id="worldFeedTitle">Live feed</h2></div>
+            <span class="world-chat-status">Latest posts</span>
+          </div>
+          <div class="world-feed" id="worldFeed" aria-live="polite"></div>
+        </section>
+      </section>
+    </main>
+    <footer class="site-footer"><p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p></footer>
+    <script>
+      (() => {
+        const username = localStorage.getItem('makingsCurrentUser');
+        let hasWorldAccess = false;
+        try {
+          const accounts = JSON.parse(localStorage.getItem('makingsAccounts') || '[]');
+          hasWorldAccess = Boolean(username && Array.isArray(accounts) && accounts.some((account) => account.username === username));
+        } catch (error) {
+          hasWorldAccess = false;
+        }
+        if (!hasWorldAccess) {
+          window.location.replace('verification.html#login');
+          return;
+        }
+
+        const $ = (id) => document.getElementById(id);
+        const people = [{ name: 'Ava Sterling', handle: '@avatrades' }, { name: 'Marcus Chen', handle: '@marketmarcus' }, { name: 'Zara King', handle: '@zaracrypto' }, { name: 'Noah Brooks', handle: '@noahblocks' }, { name: 'Lena Ortiz', handle: '@lenalens' }];
+        const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch (error) { return fallback; } };
+        const state = { selected: null, added: read('worldAddedUsers', []), groups: read('worldGroups', ['General', 'Market Watch']), joined: read('worldJoinedGroups', []), messages: read('worldMessages', {}), feed: read('worldFeed', []) };
+        const save = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+        const person = (handle) => people.find((item) => item.handle === handle);
+        const initials = (name) => name.split(' ').map((part) => part[0]).join('').slice(0, 2);
+
+        function renderPeople() {
+          const query = $('worldUserSearch').value.trim().toLowerCase();
+          $('worldPeopleList').replaceChildren();
+          people.filter((item) => !query || `${item.name} ${item.handle}`.toLowerCase().includes(query)).forEach((item) => {
+            const li = document.createElement('li'); li.className = `world-person${state.selected === item.handle ? ' is-selected' : ''}`;
+            const identity = document.createElement('button'); identity.className = 'world-person-identity'; identity.type = 'button';
+            identity.innerHTML = `<span class="world-avatar">${initials(item.name)}</span><span><strong>${item.name}</strong><small>${item.handle}</small></span>`;
+            identity.addEventListener('click', () => selectUser(item));
+            const add = document.createElement('button'); add.type = 'button'; add.textContent = state.added.includes(item.handle) ? 'Added' : 'Add';
+            add.addEventListener('click', () => { state.added = state.added.includes(item.handle) ? state.added.filter((handle) => handle !== item.handle) : [...state.added, item.handle]; save('worldAddedUsers', state.added); renderPeople(); });
+            li.append(identity, add); $('worldPeopleList').appendChild(li);
+          });
+        }
+        function selectUser(item) { state.selected = item.handle; $('worldSelectedUser').textContent = `${item.name} ${item.handle}`; $('worldChatTitle').textContent = item.name; $('worldChatStatus').textContent = 'Direct conversation'; $('worldSendPaymentButton').disabled = false; $('worldRequestPaymentButton').disabled = false; renderPeople(); renderMessages(); $('worldMessageText').focus(); }
+        function renderGroups() { $('worldGroupsList').replaceChildren(); state.groups.forEach((group) => { const li = document.createElement('li'); const label = document.createElement('strong'); label.textContent = group; const button = document.createElement('button'); button.type = 'button'; button.textContent = state.joined.includes(group) ? 'Joined' : 'Request join'; button.addEventListener('click', () => { if (!state.joined.includes(group)) { state.joined.push(group); save('worldJoinedGroups', state.joined); $('worldChatStatus').textContent = `Join request sent for ${group}.`; renderGroups(); } }); li.append(label, button); $('worldGroupsList').appendChild(li); }); }
+        function renderMessages() { const target = $('worldMessages'); target.replaceChildren(); if (!state.selected) { target.innerHTML = '<p class="world-empty">Select a user from the left to start a conversation.</p>'; return; } const thread = state.messages[state.selected] || []; if (!thread.length) { target.innerHTML = '<p class="world-empty">No messages yet. Send the first one.</p>'; return; } thread.forEach((message) => { const item = document.createElement('article'); item.className = `world-message${message.mine ? ' is-mine' : ''}`; if (message.text) { const text = document.createElement('p'); text.textContent = message.text; item.appendChild(text); } if (message.media) { const media = document.createElement(message.mediaType === 'video' ? 'video' : 'img'); media.className = 'world-message-media'; media.src = message.media; media.controls = message.mediaType === 'video'; media.alt = 'Shared media'; item.appendChild(media); } target.appendChild(item); }); target.scrollTop = target.scrollHeight; }
+        function renderFeed() { const target = $('worldFeed'); target.replaceChildren(); if (!state.feed.length) { target.innerHTML = '<p class="world-empty">Messages, photos, and videos shared in conversations will appear here.</p>'; return; } [...state.feed].reverse().forEach((post) => { const item = document.createElement('article'); item.className = 'world-feed-post'; const heading = document.createElement('div'); heading.className = 'world-feed-post-heading'; const author = document.createElement('strong'); author.textContent = post.author; const time = document.createElement('small'); time.textContent = new Date(post.createdAt).toLocaleString(); heading.append(author, time); item.appendChild(heading); if (post.text) { const text = document.createElement('p'); text.textContent = post.text; item.appendChild(text); } if (post.media) { const media = document.createElement(post.mediaType === 'video' ? 'video' : 'img'); media.className = 'world-feed-media'; media.src = post.media; media.controls = post.mediaType === 'video'; media.alt = 'Community post media'; item.appendChild(media); } target.appendChild(item); }); }
+        function payment(type) { if (!state.selected) return; const amount = prompt(`${type === 'send' ? 'Send' : 'Request'} payment amount`, '100'); if (!amount || !Number.isFinite(Number(amount)) || Number(amount) <= 0) return; const thread = state.messages[state.selected] || []; thread.push({ text: `${type === 'send' ? 'Payment sent' : 'Payment requested'}: $${Number(amount).toFixed(2)}`, mine: true }); state.messages[state.selected] = thread; save('worldMessages', state.messages); renderMessages(); $('worldChatStatus').textContent = type === 'send' ? 'Payment sent.' : 'Payment request sent.'; }
+        $('worldUserSearch').addEventListener('input', renderPeople); $('worldCreateGroupButton').addEventListener('click', () => { $('worldGroupForm').hidden = !$('worldGroupForm').hidden; if (!$('worldGroupForm').hidden) $('worldGroupName').focus(); });
+        $('worldGroupForm').addEventListener('submit', (event) => { event.preventDefault(); const name = $('worldGroupName').value.trim(); if (!name || state.groups.includes(name)) return; state.groups.push(name); save('worldGroups', state.groups); event.target.reset(); event.target.hidden = true; renderGroups(); });
+        $('worldMediaInput').addEventListener('change', () => { $('worldMediaName').textContent = $('worldMediaInput').files[0]?.name || 'No media selected'; });
+        $('worldMessageForm').addEventListener('submit', (event) => { event.preventDefault(); if (!state.selected) { $('worldChatStatus').textContent = 'Select a user before sending a message.'; return; } const file = $('worldMediaInput').files[0]; const publish = (media, mediaType) => { const text = $('worldMessageText').value.trim(); const thread = state.messages[state.selected] || []; thread.push({ text, media, mediaType, mine: true }); state.messages[state.selected] = thread; state.feed.push({ author: 'You', text, media, mediaType, createdAt: Date.now() }); save('worldMessages', state.messages); save('worldFeed', state.feed); event.target.reset(); $('worldMediaName').textContent = 'No media selected'; renderMessages(); renderFeed(); $('worldChatStatus').textContent = 'Message sent and added to the live feed.'; }; if (!file) { publish('', ''); return; } const reader = new FileReader(); reader.addEventListener('load', () => publish(reader.result, file.type.startsWith('video/') ? 'video' : 'image')); reader.readAsDataURL(file); });
+        $('worldSendPaymentButton').addEventListener('click', () => payment('send')); $('worldRequestPaymentButton').addEventListener('click', () => payment('request')); renderPeople(); renderGroups(); renderMessages(); renderFeed();
+      })();
+    </script>
+    <script src="auth.js"></script>
+  </body>
+</html>

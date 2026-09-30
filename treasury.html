@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Treasury & Wallet</title>
+    <link rel="icon" type="APP-Logo.png" href="APP-logo.png" />
+    <meta
+      name="description"
+      content="BillionairesXchange Treasury - Bank vault, payment controls, and Caribbean banking partners"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+         <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading & Investment</small>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="index.html#trade">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="wallet-section section-shell" id="wallet">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Treasury</span>
+            <h2>Bank vault</h2>
+          </div>
+          <button class="btn btn-primary" type="button" id="topAddBankBtn">🏦 Add Bank</button>
+        </div>
+
+        <div class="holdings-section card-glass">
+          <div class="holdings-header">
+            <div>
+              <span class="eyebrow">Your Portfolio</span>
+              <h3>Crypto Holdings</h3>
+            </div>
+            <div class="currency-selector">
+              <label for="preferredCurrency">Preferred Currency:</label>
+              <select id="preferredCurrency" name="preferredCurrency">
+                <option value="usd">USD ($)</option>
+                <option value="eur">EUR (€)</option>
+                <option value="gbp">GBP (£)</option>
+                <option value="jmd">JMD (J$)</option>
+                <option value="bbd">BBD (Bds$)</option>
+                <option value="ttd">TTD (TT$)</option>
+                <option value="xcd">XCD (EC$)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="holdings-summary">
+            <div class="summary-card">
+              <span class="summary-label">Total Holdings Value</span>
+              <strong class="summary-value" id="totalHoldingsValue">$0.00</strong>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">24h Change</span>
+              <strong class="summary-value" id="holdingsChange">+$0.00</strong>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">Number of Assets</span>
+              <strong class="summary-value" id="assetCount">0</strong>
+            </div>
+          </div>
+
+          <div class="holdings-list">
+            <h4>Your Assets</h4>
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th>Asset</th>
+                  <th>Amount</th>
+                  <th>Unit Price</th>
+                  <th>Value in <span id="currencyLabel">USD</span></th>
+                  <th>24h Change</th>
+                </tr>
+              </thead>
+              <tbody id="holdingsTableBody">
+                <!-- Holdings will be populated here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="wallet-grid">
+          <div class="wallet-card card-glass">
+            <h3>Deposit</h3>
+            <p>Fund your wallet from local bank or crypto transfer.</p>
+          </div>
+          <div class="wallet-card card-glass">
+            <h3>Withdraw</h3>
+            <p>Send funds securely to any approved bank account.</p>
+          </div>
+          <div class="wallet-card card-glass">
+            <h3>Transfer</h3>
+            <p>Move funds between wallets and trading accounts instantly.</p>
+          </div>
+          <div class="wallet-card card-glass">
+            <h3>Send</h3>
+            <p>Send crypto or cash to contacts and beneficiaries.</p>
+          </div>
+          <div class="wallet-card card-glass">
+            <h3>Pay Bills</h3>
+            <p>Utility bills, electricity, data, and services.</p>
+          </div>
+            <div class="wallet-card card-glass">
+              <h3>Insurance</h3>
+              <p>Car insurance, home insurance, and protected payments.</p>
+            </div>
+            <div class="wallet-card card-glass">
+              <h3>Mortgage</h3>
+              <p>Pay property mortgage and recurring amortization plans.</p>
+            </div>
+            <div class="wallet-card card-glass">
+              <h3>Vault</h3>
+              <p>Store funds in a protected banking vault before execution.</p>
+            </div>
+        </div>
+
+          <div class="transaction-actions card-glass">
+            <h3>Quick Actions</h3>
+            <div class="action-buttons">
+              <button class="btn btn-action btn-deposit" id="depositBtn">💰 Deposit</button>
+              <button class="btn btn-action btn-withdraw" id="withdrawBtn">💸 Withdraw</button>
+              <button class="btn btn-action btn-transfer" id="transferBtn">↔️ Transfer</button>
+              <button class="btn btn-action btn-send" id="sendBtn">📤 Send</button>
+              <button class="btn btn-action btn-bills" id="billsBtn">📋 Pay Bills</button>
+              <button class="btn btn-action btn-investment" id="investmentBtn">📈 Investment</button>
+            </div>
+          </div>
+
+          <div class="investment-panel card-glass" id="investmentPanel" hidden>
+            <div class="investment-panel-head">
+              <div>
+                <span class="eyebrow">Investment center</span>
+                <h3>Choose an investment type</h3>
+                <p>Select where you would like to start allocating Treasury funds.</p>
+              </div>
+              <button class="text-button" id="closeInvestmentBtn" type="button">Close</button>
+            </div>
+            <div class="investment-choice-grid">
+              <button class="investment-choice" type="button" data-investment="Company">
+                <strong>Company</strong><span>Build exposure to selected businesses.</span><small>Growth focused</small>
+              </button>
+              <button class="investment-choice" type="button" data-investment="Coins">
+                <strong>Coins</strong><span>Choose digital assets and crypto projects.</span><small>Higher volatility</small>
+              </button>
+              <button class="investment-choice" type="button" data-investment="Stocks">
+                <strong>Stocks</strong><span>Invest in listed public companies.</span><small>Market based</small>
+              </button>
+              <button class="investment-choice" type="button" data-investment="Bonds">
+                <strong>Bonds</strong><span>Seek predictable income from debt markets.</span><small>Income focused</small>
+              </button>
+              <button class="investment-choice" type="button" data-investment="CDs">
+                <strong>CDs</strong><span>Lock funds for a fixed term and rate.</span><small>Lower volatility</small>
+              </button>
+            </div>
+            <p class="investment-selection" id="investmentSelection">Choose an option to begin.</p>
+            <div class="company-investment-setup" id="companyInvestmentSetup" hidden>
+              <div class="company-path-tabs" role="tablist" aria-label="Company investment path">
+                <button class="company-path is-active" type="button" data-company-path="existing">Choose existing company</button>
+                <button class="company-path" type="button" data-company-path="register">Add Company</button>
+              </div>
+              <div class="company-path-panel" id="existingCompanyPanel">
+                <label>Company<select id="existingCompany">
+                  <option value="Caribbean Renewables Ltd">Caribbean Renewables Ltd</option>
+                  <option value="Harbor Technology Group">Harbor Technology Group</option>
+                  <option value="Island Foods Co.">Island Foods Co.</option>
+                </select></label>
+              </div>
+              <form class="company-path-panel" id="registerCompanyPanel" hidden>
+                <div class="company-form-grid">
+                  <label>Registered business name<input id="companyName" type="text" required /></label>
+                  <label>Registration number<input id="companyRegistration" type="text" required /></label>
+                  <label>Business email<input id="companyEmail" type="email" required /></label>
+                  <label>Business phone<input id="companyPhone" type="tel" required /></label>
+                  <label class="company-field-wide">Registered business address<input id="companyAddress" type="text" required /></label>
+                  <label>Country of registration<input id="companyCountry" type="text" required /></label>
+                  <label>Business type<select id="companyType"><option>Corporation</option><option>Limited company</option><option>Partnership</option><option>Sole proprietor</option></select></label>
+                  <label class="company-field-wide">Business description<textarea id="companyDescription" rows="4" placeholder="Describe what your business does and the products or services it provides." required></textarea></label>
+                  <label class="company-field-wide">Why are you looking for investors?<textarea id="companyInvestorPurpose" rows="4" placeholder="Explain how investment will support your business." required></textarea></label>
+                  <label class="company-field-wide">Contract document<textarea id="companyContractDocument" rows="8" placeholder="Create your contract here. Include the parties, investment amount, ownership or repayment terms, responsibilities, risks, and signatures to be reviewed by qualified legal counsel." required></textarea></label>
+                </div>
+                <label class="contract-check"><input id="companyContractAgreement" type="checkbox" required /> I agree to create and uphold the investment contract, provide accurate business information, and accept legal review before funds are allocated.</label>
+              </form>
+              <div class="company-investment-terms">
+                <label>Investment amount<input id="companyInvestmentAmount" type="number" min="1" step="0.01" placeholder="Amount in USD" required /></label>
+                <label>Investment term<select id="companyInvestmentTerm"><option value="12 months">12 months</option><option value="24 months">24 months</option><option value="36 months">36 months</option><option value="60 months">60 months</option></select></label>
+              </div>
+              <p class="contract-note">A contract summary is created for your review. This demo does not provide legal advice or execute a binding legal agreement.</p>
+            </div>
+            <button class="btn btn-primary" id="startInvestmentBtn" type="button" disabled>Start investment</button>
+          </div>
+
+          <div class="payment-methods card-glass" id="paymentMethodsSection" hidden>
+            <div class="payment-methods-head">
+              <div>
+                <span class="eyebrow">Payment methods</span>
+                <h3>Connect a funding method</h3>
+                <p>Add a bank account or card for deposits and withdrawals.</p>
+              </div>
+              <div class="payment-method-actions">
+                <button class="btn btn-secondary" type="button" id="addBankAccountBtn">+ Add Bank Account</button>
+                <button class="btn btn-secondary" type="button" id="addCardBtn">+ Add Credit or Debit Card</button>
+              </div>
+            </div>
+
+            <div class="bank-connection-picker">
+              <div class="form-heading">
+                <h4>Choose your bank</h4>
+                <p>Select your region and bank, then choose a secure online connection or enter details manually.</p>
+              </div>
+              <div class="bank-picker-grid">
+                <label>Region<select id="bankRegion">
+                  <option value="caribbean">Caribbean</option>
+                  <option value="usa">United States of America</option>
+                  <option value="uk">United Kingdom</option>
+                </select></label>
+                <label>Bank<select id="bankProvider">
+                  <optgroup label="Caribbean">
+                    <option>Bank of Jamaica</option><option>National Commercial Bank Jamaica</option><option>Scotiabank Jamaica</option><option>FirstCaribbean International Bank</option><option>CIBC Caribbean</option><option>RBC Royal Bank Caribbean</option><option>Republic Bank</option><option>JMMB Bank</option><option>Bank of Trinidad and Tobago</option><option>FirstBank Puerto Rico</option><option>Bank of Saint Lucia</option><option>Republic Bank Barbados</option><option>Butterfield Bank</option><option>Republic Bank Guyana</option>
+                  </optgroup>
+                  <optgroup label="United States of America" hidden>
+                    <option>JPMorgan Chase</option><option>Bank of America</option><option>Wells Fargo</option><option>Citibank</option><option>U.S. Bank</option><option>PNC Bank</option><option>Truist</option><option>Capital One</option><option>TD Bank USA</option><option>Goldman Sachs</option>
+                  </optgroup>
+                  <optgroup label="United Kingdom" hidden>
+                    <option>Barclays</option><option>HSBC UK</option><option>Lloyds Bank</option><option>NatWest</option><option>Royal Bank of Scotland</option><option>Halifax</option><option>Nationwide Building Society</option><option> Santander UK</option><option>Monzo</option><option>Starling Bank</option>
+                  </optgroup>
+                </select></label>
+              </div>
+              <div class="bank-connect-tabs"><button class="bank-connect-tab is-active" type="button" data-bank-mode="online">Secure online connection</button><button class="bank-connect-tab" type="button" data-bank-mode="manual">Enter manually</button></div>
+            </div>
+
+            <form class="payment-form bank-online-form" id="bankOnlineForm" hidden>
+              <div class="form-heading"><h4>Secure online bank connection</h4><p>You will be redirected to your bank's secure authorization page. Makings does not collect or store your bank password.</p></div>
+              <div class="online-bank-summary"><strong id="onlineBankName">Bank of Jamaica</strong><span>Secure authorization required</span></div>
+              <div class="form-actions"><button class="btn btn-primary" type="submit">Continue to secure bank login</button><button class="btn btn-ghost" type="button" data-close-form="bankOnlineForm">Cancel</button></div>
+            </form>
+
+            <form class="payment-form" id="bankAccountForm" hidden>
+              <div class="form-heading">
+                <h4>Bank account details</h4>
+                <p>Your bank information is used only to process approved Treasury transactions.</p>
+              </div>
+              <div class="form-grid">
+                <label>
+                  Bank
+                  <select id="bankName" name="bankName" required>
+                    <option value="">Choose your bank</option>
+                    <option>Bank of Jamaica</option><option>National Commercial Bank Jamaica</option><option>Scotiabank Jamaica</option><option>FirstCaribbean International Bank</option><option>CIBC Caribbean</option><option>RBC Royal Bank Caribbean</option><option>Republic Bank</option><option>JMMB Bank</option><option>Bank of Trinidad and Tobago</option><option>FirstBank Puerto Rico</option><option>Bank of Saint Lucia</option><option>Republic Bank Barbados</option><option>Butterfield Bank</option><option>Republic Bank Guyana</option><option>JPMorgan Chase</option><option>Bank of America</option><option>Wells Fargo</option><option>Citibank</option><option>U.S. Bank</option><option>PNC Bank</option><option>Truist</option><option>Capital One</option><option>TD Bank USA</option><option>Goldman Sachs</option><option>Barclays</option><option>HSBC UK</option><option>Lloyds Bank</option><option>NatWest</option><option>Royal Bank of Scotland</option><option>Halifax</option><option>Nationwide Building Society</option><option>Santander UK</option><option>Monzo</option><option>Starling Bank</option>
+                  </select>
+                </label>
+                <label>
+                  Account holder name
+                  <input type="text" name="accountHolder" autocomplete="name" required />
+                </label>
+                <label>
+                  Account number
+                  <input type="text" name="accountNumber" inputmode="numeric" autocomplete="off" required />
+                </label>
+                <label>
+                  Account type
+                  <select name="accountType" required>
+                    <option value="">Choose account type</option>
+                    <option>Checking</option>
+                    <option>Savings</option>
+                  </select>
+                </label>
+                <label>
+                  Routing or branch number
+                  <input type="text" name="routingNumber" inputmode="numeric" autocomplete="off" required />
+                </label>
+              </div>
+              <div class="form-section-divider">
+                <h4>Billing Address</h4>
+              </div>
+              <div class="form-grid">
+                <label class="form-field-wide">
+                  Street Address
+                  <input type="text" name="billingStreet" autocomplete="street-address" required />
+                </label>
+                <label>
+                  City
+                  <input type="text" name="billingCity" autocomplete="address-level2" required />
+                </label>
+                <label>
+                  State/Province
+                  <input type="text" name="billingState" autocomplete="address-level1" required />
+                </label>
+                <label>
+                  Postal Code
+                  <input type="text" name="billingPostal" autocomplete="postal-code" required />
+                </label>
+                <label class="form-field-wide">
+                  Country
+                  <input type="text" name="billingCountry" autocomplete="country-name" required />
+                </label>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Save Bank Account</button>
+                <button class="btn btn-ghost" type="button" data-close-form="bankAccountForm">Cancel</button>
+              </div>
+            </form>
+
+            <form class="payment-form" id="cardForm" hidden>
+              <div class="form-heading">
+                <h4>Credit or debit card details</h4>
+                <p>Only use a card in your name. Card details are not displayed after saving.</p>
+              </div>
+              <div class="form-grid">
+                <label>
+                  Card type
+                  <select name="cardType" required>
+                    <option value="">Choose card type</option>
+                    <option>Credit card</option>
+                    <option>Debit card</option>
+                  </select>
+                </label>
+                <label>
+                  Name on card
+                  <input type="text" name="cardHolder" autocomplete="cc-name" required />
+                </label>
+                <label class="form-field-wide">
+                  Card number
+                  <input type="text" name="cardNumber" inputmode="numeric" autocomplete="cc-number" maxlength="19" placeholder="0000 0000 0000 0000" required />
+                </label>
+                <label>
+                  Expiry date
+                  <input type="text" name="cardExpiry" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/YY" required />
+                </label>
+                <label>
+                  CVV
+                  <input type="password" name="cardCvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required />
+                </label>
+              </div>
+              <div class="form-section-divider">
+                <h4>Billing Address</h4>
+              </div>
+              <div class="form-grid">
+                <label class="form-field-wide">
+                  Street Address
+                  <input type="text" name="cardBillingStreet" autocomplete="street-address" required />
+                </label>
+                <label>
+                  City
+                  <input type="text" name="cardBillingCity" autocomplete="address-level2" required />
+                </label>
+                <label>
+                  State/Province
+                  <input type="text" name="cardBillingState" autocomplete="address-level1" required />
+                </label>
+                <label>
+                  Postal Code
+                  <input type="text" name="cardBillingPostal" autocomplete="postal-code" required />
+                </label>
+                <label class="form-field-wide">
+                  Country
+                  <input type="text" name="cardBillingCountry" autocomplete="country-name" required />
+                </label>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Save Card</button>
+                <button class="btn btn-ghost" type="button" data-close-form="cardForm">Cancel</button>
+              </div>
+            </form>
+            <p class="payment-status" id="paymentStatus" role="status" aria-live="polite"></p>
+          </div>
+
+        <div class="banks-panel card-glass">
+          <h3>Caribbean banking partners</h3>
+          <div class="bank-list">
+            <span>Bank of Jamaica</span>
+            <span>Scotiabank Caribbean</span>
+            <span>FirstCaribbean</span>
+            <span>National Commercial Bank</span>
+            <span>CIBC Caribbean</span>
+            <span>RBC Caribbean</span>
+            <span>NCB</span>
+            <span>Republic Bank</span>
+            <span>JMMB</span>
+            <span>GraceKennedy Financial</span>
+            <span>Bank of the Bahamas</span>
+            <span>Barbados National Bank</span>
+          </div>
+
+          <div class="card-customizer">
+            <div class="card-customizer-header">
+              <div>
+                <span class="eyebrow">ATM card customisation</span>
+                <h3>Choose your card style</h3>
+              </div>
+            </div>
+
+            <div class="card-customizer-grid">
+              <div class="custom-field">
+                <label>
+                  Card material
+                  <select name="cardMaterial" aria-label="Select card material">
+                    <option value="">Choose material</option>
+                    <option>Metal</option>
+                    <option>Plastic</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="custom-field">
+                <label>
+                  Card finish
+                  <select name="cardFinish" aria-label="Select card finish">
+                    <option value="">Choose finish</option>
+                    <option>Silver</option>
+                    <option>Gold</option>
+                    <option>Black</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="custom-field form-field-wide">
+                <label>
+                  Engraving text
+                  <input type="text" name="engravingText" maxlength="20" placeholder="e.g. KING JASPER" />
+                </label>
+              </div>
+
+              <div class="custom-field form-field-wide">
+                <label>
+                  Upload card design reference
+                  <input type="file" name="cardDesignImage" accept="image/*" />
+                </label>
+              </div>
+
+              <div class="custom-field form-field-wide">
+                <label>
+                  Describe your preferred card look
+                  <textarea name="cardDesignNote" rows="4" placeholder="Example: Matte black metal card with gold edges, embossed initials, and a minimalist crest."></textarea>
+                </label>
+              </div>
+            </div>
+
+            <div class="card-preview" aria-label="Card preview">
+              <div class="card-preview-inner">
+                <span class="preview-brand">Makings</span>
+                <span class="preview-chip">●●●</span>
+                <strong>YOUR NAME</strong>
+                <small>Silver • Metal • Engraved</small>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" type="button">Request custom card</button>
+              <button class="btn btn-ghost" type="button">Use default</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="atm-locator card-glass">
+          <div class="atm-locator-head">
+            <div>
+              <span class="eyebrow">Nearby ATM</span>
+              <h3>Find an ATM close to your area</h3>
+            </div>
+          </div>
+
+          <div class="atm-search-row">
+            <label>
+              Customer location
+              <input type="text" id="atmLocationInput" placeholder="Enter city, parish, or country" value="Kingston, Jamaica" />
+            </label>
+            <button class="btn btn-primary" type="button" id="findAtmBtn">Find ATM</button>
+          </div>
+
+          <div class="atm-map-layout">
+            <div class="atm-map-wrap">
+              <iframe
+                id="atmMapFrame"
+                title="Nearby ATM map"
+                src="https://www.google.com/maps?q=Kingston%20Jamaica%20ATM&output=embed"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
+
+            <div class="atm-list" id="atmList">
+              <div class="atm-item">
+                <strong>Scotiabank ATM</strong>
+                <span>Kingston Central</span>
+                <small>0.7 km away</small>
+              </div>
+              <div class="atm-item">
+                <strong>NCB Branch ATM</strong>
+                <span>Downtown Kingston</span>
+                <small>1.3 km away</small>
+              </div>
+              <div class="atm-item">
+                <strong>FirstCaribbean ATM</strong>
+                <span>New Kingston</span>
+                <small>2.1 km away</small>
+              </div>
+              <div class="atm-item">
+                <strong>JMMB ATM</strong>
+                <span>Half Way Tree</span>
+                <small>3.0 km away</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="security-features card-glass">
+          <h3>Treasury Security Features</h3>
+          <div class="features-grid">
+            <div class="feature-item">
+              <span class="feature-icon">🔐</span>
+              <h4>Bank-Level Encryption</h4>
+              <p>Your funds are protected with military-grade encryption and multi-layer security protocols.</p>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">🛡️</span>
+              <h4>Fraud Protection</h4>
+              <p>Advanced fraud detection systems monitor all transactions 24/7 to prevent unauthorized activity.</p>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">⏱️</span>
+              <h4>Instant Transfers</h4>
+              <p>Move funds between your wallets and accounts instantly without delays or hidden fees.</p>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">📊</span>
+              <h4>Real-Time Tracking</h4>
+              <p>Track every transaction in real-time with detailed receipts and transaction history.</p>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">🌍</span>
+              <h4>Global Reach</h4>
+              <p>Access banking partners across the Caribbean and beyond for seamless international transfers.</p>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">💳</span>
+              <h4>Multiple Payment Methods</h4>
+              <p>Deposit and withdraw using bank transfers, cards, crypto, and other payment options.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="wallet-guide card-glass">
+          <h3>How to Use Your Treasury Wallet</h3>
+          <div class="steps-grid">
+            <div class="step">
+              <div class="step-number">1</div>
+              <h4>Add Funds</h4>
+              <p>Deposit money from your bank account or transfer crypto to start trading.</p>
+            </div>
+            <div class="step">
+              <div class="step-number">2</div>
+              <h4>Secure Vault</h4>
+              <p>Store your funds in a protected banking vault before executing trades.</p>
+            </div>
+            <div class="step">
+              <div class="step-number">3</div>
+              <h4>Trade & Invest</h4>
+              <p>Use your vault funds to trade crypto, stocks, and other assets on Makings.</p>
+            </div>
+            <div class="step">
+              <div class="step-number">4</div>
+              <h4>Manage Payments</h4>
+              <p>Pay bills, send money, and manage insurance and mortgage payments directly from your wallet.</p>
+            </div>
+            <div class="step">
+              <div class="step-number">5</div>
+              <h4>Withdraw Earnings</h4>
+              <p>Withdraw your profits to your bank account or keep them for further trading.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
+    </footer>
+
+    <div id="toast" class="toast" aria-live="polite">Welcome to BillionairesXchange Treasury.</div>
+
+    <script src="files if needed/script.js"></script>
+    <script src="auth.js"></script>
+    <script>
+      const atmLocationInput = document.getElementById('atmLocationInput');
+      const atmMapFrame = document.getElementById('atmMapFrame');
+      const findAtmBtn = document.getElementById('findAtmBtn');
+
+      const atmLocations = {
+        'kingston, jamaica': [
+          { name: 'Scotiabank ATM', area: 'Kingston Central', distance: '0.7 km away' },
+          { name: 'NCB Branch ATM', area: 'Downtown Kingston', distance: '1.3 km away' },
+          { name: 'FirstCaribbean ATM', area: 'New Kingston', distance: '2.1 km away' },
+          { name: 'JMMB ATM', area: 'Half Way Tree', distance: '3.0 km away' }
+        ],
+        'new york, usa': [
+          { name: 'Chase ATM', area: 'Midtown Manhattan', distance: '0.9 km away' },
+          { name: 'Bank of America ATM', area: 'Upper East Side', distance: '1.8 km away' },
+          { name: 'Citi ATM', area: 'Downtown', distance: '2.4 km away' }
+        ],
+        'barbados': [
+          { name: 'CIBC ATM', area: 'Bridgetown', distance: '1.1 km away' },
+          { name: 'Scotiabank ATM', area: 'Speightstown', distance: '2.6 km away' },
+          { name: 'FirstCaribbean ATM', area: 'Holetown', distance: '3.4 km away' }
+        ]
+      };
+
+      function renderNearbyAtmList(locationText) {
+        const normalized = (locationText || '').trim().toLowerCase();
+        const matches = atmLocations[normalized] || atmLocations['kingston, jamaica'];
+
+        const list = document.getElementById('atmList');
+        list.innerHTML = matches
+          .map((item) => `
+            <div class="atm-item">
+              <strong>${item.name}</strong>
+              <span>${item.area}</span>
+              <small>${item.distance}</small>
+            </div>
+          `)
+          .join('');
+      }
+
+      function updateMapForLocation() {
+        const value = atmLocationInput.value.trim() || 'Kingston, Jamaica';
+        const encodedQuery = encodeURIComponent(`${value} ATM`);
+        atmMapFrame.src = `https://www.google.com/maps?q=${encodedQuery}&output=embed`;
+        renderNearbyAtmList(value);
+      }
+
+      findAtmBtn.addEventListener('click', updateMapForLocation);
+      atmLocationInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          updateMapForLocation();
+        }
+      });
+
+      updateMapForLocation();
+
+      const investmentBtn = document.getElementById('investmentBtn');
+      const investmentPanel = document.getElementById('investmentPanel');
+      const closeInvestmentBtn = document.getElementById('closeInvestmentBtn');
+      const investmentSelection = document.getElementById('investmentSelection');
+      const startInvestmentBtn = document.getElementById('startInvestmentBtn');
+      const companyInvestmentSetup = document.getElementById('companyInvestmentSetup');
+      const existingCompanyPanel = document.getElementById('existingCompanyPanel');
+      const registerCompanyPanel = document.getElementById('registerCompanyPanel');
+      const existingCompany = document.getElementById('existingCompany');
+      const companyRegistrationForm = document.getElementById('registerCompanyPanel');
+      const companyInvestmentAmount = document.getElementById('companyInvestmentAmount');
+      const companyInvestmentTerm = document.getElementById('companyInvestmentTerm');
+      let selectedInvestment = '';
+      let selectedCompanyPath = 'existing';
+
+      investmentBtn.addEventListener('click', () => {
+        investmentPanel.hidden = false;
+        investmentPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+
+      closeInvestmentBtn.addEventListener('click', () => {
+        investmentPanel.hidden = true;
+      });
+
+      document.querySelectorAll('[data-investment]').forEach((choice) => {
+        choice.addEventListener('click', () => {
+          selectedInvestment = choice.dataset.investment;
+          document.querySelectorAll('[data-investment]').forEach((item) => item.classList.toggle('is-selected', item === choice));
+          investmentSelection.textContent = `${selectedInvestment} selected. Review your choice, then start your investment.`;
+          companyInvestmentSetup.hidden = selectedInvestment !== 'Company';
+          startInvestmentBtn.disabled = false;
+        });
+      });
+
+      const savedCompanies = JSON.parse(localStorage.getItem('makingsRegisteredCompanies') || '[]');
+      savedCompanies.forEach((company) => {
+        const option = document.createElement('option');
+        option.value = company.name;
+        option.textContent = `${company.name} (registered by you)`;
+        existingCompany.appendChild(option);
+      });
+
+      document.querySelectorAll('[data-company-path]').forEach((pathButton) => {
+        pathButton.addEventListener('click', () => {
+          selectedCompanyPath = pathButton.dataset.companyPath;
+          document.querySelectorAll('[data-company-path]').forEach((item) => item.classList.toggle('is-active', item === pathButton));
+          existingCompanyPanel.hidden = selectedCompanyPath !== 'existing';
+          registerCompanyPanel.hidden = selectedCompanyPath !== 'register';
+        });
+      });
+
+      startInvestmentBtn.addEventListener('click', () => {
+        if (!selectedInvestment) return;
+        const amount = Number(companyInvestmentAmount.value);
+        let companyDetails = null;
+        if (selectedInvestment === 'Company') {
+          if (!amount || amount < 1 || !companyInvestmentTerm.value) {
+            investmentSelection.textContent = 'Enter an investment amount and term before starting.';
+            return;
+          }
+          if (selectedCompanyPath === 'register') {
+            if (!companyRegistrationForm.reportValidity()) return;
+            companyDetails = {
+              name: document.getElementById('companyName').value.trim(),
+              registrationNumber: document.getElementById('companyRegistration').value.trim(),
+              email: document.getElementById('companyEmail').value.trim(),
+              phone: document.getElementById('companyPhone').value.trim(),
+              address: document.getElementById('companyAddress').value.trim(),
+              country: document.getElementById('companyCountry').value.trim(),
+              type: document.getElementById('companyType').value,
+              description: document.getElementById('companyDescription').value.trim(),
+              investorPurpose: document.getElementById('companyInvestorPurpose').value.trim(),
+              contractDocument: document.getElementById('companyContractDocument').value.trim(),
+              contractAcknowledged: document.getElementById('companyContractAgreement').checked
+            };
+            const companies = JSON.parse(localStorage.getItem('makingsRegisteredCompanies') || '[]');
+            companies.push(companyDetails);
+            localStorage.setItem('makingsRegisteredCompanies', JSON.stringify(companies));
+          } else {
+            companyDetails = { name: existingCompany.value, contractAcknowledged: true };
+          }
+        }
+        const investment = { type: selectedInvestment, amount: amount || null, term: selectedInvestment === 'Company' ? companyInvestmentTerm.value : null, company: companyDetails, createdAt: new Date().toISOString() };
+        localStorage.setItem('makingsSelectedInvestment', JSON.stringify(investment));
+        const toast = document.getElementById('toast');
+        toast.textContent = `${selectedInvestment} investment started. Your Treasury plan is ready for review.`;
+        toast.classList.add('show');
+        window.setTimeout(() => toast.classList.remove('show'), 3200);
+      });
+    </script>
+  </body>
+</html>

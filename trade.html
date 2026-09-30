@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Trade Center</title>
+    <link rel="icon" type="APP-Logo.png" href="APP-logo.png" />
+    <meta
+      name="description"
+      content="BillionairesXchange Trade Center - Track assets, manage paper positions, and review execution activity."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading & Investment</small>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="market-section section-shell" id="markets">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Live assets</span>
+            <h2>Crypto, stocks, commodities, and brand markets</h2>
+          </div>
+          <div class="market-header-actions">
+            <button class="btn btn-ghost">View all</button>
+          </div>
+        </div>
+
+        <div class="market-overview">
+          <div class="overview-card card-glass">
+            <span>Market cap</span>
+            <strong id="marketCapStat">$0</strong>
+            <small class="trend-up">+2.48%</small>
+          </div>
+          <div class="overview-card card-glass">
+            <span>24h volume</span>
+            <strong id="volumeStat">$0</strong>
+            <small class="trend-up">+7.16%</small>
+          </div>
+          <div class="overview-card card-glass">
+            <span>Dominance</span>
+            <strong id="dominanceStat">BTC 52%</strong>
+            <small class="trend-up">+0.84%</small>
+          </div>
+          <div class="overview-card card-glass">
+            <span>Fear & Greed</span>
+            <strong>72 / 100</strong>
+            <small class="trend-up">Greed</small>
+          </div>
+        </div>
+
+        <div class="market-dashboard">
+          <div class="market-panel card-glass">
+            <div class="market-toolbar">
+              <div class="filter-row">
+                <button class="filter-chip is-active" data-filter="all" type="button">All</button>
+                <button class="filter-chip" data-filter="layer1" type="button">Layer 1</button>
+                <button class="filter-chip" data-filter="meme" type="button">Meme</button>
+                <button class="filter-chip" data-filter="stable" type="button">Stable</button>
+              </div>
+              <label class="search-field">
+                <span>Search</span>
+                <input id="marketSearch" type="search" placeholder="Search asset" />
+              </label>
+            </div>
+
+            <div class="asset-grid" id="assetGrid"></div>
+          </div>
+
+          <aside class="watch-panel card-glass">
+            <div class="watch-header">
+              <span class="eyebrow">Watchlist</span>
+              <h3>Top picks</h3>
+            </div>
+            <ul id="watchlist" class="watchlist"></ul>
+          </aside>
+        </div>
+
+      </section>
+
+      <section class="trade-section section-shell" id="trade">
+        <div class="card-glass positions-chart-panel">
+          <div class="positions-chart-header">
+            <div>
+              <span class="eyebrow">Position market view</span>
+              <h3 id="positionsChartTitle">XRP / USD</h3>
+              <div class="positions-market-row">
+                <label class="positions-market-selector">
+                  <span>Choose market</span>
+                  <select id="positionsMarketSelect">
+                    <option value="BTC">BTC / USD</option>
+                    <option value="XRP">XRP / USD</option>
+                    <option value="BNB">BNB / USD</option>
+                    <option value="ETH">ETH / USD</option>
+                  </select>
+                </label>
+                <div class="positions-tools-menu">
+                  <button class="positions-tools-button" id="positionsToolsButton" type="button" aria-expanded="false" aria-controls="positionsToolsOptions">Tools</button>
+                  <div class="positions-tools-options" id="positionsToolsOptions" hidden>
+                    <button type="button" data-chart-tool="import">Import Indicator</button>
+                    <button type="button" data-chart-tool="create">Create Indicator</button>
+                    <button type="button" data-chart-tool="custom-candles">Custom Candlesticks</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <strong id="positionsChartPrice">--</strong>
+          </div>
+          <div id="price">Waiting for live data...</div>
+          <div class="positions-chart-wrap">
+            <canvas id="positionsCandleChart" aria-label="Candlestick chart with timestamps for the selected market"></canvas>
+            <p id="positionsChartStatus">Loading market candles...</p>
+            <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
+          </div>
+          <div class="positions-chart-actions" role="group" aria-label="Trade actions">
+            <button class="btn positions-buy-button" id="positionsBuyButton" type="button">Buy</button> 
+            <button class="btn positions-sell-button" id="positionsSellButton" type="button">Sell</button>
+          </div>
+        </div>
+        <div class="terminal-lower-grid"><div class="card-glass data-panel"><div class="panel-title"><div><span class="eyebrow">Positions</span><h3>Open positions</h3></div><strong id="paperBalance">10,000.00 USDT</strong></div><div id="positionsList" class="empty-state">No open paper positions.</div></div></div>
+        <div class="card-glass data-panel orders-history"><div class="panel-title"><div><span class="eyebrow">Execution log</span><h3>Recent orders</h3></div><button class="text-button" id="clearOrders" type="button">Clear</button></div><div id="ordersList" class="orders-list"><div class="empty-state">Your paper orders will appear here.</div></div></div>
+      </section>
+
+      <section class="news-section section-shell">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Market news</span>
+            <h2>Crypto and company market updates</h2>
+          </div>
+        </div>
+
+        <div class="news-grid">
+          <article class="news-card card-glass">
+            <span class="tag">Crypto</span>
+            <h3>Bitcoin demand surges as ETFs fund inflow remains strong.</h3>
+            <p>Large institutional buyers continue to accumulate BTC across major exchanges and treasury desks.</p>
+          </article>
+          <article class="news-card card-glass">
+            <span class="tag">Stocks</span>
+            <h3>Nasdaq momentum keeps Tesla and Apple active in high-volume trading.</h3>
+            <p>Tech stocks continue to drive sentiment while commodity names stay steady on supply concerns.</p>
+          </article>
+          <article class="news-card card-glass">
+            <span class="tag">Commodities</span>
+            <h3>Oil, gold, and copper attract safe-haven traders amid global volatility.</h3>
+            <p>Investors rotate into hard assets as inflation and rate expectations continue to shift.</p>
+          </article>
+          <article class="news-card card-glass">
+            <span class="tag">Consumer</span>
+            <h3>Wendy's, McDonald's, KFC, and Burger King remain market bellwethers.</h3>
+            <p>Food-service stocks remain highly watched as margins and consumer demand recover regionally.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
+    </footer>
+
+    <div id="toast" class="toast" aria-live="polite">Welcome to BillionairesXchange Trade Center.</div>
+
+    <script src="files if needed/script.js"></script>
+    <script src="auth.js"></script>
+  </body>
+</html>
+
+
+

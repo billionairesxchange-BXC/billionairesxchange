@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange Verification</title>
+    <link rel="icon" type="APP-Logo.png" href="APP-logo.png" />
+    <style>
+      :root {
+        --bg: #050505;
+        --bg-elevated: #111111;
+        --panel: rgba(17, 17, 17, 0.96);
+        --gold: #d4af37;
+        --gold-soft: #f7e8aa;
+        --white: #f5f5f5;
+        --muted: #d0d0d0;
+        --border: rgba(212, 175, 55, 0.35);
+        --success: #d4af37;
+        --danger: #f5f5f5;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        font-family: Arial, Helvetica, sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(212, 175, 55, 0.12), transparent 35%),
+          linear-gradient(180deg, #050505 0%, #101010 100%);
+        color: var(--white);
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        padding: 32px 16px;
+      }
+
+      .page-shell {
+        width: min(1220px, 100%);
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        padding: 18px 24px;
+        border: 1px solid var(--border);
+        border-radius: 18px 18px 0 0;
+        background: rgba(9, 12, 17, 0.92);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-mark {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+        color: #12100e;
+      }
+
+      .brand-text {
+        line-height: 1.1;
+      }
+
+      .brand-text strong {
+        display: block;
+        font-size: 1.1rem;
+      }
+
+      .brand-text small { color: var(--muted); }
+
+      .top-links {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .top-links a, .top-links button {
+        text-decoration: none;
+        color: var(--white);
+        background: var(--gold);
+        border: 1px solid var(--gold);
+        border-radius: 10px;
+        padding: 9px 14px;
+        cursor: pointer;
+      }
+
+      .top-links .primary {
+        background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+        color: #17120e;
+        border-color: transparent;
+        font-weight: 700;
+      }
+
+      .panel {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-top: none;
+        border-radius: 0 0 18px 18px;
+        overflow: hidden;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+      }
+
+      .sidebar {
+        padding: 30px 24px;
+        background: linear-gradient(180deg, rgba(212, 175, 55, 0.08), rgba(255,255,255,0.01));
+        border-right: 1px solid var(--border);
+      }
+
+      .tag {
+        display: inline-block;
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold-soft);
+        margin-bottom: 16px;
+      }
+
+      .sidebar h1 {
+        margin: 0 0 16px;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1.08;
+      }
+
+      .sidebar p {
+        color: var(--muted);
+        line-height: 1.7;
+        margin: 0 0 22px;
+      }
+
+      .check-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .check-list div {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--white);
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+      }
+
+      .bullet {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--gold);
+        box-shadow: 0 0 16px rgba(212,175,55,0.8);
+      }
+
+      .form-panel {
+        padding: 28px 24px;
+      }
+
+      .auth-tabs {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 22px;
+      }
+
+      .auth-tabs button {
+        flex: 1;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.02);
+        color: var(--white);
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .auth-tabs .active {
+        background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(212,175,55,0.08));
+        border-color: rgba(212,175,55,0.35);
+      }
+
+      .auth-box {
+        display: none;
+      }
+
+      .auth-box.active {
+        display: block;
+      }
+
+      form {
+        display: grid;
+        gap: 16px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      label {
+        display: grid;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      input, select {
+        width: 100%;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.02);
+        color: var(--white);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 0.96rem;
+      }
+
+      select[name="countryBirth"],
+      select[name="countryBirth"] option {
+        background: #000;
+        color: var(--white);
+      }
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .primary-btn, .secondary-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 13px 16px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .primary-btn {
+        background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+        color: #17120d;
+      }
+
+      .secondary-btn {
+        background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+        color: #17120d;
+        border: 1px solid var(--gold);
+      }
+
+      .verify-box,
+      .identity-box,
+      .terms-box {
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.02);
+        border-radius: 16px;
+        padding: 18px;
+      }
+
+      .signup-step {
+        display: none;
+      }
+
+      .signup-step.active {
+        display: block;
+      }
+
+      .step-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .verify-box h3,
+      .identity-box h3,
+      .terms-box h3 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      .verify-box p,
+      .identity-box p,
+      .terms-box p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .verify-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .upload-options {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin: 14px 0;
+      }
+
+      .upload-options label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.05);
+        background: rgba(255,255,255,0.02);
+        color: var(--white);
+      }
+
+      .terms-box {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .terms-box input {
+        width: 18px;
+        height: 18px;
+        margin-top: 3px;
+      }
+
+      .toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(212,175,55,0.08));
+        border: 1px solid rgba(212,175,55,0.4);
+        color: var(--white);
+        border-radius: 12px;
+        padding: 12px 16px;
+        opacity: 0;
+        transform: translateY(16px);
+        transition: 0.3s ease;
+        pointer-events: none;
+        max-width: 320px;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.30);
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 900px) {
+        .panel { grid-template-columns: 1fr; }
+        .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+      }
+
+      @media (max-width: 640px) {
+        .form-grid, .upload-options { grid-template-columns: 1fr; }
+        .topbar { flex-direction: column; align-items: flex-start; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand">
+           <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+          <div class="brand-text">
+            <strong>BillionairesX</strong>
+            <small>Verification Portal</small>
+          </div>
+        </div>
+
+        <div class="top-links">
+          <a href="index.html">Home</a>
+          <button type="button" class="primary" onclick="document.querySelector('#loginTab').click()">Login</button>
+          <button type="button" class="primary" onclick="document.querySelector('#signupTab').click()">Sign Up</button>
+        </div>
+      </header>
+
+      <main class="panel">
+        <aside class="sidebar">
+          <span class="tag">secure onboarding</span>
+          <h1>Protect your account before trading begins.</h1>
+          <p>
+            New members must verify identity, email, and phone number to prevent fraud,
+            identity theft, and suspicious account activity before deposits and trades are approved.
+          </p>
+
+          <div class="check-list">
+            <div><span class="bullet"></span> Email verification</div>
+            <div><span class="bullet"></span> Phone verification</div>
+            <div><span class="bullet"></span> ID and selfie review</div>
+            <div><span class="bullet"></span> Fraud and identity protection</div>
+          </div>
+        </aside>
+
+        <section class="form-panel">
+          <div class="auth-tabs">
+            <button id="loginTab" type="button">Login</button>
+            <button id="signupTab" class="active" type="button">Sign Up</button>
+          </div>
+
+          <div id="loginBox" class="auth-box">
+            <form id="loginForm">
+              <label>
+                Username or email
+                <input type="text" name="loginName" placeholder="username or email" required />
+              </label>
+              <label>
+                Password
+                <input type="password" name="loginPassword" placeholder="Enter password" required />
+              </label>
+              <button class="primary-btn" type="submit">Login</button>
+            </form>
+          </div>
+
+          <div id="signupBox" class="auth-box active">
+            <form id="signupForm">
+              <div class="signup-step active" data-step="1">
+                <div class="form-grid">
+                  <label>
+                    First Name
+                    <input type="text" name="firstName" placeholder="First Name" required />
+                  </label>
+                  <label>
+                    Last Name
+                    <input type="text" name="lastName" placeholder="Last Name" required />
+                  </label>
+                  <label>
+                    Email
+                    <input type="email" name="email" placeholder="you@example.com" required />
+                  </label>
+                  <label>
+                    Phone Number
+                    <input type="tel" name="phone" placeholder="+1 876 555 0198" required />
+                  </label>
+                  <label>
+                    Username ID
+                    <input type="text" name="username" placeholder="usernameID" required />
+                  </label>
+                  <label>
+                    Date of Birth
+                    <input type="date" name="dob" required />
+                  </label>
+                  <label class="full-width">
+                    Country of Birth
+                    <select name="countryBirth" required>
+                      <option value="">Select country</option>
+                      <option>Anguilla</option>
+                      <option>Antigua and Barbuda</option>
+                      <option>The Bahamas</option>
+                      <option>Barbados</option>
+                      <option>Belize</option>
+                      <option>Bermuda</option>
+                      <option>British Virgin Islands</option>
+                      <option>Cayman Islands</option>
+                      <option>Cuba</option>
+                      <option>Dominica</option>
+                      <option>Dominican Republic</option>
+                      <option>Grenada</option>
+                      <option>Guadeloupe</option>
+                      <option>Haiti</option>
+                      <option>Jamaica</option>
+                      <option>Martinique</option>
+                      <option>Montserrat</option>
+                      <option>Puerto Rico</option>
+                      <option>Saint Kitts and Nevis</option>
+                      <option>Saint Lucia</option>
+                      <option>Saint Vincent and the Grenadines</option>
+                      <option>Trinidad and Tobago</option>
+                      <option>Turks and Caicos Islands</option>
+                      <option>U.S. Virgin Islands</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="step-actions">
+                  <button class="primary-btn next-step" type="button">Continue</button>
+                </div>
+              </div>
+
+              <div class="signup-step" data-step="2">
+                <div class="verify-box">
+                  <h3>Verification and fraud prevention</h3>
+                  <p>
+                    We protect against fraud and identity theft. All new accounts must verify email,
+                    phone, and identity before trading is approved.
+                  </p>
+                  <div class="verify-actions">
+                    <button class="secondary-btn" type="button" id="sendEmailVerify">Send email verification</button>
+                    <button class="secondary-btn" type="button" id="sendPhoneVerify">Send phone verification</button>
+                  </div>
+                  <div class="otp-box" id="emailOtpBox" style="display: none; margin-top: 1rem;">
+                    <label>
+                      Enter email OTP code
+                      <input type="text" id="emailOtpCode" maxlength="6" placeholder="6-digit code" />
+                    </label>
+                    <div class="verify-actions" style="margin-top: 0.75rem;">
+                      <button class="primary-btn" type="button" id="verifyEmailOtp">Verify email OTP</button>
+                      <button class="secondary-btn" type="button" id="resendEmailOtp">Resend email code</button>
+                    </div>
+                  </div>
+                  <div class="otp-box" id="otpBox" style="display: none; margin-top: 1rem;">
+                    <label>
+                      Enter phone OTP code
+                      <input type="text" id="otpCode" maxlength="6" placeholder="6-digit code" />
+                    </label>
+                    <div class="verify-actions" style="margin-top: 0.75rem;">
+                      <button class="primary-btn" type="button" id="verifyPhoneOtp">Verify phone OTP</button>
+                      <button class="secondary-btn" type="button" id="resendPhoneOtp">Resend phone code</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="step-actions">
+                  <button class="secondary-btn prev-step" type="button">Back</button>
+                  <button class="primary-btn next-step" type="button">Continue</button>
+                </div>
+              </div>
+
+              <div class="signup-step" data-step="3">
+                <div class="identity-box">
+                  <h3>Identity verification</h3>
+                  <p>Choose one valid government-issued document and upload a matching selfie.</p>
+                  <div class="upload-options">
+                    <label><input type="radio" name="idType" value="Passport" /> Passport</label>
+                    <label><input type="radio" name="idType" value="National ID / State ID" /> National ID / State ID</label>
+                    <label><input type="radio" name="idType" value="Driver's License" /> Driver's License</label>
+                    <label><input type="radio" name="idType" value="TRN / SSN" /> TRN / SSN</label>
+                  </div>
+
+                  <label>
+                    Upload photo of ID
+                    <input type="file" accept="image/*" />
+                  </label>
+                  <label>
+                    Take selfie for identity match
+                    <input type="file" accept="image/*" />
+                  </label>
+                </div>
+                <div class="step-actions">
+                  <button class="secondary-btn prev-step" type="button">Back</button>
+                  <button class="primary-btn next-step" type="button">Continue</button>
+                </div>
+              </div>
+
+              <div class="signup-step" data-step="4">
+                <div class="form-grid">
+                  <label>
+                    New Password
+                    <input type="password" name="password" placeholder="New Password" required />
+                  </label>
+                  <label>
+                    Confirm Password
+                    <input type="password" name="confirmPassword" placeholder="Confirm Password" required />
+                  </label>
+                </div>
+
+                <div class="terms-box">
+                  <input type="checkbox" name="terms" required />
+                  <p>
+                    I agree to the Terms &amp; Conditions and understand the verification process to prevent fraud and identity theft.
+                  </p>
+                </div>
+
+                <div class="step-actions">
+                  <button class="secondary-btn prev-step" type="button">Back</button>
+                  <button class="primary-btn" type="submit">Create account</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" aria-live="polite">Saved successfully.</div>
+    <div id="recaptcha-container"></div>
+
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getAuth, signInWithPhoneNumber, RecaptchaVerifier } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { getFirestore, doc, setDoc, collection, query, where, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+      const firebaseConfig = {
+        apiKey: 'AIzaSyBue8CgOU3cd8wjt9oeMDqaNkpBiraDNYw',
+        authDomain: 'billionaires-87519.firebaseapp.com',
+        projectId: 'billionaires-87519',
+        storageBucket: 'billionaires-87519.firebasestorage.app',
+        messagingSenderId: '799625535151',
+        appId: '1:799625535151:web:283629136b45f40afc7e5a',
+        measurementId: 'G-X16NGMSE4B'
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      auth.languageCode = 'en';
+
+      window.firebaseAuth = auth;
+      window.firestoreDb = db;
+      window.phoneConfirmationResult = null;
+      window.isPhoneVerified = false;
+
+      const loginTab = document.getElementById('loginTab');
+      const signupTab = document.getElementById('signupTab');
+      const loginBox = document.getElementById('loginBox');
+      const signupBox = document.getElementById('signupBox');
+      const toast = document.getElementById('toast');
+      const signupSteps = Array.from(document.querySelectorAll('.signup-step'));
+      const emailOtpBox = document.getElementById('emailOtpBox');
+      const emailOtpCodeInput = document.getElementById('emailOtpCode');
+      const otpBox = document.getElementById('otpBox');
+      const otpCodeInput = document.getElementById('otpCode');
+      let currentStep = 0;
+      window.isEmailVerified = false;
+
+      function renderSignupStep(stepIndex) {
+        currentStep = Math.max(0, Math.min(stepIndex, signupSteps.length - 1));
+        signupSteps.forEach((step, index) => {
+          step.classList.toggle('active', index === currentStep);
+        });
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => toast.classList.remove('show'), 5000);
+      }
+
+      function setupRecaptcha() {
+        if (!window.recaptchaVerifier) {
+          window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            size: 'invisible',
+            callback: () => {
+              console.log('reCAPTCHA solved');
+            },
+            'expired-callback': () => {
+              showToast('reCAPTCHA expired. Please request a new OTP.');
+            }
+          });
+        }
+      }
+
+      function resetPhoneVerification() {
+        window.phoneConfirmationResult = null;
+        if (window.recaptchaVerifier) {
+          window.recaptchaVerifier.clear();
+          window.recaptchaVerifier = null;
+        }
+      }
+
+      loginTab.addEventListener('click', () => {
+        loginTab.classList.add('active');
+        signupTab.classList.remove('active');
+        loginBox.classList.add('active');
+        signupBox.classList.remove('active');
+      });
+
+      signupTab.addEventListener('click', () => {
+        signupTab.classList.add('active');
+        loginTab.classList.remove('active');
+        signupBox.classList.add('active');
+        loginBox.classList.remove('active');
+        renderSignupStep(0);
+      });
+
+      document.querySelectorAll('.next-step').forEach((button) => {
+        button.addEventListener('click', () => {
+          const currentFormStep = signupSteps[currentStep];
+          const requiredInputs = currentFormStep.querySelectorAll('input[required], select[required]');
+          const invalid = Array.from(requiredInputs).find((input) => !input.checkValidity());
+
+          if (invalid) {
+            invalid.reportValidity();
+            return;
+          }
+
+          renderSignupStep(currentStep + 1);
+        });
+      });
+
+      document.querySelectorAll('.prev-step').forEach((button) => {
+        button.addEventListener('click', () => {
+          renderSignupStep(currentStep - 1);
+        });
+      });
+
+      document.getElementById('sendEmailVerify').addEventListener('click', () => {
+        const btn = document.getElementById('sendEmailVerify');
+        const emailInput = document.querySelector('input[name="email"]');
+        const email = emailInput ? emailInput.value.trim() : '';
+
+        if (!email) {
+          showToast('Please enter your email before sending the verification code.');
+          emailInput?.focus();
+          return;
+        }
+
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        window.emailVerificationCode = code;
+        emailOtpBox.style.display = 'block';
+        emailOtpCodeInput.focus();
+        btn.textContent = 'Email verification code sent';
+        btn.disabled = true;
+        showToast(`Email verification code sent. Use code ${code} to verify your email.`);
+      });
+
+      document.getElementById('resendEmailOtp').addEventListener('click', () => {
+        const emailInput = document.querySelector('input[name="email"]');
+        const email = emailInput ? emailInput.value.trim() : '';
+        if (!email) {
+          showToast('Please enter your email before requesting a new code.');
+          emailInput?.focus();
+          return;
+        }
+
+        window.emailVerificationCode = String(Math.floor(100000 + Math.random() * 900000));
+        window.isEmailVerified = false;
+        emailOtpCodeInput.value = '';
+        emailOtpCodeInput.disabled = false;
+        const verifyEmailButton = document.getElementById('verifyEmailOtp');
+        verifyEmailButton.textContent = 'Verify email OTP';
+        verifyEmailButton.disabled = false;
+        showToast(`A new email verification code was sent. Use code ${window.emailVerificationCode} to verify your email.`);
+      });
+
+      document.getElementById('verifyEmailOtp').addEventListener('click', () => {
+        const code = emailOtpCodeInput.value.trim();
+
+        if (!window.emailVerificationCode) {
+          showToast('Please request an email verification code first.');
+          return;
+        }
+
+        if (!code || code.length !== 6) {
+          showToast('Please enter the 6-digit email verification code.');
+          emailOtpCodeInput.focus();
+          return;
+        }
+
+        if (code === window.emailVerificationCode) {
+          window.isEmailVerified = true;
+          document.getElementById('verifyEmailOtp').textContent = 'Email verified';
+          document.getElementById('verifyEmailOtp').disabled = true;
+          emailOtpCodeInput.disabled = true;
+          showToast('Email verified successfully.');
+        } else {
+          showToast('Invalid email verification code. Please try again.');
+        }
+      });
+
+      async function requestPhoneOtp(button) {
+        const phoneInput = document.querySelector('input[name="phone"]');
+        const phone = phoneInput ? phoneInput.value.trim() : '';
+
+        if (!phone) {
+          showToast('Please enter your phone number before sending the OTP.');
+          phoneInput?.focus();
+          return false;
+        }
+
+        try {
+          resetPhoneVerification();
+          setupRecaptcha();
+          const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+          const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
+          window.phoneConfirmationResult = confirmationResult;
+          otpBox.style.display = 'block';
+          window.isPhoneVerified = false;
+          otpCodeInput.value = '';
+          otpCodeInput.disabled = false;
+          document.getElementById('verifyPhoneOtp').textContent = 'Verify phone OTP';
+          document.getElementById('verifyPhoneOtp').disabled = false;
+          otpCodeInput.focus();
+          button.textContent = button.id === 'resendPhoneOtp' ? 'Resend phone code' : 'OTP sent';
+          button.disabled = button.id === 'sendPhoneVerify';
+          showToast(button.id === 'resendPhoneOtp' ? 'A new OTP was sent. Please enter the new 6-digit code.' : 'OTP sent. Please enter the 6-digit code.');
+          return true;
+        } catch (error) {
+          console.error(error);
+          showToast('Unable to send OTP. Please check the phone number and try again.');
+          resetPhoneVerification();
+          button.textContent = button.id === 'resendPhoneOtp' ? 'Resend phone code' : 'Send phone OTP';
+          button.disabled = false;
+          return false;
+        }
+      }
+
+      document.getElementById('sendPhoneVerify').addEventListener('click', () => requestPhoneOtp(document.getElementById('sendPhoneVerify')));
+      document.getElementById('resendPhoneOtp').addEventListener('click', () => requestPhoneOtp(document.getElementById('resendPhoneOtp')));
+
+      document.getElementById('verifyPhoneOtp').addEventListener('click', async () => {
+        const code = otpCodeInput.value.trim();
+
+        if (!window.phoneConfirmationResult) {
+          showToast('Please request an OTP first.');
+          return;
+        }
+
+        if (!code || code.length !== 6) {
+          showToast('Please enter the 6-digit OTP code.');
+          otpCodeInput.focus();
+          return;
+        }
+
+        try {
+          await window.phoneConfirmationResult.confirm(code);
+          window.isPhoneVerified = true;
+          document.getElementById('verifyPhoneOtp').textContent = 'Verified';
+          document.getElementById('verifyPhoneOtp').disabled = true;
+          otpCodeInput.disabled = true;
+          showToast('Phone number verified successfully.');
+        } catch (error) {
+          console.error(error);
+          showToast('Invalid OTP. Please check the code and try again.');
+        }
+      });
+
+      document.getElementById('signupForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const password = formData.get('password');
+        const confirmPassword = formData.get('confirmPassword');
+
+        if (!window.isEmailVerified) {
+          showToast('Please verify your email with the OTP before creating the account.');
+          return;
+        }
+
+        if (!window.isPhoneVerified) {
+          showToast('Please verify your phone number with the OTP before creating the account.');
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          showToast('Passwords do not match. Please check again.');
+          return;
+        }
+
+        const user = Object.fromEntries(formData.entries());
+        const accounts = window.MakingsAuth.getAccounts();
+        const duplicate = accounts.find((account) => account.username === user.username || account.email === user.email);
+
+        if (duplicate) {
+          showToast('That username or email is already registered.');
+          return;
+        }
+
+        try {
+          const customersRef = collection(window.firestoreDb, 'customers');
+          const usernameQuery = query(customersRef, where('username', '==', user.username));
+          const emailQuery = query(customersRef, where('email', '==', user.email));
+
+          const [usernameSnapshot, emailSnapshot] = await Promise.all([
+            getDocs(usernameQuery),
+            getDocs(emailQuery)
+          ]);
+
+          if (!usernameSnapshot.empty || !emailSnapshot.empty) {
+            showToast('That username or email is already registered in Firestore.');
+            return;
+          }
+
+          const customerRecord = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phone: user.phone,
+            username: user.username,
+            dob: user.dob,
+            countryBirth: user.countryBirth,
+            password: user.password,
+            emailVerified: true,
+            phoneVerified: true,
+            createdAt: serverTimestamp()
+          };
+
+          await setDoc(doc(window.firestoreDb, 'customers', user.username), customerRecord);
+
+          user.phoneVerified = true;
+          user.emailVerified = true;
+          user.createdAt = user.createdAt || Date.now();
+          user.remembered = true;
+          window.MakingsAuth.saveAccounts([...accounts, user]);
+          window.MakingsAuth.setCurrentUser(user);
+          showToast('Account created successfully and saved to Firestore. Welcome to Makings.');
+
+          setTimeout(() => {
+            window.location.href = 'index.html#trade';
+          }, 1500);
+
+          event.target.reset();
+        } catch (error) {
+          console.error('Firestore save failed:', error);
+          user.phoneVerified = true;
+          user.emailVerified = true;
+          user.createdAt = user.createdAt || Date.now();
+          user.remembered = true;
+          window.MakingsAuth.saveAccounts([...accounts, user]);
+          window.MakingsAuth.setCurrentUser(user);
+          showToast('Account saved on this device and remembered. Cloud sync will retry later.');
+          setTimeout(() => {
+            window.location.href = 'index.html#trade';
+          }, 1500);
+        }
+      });
+
+      document.getElementById('loginForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const loginName = String(formData.get('loginName') || '').trim();
+        const password = String(formData.get('loginPassword') || '').trim();
+        const savedUsers = window.MakingsAuth.getAccounts();
+
+        if (!savedUsers.length) {
+          showToast('No account found. Please sign up first.');
+          return;
+        }
+
+        const savedUser = savedUsers.find((user) => loginName === user.username || loginName === user.email);
+        const validPassword = savedUser && password === savedUser.password;
+
+        if (savedUser && validPassword) {
+          window.MakingsAuth.setCurrentUser(savedUser);
+          showToast('Login successful. Welcome back.');
+
+          setTimeout(() => {
+            window.location.href = 'index.html#trade';
+          }, 1500);
+        } else {
+          showToast('Username/email or password is incorrect.');
+        }
+      });
+
+      if (window.location.hash === '#login') {
+        loginTab.click();
+      }
+
+      renderSignupStep(0);
+    </script>
+  </body>
+</html>

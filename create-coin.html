@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Create Your Own Coin</title>
+    <link rel="icon" type="APP-Logo.png" href="APP-logo.png" />
+    <meta
+      name="description"
+      content="Create your own cryptocurrency coin on Makings marketplace - Easy coin creation and publishing"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+         <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading & Investment</small>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="index.html#trade">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="index.html#wallet">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="coin-section section-shell" id="create-coin">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Custom markets</span>
+            <h2>Create your own coin</h2>
+          </div>
+        </div>
+
+        <div class="coin-layout">
+          <form class="card-glass coin-form" id="coinForm">
+            <label>
+              Coin name
+              <input type="text" name="coinName" placeholder="e.g. Kings Gold" required />
+            </label>
+            <label>
+              Coin symbol
+              <input type="text" name="coinSymbol" placeholder="KGD" maxlength="8" required />
+            </label>
+            <label>
+              Website link
+              <input type="url" name="website" placeholder="https://example.com" required />
+            </label>
+            <label>
+              Upload coin image (optional)
+              <input type="file" name="coinImage" accept="image/*" />
+            </label>
+            <label>
+              Publish fee
+              <input type="number" name="publishFee" min="50" value="150" />
+            </label>
+            <button class="btn coin-publish-button" type="submit">Publish to market</button>
+          </form>
+
+          <div class="card-glass custom-coin-list">
+            <h3>Recently created coins</h3>
+            <ul id="customCoinList">
+              <li><span>King's Gold</span><em>+8.4%</em></li>
+              <li><span>Carib Mint</span><em>+4.6%</em></li>
+              <li><span>Blue Horizon</span><em>+2.1%</em></li>
+            </ul>
+          </div>
+        </div>
+
+        <section class="coin-market card-glass" aria-labelledby="coinMarketTitle">
+          <div class="coin-market-head">
+            <div>
+              <span class="eyebrow">Your market</span>
+              <h3 id="coinMarketTitle">Publish a coin to view its chart</h3>
+            </div>
+            <div class="coin-price-readout">
+              <strong id="coinCurrentPrice">--</strong>
+              <span id="coinCandleStatus">Waiting for coin</span>
+            </div>
+          </div>
+          <div class="coin-chart-wrap">
+            <canvas id="coinCandleChart" aria-label="Candlestick chart for your created coin"></canvas>
+            <p class="coin-chart-empty" id="coinChartEmpty">Your coin's 15-minute candles will appear here after publishing.</p>
+            <button class="coin-chart-resizer" id="coinChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
+          </div>
+          <div class="coin-order-bar">
+            <div>
+                <h4>Market Order</h4>
+              <p>Place a market buy or sell using the latest available coin price.</p>
+            </div>
+            <form class="stop-market-form" id="stopMarketForm">
+              <label>
+                Side
+                <select id="stopMarketSide">
+                  <option value="SELL">Sell</option>
+                  <option value="BUY">Buy</option>
+                </select>
+              </label>
+              <label>
+                Order price
+                <input id="stopMarketPrice" type="number" min="0.000001" step="0.000001" placeholder="0.000000" required />
+              </label>
+              <label>
+                Quantity
+                <input id="stopMarketQuantity" type="number" min="0.000001" step="0.000001" placeholder="100" required />
+              </label>
+              <button class="btn btn-danger" id="stopMarketSubmit" type="submit">Place Sell Market</button>
+            </form>
+          </div>
+          <p class="coin-order-status" id="stopMarketStatus" role="status"></p>
+        </section>
+
+        <div class="coin-info card-glass">
+          <h3>How to Create Your Coin</h3>
+          <div class="info-grid">
+            <div class="info-card">
+              <h4>1. Enter Coin Details</h4>
+              <p>Choose a unique name, symbol, and website URL for your cryptocurrency. This information will be displayed on the marketplace.</p>
+            </div>
+            <div class="info-card">
+              <h4>2. Upload Coin Image</h4>
+              <p>Add a professional logo or icon for your coin. This helps users identify and remember your coin in the marketplace.</p>
+            </div>
+            <div class="info-card">
+              <h4>3. Set Publishing Fee</h4>
+              <p>Decide your coin's publishing fee. This is the cost for listing your coin on the Makings marketplace.</p>
+            </div>
+            <div class="info-card">
+              <h4>4. Publish to Market</h4>
+              <p>Submit your coin to the marketplace. Once published, traders can buy, sell, and trade your coin on Makings.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="coin-benefits card-glass">
+          <h3>Benefits of Creating Your Coin</h3>
+          <div class="benefits-grid">
+            <div class="benefit-item">
+              <span class="benefit-icon">🚀</span>
+              <h4>Global Reach</h4>
+              <p>Access to millions of traders on the Makings platform worldwide.</p>
+            </div>
+            <div class="benefit-item">
+              <span class="benefit-icon">💰</span>
+              <h4>Monetization</h4>
+              <p>Earn from your coin's trading volume and market performance.</p>
+            </div>
+            <div class="benefit-item">
+              <span class="benefit-icon">📊</span>
+              <h4>Live Analytics</h4>
+              <p>Track your coin's performance with real-time charts and statistics.</p>
+            </div>
+            <div class="benefit-item">
+              <span class="benefit-icon">🔒</span>
+              <h4>Secure Platform</h4>
+              <p>Your coin is protected by Makings' enterprise-grade security infrastructure.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2026 Makings | Crypto, investment, and secure digital trading.</p>
+    </footer>
+
+    <div id="toast" class="toast" aria-live="polite">Coin published successfully!</div>
+
+    <script>
+      const coinForm = document.getElementById('coinForm');
+      const coinChart = document.getElementById('coinCandleChart');
+      const coinChartEmpty = document.getElementById('coinChartEmpty');
+      const coinMarketTitle = document.getElementById('coinMarketTitle');
+      const coinCurrentPrice = document.getElementById('coinCurrentPrice');
+      const coinCandleStatus = document.getElementById('coinCandleStatus');
+      const coinChartWrap = document.querySelector('.coin-chart-wrap');
+      const coinChartResizer = document.getElementById('coinChartResizer');
+      const stopMarketForm = document.getElementById('stopMarketForm');
+      const stopMarketSide = document.getElementById('stopMarketSide');
+      const stopMarketPrice = document.getElementById('stopMarketPrice');
+      const stopMarketQuantity = document.getElementById('stopMarketQuantity');
+      const stopMarketSubmit = document.getElementById('stopMarketSubmit');
+      const stopMarketStatus = document.getElementById('stopMarketStatus');
+      let activeCoin = JSON.parse(localStorage.getItem('createdCoin') || 'null');
+      let candles = [];
+
+      const formatPrice = (value) => '$' + value.toFixed(value < 1 ? 6 : 2);
+      const formatTime = (timestamp) => new Intl.DateTimeFormat([], { hour: 'numeric', minute: '2-digit' }).format(new Date(timestamp));
+
+      function seedCandles(coin) {
+        let seed = [...(coin.symbol + coin.name)].reduce((total, character) => total + character.charCodeAt(0), 0);
+        let price = Math.max(0.01, (seed % 9000) / 100 + 1);
+        return Array.from({ length: 32 }, (_, index) => {
+          const open = price;
+          const close = Math.max(0.000001, open * (1 + ((seed % 13) - 6) / 350));
+          const high = Math.max(open, close) * 1.006;
+          const low = Math.min(open, close) * 0.994;
+          seed = (seed * 9301 + 49297) % 233280;
+          price = close;
+          return { time: Date.now() - (31 - index) * 900000, open, high, low, close };
+        });
+      }
+
+      function drawCoinChart() {
+        if (!activeCoin || !candles.length) return;
+        const bounds = coinChart.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        coinChart.width = Math.max(320, bounds.width * ratio);
+        const height = Math.max(260, coinChart.clientHeight || 310);
+        coinChart.height = height * ratio;
+        const context = coinChart.getContext('2d');
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        const width = Math.max(320, bounds.width);
+        const pad = { top: 22, right: 62, bottom: 36, left: 12 };
+        const visibleCandles = candles.slice(-24);
+        const prices = visibleCandles.flatMap((candle) => [candle.high, candle.low]);
+        const min = Math.min(...prices) * 0.997;
+        const max = Math.max(...prices) * 1.003;
+        const candleWidth = (width - pad.left - pad.right) / visibleCandles.length;
+        const y = (price) => pad.top + (max - price) / (max - min) * (height - pad.top - pad.bottom);
+        context.clearRect(0, 0, width, height);
+        context.fillStyle = 'rgba(0, 0, 0, .18)';
+        context.fillRect(0, 0, width, height);
+        context.font = '12px Inter, sans-serif';
+        context.strokeStyle = 'rgba(212, 175, 55, .12)';
+        context.fillStyle = '#cfc5a2';
+        for (let row = 0; row < 5; row += 1) {
+          const price = min + (max - min) * row / 4;
+          const lineY = y(price);
+          context.beginPath();
+          context.moveTo(pad.left, lineY);
+          context.lineTo(width - pad.right, lineY);
+          context.stroke();
+          context.fillText(formatPrice(price), width - pad.right + 8, lineY + 4);
+        }
+        visibleCandles.forEach((candle, index) => {
+          const centerX = pad.left + index * candleWidth + candleWidth / 2;
+          const rising = candle.close >= candle.open;
+          const color = rising ? '#31d598' : '#ff6b7a';
+          context.strokeStyle = color;
+          context.fillStyle = color;
+          context.beginPath();
+          context.moveTo(centerX, y(candle.high));
+          context.lineTo(centerX, y(candle.low));
+          context.stroke();
+          const bodyTop = y(Math.max(candle.open, candle.close));
+          const bodyHeight = Math.max(2, Math.abs(y(candle.open) - y(candle.close)));
+          context.fillRect(centerX - Math.max(3, candleWidth * .28), bodyTop, Math.max(6, candleWidth * .56), bodyHeight);
+          if (index === 0 || index === visibleCandles.length - 1 || index % 6 === 0) {
+            context.fillStyle = '#cfc5a2';
+            context.fillText(formatTime(candle.time), centerX - 20, height - 12);
+          }
+        });
+        coinCurrentPrice.textContent = formatPrice(visibleCandles[visibleCandles.length - 1].close);
+      }
+
+      function showCoin(coin) {
+        activeCoin = coin;
+        candles = seedCandles(coin);
+        coinMarketTitle.textContent = coin.name + ' (' + coin.symbol + ')';
+        coinCandleStatus.textContent = '15m candles • local market feed';
+        coinChartEmpty.hidden = true;
+        stopMarketPrice.value = candles[candles.length - 1].close.toFixed(6);
+        drawCoinChart();
+      }
+
+      if (activeCoin) showCoin(activeCoin);
+
+      function updateStopMarketButton() {
+        const isBuy = stopMarketSide.value === 'BUY';
+        stopMarketSubmit.textContent = isBuy ? 'Place Buy Market' : 'Place Sell Market';
+        stopMarketSubmit.classList.toggle('btn-buy-market', isBuy);
+        stopMarketSubmit.classList.toggle('btn-danger', !isBuy);
+        if (candles.length) {
+          stopMarketPrice.value = candles[candles.length - 1].close.toFixed(6);
+        }
+      }
+
+      stopMarketSide.addEventListener('change', updateStopMarketButton);
+      updateStopMarketButton();
+      window.addEventListener('resize', drawCoinChart);
+      if (coinChartResizer && coinChartWrap) {
+        coinChartResizer.addEventListener('pointerdown', (event) => {
+          event.preventDefault();
+          coinChartResizer.setPointerCapture(event.pointerId);
+          const startX = event.clientX;
+          const startY = event.clientY;
+          const startWidth = coinChartWrap.getBoundingClientRect().width;
+          const startHeight = coinChartWrap.getBoundingClientRect().height;
+          const parentWidth = coinChartWrap.parentElement.getBoundingClientRect().width;
+          const resizeChart = (moveEvent) => {
+            const nextWidth = Math.min(parentWidth, Math.max(320, startWidth + moveEvent.clientX - startX));
+            const nextHeight = Math.min(720, Math.max(260, startHeight + moveEvent.clientY - startY));
+            coinChartWrap.style.width = nextWidth + 'px';
+            coinChartWrap.style.height = nextHeight + 'px';
+            coinChartWrap.style.minHeight = nextHeight + 'px';
+            drawCoinChart();
+          };
+          const stopResize = () => {
+            coinChartResizer.removeEventListener('pointermove', resizeChart);
+            coinChartResizer.removeEventListener('pointerup', stopResize);
+            coinChartResizer.removeEventListener('pointercancel', stopResize);
+          };
+          coinChartResizer.addEventListener('pointermove', resizeChart);
+          coinChartResizer.addEventListener('pointerup', stopResize);
+          coinChartResizer.addEventListener('pointercancel', stopResize);
+        });
+      }
+      coinForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const coin = {
+          name: formData.get('coinName').trim(),
+          symbol: formData.get('coinSymbol').trim().toUpperCase(),
+          createdAt: Date.now()
+        };
+        const savedCoins = JSON.parse(localStorage.getItem('customCoins') || '[]');
+        const existingIndex = savedCoins.findIndex((savedCoin) => savedCoin.symbol === coin.symbol);
+        if (existingIndex >= 0) {
+          savedCoins[existingIndex] = coin;
+        } else {
+          savedCoins.push(coin);
+        }
+        localStorage.setItem('customCoins', JSON.stringify(savedCoins));
+        localStorage.setItem('createdCoin', JSON.stringify(coin));
+        showCoin(coin);
+        const toast = document.getElementById('toast');
+        toast.textContent = coin.name + ' published to market successfully!';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 5000);
+        event.target.reset();
+      });
+
+      stopMarketForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!activeCoin) {
+          stopMarketStatus.textContent = 'Publish your coin before placing an order.';
+          return;
+        }
+        const side = stopMarketSide.value;
+        const stopPrice = Number(stopMarketPrice.value);
+        const quantity = Number(stopMarketQuantity.value);
+        const currentPrice = candles[candles.length - 1].close;
+        stopMarketStatus.textContent = side + ' market order placed for ' + quantity + ' ' + activeCoin.symbol + ' at ' + formatPrice(stopPrice) + ' (current price ' + formatPrice(currentPrice) + ').';
+      });
+    </script>
+    <script src="script.js"></script>
+    <script src="auth.js"></script>
+  </body>
+</html>
