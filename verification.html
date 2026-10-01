@@ -946,6 +946,10 @@
         showToast.timer = setTimeout(() => toast.classList.remove('show'), 5000);
       }
 
+      function isSuspendedApiKeyError(error) {
+        return /api-key.*suspend/i.test(`${error.code || ''} ${error.message || ''}`);
+      }
+
       loginTab.addEventListener('click', () => {
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
@@ -1088,7 +1092,9 @@
               await signOut(auth);
             }
           }
-          if (error.code === 'username-already-in-use') {
+          if (isSuspendedApiKeyError(error)) {
+            showToast('Firebase rejected the app API key because its Google Cloud consumer is suspended. Check the project status and API key in Google Cloud Console.');
+          } else if (error.code === 'username-already-in-use') {
             showToast(error.message);
           } else if (error.code === 'auth/email-already-in-use') {
             showToast('An account already exists for this email address.');
@@ -1129,7 +1135,11 @@
           showToast('Login successful. Welcome back.');
           setTimeout(() => { window.location.href = 'index.html#trade'; }, 1500);
         } catch (error) {
-          showToast('Email address or password is incorrect.');
+          if (isSuspendedApiKeyError(error)) {
+            showToast('Firebase rejected the app API key because its Google Cloud consumer is suspended. Check the project status and API key in Google Cloud Console.');
+          } else {
+            showToast('Email address or password is incorrect.');
+          }
         }
       });
 
