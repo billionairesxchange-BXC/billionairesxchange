@@ -156,13 +156,30 @@ service cloud.firestore {
     match /communityPosts/{postId} {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn()
-        && request.resource.data.keys().hasOnly(['authorUid', 'authorName', 'text', 'createdAt'])
+        && request.resource.data.keys().hasOnly([
+          'authorUid',
+          'authorName',
+          'text',
+          'mediaUrl',
+          'mediaType',
+          'mediaPath',
+          'createdAt'
+        ])
         && request.resource.data.keys().hasAll(['authorUid', 'authorName', 'text', 'createdAt'])
         && request.resource.data.authorUid == request.auth.uid
         && request.resource.data.authorName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username
         && request.resource.data.text is string
-        && request.resource.data.text.size() > 0
         && request.resource.data.text.size() <= 2000
+        && (request.resource.data.text.size() > 0
+          || request.resource.data.keys().hasAll(['mediaUrl', 'mediaType', 'mediaPath']))
+        && (!request.resource.data.keys().hasAny(['mediaUrl', 'mediaType', 'mediaPath'])
+          || (request.resource.data.keys().hasAll(['mediaUrl', 'mediaType', 'mediaPath'])
+            && request.resource.data.mediaUrl is string
+            && request.resource.data.mediaUrl.size() <= 2048
+            && request.resource.data.mediaType in ['image', 'video']
+            && request.resource.data.mediaPath is string
+            && request.resource.data.mediaPath.size() <= 200
+            && request.resource.data.mediaPath.matches('^community-posts/' + request.auth.uid + '/[^/]+$')))
         && request.resource.data.createdAt is timestamp;
       allow update: if false;
       allow delete: if isSignedIn() && resource.data.authorUid == request.auth.uid;
@@ -179,7 +196,9 @@ service cloud.firestore {
           && request.resource.data.text.size() <= 1000
           && request.resource.data.createdAt is timestamp;
         allow update: if false;
-        allow delete: if isSignedIn() && resource.data.authorUid == request.auth.uid;
+        allow delete: if isSignedIn()
+          && (resource.data.authorUid == request.auth.uid
+            || get(/databases/$(database)/documents/communityPosts/$(postId)).data.authorUid == request.auth.uid);
       }
 
       match /likes/{userId} {
@@ -191,7 +210,9 @@ service cloud.firestore {
           && request.resource.data.uid == request.auth.uid
           && request.resource.data.createdAt is timestamp;
         allow update: if false;
-        allow delete: if isSignedIn() && request.auth.uid == userId;
+        allow delete: if isSignedIn()
+          && (request.auth.uid == userId
+            || get(/databases/$(database)/documents/communityPosts/$(postId)).data.authorUid == request.auth.uid);
       }
     }
 
@@ -201,6 +222,15 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['uid'])
         && request.resource.data.uid == request.auth.uid;
       allow list, update, delete: if false;
+    }
+
+    match /userDirectory/{userId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['username'])
+        && request.resource.data.username == getAfter(/databases/$(database)/documents/users/$(userId)).data.username;
+      allow update, delete: if false;
     }
 
     match /{document=**} {

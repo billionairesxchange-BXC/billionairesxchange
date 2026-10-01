@@ -32,19 +32,27 @@
           <a class="btn btn-ghost" href="billionaires-world.html">Back to community</a>
         </div>
 
-        <form class="live-feed-composer card-glass" id="livePostForm">
+        <div class="live-post-list" id="livePostList" aria-live="polite">
+          <p class="live-feed-empty">Loading community posts...</p>
+        </div>
+        <button class="live-create-button" id="liveCreateButton" type="button" aria-label="Create a post" title="Create a post" hidden>+</button>
+
+        <form class="live-feed-composer card-glass" id="livePostForm" hidden>
           <label for="livePostText">Create a post</label>
-          <textarea id="livePostText" maxlength="2000" rows="4" placeholder="Share an update with the community..." required></textarea>
+          <textarea id="livePostText" maxlength="2000" rows="4" placeholder="Share an update with the community..."></textarea>
+          <label class="live-media-picker" for="livePostMedia">Add a photo or video</label>
+          <input id="livePostMedia" type="file" accept="image/*,video/*" />
+          <small id="livePostMediaName">No media selected</small>
           <div class="live-feed-composer-actions">
             <small id="livePostCount">0 / 2000</small>
-            <button class="btn btn-primary" type="submit">Post</button>
+            <div>
+              <button class="btn btn-ghost" id="liveCancelPost" type="button">Cancel</button>
+              <button class="btn btn-primary" type="submit">Post</button>
+            </div>
           </div>
         </form>
 
         <p class="live-feed-status" id="liveFeedStatus" role="status" aria-live="polite"></p>
-        <div class="live-post-list" id="livePostList" aria-live="polite">
-          <p class="live-feed-empty">Loading community posts...</p>
-        </div>
       </section>
     </main>
 
@@ -54,6 +62,7 @@
     <script type="module">
       import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
       import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-storage.js';
       import {
         addDoc,
         collection,
@@ -81,12 +90,16 @@
       const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
+      const storage = getStorage(app);
       const postForm = document.getElementById('livePostForm');
       const postText = document.getElementById('livePostText');
+      const postMedia = document.getElementById('livePostMedia');
+      const postMediaName = document.getElementById('livePostMediaName');
       const postCount = document.getElementById('livePostCount');
       const postList = document.getElementById('livePostList');
+      const createButton = document.getElementById('liveCreateButton');
       const feedStatus = document.getElementById('liveFeedStatus');
-      const postsQuery = query(collection(db, 'communityPosts'), orderBy('createdAt', 'desc'), limit(30));
+      const postsQuery = query(collection(db, 'communityPosts'), orderBy('createdAt', 'desc'));
       let currentUser = null;
       let currentProfile = null;
       let latestPostDocs = [];
@@ -96,14 +109,45 @@
         postCount.textContent = `${postText.value.length} / 2000`;
       });
 
-      function createComment(comment) {
+      createButton.addEventListener('click', () => {
+        postForm.hidden = !postForm.hidden;
+        if (!postForm.hidden) postText.focus();
+      });
+      document.getElementById('liveCancelPost').addEventListener('click', () => {
+        postForm.reset();
+        postMediaName.textContent = 'No media selected';
+        postCount.textContent = '0 / 2000';
+        postForm.hidden = true;
+      });
+      postMedia.addEventListener('change', () => {
+        postMediaName.textContent = postMedia.files[0]?.name || 'No media selected';
+      });
+
+      function createComment(comment, commentRef, postAuthorUid) {
         const item = document.createElement('div');
         item.className = 'live-comment';
         const author = document.createElement('strong');
         author.textContent = `@${comment.authorName || 'member'}`;
         const text = document.createElement('p');
-        text.textContent = comment.text;
+        text.textContent = comment.text || '';
         item.append(author, text);
+        if (comment.authorUid === currentUser.uid || postAuthorUid === currentUser.uid) {
+          const removeButton = document.createElement('button');
+          removeButton.className = 'live-delete-button';
+          removeButton.type = 'button';
+          removeButton.textContent = 'Delete comment';
+          removeButton.addEventListener('click', async () => {
+            removeButton.disabled = true;
+            try {
+              await deleteDoc(commentRef);
+              await refreshPosts();
+            } catch (error) {
+              feedStatus.textContent = 'Could not delete your comment. Try again.';
+              removeButton.disabled = false;
+            }
+          });
+          item.appendChild(removeButton);
+        }
         return item;
       }
 
@@ -122,7 +166,8 @@
         article.className = 'live-post card-glass';
         const heading = document.createElement('div');
         heading.className = 'live-post-heading';
-        const author = document.createElement('strong');
+        const author = document.createElement('a');
+        author.href = `user-profile.html?uid=${encodeURIComponent(post.authorUid)}`;
         author.textContent = `@${post.authorName || 'member'}`;
         const time = document.createElement('time');
         const createdAt = post.createdAt?.toDate?.() || new Date();
@@ -130,9 +175,21 @@
         time.textContent = createdAt.toLocaleString();
         heading.append(author, time);
 
-        const body = document.createElement('p');
-        body.className = 'live-post-body';
-        body.textContent = post.text;
+        const content = [];
+        if (post.text) {
+          const body = document.createElement('p');
+          body.className = 'live-post-body';
+          body.textContent = post.text;
+          content.push(body);
+        }
+        if (post.mediaUrl) {
+          const media = document.createElement(post.mediaType === 'video' ? 'video' : 'img');
+          media.className = 'live-post-media';
+          media.src = post.mediaUrl;
+          if (post.mediaType === 'video') media.controls = true;
+          else media.alt = `Photo shared by @${post.authorName || 'member'}`;
+          content.push(media);
+        }
 
         const actions = document.createElement('div');
         actions.className = 'live-post-actions';
@@ -157,10 +214,34 @@
           }
         });
         actions.appendChild(likeButton);
+        if (post.authorUid === currentUser.uid) {
+          const deleteButton = document.createElement('button');
+          deleteButton.className = 'live-delete-button';
+          deleteButton.type = 'button';
+          deleteButton.textContent = 'Delete post';
+          deleteButton.addEventListener('click', async () => {
+            if (!window.confirm('Delete this post and its comments?')) return;
+            deleteButton.disabled = true;
+            try {
+              const [postComments, postLikes] = await Promise.all([getDocs(commentsRef), getDocs(likesRef)]);
+              await Promise.all([
+                ...postComments.docs.map((item) => deleteDoc(item.ref)),
+                ...postLikes.docs.map((item) => deleteDoc(item.ref))
+              ]);
+              if (post.mediaPath) await deleteObject(ref(storage, post.mediaPath));
+              await deleteDoc(postRef);
+              await refreshPosts();
+            } catch (error) {
+              feedStatus.textContent = 'Could not delete your post. Try again.';
+              deleteButton.disabled = false;
+            }
+          });
+          actions.appendChild(deleteButton);
+        }
 
         const comments = document.createElement('div');
         comments.className = 'live-comments';
-        commentsSnapshot.forEach((commentSnapshot) => comments.appendChild(createComment(commentSnapshot.data())));
+        commentsSnapshot.forEach((commentSnapshot) => comments.appendChild(createComment(commentSnapshot.data(), commentSnapshot.ref, post.authorUid)));
 
         const commentForm = document.createElement('form');
         commentForm.className = 'live-comment-form';
@@ -194,7 +275,7 @@
           }
         });
 
-        article.append(heading, body, actions, comments, commentForm);
+        article.append(heading, ...content, actions, comments, commentForm);
         return article;
       }
 
@@ -209,7 +290,9 @@
           if (version !== renderVersion) return;
           postList.replaceChildren(...cards);
         } catch (error) {
-          feedStatus.textContent = 'Could not load the community feed. Try refreshing the page.';
+          console.error('Live Feed could not load post details:', error);
+          const code = error?.code || 'unknown error';
+          feedStatus.textContent = `Posts were found, but likes or comments could not load (${code}). Check the deployed Firestore rules.`;
         }
       }
 
@@ -222,23 +305,55 @@
       postForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const text = postText.value.trim();
-        if (!text || !currentUser || !currentProfile) return;
+        const file = postMedia.files[0];
+        if ((!text && !file) || !currentUser || !currentProfile) {
+          feedStatus.textContent = 'Add text or choose a photo or video before posting.';
+          return;
+        }
+        if (file && (!file.type.startsWith('image/') && !file.type.startsWith('video/'))) {
+          feedStatus.textContent = 'Choose an image or video file.';
+          return;
+        }
+        if (file && file.size > 50 * 1024 * 1024) {
+          feedStatus.textContent = 'Media must be smaller than 50 MB.';
+          return;
+        }
         const submitButton = postForm.querySelector('button[type="submit"]');
         submitButton.disabled = true;
         feedStatus.textContent = 'Publishing post...';
+        let mediaPath = '';
         try {
+          let mediaUrl = '';
+          let mediaType = '';
+          if (file) {
+            mediaPath = `community-posts/${currentUser.uid}/${crypto.randomUUID()}`;
+            const mediaRef = ref(storage, mediaPath);
+            await uploadBytes(mediaRef, file, { contentType: file.type });
+            mediaUrl = await getDownloadURL(mediaRef);
+            mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+          }
           await addDoc(collection(db, 'communityPosts'), {
             authorUid: currentUser.uid,
             authorName: currentProfile.username,
             text,
+            ...(file ? { mediaUrl, mediaType, mediaPath } : {}),
             createdAt: serverTimestamp()
           });
           postForm.reset();
+          postMediaName.textContent = 'No media selected';
           postCount.textContent = '0 / 2000';
+          postForm.hidden = true;
           feedStatus.textContent = 'Post published to the community.';
           await refreshPosts();
         } catch (error) {
-          feedStatus.textContent = 'Could not publish your post. Check your connection and try again.';
+          if (mediaPath) await deleteObject(ref(storage, mediaPath)).catch(() => {});
+          console.error('Live Feed post publishing failed:', error);
+          if (file) {
+            feedStatus.textContent = 'Photo/video upload failed. Set up Firebase Storage for this project in the Firebase Console, then deploy storage.rules.';
+          } else {
+            const code = error?.code || 'unknown error';
+            feedStatus.textContent = `Could not publish your post (${code}). Check the deployed Firestore rules and try again.`;
+          }
         } finally {
           submitButton.disabled = false;
         }
@@ -248,18 +363,34 @@
         currentUser = user;
         if (!user) {
           postForm.hidden = true;
+          createButton.hidden = true;
           postList.innerHTML = '<p class="live-feed-empty">Sign in to view and post in the community feed.</p><a class="btn btn-primary" href="verification.html#login">Sign in</a>';
           return;
         }
         try {
           const profileSnapshot = await getDoc(doc(db, 'users', user.uid));
-          if (!profileSnapshot.exists()) throw new Error('Account profile not found.');
+          if (!profileSnapshot.exists()) {
+            postForm.hidden = true;
+            createButton.hidden = true;
+            postList.innerHTML = '<p class="live-feed-empty">Your signed-in account has no community profile. Sign out and sign back in, or contact support if this continues.</p>';
+            return;
+          }
           currentProfile = profileSnapshot.data();
-          postForm.hidden = false;
+          createButton.hidden = false;
+        } catch (error) {
+          console.error('Live Feed could not load the signed-in profile:', error);
+          postForm.hidden = true;
+          createButton.hidden = true;
+          const code = error?.code || 'unknown error';
+          postList.innerHTML = `<p class="live-feed-empty">Could not read your account profile (${code}). Check that you are signed in and that the deployed Firestore rules allow users to read their own profile.</p>`;
+          return;
+        }
+        try {
           await refreshPosts();
         } catch (error) {
-          postForm.hidden = true;
-          postList.innerHTML = '<p class="live-feed-empty">Could not load your account or community feed.</p>';
+          console.error('Live Feed could not load community posts:', error);
+          const code = error?.code || 'unknown error';
+          postList.innerHTML = `<p class="live-feed-empty">Could not read community posts (${code}). Check the deployed Firestore rules and your connection.</p>`;
         }
       });
     </script>

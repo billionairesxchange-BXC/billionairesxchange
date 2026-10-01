@@ -1067,6 +1067,7 @@
             }
             transaction.set(usernameRef, { uid: credential.user.uid });
             transaction.set(userRef, privateProfile);
+            transaction.set(doc(db, 'userDirectory', credential.user.uid), { username: usernameKey });
           });
 
           localStorage.setItem('makingsCurrentUser', usernameKey);

@@ -1526,6 +1526,55 @@ canvas {
   position: relative;
 }
 
+.positions-time-menu {
+  position: relative;
+}
+
+.positions-time-options {
+  position: absolute;
+  top: calc(100% + .35rem);
+  left: 0;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(90px, 1fr));
+  min-width: 230px;
+  padding: .35rem;
+  border: 1px solid var(--primary-gold);
+  border-radius: 4px;
+  background: #000;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .45);
+}
+
+.positions-time-options[hidden] {
+  display: none;
+}
+
+.positions-time-options strong {
+  grid-column: 1 / -1;
+  padding: .45rem .6rem .2rem;
+  color: var(--white);
+  font-size: .7rem;
+}
+
+.positions-time-options button {
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--light-gold);
+  cursor: pointer;
+  padding: .5rem .6rem;
+  text-align: left;
+  font: inherit;
+  font-size: .75rem;
+}
+
+.positions-time-options button:hover,
+.positions-time-options button:focus-visible,
+.positions-time-options button.is-active {
+  background: rgba(212, 175, 55, .18);
+  color: var(--primary-gold);
+}
+
 .positions-tools-options {
   position: absolute;
   top: calc(100% + .35rem);
@@ -2221,6 +2270,14 @@ canvas {
   background: rgba(0, 0, 0, .2);
 }
 
+.bot-chart-toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin: .9rem 0 .65rem;
+}
+
 #botCanvas {
   display: block;
   width: 100%;
@@ -2247,7 +2304,8 @@ canvas {
   opacity: 1;
 }
 
-.bot-market-status {
+.bot-market-status,
+.bot-chart-status {
   color: var(--light-gold);
   font-size: .78rem;
   margin-top: .5rem;
@@ -3721,10 +3779,36 @@ canvas {
   max-width: 1040px;
 }
 
+.live-create-button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 1rem 0 0 auto;
+  border: 1px solid var(--primary-gold);
+  border-radius: 50%;
+  background: var(--primary-gold);
+  color: #111;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.live-create-button:hover,
+.live-create-button:focus-visible {
+  background: var(--light-gold);
+}
+
 .live-feed-composer {
   display: grid;
   gap: .75rem;
   padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.live-feed-composer[hidden],
+.live-create-button[hidden] {
+  display: none;
 }
 
 .live-feed-composer label {
@@ -3742,6 +3826,34 @@ canvas {
   background: rgba(0, 0, 0, .35);
   color: var(--white);
   resize: vertical;
+}
+
+.live-feed-composer input[type="file"] {
+  max-width: 100%;
+  color: var(--light-gold);
+}
+
+.live-feed-composer > small {
+  color: var(--light-gold);
+  font-size: .78rem;
+}
+
+.live-media-picker {
+  width: fit-content;
+  padding: .45rem .7rem;
+  border: 1px solid rgba(212, 175, 55, .35);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.live-post-media {
+  display: block;
+  width: 100%;
+  max-height: 600px;
+  margin: .8rem 0;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, .35);
+  object-fit: contain;
 }
 
 .live-feed-composer-actions,
@@ -3811,6 +3923,20 @@ canvas {
   color: var(--primary-gold);
 }
 
+.live-delete-button {
+  padding: .4rem .55rem;
+  border: 1px solid rgba(255, 110, 110, .4);
+  border-radius: 4px;
+  background: transparent;
+  color: #ff9b9b;
+  cursor: pointer;
+}
+
+.live-delete-button:disabled {
+  cursor: wait;
+  opacity: .6;
+}
+
 .live-comments {
   display: grid;
   gap: .45rem;
@@ -3818,9 +3944,17 @@ canvas {
 }
 
 .live-comment {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
   padding: .6rem .7rem;
   border-left: 2px solid rgba(212, 175, 55, .42);
   background: rgba(212, 175, 55, .035);
+}
+
+.live-comment > p {
+  flex: 1;
 }
 
 .live-comment strong {

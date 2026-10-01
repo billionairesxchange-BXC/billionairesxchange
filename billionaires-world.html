@@ -33,7 +33,7 @@
           <aside class="card-glass world-page-sidebar">
             <div class="world-block">
               <div class="world-block-heading"><div><span class="eyebrow">People</span><h2>Find and add users</h2></div></div>
-              <input class="world-search" id="worldUserSearch" type="search" placeholder="Search name or handle" aria-label="Search users" />
+              <input class="world-search" id="worldUserSearch" type="search" placeholder="Search by username" aria-label="Search users by username" />
               <ul class="world-people-list" id="worldPeopleList"></ul>
             </div>
             <div class="world-block">
@@ -54,7 +54,11 @@
       <div id="worldFeed" hidden></div>
     </main>
     <footer class="site-footer"><p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p></footer>
-    <script>
+    <script type="module">
+      import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { doc, endAt, getDoc, getFirestore, limit, orderBy, query, startAt, where, getDocs, collection } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
       (() => {
         const username = localStorage.getItem('makingsCurrentUser');
         const hasWorldAccess = Boolean(username && localStorage.getItem('makingsAuthUid'));
@@ -64,17 +68,67 @@
         }
 
         const $ = (id) => document.getElementById(id);
-        const people = [{ name: 'Ava Sterling', handle: '@avatrades' }, { name: 'Marcus Chen', handle: '@marketmarcus' }, { name: 'Zara King', handle: '@zaracrypto' }, { name: 'Noah Brooks', handle: '@noahblocks' }, { name: 'Lena Ortiz', handle: '@lenalens' }];
+        const firebaseConfig = {
+          apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
+          authDomain: 'billionairesxchange-e8162.firebaseapp.com',
+          projectId: 'billionairesxchange-e8162',
+          storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
+          messagingSenderId: '872942229296',
+          appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
+          measurementId: 'G-JCZ6FCKF3M'
+        };
+        const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
         const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch (error) { return fallback; } };
-        const state = { selected: null, added: read('worldAddedUsers', []), groups: read('worldGroups', ['General', 'Market Watch']), joined: read('worldJoinedGroups', []), messages: read('worldMessages', {}), feed: read('worldFeed', []) };
+        const state = { selected: null, added: read('worldAddedUsers', []), groups: read('worldGroups', ['General', 'Market Watch']), joined: read('worldJoinedGroups', []), messages: read('worldMessages', {}), feed: read('worldFeed', []), searchVersion: 0 };
         const save = (key, value) => localStorage.setItem(key, JSON.stringify(value));
-        const person = (handle) => people.find((item) => item.handle === handle);
         const initials = (name) => name.split(' ').map((part) => part[0]).join('').slice(0, 2);
 
-        function renderPeople() {
-          const query = $('worldUserSearch').value.trim().toLowerCase();
-          $('worldPeopleList').replaceChildren();
-          people.filter((item) => !query || `${item.name} ${item.handle}`.toLowerCase().includes(query)).forEach((item) => {
+        async function renderPeople() {
+          const search = $('worldUserSearch').value.trim().replace(/^@/, '').toLowerCase();
+          const searchVersion = ++state.searchVersion;
+          const list = $('worldPeopleList');
+          list.replaceChildren();
+          if (!search) {
+            list.innerHTML = '<li class="world-empty">Enter a username to find people.</li>';
+            return;
+          }
+          if (search.length < 2) {
+            list.innerHTML = '<li class="world-empty">Enter at least 2 characters.</li>';
+            return;
+          }
+          if (!auth.currentUser) {
+            list.innerHTML = '<li class="world-empty">Connecting to your account...</li>';
+            return;
+          }
+
+          list.innerHTML = '<li class="world-empty">Searching...</li>';
+          try {
+            const directoryQuery = query(
+              collection(db, 'userDirectory'),
+              orderBy('username'),
+              startAt(search),
+              endAt(`${search}\uf8ff`),
+              limit(20)
+            );
+            const directorySnapshot = await getDocs(directoryQuery);
+            let matches = directorySnapshot.docs
+              .filter((snapshot) => snapshot.id !== auth.currentUser.uid)
+              .map((snapshot) => ({ uid: snapshot.id, name: snapshot.data().username, handle: `@${snapshot.data().username}` }));
+
+            const usernameSnapshot = await getDoc(doc(db, 'usernames', search));
+            if (usernameSnapshot.exists() && usernameSnapshot.data().uid !== auth.currentUser.uid
+              && !matches.some((item) => item.uid === usernameSnapshot.data().uid)) {
+              matches.push({ uid: usernameSnapshot.data().uid, name: search, handle: `@${search}` });
+            }
+            if (searchVersion !== state.searchVersion) return;
+            list.replaceChildren();
+            if (!matches.length) {
+              list.innerHTML = '<li class="world-empty">No users found.</li>';
+              return;
+            }
+            matches.forEach((item) => {
             const li = document.createElement('li'); li.className = `world-person${state.selected === item.handle ? ' is-selected' : ''}`;
             const identity = document.createElement('button'); identity.className = 'world-person-identity'; identity.type = 'button';
             identity.innerHTML = `<span class="world-avatar">${initials(item.name)}</span><span><strong>${item.name}</strong><small>${item.handle}</small></span>`;
@@ -83,6 +137,10 @@
             add.addEventListener('click', () => { state.added = state.added.includes(item.handle) ? state.added.filter((handle) => handle !== item.handle) : [...state.added, item.handle]; save('worldAddedUsers', state.added); renderPeople(); });
             li.append(identity, add); $('worldPeopleList').appendChild(li);
           });
+          } catch (error) {
+            console.error('Unable to search the username directory:', error);
+            if (searchVersion === state.searchVersion) list.innerHTML = '<li class="world-empty">Search failed. Please try again.</li>';
+          }
         }
         function selectUser(item) { state.selected = item.handle; $('worldSelectedUser').textContent = `${item.name} ${item.handle}`; $('worldChatTitle').textContent = item.name; $('worldChatStatus').textContent = 'Direct conversation'; $('worldSendPaymentButton').disabled = false; $('worldRequestPaymentButton').disabled = false; renderPeople(); renderMessages(); $('worldMessageText').focus(); }
         function renderGroups() { $('worldGroupsList').replaceChildren(); state.groups.forEach((group) => { const li = document.createElement('li'); const label = document.createElement('strong'); label.textContent = group; const button = document.createElement('button'); button.type = 'button'; button.textContent = state.joined.includes(group) ? 'Joined' : 'Request join'; button.addEventListener('click', () => { if (!state.joined.includes(group)) { state.joined.push(group); save('worldJoinedGroups', state.joined); $('worldChatStatus').textContent = `Join request sent for ${group}.`; renderGroups(); } }); li.append(label, button); $('worldGroupsList').appendChild(li); }); }
@@ -93,7 +151,8 @@
         $('worldGroupForm').addEventListener('submit', (event) => { event.preventDefault(); const name = $('worldGroupName').value.trim(); if (!name || state.groups.includes(name)) return; state.groups.push(name); save('worldGroups', state.groups); event.target.reset(); event.target.hidden = true; renderGroups(); });
         $('worldMediaInput').addEventListener('change', () => { $('worldMediaName').textContent = $('worldMediaInput').files[0]?.name || 'No media selected'; });
         $('worldMessageForm').addEventListener('submit', (event) => { event.preventDefault(); if (!state.selected) { $('worldChatStatus').textContent = 'Select a user before sending a message.'; return; } const file = $('worldMediaInput').files[0]; const publish = (media, mediaType) => { const text = $('worldMessageText').value.trim(); const thread = state.messages[state.selected] || []; thread.push({ text, media, mediaType, mine: true }); state.messages[state.selected] = thread; state.feed.push({ author: 'You', text, media, mediaType, createdAt: Date.now() }); save('worldMessages', state.messages); save('worldFeed', state.feed); event.target.reset(); $('worldMediaName').textContent = 'No media selected'; renderMessages(); renderFeed(); $('worldChatStatus').textContent = 'Message sent to conversation.'; }; if (!file) { publish('', ''); return; } const reader = new FileReader(); reader.addEventListener('load', () => publish(reader.result, file.type.startsWith('video/') ? 'video' : 'image')); reader.readAsDataURL(file); });
-        $('worldSendPaymentButton').addEventListener('click', () => payment('send')); $('worldRequestPaymentButton').addEventListener('click', () => payment('request')); renderPeople(); renderGroups(); renderMessages(); renderFeed();
+        $('worldSendPaymentButton').addEventListener('click', () => payment('send')); $('worldRequestPaymentButton').addEventListener('click', () => payment('request')); renderGroups(); renderMessages(); renderFeed();
+        onAuthStateChanged(auth, () => renderPeople());
       })();
     </script>
     <script type="module" src="auth.js"></script>

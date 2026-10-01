@@ -49,6 +49,7 @@
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
       import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
       import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, orderBy, query, updateDoc } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+  import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-storage.js';
 
       const firebaseConfig = {
         apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
@@ -62,6 +63,7 @@
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
+        const storage = getStorage(app);
       const displayName = (user) => `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
 
       onAuthStateChanged(auth, async (firebaseUser) => {
@@ -218,6 +220,7 @@
                 <span id="profileMediaFileName">No media selected</span>
                 <button class="btn btn-primary" type="submit">Post media</button>
               </div>
+              <p class="profile-media-status" id="profileMediaStatus" role="status" aria-live="polite"></p>
             </form>
             <div class="profile-media-feed" id="profileMediaFeed" aria-live="polite"></div>
           </section>
@@ -507,6 +510,7 @@
         const mediaCaption = document.getElementById('profileMediaCaption');
         const mediaFileName = document.getElementById('profileMediaFileName');
         const mediaFeed = document.getElementById('profileMediaFeed');
+        const mediaStatus = document.getElementById('profileMediaStatus');
         const mediaKey = `profileMedia:${user.username}`;
         const reactionOptions = ['❤️', '🔥', '👏', '🚀', '😍'];
         let mediaPosts = JSON.parse(localStorage.getItem(mediaKey) || '[]');
@@ -568,16 +572,38 @@
           mediaFileName.textContent = mediaInput.files[0]?.name || 'No media selected';
         });
 
-        mediaForm.addEventListener('submit', (event) => {
+        mediaForm.addEventListener('submit', async (event) => {
           event.preventDefault();
           const file = mediaInput.files[0];
           if (!file) return;
-          const reader = new FileReader();
-          reader.addEventListener('load', () => {
+          if ((!file.type.startsWith('image/') && !file.type.startsWith('video/')) || file.size > 50 * 1024 * 1024) {
+            mediaStatus.textContent = 'Choose an image or video smaller than 50 MB.';
+            return;
+          }
+
+          const submitButton = mediaForm.querySelector('button[type="submit"]');
+          const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+          const mediaPath = `community-posts/${firebaseUser.uid}/${crypto.randomUUID()}`;
+          submitButton.disabled = true;
+          mediaStatus.textContent = 'Uploading your post...';
+          try {
+            const mediaRef = ref(storage, mediaPath);
+            await uploadBytes(mediaRef, file, { contentType: file.type });
+            const mediaUrl = await getDownloadURL(mediaRef);
+            const caption = mediaCaption.value.trim();
+            await addDoc(collection(db, 'communityPosts'), {
+              authorUid: firebaseUser.uid,
+              authorName: user.username,
+              text: caption,
+              mediaUrl,
+              mediaType,
+              mediaPath,
+              createdAt: new Date()
+            });
             mediaPosts.push({
-              caption: mediaCaption.value.trim(),
-              media: reader.result,
-              mediaType: file.type.startsWith('video/') ? 'video' : 'image',
+              caption,
+              media: mediaUrl,
+              mediaType,
               reactions: {},
               createdAt: Date.now()
             });
@@ -585,8 +611,14 @@
             mediaForm.reset();
             mediaFileName.textContent = 'No media selected';
             renderMedia();
-          });
-          reader.readAsDataURL(file);
+            mediaStatus.textContent = 'Posted to your profile and the Live Feed.';
+          } catch (error) {
+            await deleteObject(ref(storage, mediaPath)).catch(() => {});
+            console.error('Profile media post failed:', error);
+            mediaStatus.textContent = 'Could not publish. Check that Firebase Storage is set up and its rules are deployed.';
+          } finally {
+            submitButton.disabled = false;
+          }
         });
 
         renderMedia();

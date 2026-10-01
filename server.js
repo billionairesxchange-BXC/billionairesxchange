@@ -2,10 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const WebSocket = require('ws');
 const axios = require('axios');
+const crypto = require('crypto');
 const app = express();
 const PORT = 3000;
 
-// Serve static files (your index.html and chart.js)
+app.use(express.json());
 app.use(express.static(__dirname));
 
 // Example REST endpoint for current price
@@ -18,52 +19,6 @@ app.get('/api/price/:symbol', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch price' });
   }
 });
-
-// WebSocket server to stream live data
-const server = app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-const wss = new WebSocket.Server({ server });
-
-wss.on('connection', (ws) => {
-  console.log('Client connected');
-
-  // Default pair
-  let pair = 'btcusdt';
-  let socket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@trade`);
-
-  socket.on('message', (data) => {
-    const trade = JSON.parse(data);
-    ws.send(JSON.stringify({ price: trade.p, quantity: trade.q }));
-  });
-
-  ws.on('message', (msg) => {
-    // Allow frontend to change pair dynamically
-    const { newPair } = JSON.parse(msg);
-    if (newPair) {
-      socket.close();
-      pair = newPair.toLowerCase();
-      socket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@trade`);
-      socket.on('message', (data) => {
-        const trade = JSON.parse(data);
-        ws.send(JSON.stringify({ price: trade.p, quantity: trade.q }));
-      });
-    }
-  });
-
-  ws.on('close', () => {
-    console.log('Client disconnected');
-    socket.close();
-  });
-});
-require('dotenv').config();
-const express = require('express');
-const WebSocket = require('ws');
-const axios = require('axios');
-const crypto = require('crypto');
-const app = express();
-const PORT = 3000;
-
-app.use(express.json());
-app.use(express.static(__dirname));
 
 const BINANCE_API_KEY = process.env.BINANCE_API_KEY;
 const BINANCE_API_SECRET = process.env.BINANCE_API_SECRET;
@@ -126,5 +81,35 @@ app.get('/api/account', async (req, res) => {
 });
 
 const server = app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (ws) => {
+  console.log('Client connected');
+  let pair = 'btcusdt';
+  let socket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@trade`);
+
+  socket.on('message', (data) => {
+    const trade = JSON.parse(data);
+    ws.send(JSON.stringify({ price: trade.p, quantity: trade.q }));
+  });
+
+  ws.on('message', (msg) => {
+    const { newPair } = JSON.parse(msg);
+    if (newPair) {
+      socket.close();
+      pair = newPair.toLowerCase();
+      socket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@trade`);
+      socket.on('message', (data) => {
+        const trade = JSON.parse(data);
+        ws.send(JSON.stringify({ price: trade.p, quantity: trade.q }));
+      });
+    }
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+    socket.close();
+  });
+});
 
 

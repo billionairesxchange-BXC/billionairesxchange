@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Community Profile</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange" width="100" />
+        <div><p class="brand-name">BillionairesXchange</p><small>Community</small></div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="live-feed.html">Live Feed</a>
+        <a href="billionaires-world.html">Billionaires World</a>
+      </nav>
+      <div class="nav-actions"></div>
+    </header>
+
+    <main>
+      <section class="profile-section section-shell">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Community profile</span>
+            <h1 id="profileTitle">Member</h1>
+            <p id="profileHandle"></p>
+          </div>
+          <a class="btn btn-ghost" href="live-feed.html">Back to Live Feed</a>
+        </div>
+        <div class="live-post-list" id="profilePosts" aria-live="polite">
+          <p class="live-feed-empty">Loading posts...</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><p>© 2026 BillionairesXchange | Community.</p></footer>
+
+    <script type="module" src="auth.js"></script>
+    <script type="module">
+      import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { collection, doc, getDoc, getDocs, getFirestore, limit, query, where } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
+        authDomain: 'billionairesxchange-e8162.firebaseapp.com',
+        projectId: 'billionairesxchange-e8162',
+        storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
+        messagingSenderId: '872942229296',
+        appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
+        measurementId: 'G-JCZ6FCKF3M'
+      };
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const profilePosts = document.getElementById('profilePosts');
+      const profileTitle = document.getElementById('profileTitle');
+      const profileHandle = document.getElementById('profileHandle');
+      const uid = new URLSearchParams(window.location.search).get('uid');
+
+      function showMessage(message, withLogin = false) {
+        profilePosts.replaceChildren();
+        const text = document.createElement('p');
+        text.className = 'live-feed-empty';
+        text.textContent = message;
+        profilePosts.appendChild(text);
+        if (withLogin) {
+          const link = document.createElement('a');
+          link.className = 'btn btn-primary';
+          link.href = 'verification.html#login';
+          link.textContent = 'Sign in';
+          profilePosts.appendChild(link);
+        }
+      }
+
+      function renderPost(post) {
+        const article = document.createElement('article');
+        article.className = 'live-post card-glass';
+        const heading = document.createElement('div');
+        heading.className = 'live-post-heading';
+        const author = document.createElement('strong');
+        author.textContent = `@${post.authorName || 'member'}`;
+        const time = document.createElement('time');
+        const createdAt = post.createdAt?.toDate?.() || new Date();
+        time.dateTime = createdAt.toISOString();
+        time.textContent = createdAt.toLocaleString();
+        heading.append(author, time);
+        article.appendChild(heading);
+
+        if (post.text) {
+          const text = document.createElement('p');
+          text.className = 'live-post-body';
+          text.textContent = post.text;
+          article.appendChild(text);
+        }
+        if (post.mediaUrl) {
+          const media = document.createElement(post.mediaType === 'video' ? 'video' : 'img');
+          media.className = 'live-post-media';
+          media.src = post.mediaUrl;
+          if (post.mediaType === 'video') media.controls = true;
+          else media.alt = `Photo shared by @${post.authorName || 'member'}`;
+          article.appendChild(media);
+        }
+        return article;
+      }
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          showMessage('Sign in to view community profiles and posts.', true);
+          return;
+        }
+        if (!uid) {
+          showMessage('This profile link is missing a user ID.');
+          return;
+        }
+
+        try {
+          const [directorySnapshot, postsSnapshot] = await Promise.all([
+            getDoc(doc(db, 'userDirectory', uid)),
+            getDocs(query(collection(db, 'communityPosts'), where('authorUid', '==', uid), limit(50)))
+          ]);
+          const posts = postsSnapshot.docs
+            .map((postSnapshot) => postSnapshot.data())
+            .sort((left, right) => (right.createdAt?.toMillis?.() || 0) - (left.createdAt?.toMillis?.() || 0));
+          const username = directorySnapshot.exists()
+            ? directorySnapshot.data().username
+            : posts[0]?.authorName || 'Member';
+          profileTitle.textContent = username;
+          profileHandle.textContent = `@${username}`;
+
+          if (!posts.length) {
+            showMessage('This user has not posted yet.');
+            return;
+          }
+          profilePosts.replaceChildren(...posts.map(renderPost));
+        } catch (error) {
+          console.error('Unable to load community profile:', error);
+          showMessage('Could not load this profile. Check your connection and deployed Firestore rules.');
+        }
+      });
+    </script>
+  </body>
+</html>
