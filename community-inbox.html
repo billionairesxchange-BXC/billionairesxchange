@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Community Inbox</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange" width="100" />
+        <div><p class="brand-name">BillionairesXchange</p><small>Community</small></div>
+      </div>
+      <nav class="main-nav" aria-label="Community navigation">
+        <a href="billionaires-world.html">Billionaires World</a>
+        <a href="live-feed.html">Live Feed</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+      </nav>
+      <div class="nav-actions"></div>
+    </header>
+
+    <main>
+      <section class="section-shell community-inbox-section">
+        <div class="section-head">
+          <div><span class="eyebrow">Billionaires World</span><h1>Community Inbox</h1></div>
+          <a class="btn btn-ghost" href="billionaires-world.html">Back to Community</a>
+        </div>
+        <p class="community-inbox-status" id="inboxStatus" role="status" aria-live="polite">Checking your account...</p>
+        <div class="community-inbox-layout">
+          <div class="community-inbox-list" id="inboxList" aria-label="Inbox messages"></div>
+          <section class="community-inbox-message" id="inboxMessagePanel" aria-labelledby="inboxSubject" hidden>
+            <div class="community-inbox-message-head">
+              <div>
+                <span class="eyebrow" id="inboxMessageType">Signed investment contract</span>
+                <h2 id="inboxSubject"></h2>
+              </div>
+              <a class="btn btn-secondary" id="downloadInboxContract" download hidden>Download PDF</a>
+            </div>
+            <dl class="community-inbox-meta">
+              <div><dt>Investor</dt><dd id="inboxInvestor"></dd></div>
+              <div><dt>Company</dt><dd id="inboxCompany"></dd></div>
+              <div><dt>Investment</dt><dd id="inboxInvestment"></dd></div>
+              <div><dt>Term</dt><dd id="inboxTerm"></dd></div>
+              <div><dt>Sent</dt><dd id="inboxDate"></dd></div>
+            </dl>
+            <pre class="community-inbox-contract-text" id="inboxContractText"></pre>
+            <p class="community-inbox-status" id="inboxPreviewStatus" role="status"></p>
+            <div class="contract-pdf-pages" id="inboxContractPreview" aria-label="Signed contract PDF preview"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><p>© 2026 BillionairesXchange | Community.</p></footer>
+
+    <script type="module" src="auth.js"></script>
+    <script type="module">
+      import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { collection, getDocs, getFirestore, limit, orderBy, query } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
+        authDomain: 'billionairesxchange-e8162.firebaseapp.com',
+        projectId: 'billionairesxchange-e8162',
+        storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
+        messagingSenderId: '872942229296',
+        appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
+        measurementId: 'G-JCZ6FCKF3M'
+      };
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const inboxList = document.getElementById('inboxList');
+      const inboxStatus = document.getElementById('inboxStatus');
+      const messagePanel = document.getElementById('inboxMessagePanel');
+      const preview = document.getElementById('inboxContractPreview');
+      let messages = [];
+      let renderVersion = 0;
+
+      function formatDate(value) {
+        const date = value?.toDate ? value.toDate() : new Date(value);
+        return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleString();
+      }
+
+      async function showMessage(message) {
+        const version = ++renderVersion;
+        messagePanel.hidden = false;
+        document.getElementById('inboxSubject').textContent = message.subject || 'Signed investment contract';
+        document.getElementById('inboxInvestor').textContent = `${message.investorName} (${message.investorType})${message.investorCompany ? ` - ${message.investorCompany}` : ''}`;
+        document.getElementById('inboxCompany').textContent = message.companyName || 'Company';
+        document.getElementById('inboxInvestment').textContent = `${new Intl.NumberFormat(undefined, { style: 'currency', currency: message.currency }).format(message.amount)} (${message.currency})`;
+        document.getElementById('inboxTerm').textContent = message.term || 'Not provided';
+        document.getElementById('inboxDate').textContent = formatDate(message.createdAt);
+        document.getElementById('inboxContractText').textContent = message.contractText || '';
+        const download = document.getElementById('downloadInboxContract');
+        download.href = message.contractPdfDataUrl;
+        download.download = message.contractFileName || 'signed-investment-agreement.pdf';
+        download.hidden = false;
+        preview.replaceChildren();
+        const status = document.getElementById('inboxPreviewStatus');
+        status.textContent = 'Rendering contract...';
+
+        try {
+          const response = await fetch(message.contractPdfDataUrl);
+          const blob = await response.blob();
+          const pdfjsLib = await import('./node_modules/pdfjs-dist/build/pdf.mjs');
+          pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('node_modules/pdfjs-dist/build/pdf.worker.min.mjs', document.baseURI).href;
+          const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise;
+          for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+            if (version !== renderVersion) return;
+            const page = await pdf.getPage(pageNumber);
+            const baseViewport = page.getViewport({ scale: 1 });
+            const viewport = page.getViewport({ scale: Math.min(1.2, Math.max(240, preview.clientWidth - 32) / baseViewport.width) });
+            const frame = document.createElement('div');
+            frame.className = 'contract-pdf-page';
+            const canvas = document.createElement('canvas');
+            const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = Math.ceil(viewport.width * pixelRatio);
+            canvas.height = Math.ceil(viewport.height * pixelRatio);
+            canvas.style.width = `${viewport.width}px`;
+            canvas.style.height = `${viewport.height}px`;
+            canvas.setAttribute('aria-label', `Contract PDF page ${pageNumber}`);
+            frame.appendChild(canvas);
+            preview.appendChild(frame);
+            const context = canvas.getContext('2d');
+            context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+            await page.render({ canvasContext: context, viewport }).promise;
+          }
+          if (version === renderVersion) status.textContent = `${pdf.numPages} page${pdf.numPages === 1 ? '' : 's'} ready to preview.`;
+        } catch {
+          if (version === renderVersion) status.textContent = 'Could not preview this contract. Use Download PDF to open it.';
+        }
+      }
+
+      function renderMessages() {
+        inboxList.replaceChildren();
+        if (!messages.length) {
+          inboxList.innerHTML = '<p class="community-inbox-empty">Your Community inbox is empty.</p>';
+          return;
+        }
+        messages.forEach((message) => {
+          const button = document.createElement('button');
+          button.className = 'community-inbox-item';
+          button.type = 'button';
+          const subject = document.createElement('strong');
+          subject.textContent = message.subject || 'Signed investment contract';
+          const company = document.createElement('span');
+          company.textContent = message.companyName || 'Company';
+          const date = document.createElement('small');
+          date.textContent = formatDate(message.createdAt);
+          button.append(subject, company, date);
+          button.addEventListener('click', () => showMessage(message));
+          inboxList.appendChild(button);
+        });
+        showMessage(messages[0]);
+      }
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          inboxStatus.innerHTML = 'Sign in to view your Community inbox. <a href="verification.html#login">Sign in</a>';
+          inboxList.replaceChildren();
+          return;
+        }
+        inboxStatus.textContent = 'Loading your inbox...';
+        try {
+          const inboxQuery = query(collection(db, 'users', user.uid, 'communityInbox'), orderBy('createdAt', 'desc'), limit(50));
+          const snapshot = await getDocs(inboxQuery);
+          messages = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+          inboxStatus.textContent = `${messages.length} message${messages.length === 1 ? '' : 's'}`;
+          renderMessages();
+        } catch (error) {
+          console.error('Unable to load Community inbox:', error);
+          inboxStatus.textContent = 'Could not load your Community inbox. Check your connection and Firestore rules.';
+        }
+      });
+    </script>
+  </body>
+</html>

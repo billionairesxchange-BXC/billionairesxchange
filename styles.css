@@ -641,7 +641,10 @@ header.topbar {
   .btn-transfer,
   .btn-send,
   .btn-bills,
-  .btn-investment {
+  .btn-investment,
+  .btn-insurance,
+  .btn-mortgage,
+  .btn-vault {
     background: linear-gradient(135deg, #d4af37 0%, #f2d77c 100%);
     color: #0b0b0b;
     border: 2px solid #d4af37;
@@ -652,7 +655,10 @@ header.topbar {
   .btn-transfer:hover,
   .btn-send:hover,
   .btn-bills:hover,
-  .btn-investment:hover {
+  .btn-investment:hover,
+  .btn-insurance:hover,
+  .btn-mortgage:hover,
+  .btn-vault:hover {
     background: linear-gradient(135deg, #f2d77c 0%, #f7e8aa 100%);
     box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
     transform: translateY(-2px);
@@ -845,14 +851,94 @@ header.topbar {
   .company-path { border: 1px solid rgba(212, 175, 55, .3); background: transparent; color: var(--light-gold); border-radius: 4px; padding: .55rem .7rem; cursor: pointer; }
   .company-path.is-active { background: rgba(212, 175, 55, .14); border-color: var(--primary-gold); color: var(--primary-gold); }
   .company-path-panel { margin-top: 1rem; }
+  .company-choice-label { color: var(--light-gold); font-size: .82rem; margin-bottom: .65rem; }
+  .company-option-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .65rem; }
+  .company-option { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: .75rem; min-height: 72px; padding: .7rem; border: 1px solid rgba(212, 175, 55, .25); border-radius: 4px; background: rgba(212, 175, 55, .04); color: var(--white); text-align: left; cursor: pointer; }
+  .company-option:hover, .company-option.is-selected { border-color: var(--primary-gold); background: rgba(212, 175, 55, .12); }
+  .company-option:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
+  .company-option-logo { display: grid; place-items: center; width: 48px; aspect-ratio: 1; border-radius: 50%; background: var(--primary-gold); color: var(--black); font-weight: 800; }
+  .company-option-details { display: grid; min-width: 0; gap: .1rem; }
+  .company-option-details strong { overflow-wrap: anywhere; color: var(--white); font-size: .85rem; }
+  .company-option-details small { color: #9b927a; font-size: .7rem; }
+  .company-option-logo img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .selected-company-details { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(212, 175, 55, .25); }
+  .selected-company-details[hidden] { display: none; }
+  .selected-company-heading { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+  .selected-company-heading h4 { color: var(--white); font-size: 1rem; }
+  .selected-company-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem 1rem; }
+  .selected-company-grid > div { min-width: 0; padding: .55rem 0; border-bottom: 1px solid rgba(212, 175, 55, .12); }
+  .selected-company-grid dt { color: #9b927a; font-size: .7rem; }
+  .selected-company-grid dd { margin-top: .15rem; color: var(--light-gold); font-size: .82rem; overflow-wrap: anywhere; white-space: pre-wrap; }
+  .selected-company-grid .selected-company-wide { grid-column: 1 / -1; }
+  .selected-company-investor-form, .selected-company-agreement { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(212, 175, 55, .25); }
+  .selected-company-investor-form h5, .selected-company-agreement h5 { margin-bottom: .65rem; color: var(--primary-gold); font-size: .9rem; }
+  .selected-company-agreement { display: grid; gap: .65rem; }
+  .selected-company-agreement-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+  .selected-company-agreement-heading p { color: #9b927a; font-size: .72rem; }
+  .selected-company-agreement > label { color: var(--light-gold); font-size: .78rem; }
+  .selected-company-agreement textarea { width: 100%; min-height: 220px; padding: .7rem; border: 1px solid rgba(212, 175, 55, .3); border-radius: 4px; color: var(--white); background: #151515; font: inherit; resize: vertical; }
+  #selectedCompanyAgreementPdfPanel[hidden] { display: none; }
+  .selected-company-contract { display: grid; gap: .55rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(212, 175, 55, .25); }
+  .selected-company-contract h5 { color: var(--primary-gold); font-size: .9rem; }
+  .selected-company-contract p { color: var(--light-gold); font-size: .75rem; }
+  .selected-company-contract pre { padding: .8rem; border: 1px solid rgba(212, 175, 55, .25); border-radius: 4px; color: var(--white); background: #111; font: inherit; font-size: .78rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .selected-company-contract [hidden], .contract-pdf-pages[hidden], #downloadSelectedCompanyContract[hidden] { display: none; }
+  #downloadSelectedCompanyContract { justify-self: start; text-decoration: none; }
+  .coin-investment-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
+  .coin-investment-empty { color: var(--light-gold); font-size: .85rem; padding: .9rem 0; }
   .company-path-panel label, .company-investment-terms label { display: grid; gap: .35rem; color: var(--light-gold); font-size: .78rem; }
   .company-path-panel input, .company-path-panel select, .company-path-panel textarea, .company-investment-terms input, .company-investment-terms select { background: #151515; border: 1px solid rgba(212, 175, 55, .3); color: var(--white); border-radius: 4px; padding: .65rem .7rem; font: inherit; resize: vertical; }
   .company-form-grid, .company-investment-terms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+  .investment-amount-inputs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: .5rem; }
+  .investment-amount-inputs select, .investment-amount-inputs input { min-width: 0; width: 100%; }
   .company-field-wide { grid-column: 1 / -1; }
+  .field-help { color: #9b927a; font-size: .7rem; }
+  .company-logo-preview { display: flex; align-items: center; gap: .7rem; color: var(--light-gold); font-size: .78rem; }
+  .company-logo-preview[hidden] { display: none; }
+  .company-logo-preview img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(212, 175, 55, .45); }
+  .contract-field { display: grid; gap: .5rem; }
+  .contract-field-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .7rem; }
+  .contract-field-head label { display: block; }
+  .contract-field-head .btn { padding: .5rem .7rem; font-size: .75rem; }
+  .contract-source-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .contract-pdf-panel { display: grid; gap: .5rem; }
+  .contract-pdf-panel[hidden], #downloadContractPdf[hidden] { display: none; }
+  .contract-pdf-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem; color: var(--light-gold); font-size: .78rem; }
+  .contract-pdf-toolbar > div { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .contract-pdf-toolbar .btn { padding: .45rem .65rem; font-size: .72rem; text-decoration: none; }
+  .contract-pdf-pages { display: grid; justify-items: center; gap: .8rem; max-height: min(72vh, 760px); overflow: auto; padding: .8rem; border: 1px solid rgba(212, 175, 55, .3); border-radius: 4px; background: #292929; }
+  .contract-pdf-page { max-width: 100%; padding: .25rem; background: #fff; box-shadow: 0 2px 10px rgba(0, 0, 0, .4); }
+  .contract-pdf-page canvas { display: block; max-width: 100%; height: auto; }
+  .contract-pdf-status { color: var(--light-gold); font-size: .75rem; }
+  .investor-signature-section { display: grid; gap: .5rem; margin-top: .75rem; }
+  .investor-signature-section > label { display: block; }
+  #investorSignatureCanvas { display: block; width: 100%; height: 128px; border: 1px dashed rgba(212, 175, 55, .55); border-radius: 4px; background: #111; touch-action: none; cursor: crosshair; }
+  #investorSignatureCanvas:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
+  .signature-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; color: #9b927a; font-size: .72rem; }
+  .signature-actions .btn { padding: .45rem .65rem; font-size: .72rem; }
   .company-investment-terms { margin-top: 1rem; }
   .contract-check { display: flex !important; grid-template-columns: none; align-items: flex-start; gap: .55rem; margin-top: 1rem; line-height: 1.4; }
   .contract-check input { margin-top: .2rem; accent-color: var(--primary-gold); }
   .contract-note { color: #9b927a; font-size: .72rem; margin-top: .8rem; }
+
+  .community-inbox-section > .section-head h1 { color: var(--primary-gold); font-size: 2rem; }
+  .community-inbox-status { color: var(--light-gold); font-size: .8rem; margin: .75rem 0; }
+  .community-inbox-layout { display: grid; grid-template-columns: minmax(220px, .75fr) minmax(0, 1.5fr); gap: 1rem; align-items: start; }
+  .community-inbox-list { display: grid; gap: .5rem; }
+  .community-inbox-item { display: grid; gap: .2rem; width: 100%; padding: .8rem; border: 1px solid rgba(212, 175, 55, .25); border-radius: 4px; background: rgba(212, 175, 55, .04); color: var(--white); text-align: left; cursor: pointer; }
+  .community-inbox-item:hover, .community-inbox-item:focus-visible { border-color: var(--primary-gold); background: rgba(212, 175, 55, .12); }
+  .community-inbox-item strong { overflow-wrap: anywhere; color: var(--gold-soft); font-size: .82rem; }
+  .community-inbox-item span, .community-inbox-item small { color: #aaa; font-size: .72rem; }
+  .community-inbox-empty { padding: 1rem 0; color: var(--light-gold); font-size: .85rem; }
+  .community-inbox-message { min-width: 0; padding: 1rem; border: 1px solid rgba(212, 175, 55, .25); border-radius: 4px; background: rgba(15, 15, 15, .75); }
+  .community-inbox-message[hidden] { display: none; }
+  .community-inbox-message-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+  .community-inbox-message-head h2 { overflow-wrap: anywhere; font-size: 1rem; }
+  .community-inbox-message-head .btn { text-decoration: none; }
+  .community-inbox-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem 1rem; margin: 1rem 0; }
+  .community-inbox-meta dt { color: #9b927a; font-size: .7rem; }
+  .community-inbox-meta dd { color: var(--light-gold); font-size: .8rem; overflow-wrap: anywhere; }
+  .community-inbox-contract-text { margin-bottom: .8rem; padding: .8rem; border: 1px solid rgba(212, 175, 55, .2); border-radius: 4px; background: #111; color: var(--light-gold); font: inherit; font-size: .76rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 
   .payment-methods {
     margin: 2rem 0;
@@ -1000,6 +1086,11 @@ header.topbar {
       grid-template-columns: 1fr;
     }
 
+    .investment-amount-inputs { grid-template-columns: 1fr; }
+    .selected-company-grid { grid-template-columns: 1fr; }
+    .selected-company-grid .selected-company-wide { grid-column: auto; }
+    .community-inbox-layout, .community-inbox-meta { grid-template-columns: 1fr; }
+
     .company-field-wide {
       grid-column: auto;
     }
@@ -1049,6 +1140,61 @@ section {
   font-size: 32px;
   color: var(--primary-gold);
   margin-top: 0.5rem;
+}
+
+.treasury-quick-menu {
+  position: relative;
+  z-index: 4;
+}
+
+.treasury-quick-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .7rem 1rem;
+  border: 1px solid var(--primary-gold);
+  border-radius: 4px;
+  background: rgba(212, 175, 55, .12);
+  color: var(--primary-gold);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.treasury-quick-menu-trigger:hover,
+.treasury-quick-menu-trigger:focus-visible {
+  background: var(--primary-gold);
+  color: var(--black);
+}
+
+.treasury-quick-menu-items {
+  position: absolute;
+  top: calc(100% + .4rem);
+  right: 0;
+  display: grid;
+  gap: .4rem;
+  width: min(250px, calc(100vw - 2rem));
+  padding: .6rem;
+  border: 1px solid rgba(212, 175, 55, .55);
+  border-radius: 4px;
+  background: #080808;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .45);
+}
+
+.treasury-quick-menu-items[hidden] {
+  display: none;
+}
+
+.treasury-quick-menu-items .btn-action {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+
+@media (max-width: 640px) {
+  .treasury-quick-menu-trigger {
+    padding: .6rem .7rem;
+  }
 }
 
 .eyebrow {

@@ -1165,13 +1165,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const transferBtn = document.getElementById('transferBtn');
     const sendBtn = document.getElementById('sendBtn');
     const billsBtn = document.getElementById('billsBtn');
+    const insuranceBtn = document.getElementById('insuranceBtn');
+    const mortgageBtn = document.getElementById('mortgageBtn');
+    const vaultBtn = document.getElementById('vaultBtn');
 
     const transactionMessages = {
       deposit: 'Opening Deposit form...\n\nYou can add funds from:\n- Bank Transfer\n- Credit/Debit Card\n- Crypto Transfer',
       withdraw: 'Opening Withdrawal form...\n\nSelect destination:\n- Bank Account\n- Credit/Debit Card\n- Crypto Wallet',
       transfer: 'Opening Transfer form...\n\nTransfer between:\n- Your Wallets\n- Trading Accounts\n- Vault Storage',
       send: 'Opening Send form...\n\nSend funds to:\n- Contacts\n- Beneficiaries\n- Email Address',
-      bills: 'Opening Bill Payment form...\n\nPay:\n- Utility Bills\n- Electricity\n- Data Services\n- Other Services'
+      bills: 'Opening Bill Payment form...\n\nPay:\n- Utility Bills\n- Electricity\n- Data Services\n- Other Services',
+      insurance: 'Opening Insurance payments...\n\nManage car, home, and other protected payments.',
+      mortgage: 'Opening Mortgage payments...\n\nManage property payments and recurring amortization plans.',
+      vault: 'Opening Secure Vault...\n\nStore funds in your protected banking vault before execution.'
     };
 
     if (depositBtn) {
@@ -1201,6 +1207,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (billsBtn) {
       billsBtn.addEventListener('click', () => {
         alert(transactionMessages.bills);
+      });
+    }
+
+    if (insuranceBtn) {
+      insuranceBtn.addEventListener('click', () => {
+        alert(transactionMessages.insurance);
+      });
+    }
+
+    if (mortgageBtn) {
+      mortgageBtn.addEventListener('click', () => {
+        alert(transactionMessages.mortgage);
+      });
+    }
+
+    if (vaultBtn) {
+      vaultBtn.addEventListener('click', () => {
+        alert(transactionMessages.vault);
       });
     }
   });

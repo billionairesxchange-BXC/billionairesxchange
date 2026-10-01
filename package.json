@@ -11,6 +11,8 @@
     "chartjs-chart-financial": "^0.2.1",
     "dotenv": "^18.0.3",
     "express": "^5.2.1",
+    "jspdf": "^4.2.1",
+    "pdfjs-dist": "^4.10.38",
     "ws": "^8.21.3"
   }
 }
