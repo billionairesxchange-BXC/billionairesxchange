@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    match /users/{userId} {
+      allow create: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.keys().hasAll(['email', 'username', 'createdAt'])
+        && request.resource.data.keys().hasOnly([
+          'firstName',
+          'lastName',
+          'email',
+          'phone',
+          'username',
+          'age',
+          'preferredCurrency',
+          'idType',
+          'governmentIdType',
+          'governmentIdNumber',
+          'investedBefore',
+          'tradingAmount',
+          'incomeSource',
+          'riskLevel',
+          'dob',
+          'countryBirth',
+          'emailVerified',
+          'phoneVerified',
+          'createdAt'
+        ]);
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow list, update, delete: if false;
+    }
+
+    match /usernames/{username} {
+      allow get: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid;
+      allow list, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

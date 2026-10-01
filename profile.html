@@ -44,13 +44,29 @@
       <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
     </footer>
 
-    <script src="auth.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const profileContent = document.getElementById('profileContent');
-        const user = window.MakingsAuth.getCurrentUser();
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { doc, getDoc, getFirestore } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 
-        if (!user) {
+      const firebaseConfig = {
+        apiKey: 'AIzaSyBue8CgOU3cd8wjt9oeMDqaNkpBiraDNYw',
+        authDomain: 'billionaires-87519.firebaseapp.com',
+        projectId: 'billionaires-87519',
+        storageBucket: 'billionaires-87519.firebasestorage.app',
+        messagingSenderId: '799625535151',
+        appId: '1:799625535151:web:283629136b45f40afc7e5a',
+        measurementId: 'G-X16NGMSE4B'
+      };
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const displayName = (user) => `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
+
+      onAuthStateChanged(auth, async (firebaseUser) => {
+        const profileContent = document.getElementById('profileContent');
+
+        if (!firebaseUser) {
           profileContent.innerHTML = `
             <div class="card-glass profile-empty">
               <h2>Sign in to view your profile</h2>
@@ -61,11 +77,29 @@
           return;
         }
 
+        let user;
+        try {
+          const userSnapshot = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (!userSnapshot.exists()) throw new Error('Private profile not found.');
+          user = userSnapshot.data();
+        } catch (error) {
+          profileContent.innerHTML = `
+            <div class="card-glass profile-empty">
+              <h2>Private profile unavailable</h2>
+              <p>We could not securely load this account's profile.</p>
+              <a class="btn btn-primary" href="verification.html#login">Return to login</a>
+            </div>
+          `;
+          return;
+        }
+
         const details = [
-          ['Full name', window.MakingsAuth.displayName(user)],
+          ['Full name', displayName(user)],
           ['Username ID', user.username],
           ['Email', user.email],
           ['Phone number', user.phone],
+          ['Age', user.age],
+          ['Preferred currency', user.preferredCurrency ? user.preferredCurrency.toUpperCase() : null],
           ['Date of birth', user.dob],
           ['Country of birth', user.countryBirth],
           ['Identity document', user.idType || 'Pending verification'],
@@ -74,8 +108,8 @@
 
         profileContent.innerHTML = `
           <div class="profile-identity card-glass">
-            <div class="profile-avatar">${window.MakingsAuth.displayName(user).charAt(0).toUpperCase()}</div>
-            <h2>${window.MakingsAuth.displayName(user)}</h2>
+            <div class="profile-avatar">${displayName(user).charAt(0).toUpperCase()}</div>
+            <h2>${displayName(user)}</h2>
             <p>@${user.username}</p>
             <span class="profile-status">Account active</span>
           </div>
@@ -196,8 +230,10 @@
 
         renderMedia();
 
-        profileContent.querySelector('.profile-logout').addEventListener('click', () => {
-          window.MakingsAuth.clearCurrentUser();
+        profileContent.querySelector('.profile-logout').addEventListener('click', async () => {
+          await signOut(auth);
+          localStorage.removeItem('makingsCurrentUser');
+          localStorage.removeItem('makingsAuthUid');
           window.location.href = 'verification.html#login';
         });
       });

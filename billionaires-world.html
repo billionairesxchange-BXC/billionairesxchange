@@ -60,13 +60,7 @@
     <script>
       (() => {
         const username = localStorage.getItem('makingsCurrentUser');
-        let hasWorldAccess = false;
-        try {
-          const accounts = JSON.parse(localStorage.getItem('makingsAccounts') || '[]');
-          hasWorldAccess = Boolean(username && Array.isArray(accounts) && accounts.some((account) => account.username === username));
-        } catch (error) {
-          hasWorldAccess = false;
-        }
+        const hasWorldAccess = Boolean(username && localStorage.getItem('makingsAuthUid'));
         if (!hasWorldAccess) {
           window.location.replace('verification.html#login');
           return;

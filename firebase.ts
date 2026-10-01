@@ -1,7 +1,11 @@
 // Import the functions you need from the SDKs you need
+// @ts-expect-error Firebase is loaded by the project's runtime configuration.
 import { initializeApp } from "firebase/app";
+// @ts-expect-error Firebase is loaded by the project's runtime configuration.
 import { getAuth } from "firebase/auth";
+// @ts-expect-error Firebase is loaded by the project's runtime configuration.
 import { getFirestore } from "firebase/firestore";
+// @ts-expect-error Firebase is loaded by the project's runtime configuration.
 import { getAnalytics } from "firebase/analytics";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries

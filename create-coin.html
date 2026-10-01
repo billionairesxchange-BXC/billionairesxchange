@@ -275,7 +275,18 @@
 
       function showCoin(coin) {
         activeCoin = coin;
-        candles = seedCandles(coin);
+        let savedHistory = {};
+        try {
+          savedHistory = JSON.parse(localStorage.getItem('customCoinMarketHistory') || '{}');
+        } catch (error) {
+          savedHistory = {};
+        }
+        const storedCandles = savedHistory[coin.symbol];
+        candles = Array.isArray(storedCandles) && storedCandles.length
+          ? storedCandles.filter((candle) => Number.isFinite(candle.open) && Number.isFinite(candle.close)).slice(-500)
+          : seedCandles(coin);
+        savedHistory[coin.symbol] = candles;
+        localStorage.setItem('customCoinMarketHistory', JSON.stringify(savedHistory));
         coinMarketTitle.textContent = coin.name + ' (' + coin.symbol + ')';
         coinCandleStatus.textContent = '15m candles • local market feed';
         coinChartEmpty.hidden = true;
@@ -331,6 +342,9 @@
         const coin = {
           name: formData.get('coinName').trim(),
           symbol: formData.get('coinSymbol').trim().toUpperCase(),
+          website: formData.get('website').trim(),
+          publishFee: Number(formData.get('publishFee')) || 0,
+          imageName: formData.get('coinImage')?.name || '',
           createdAt: Date.now()
         };
         const savedCoins = JSON.parse(localStorage.getItem('customCoins') || '[]');

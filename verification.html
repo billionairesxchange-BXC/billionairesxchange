@@ -116,6 +116,20 @@
         box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
       }
 
+      .panel.intro-only,
+      .panel.form-only {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .panel.intro-only .sidebar {
+        border-right: none;
+      }
+
+      .onboarding-next {
+        min-width: 120px;
+        margin-top: 22px;
+      }
+
       .sidebar {
         padding: 30px 24px;
         background: linear-gradient(180deg, rgba(212, 175, 55, 0.08), rgba(255,255,255,0.01));
@@ -234,6 +248,42 @@
       select[name="countryBirth"] option {
         background: #000;
         color: var(--white);
+      }
+
+      select[name="governmentIdType"],
+      select[name="governmentIdType"] option {
+        background: #000;
+        color: #fff;
+      }
+
+      select[name="investedBefore"],
+      select[name="investedBefore"] option {
+        background: #000;
+        color: #fff;
+      }
+
+      select[name="preferredCurrency"],
+      select[name="preferredCurrency"] option {
+        background: #000;
+        color: #fff;
+      }
+
+      select[name="tradingAmount"],
+      select[name="tradingAmount"] option {
+        background: #000;
+        color: #fff;
+      }
+
+      select[name="incomeSource"],
+      select[name="incomeSource"] option {
+        background: #000;
+        color: #fff;
+      }
+
+      select[name="riskLevel"],
+      select[name="riskLevel"] option {
+        background: #000;
+        color: #fff;
       }
 
       .full-width {
@@ -381,29 +431,28 @@
 
         <div class="top-links">
           <a href="index.html">Home</a>
-          <button type="button" class="primary" onclick="document.querySelector('#loginTab').click()">Login</button>
-          <button type="button" class="primary" onclick="document.querySelector('#signupTab').click()">Sign Up</button>
         </div>
       </header>
 
-      <main class="panel">
-        <aside class="sidebar">
-          <span class="tag">secure onboarding</span>
+      <main class="panel intro-only" id="registrationPanel">
+        <aside class="sidebar" id="onboardingIntro">
+          <span class="tag">SECURE ONBOARDING</span>
           <h1>Protect your account before trading begins.</h1>
           <p>
-            New members must verify identity, email, and phone number to prevent fraud,
+            New members must verify identity and email to prevent fraud,
             identity theft, and suspicious account activity before deposits and trades are approved.
           </p>
 
           <div class="check-list">
             <div><span class="bullet"></span> Email verification</div>
-            <div><span class="bullet"></span> Phone verification</div>
+            <div><span class="bullet"></span> Phone contact details</div>
             <div><span class="bullet"></span> ID and selfie review</div>
             <div><span class="bullet"></span> Fraud and identity protection</div>
           </div>
+          <button class="primary-btn onboarding-next" id="beginSignupBtn" type="button">Next</button>
         </aside>
 
-        <section class="form-panel">
+        <section class="form-panel" id="authPanel" hidden>
           <div class="auth-tabs">
             <button id="loginTab" type="button">Login</button>
             <button id="signupTab" class="active" type="button">Sign Up</button>
@@ -412,8 +461,8 @@
           <div id="loginBox" class="auth-box">
             <form id="loginForm">
               <label>
-                Username or email
-                <input type="text" name="loginName" placeholder="username or email" required />
+                Email address
+                <input type="email" name="loginName" autocomplete="email" placeholder="you@example.com" required />
               </label>
               <label>
                 Password
@@ -434,6 +483,10 @@
                   <label>
                     Last Name
                     <input type="text" name="lastName" placeholder="Last Name" required />
+                  </label>
+                  <label>
+                    Age
+                    <input type="number" name="age" placeholder="Age" min="1" max="120" step="1" required />
                   </label>
                   <label>
                     Email
@@ -488,36 +541,192 @@
               </div>
 
               <div class="signup-step" data-step="2">
-                <div class="verify-box">
-                  <h3>Verification and fraud prevention</h3>
-                  <p>
-                    We protect against fraud and identity theft. All new accounts must verify email,
-                    phone, and identity before trading is approved.
-                  </p>
-                  <div class="verify-actions">
-                    <button class="secondary-btn" type="button" id="sendEmailVerify">Send email verification</button>
-                    <button class="secondary-btn" type="button" id="sendPhoneVerify">Send phone verification</button>
-                  </div>
-                  <div class="otp-box" id="emailOtpBox" style="display: none; margin-top: 1rem;">
-                    <label>
-                      Enter email OTP code
-                      <input type="text" id="emailOtpCode" maxlength="6" placeholder="6-digit code" />
-                    </label>
-                    <div class="verify-actions" style="margin-top: 0.75rem;">
-                      <button class="primary-btn" type="button" id="verifyEmailOtp">Verify email OTP</button>
-                      <button class="secondary-btn" type="button" id="resendEmailOtp">Resend email code</button>
-                    </div>
-                  </div>
-                  <div class="otp-box" id="otpBox" style="display: none; margin-top: 1rem;">
-                    <label>
-                      Enter phone OTP code
-                      <input type="text" id="otpCode" maxlength="6" placeholder="6-digit code" />
-                    </label>
-                    <div class="verify-actions" style="margin-top: 0.75rem;">
-                      <button class="primary-btn" type="button" id="verifyPhoneOtp">Verify phone OTP</button>
-                      <button class="secondary-btn" type="button" id="resendPhoneOtp">Resend phone code</button>
-                    </div>
-                  </div>
+                <div class="onboarding-question">
+                  <h3>Have you invested before?</h3>
+                  <p>Tell us about your investing experience.</p>
+                  <label>
+                    Previous investing experience
+                    <select name="investedBefore" required>
+                      <option value="">Choose yes or no</option>
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                    </select>
+                  </label>
+                  <label>
+                    Preferred currency
+                    <select name="preferredCurrency" required>
+                      <option value="">Choose your currency</option>
+                      <optgroup label="Caribbean">
+                        <option value="jmd">Jamaica - Jamaican Dollar (JMD)</option>
+                        <option value="bbd">Barbados - Barbadian Dollar (BBD)</option>
+                        <option value="ttd">Trinidad and Tobago - Trinidad and Tobago Dollar (TTD)</option>
+                        <option value="xcd">Eastern Caribbean countries - East Caribbean Dollar (XCD)</option>
+                        <option value="bsd">The Bahamas - Bahamian Dollar (BSD)</option>
+                        <option value="bzd">Belize - Belize Dollar (BZD)</option>
+                        <option value="gyd">Guyana - Guyanese Dollar (GYD)</option>
+                        <option value="htg">Haiti - Haitian Gourde (HTG)</option>
+                        <option value="dop">Dominican Republic - Dominican Peso (DOP)</option>
+                        <option value="cup">Cuba - Cuban Peso (CUP)</option>
+                        <option value="kyd">Cayman Islands - Cayman Islands Dollar (KYD)</option>
+                        <option value="awg">Aruba - Aruban Florin (AWG)</option>
+                        <option value="ang">Curacao and Sint Maarten - Netherlands Antillean Guilder (ANG)</option>
+                        <option value="usd">United States and some Caribbean countries - US Dollar (USD)</option>
+                      </optgroup>
+                      <optgroup label="Americas">
+                        <option value="cad">Canada - Canadian Dollar (CAD)</option>
+                        <option value="mxn">Mexico - Mexican Peso (MXN)</option>
+                        <option value="brl">Brazil - Brazilian Real (BRL)</option>
+                        <option value="ars">Argentina - Argentine Peso (ARS)</option>
+                        <option value="clp">Chile - Chilean Peso (CLP)</option>
+                        <option value="cop">Colombia - Colombian Peso (COP)</option>
+                        <option value="pen">Peru - Peruvian Sol (PEN)</option>
+                        <option value="uyu">Uruguay - Uruguayan Peso (UYU)</option>
+                        <option value="pyg">Paraguay - Paraguayan Guarani (PYG)</option>
+                        <option value="bob">Bolivia - Bolivian Boliviano (BOB)</option>
+                        <option value="crc">Costa Rica - Costa Rican Colon (CRC)</option>
+                        <option value="gtq">Guatemala - Guatemalan Quetzal (GTQ)</option>
+                        <option value="hnl">Honduras - Honduran Lempira (HNL)</option>
+                        <option value="nio">Nicaragua - Nicaraguan Cordoba (NIO)</option>
+                        <option value="pab">Panama - Panamanian Balboa (PAB)</option>
+                      </optgroup>
+                      <optgroup label="Europe">
+                        <option value="eur">Euro area countries - Euro (EUR)</option>
+                        <option value="gbp">United Kingdom - Pound Sterling (GBP)</option>
+                        <option value="chf">Switzerland and Liechtenstein - Swiss Franc (CHF)</option>
+                        <option value="sek">Sweden - Swedish Krona (SEK)</option>
+                        <option value="nok">Norway - Norwegian Krone (NOK)</option>
+                        <option value="dkk">Denmark - Danish Krone (DKK)</option>
+                        <option value="isk">Iceland - Icelandic Krona (ISK)</option>
+                        <option value="pln">Poland - Polish Zloty (PLN)</option>
+                        <option value="czk">Czechia - Czech Koruna (CZK)</option>
+                        <option value="huf">Hungary - Hungarian Forint (HUF)</option>
+                        <option value="ron">Romania - Romanian Leu (RON)</option>
+                        <option value="bgn">Bulgaria - Bulgarian Lev (BGN)</option>
+                        <option value="rsd">Serbia - Serbian Dinar (RSD)</option>
+                        <option value="rub">Russia - Russian Ruble (RUB)</option>
+                        <option value="try">Turkey - Turkish Lira (TRY)</option>
+                        <option value="uah">Ukraine - Ukrainian Hryvnia (UAH)</option>
+                      </optgroup>
+                      <optgroup label="Asia">
+                        <option value="jpy">Japan - Japanese Yen (JPY)</option>
+                        <option value="cny">China - Chinese Yuan (CNY)</option>
+                        <option value="hkd">Hong Kong - Hong Kong Dollar (HKD)</option>
+                        <option value="twd">Taiwan - New Taiwan Dollar (TWD)</option>
+                        <option value="krw">South Korea - South Korean Won (KRW)</option>
+                        <option value="inr">India - Indian Rupee (INR)</option>
+                        <option value="pkr">Pakistan - Pakistani Rupee (PKR)</option>
+                        <option value="bdt">Bangladesh - Bangladeshi Taka (BDT)</option>
+                        <option value="lkr">Sri Lanka - Sri Lankan Rupee (LKR)</option>
+                        <option value="npr">Nepal - Nepalese Rupee (NPR)</option>
+                        <option value="sgd">Singapore - Singapore Dollar (SGD)</option>
+                        <option value="myr">Malaysia - Malaysian Ringgit (MYR)</option>
+                        <option value="idr">Indonesia - Indonesian Rupiah (IDR)</option>
+                        <option value="php">Philippines - Philippine Peso (PHP)</option>
+                        <option value="thb">Thailand - Thai Baht (THB)</option>
+                        <option value="vnd">Vietnam - Vietnamese Dong (VND)</option>
+                        <option value="kzt">Kazakhstan - Kazakhstani Tenge (KZT)</option>
+                        <option value="uzs">Uzbekistan - Uzbekistani Som (UZS)</option>
+                      </optgroup>
+                      <optgroup label="Middle East and Africa">
+                        <option value="aed">United Arab Emirates - UAE Dirham (AED)</option>
+                        <option value="sar">Saudi Arabia - Saudi Riyal (SAR)</option>
+                        <option value="qar">Qatar - Qatari Riyal (QAR)</option>
+                        <option value="kwd">Kuwait - Kuwaiti Dinar (KWD)</option>
+                        <option value="bhd">Bahrain - Bahraini Dinar (BHD)</option>
+                        <option value="omr">Oman - Omani Rial (OMR)</option>
+                        <option value="jod">Jordan - Jordanian Dinar (JOD)</option>
+                        <option value="ils">Israel - Israeli New Shekel (ILS)</option>
+                        <option value="egp">Egypt - Egyptian Pound (EGP)</option>
+                        <option value="ngn">Nigeria - Nigerian Naira (NGN)</option>
+                        <option value="kes">Kenya - Kenyan Shilling (KES)</option>
+                        <option value="ghs">Ghana - Ghanaian Cedi (GHS)</option>
+                        <option value="zar">South Africa - South African Rand (ZAR)</option>
+                        <option value="tzs">Tanzania - Tanzanian Shilling (TZS)</option>
+                        <option value="ugx">Uganda - Ugandan Shilling (UGX)</option>
+                        <option value="mad">Morocco - Moroccan Dirham (MAD)</option>
+                        <option value="dzd">Algeria - Algerian Dinar (DZD)</option>
+                        <option value="etb">Ethiopia - Ethiopian Birr (ETB)</option>
+                        <option value="xof">West African countries - West African CFA Franc (XOF)</option>
+                        <option value="xaf">Central African countries - Central African CFA Franc (XAF)</option>
+                      </optgroup>
+                      <optgroup label="Oceania">
+                        <option value="aud">Australia - Australian Dollar (AUD)</option>
+                        <option value="nzd">New Zealand - New Zealand Dollar (NZD)</option>
+                        <option value="fjd">Fiji - Fijian Dollar (FJD)</option>
+                        <option value="pgk">Papua New Guinea - Kina (PGK)</option>
+                        <option value="wst">Samoa - Samoan Tala (WST)</option>
+                        <option value="top">Tonga - Tongan Pa'anga (TOP)</option>
+                        <option value="vuv">Vanuatu - Vanuatu Vatu (VUV)</option>
+                      </optgroup>
+                    </select>
+                  </label>
+                </div>
+                <div class="step-actions">
+                  <button class="secondary-btn prev-step" type="button">Back</button>
+                  <button class="primary-btn next-step" type="button">Next</button>
+                </div>
+              </div>
+
+              <div class="signup-step" data-step="3">
+                <div class="onboarding-question">
+                  <h3>How much do you plan to trade with?</h3>
+                    <p>Choose an estimated trading amount in your preferred currency.</p>
+                  <label>
+                    Planned trading amount
+                    <select name="tradingAmount" required>
+                      <option value="">Choose an amount range</option>
+                      <option value="2500-5000">$2,500.00 - $5,000.00</option>
+                      <option value="5000-10000">$5,000.00 - $10,000.00</option>
+                      <option value="10000-25000">$10,000.00 - $25,000.00</option>
+                      <option value="25000-50000">$25,000.00 - $50,000.00</option>
+                      <option value="50000-75000">$50,000.00 - $75,000.00</option>
+                      <option value="75000-100000">$75,000.00 - $100,000.00</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="step-actions">
+                  <button class="secondary-btn prev-step" type="button">Back</button>
+                  <button class="primary-btn next-step" type="button">Next</button>
+                </div>
+              </div>
+
+              <div class="signup-step" data-step="4">
+                <div class="onboarding-question">
+                  <h3>What is your source of income?</h3>
+                  <p>Select the option that best describes your primary income source.</p>
+                  <label>
+                    Primary income source
+                    <select name="incomeSource" required>
+                      <option value="">Choose an income source</option>
+                      <option>Employment</option>
+                      <option>Self-employment or business</option>
+                      <option>Investments or dividends</option>
+                      <option>Retirement or pension</option>
+                      <option>Savings</option>
+                      <option>Family support</option>
+                      <option>Other</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="step-actions">
+                  <button class="secondary-btn prev-step" type="button">Back</button>
+                  <button class="primary-btn next-step" type="button">Next</button>
+                </div>
+              </div>
+
+              <div class="signup-step" data-step="5">
+                <div class="onboarding-question">
+                  <h3>What is your risk level?</h3>
+                  <p>Choose the level of risk you are comfortable with.</p>
+                  <label>
+                    Risk preference
+                    <select name="riskLevel" required>
+                      <option value="">Choose a risk level</option>
+                      <option value="Conservative">Conservative - lower risk</option>
+                      <option value="Balanced">Balanced - moderate risk</option>
+                      <option value="Aggressive">Aggressive - higher risk</option>
+                    </select>
+                  </label>
                 </div>
                 <div class="step-actions">
                   <button class="secondary-btn prev-step" type="button">Back</button>
@@ -525,24 +734,58 @@
                 </div>
               </div>
 
-              <div class="signup-step" data-step="3">
+              <div class="signup-step" data-step="6">
+                <div class="verify-box">
+                  <h3>Verification and fraud prevention</h3>
+                  <p>
+                    We protect against fraud and identity theft. Identity verification is required before trading is approved.
+                  </p>
+                </div>
+                <div class="step-actions">
+                  <button class="secondary-btn prev-step" type="button">Back</button>
+                  <button class="primary-btn next-step" type="button">Continue</button>
+                </div>
+              </div>
+
+              <div class="signup-step" data-step="7">
                 <div class="identity-box">
                   <h3>Identity verification</h3>
                   <p>Choose one valid government-issued document and upload a matching selfie.</p>
                   <div class="upload-options">
-                    <label><input type="radio" name="idType" value="Passport" /> Passport</label>
+                    <label><input type="radio" name="idType" value="Passport" required /> Passport</label>
                     <label><input type="radio" name="idType" value="National ID / State ID" /> National ID / State ID</label>
                     <label><input type="radio" name="idType" value="Driver's License" /> Driver's License</label>
                     <label><input type="radio" name="idType" value="TRN / SSN" /> TRN / SSN</label>
                   </div>
 
-                  <label>
-                    Upload photo of ID
-                    <input type="file" accept="image/*" />
-                  </label>
+                  <p class="identity-guidance" id="identityGuidance" role="status">Choose an identification type to see what information and images are required.</p>
+                  <div id="taxIdentifierFields" hidden>
+                    <label>
+                      Identifier type
+                      <select name="governmentIdType">
+                        <option value="">Choose TRN or SSN</option>
+                        <option value="TRN">TRN</option>
+                        <option value="SSN">SSN</option>
+                      </select>
+                    </label>
+                    <label>
+                      TRN or SSN number
+                      <input type="text" name="governmentIdNumber" maxlength="30" autocomplete="off" placeholder="Enter your number" />
+                    </label>
+                  </div>
+                  <div id="identityDocumentUploads" hidden>
+                    <label id="identityFrontLabel">
+                      Upload front of identity document
+                      <input type="file" id="identityFrontUpload" accept="image/*" />
+                    </label>
+                    <label id="identityBackLabel">
+                      Upload back of identity document
+                      <input type="file" id="identityBackUpload" accept="image/*" />
+                    </label>
+                  </div>
                   <label>
                     Take selfie for identity match
-                    <input type="file" accept="image/*" />
+                    <input type="file" id="identitySelfieUpload" accept="image/*" />
                   </label>
                 </div>
                 <div class="step-actions">
@@ -551,7 +794,7 @@
                 </div>
               </div>
 
-              <div class="signup-step" data-step="4">
+              <div class="signup-step" data-step="8">
                 <div class="form-grid">
                   <label>
                     New Password
@@ -582,12 +825,10 @@
     </div>
 
     <div id="toast" class="toast" aria-live="polite">Saved successfully.</div>
-    <div id="recaptcha-container"></div>
-
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
-      import { getAuth, signInWithPhoneNumber, RecaptchaVerifier } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
-      import { getFirestore, doc, setDoc, collection, query, where, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+      import { createUserWithEmailAndPassword, deleteUser, getAuth, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { doc, getDoc, getFirestore, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 
       const firebaseConfig = {
         apiKey: 'AIzaSyBue8CgOU3cd8wjt9oeMDqaNkpBiraDNYw',
@@ -606,21 +847,29 @@
 
       window.firebaseAuth = auth;
       window.firestoreDb = db;
-      window.phoneConfirmationResult = null;
-      window.isPhoneVerified = false;
 
       const loginTab = document.getElementById('loginTab');
       const signupTab = document.getElementById('signupTab');
       const loginBox = document.getElementById('loginBox');
       const signupBox = document.getElementById('signupBox');
+      const registrationPanel = document.getElementById('registrationPanel');
+      const onboardingIntro = document.getElementById('onboardingIntro');
+      const authPanel = document.getElementById('authPanel');
       const toast = document.getElementById('toast');
       const signupSteps = Array.from(document.querySelectorAll('.signup-step'));
-      const emailOtpBox = document.getElementById('emailOtpBox');
-      const emailOtpCodeInput = document.getElementById('emailOtpCode');
-      const otpBox = document.getElementById('otpBox');
-      const otpCodeInput = document.getElementById('otpCode');
+      const preferredCurrencySelect = document.querySelector('[name="preferredCurrency"]');
+      const tradingAmountSelect = document.querySelector('[name="tradingAmount"]');
+      document.querySelector('.signup-step[data-step="1"] .form-grid').appendChild(preferredCurrencySelect.closest('label'));
+      const identityGuidance = document.getElementById('identityGuidance');
+      const taxIdentifierFields = document.getElementById('taxIdentifierFields');
+      const governmentIdTypeSelect = document.querySelector('[name="governmentIdType"]');
+      const governmentIdNumberInput = document.querySelector('[name="governmentIdNumber"]');
+      const identityDocumentUploads = document.getElementById('identityDocumentUploads');
+      const identityFrontLabel = document.getElementById('identityFrontLabel');
+      const identityBackLabel = document.getElementById('identityBackLabel');
+      const identityFrontUpload = document.getElementById('identityFrontUpload');
+      const identityBackUpload = document.getElementById('identityBackUpload');
       let currentStep = 0;
-      window.isEmailVerified = false;
 
       function renderSignupStep(stepIndex) {
         currentStep = Math.max(0, Math.min(stepIndex, signupSteps.length - 1));
@@ -629,33 +878,72 @@
         });
       }
 
+      function updateIdentityRequirements() {
+        const selectedType = document.querySelector('input[name="idType"]:checked')?.value || '';
+        const usesTaxId = selectedType === 'TRN / SSN';
+        const isPassport = selectedType === 'Passport';
+        const usesCard = selectedType === "Driver's License" || selectedType === 'National ID / State ID';
+        const usesDocumentImages = isPassport || usesCard;
+
+        taxIdentifierFields.hidden = !usesTaxId;
+        governmentIdTypeSelect.required = usesTaxId;
+        governmentIdNumberInput.required = usesTaxId;
+        identityDocumentUploads.hidden = !usesDocumentImages;
+        identityFrontUpload.required = usesDocumentImages;
+        identityBackLabel.hidden = !usesCard;
+        identityBackUpload.required = usesCard;
+
+        if (isPassport) {
+          identityGuidance.textContent = 'Take a clear, well-lit photo of the passport photo and information page. Keep all edges visible; passports do not have a card back.';
+          identityFrontLabel.firstChild.textContent = 'Upload passport photo and information page';
+        } else if (usesCard) {
+          const documentName = selectedType === "Driver's License" ? "driver's license" : 'National ID / State ID';
+          identityGuidance.textContent = `Take clear, well-lit photos of both the front and back of your ${documentName}. Keep all edges and text visible, and avoid blur, glare, or cropped details so agents can verify your identity accurately.`;
+          identityFrontLabel.firstChild.textContent = `Upload front of ${documentName}`;
+        } else if (usesTaxId) {
+          identityGuidance.textContent = 'Select TRN or SSN and enter the number exactly as issued. The full number is sent to the Firestore review record; only its last four digits are retained in this browser.';
+        } else {
+          identityGuidance.textContent = 'Choose an identification type to see what information and images are required.';
+        }
+
+        if (!usesTaxId) {
+          governmentIdTypeSelect.value = '';
+          governmentIdNumberInput.value = '';
+        }
+        if (!usesDocumentImages) {
+          identityFrontUpload.value = '';
+          identityBackUpload.value = '';
+        }
+      }
+
+      function updateTradingAmountOptions() {
+        const currency = (preferredCurrencySelect.value || 'usd').toUpperCase();
+        let formatAmount;
+        try {
+          const formatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
+          formatAmount = (amount) => formatter.format(amount);
+        } catch (error) {
+          formatAmount = (amount) => `${currency} ${amount.toFixed(2)}`;
+        }
+
+        Array.from(tradingAmountSelect.options).forEach((option) => {
+          if (!option.value) return;
+          const [minimum, maximum] = option.value.split('-').map(Number);
+          if (!Number.isFinite(minimum) || !Number.isFinite(maximum)) return;
+          option.textContent = `${formatAmount(minimum)} - ${formatAmount(maximum)}`;
+        });
+      }
+
       function showToast(message) {
         toast.textContent = message;
         toast.classList.add('show');
         clearTimeout(showToast.timer);
         showToast.timer = setTimeout(() => toast.classList.remove('show'), 5000);
-      }
-
-      function setupRecaptcha() {
-        if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'invisible',
-            callback: () => {
-              console.log('reCAPTCHA solved');
-            },
-            'expired-callback': () => {
-              showToast('reCAPTCHA expired. Please request a new OTP.');
-            }
-          });
-        }
-      }
-
-      function resetPhoneVerification() {
-        window.phoneConfirmationResult = null;
-        if (window.recaptchaVerifier) {
-          window.recaptchaVerifier.clear();
-          window.recaptchaVerifier = null;
-        }
       }
 
       loginTab.addEventListener('click', () => {
@@ -671,6 +959,19 @@
         signupBox.classList.add('active');
         loginBox.classList.remove('active');
         renderSignupStep(0);
+      });
+
+      function showAuthForm() {
+        registrationPanel.classList.remove('intro-only');
+        registrationPanel.classList.add('form-only');
+        onboardingIntro.hidden = true;
+        authPanel.hidden = false;
+      }
+
+      document.getElementById('beginSignupBtn').addEventListener('click', () => {
+        showAuthForm();
+        signupTab.click();
+        document.querySelector('input[name="firstName"]').focus();
       });
 
       document.querySelectorAll('.next-step').forEach((button) => {
@@ -694,136 +995,12 @@
         });
       });
 
-      document.getElementById('sendEmailVerify').addEventListener('click', () => {
-        const btn = document.getElementById('sendEmailVerify');
-        const emailInput = document.querySelector('input[name="email"]');
-        const email = emailInput ? emailInput.value.trim() : '';
-
-        if (!email) {
-          showToast('Please enter your email before sending the verification code.');
-          emailInput?.focus();
-          return;
-        }
-
-        const code = String(Math.floor(100000 + Math.random() * 900000));
-        window.emailVerificationCode = code;
-        emailOtpBox.style.display = 'block';
-        emailOtpCodeInput.focus();
-        btn.textContent = 'Email verification code sent';
-        btn.disabled = true;
-        showToast(`Email verification code sent. Use code ${code} to verify your email.`);
+      document.querySelectorAll('input[name="idType"]').forEach((input) => {
+        input.addEventListener('change', updateIdentityRequirements);
       });
-
-      document.getElementById('resendEmailOtp').addEventListener('click', () => {
-        const emailInput = document.querySelector('input[name="email"]');
-        const email = emailInput ? emailInput.value.trim() : '';
-        if (!email) {
-          showToast('Please enter your email before requesting a new code.');
-          emailInput?.focus();
-          return;
-        }
-
-        window.emailVerificationCode = String(Math.floor(100000 + Math.random() * 900000));
-        window.isEmailVerified = false;
-        emailOtpCodeInput.value = '';
-        emailOtpCodeInput.disabled = false;
-        const verifyEmailButton = document.getElementById('verifyEmailOtp');
-        verifyEmailButton.textContent = 'Verify email OTP';
-        verifyEmailButton.disabled = false;
-        showToast(`A new email verification code was sent. Use code ${window.emailVerificationCode} to verify your email.`);
-      });
-
-      document.getElementById('verifyEmailOtp').addEventListener('click', () => {
-        const code = emailOtpCodeInput.value.trim();
-
-        if (!window.emailVerificationCode) {
-          showToast('Please request an email verification code first.');
-          return;
-        }
-
-        if (!code || code.length !== 6) {
-          showToast('Please enter the 6-digit email verification code.');
-          emailOtpCodeInput.focus();
-          return;
-        }
-
-        if (code === window.emailVerificationCode) {
-          window.isEmailVerified = true;
-          document.getElementById('verifyEmailOtp').textContent = 'Email verified';
-          document.getElementById('verifyEmailOtp').disabled = true;
-          emailOtpCodeInput.disabled = true;
-          showToast('Email verified successfully.');
-        } else {
-          showToast('Invalid email verification code. Please try again.');
-        }
-      });
-
-      async function requestPhoneOtp(button) {
-        const phoneInput = document.querySelector('input[name="phone"]');
-        const phone = phoneInput ? phoneInput.value.trim() : '';
-
-        if (!phone) {
-          showToast('Please enter your phone number before sending the OTP.');
-          phoneInput?.focus();
-          return false;
-        }
-
-        try {
-          resetPhoneVerification();
-          setupRecaptcha();
-          const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
-          const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
-          window.phoneConfirmationResult = confirmationResult;
-          otpBox.style.display = 'block';
-          window.isPhoneVerified = false;
-          otpCodeInput.value = '';
-          otpCodeInput.disabled = false;
-          document.getElementById('verifyPhoneOtp').textContent = 'Verify phone OTP';
-          document.getElementById('verifyPhoneOtp').disabled = false;
-          otpCodeInput.focus();
-          button.textContent = button.id === 'resendPhoneOtp' ? 'Resend phone code' : 'OTP sent';
-          button.disabled = button.id === 'sendPhoneVerify';
-          showToast(button.id === 'resendPhoneOtp' ? 'A new OTP was sent. Please enter the new 6-digit code.' : 'OTP sent. Please enter the 6-digit code.');
-          return true;
-        } catch (error) {
-          console.error(error);
-          showToast('Unable to send OTP. Please check the phone number and try again.');
-          resetPhoneVerification();
-          button.textContent = button.id === 'resendPhoneOtp' ? 'Resend phone code' : 'Send phone OTP';
-          button.disabled = false;
-          return false;
-        }
-      }
-
-      document.getElementById('sendPhoneVerify').addEventListener('click', () => requestPhoneOtp(document.getElementById('sendPhoneVerify')));
-      document.getElementById('resendPhoneOtp').addEventListener('click', () => requestPhoneOtp(document.getElementById('resendPhoneOtp')));
-
-      document.getElementById('verifyPhoneOtp').addEventListener('click', async () => {
-        const code = otpCodeInput.value.trim();
-
-        if (!window.phoneConfirmationResult) {
-          showToast('Please request an OTP first.');
-          return;
-        }
-
-        if (!code || code.length !== 6) {
-          showToast('Please enter the 6-digit OTP code.');
-          otpCodeInput.focus();
-          return;
-        }
-
-        try {
-          await window.phoneConfirmationResult.confirm(code);
-          window.isPhoneVerified = true;
-          document.getElementById('verifyPhoneOtp').textContent = 'Verified';
-          document.getElementById('verifyPhoneOtp').disabled = true;
-          otpCodeInput.disabled = true;
-          showToast('Phone number verified successfully.');
-        } catch (error) {
-          console.error(error);
-          showToast('Invalid OTP. Please check the code and try again.');
-        }
-      });
+      updateIdentityRequirements();
+      preferredCurrencySelect.addEventListener('change', updateTradingAmountOptions);
+      updateTradingAmountOptions();
 
       document.getElementById('signupForm').addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -831,68 +1008,70 @@
         const password = formData.get('password');
         const confirmPassword = formData.get('confirmPassword');
 
-        if (!window.isEmailVerified) {
-          showToast('Please verify your email with the OTP before creating the account.');
-          return;
-        }
-
-        if (!window.isPhoneVerified) {
-          showToast('Please verify your phone number with the OTP before creating the account.');
-          return;
-        }
-
         if (password !== confirmPassword) {
           showToast('Passwords do not match. Please check again.');
           return;
         }
 
         const user = Object.fromEntries(formData.entries());
-        const accounts = window.MakingsAuth.getAccounts();
-        const duplicate = accounts.find((account) => account.username === user.username || account.email === user.email);
-
-        if (duplicate) {
-          showToast('That username or email is already registered.');
+        user.email = String(user.email || '').trim().toLowerCase();
+        user.username = String(user.username || '').trim();
+        const governmentIdType = String(user.governmentIdType || '');
+        const governmentIdNumber = String(user.governmentIdNumber || '').trim();
+        user.age = Number(user.age);
+        if (!Number.isInteger(user.age) || user.age < 1 || user.age > 120) {
+          showToast('Enter an age between 1 and 120.');
+          event.target.elements.age.focus();
+          return;
+        }
+        const usernameKey = user.username.toLowerCase();
+        if (!/^[a-z0-9_.-]{3,32}$/.test(usernameKey)) {
+          showToast('Username must be 3-32 characters using letters, numbers, dots, underscores, or hyphens.');
           return;
         }
 
+        let createdAuthUser = null;
         try {
-          const customersRef = collection(window.firestoreDb, 'customers');
-          const usernameQuery = query(customersRef, where('username', '==', user.username));
-          const emailQuery = query(customersRef, where('email', '==', user.email));
-
-          const [usernameSnapshot, emailSnapshot] = await Promise.all([
-            getDocs(usernameQuery),
-            getDocs(emailQuery)
-          ]);
-
-          if (!usernameSnapshot.empty || !emailSnapshot.empty) {
-            showToast('That username or email is already registered in Firestore.');
-            return;
-          }
-
-          const customerRecord = {
+          const credential = await createUserWithEmailAndPassword(auth, user.email, password);
+          createdAuthUser = credential.user;
+          const userRef = doc(db, 'users', credential.user.uid);
+          const usernameRef = doc(db, 'usernames', usernameKey);
+          const privateProfile = {
             firstName: user.firstName,
             lastName: user.lastName,
-            email: user.email,
+            email: credential.user.email,
             phone: user.phone,
-            username: user.username,
+            username: usernameKey,
+            age: user.age,
+            preferredCurrency: user.preferredCurrency,
+            idType: user.idType,
+            governmentIdType,
+            governmentIdNumber: governmentIdNumber || null,
+            investedBefore: user.investedBefore,
+            tradingAmount: user.tradingAmount,
+            incomeSource: user.incomeSource,
+            riskLevel: user.riskLevel,
             dob: user.dob,
             countryBirth: user.countryBirth,
-            password: user.password,
-            emailVerified: true,
-            phoneVerified: true,
+            emailVerified: credential.user.emailVerified,
+            phoneVerified: false,
             createdAt: serverTimestamp()
           };
 
-          await setDoc(doc(window.firestoreDb, 'customers', user.username), customerRecord);
+          await runTransaction(db, async (transaction) => {
+            const usernameSnapshot = await transaction.get(usernameRef);
+            if (usernameSnapshot.exists()) {
+              const usernameError = new Error('That username is already registered.');
+              usernameError.code = 'username-already-in-use';
+              throw usernameError;
+            }
+            transaction.set(usernameRef, { uid: credential.user.uid });
+            transaction.set(userRef, privateProfile);
+          });
 
-          user.phoneVerified = true;
-          user.emailVerified = true;
-          user.createdAt = user.createdAt || Date.now();
-          user.remembered = true;
-          window.MakingsAuth.saveAccounts([...accounts, user]);
-          window.MakingsAuth.setCurrentUser(user);
-          showToast('Account created successfully and saved to Firestore. Welcome to Makings.');
+          localStorage.setItem('makingsCurrentUser', usernameKey);
+          localStorage.setItem('makingsAuthUid', credential.user.uid);
+          showToast('Account created successfully. Your private profile is saved.');
 
           setTimeout(() => {
             window.location.href = 'index.html#trade';
@@ -900,48 +1079,61 @@
 
           event.target.reset();
         } catch (error) {
-          console.error('Firestore save failed:', error);
-          user.phoneVerified = true;
-          user.emailVerified = true;
-          user.createdAt = user.createdAt || Date.now();
-          user.remembered = true;
-          window.MakingsAuth.saveAccounts([...accounts, user]);
-          window.MakingsAuth.setCurrentUser(user);
-          showToast('Account saved on this device and remembered. Cloud sync will retry later.');
-          setTimeout(() => {
-            window.location.href = 'index.html#trade';
-          }, 1500);
+          if (createdAuthUser) {
+            try {
+              await deleteUser(createdAuthUser);
+            } catch (cleanupError) {
+              console.error('Unable to roll back the incomplete Firebase account:', cleanupError);
+              await signOut(auth);
+            }
+          }
+          if (error.code === 'username-already-in-use') {
+            showToast(error.message);
+          } else if (error.code === 'auth/email-already-in-use') {
+            showToast('An account already exists for this email address.');
+          } else if (error.code === 'auth/weak-password') {
+            showToast('Choose a stronger password before creating your account.');
+          } else if (error.code === 'auth/operation-not-allowed') {
+            showToast('Email/password sign-up is disabled in Firebase. Enable Email/Password under Authentication sign-in providers.');
+          } else if (error.code === 'auth/invalid-api-key') {
+            showToast('Firebase rejected this app API key. Check the Firebase project configuration.');
+          } else if (error.code === 'auth/network-request-failed') {
+            showToast('Could not reach Firebase. Check your connection and try again.');
+          } else if (error.code === 'permission-denied' || error.code === 'firestore/permission-denied') {
+            showToast('Firestore blocked the private account save. Sign in with Firebase CLI and deploy firestore.rules.');
+          } else {
+            console.error('Secure account creation failed:', error);
+            showToast(`Account could not be saved (${error.code || 'unknown error'}). Check Firebase settings and Firestore rules.`);
+          }
         }
       });
 
-      document.getElementById('loginForm').addEventListener('submit', (event) => {
+      document.getElementById('loginForm').addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(event.target);
-        const loginName = String(formData.get('loginName') || '').trim();
-        const password = String(formData.get('loginPassword') || '').trim();
-        const savedUsers = window.MakingsAuth.getAccounts();
+        const email = String(formData.get('loginName') || '').trim().toLowerCase();
+        const password = String(formData.get('loginPassword') || '');
 
-        if (!savedUsers.length) {
-          showToast('No account found. Please sign up first.');
-          return;
-        }
-
-        const savedUser = savedUsers.find((user) => loginName === user.username || loginName === user.email);
-        const validPassword = savedUser && password === savedUser.password;
-
-        if (savedUser && validPassword) {
-          window.MakingsAuth.setCurrentUser(savedUser);
+        try {
+          const credential = await signInWithEmailAndPassword(auth, email, password);
+          const userSnapshot = await getDoc(doc(db, 'users', credential.user.uid));
+          if (!userSnapshot.exists()) {
+            await signOut(auth);
+            showToast('Private account profile was not found. Contact support.');
+            return;
+          }
+          const user = userSnapshot.data();
+          localStorage.setItem('makingsCurrentUser', user.username);
+          localStorage.setItem('makingsAuthUid', credential.user.uid);
           showToast('Login successful. Welcome back.');
-
-          setTimeout(() => {
-            window.location.href = 'index.html#trade';
-          }, 1500);
-        } else {
-          showToast('Username/email or password is incorrect.');
+          setTimeout(() => { window.location.href = 'index.html#trade'; }, 1500);
+        } catch (error) {
+          showToast('Email address or password is incorrect.');
         }
       });
 
       if (window.location.hash === '#login') {
+        showAuthForm();
         loginTab.click();
       }
 
