@@ -1,97 +1,175 @@
-(() => {
-  const ACCOUNTS_KEY = 'makingsAccounts';
-  const CURRENT_USER_KEY = 'makingsCurrentUser';
-  const LEGACY_USER_KEY = 'makingsVerificationUser';
-  const LEGACY_SESSION_KEY = 'makingsUserLoggedIn';
+import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+import { doc, getDoc, getFirestore, updateDoc } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 
-  const readJson = (key, fallback) => {
-    try {
-      const value = JSON.parse(localStorage.getItem(key));
-      return value ?? fallback;
-    } catch (error) {
-      return fallback;
+const firebaseConfig = {
+  apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
+  authDomain: 'billionairesxchange-e8162.firebaseapp.com',
+  projectId: 'billionairesxchange-e8162',
+  storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
+  messagingSenderId: '872942229296',
+  appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
+  measurementId: 'G-JCZ6FCKF3M'
+};
+
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const navActions = document.querySelector('.nav-actions');
+
+function addLink(label, href, className) {
+  const link = document.createElement('a');
+  link.className = className;
+  link.href = href;
+  link.textContent = label;
+  navActions.appendChild(link);
+}
+
+function renderSignedOut() {
+  navActions.replaceChildren();
+  addLink('Login', 'verification.html#login', 'btn btn-ghost');
+  addLink('Sign Up', 'verification.html#signup', 'btn btn-primary');
+}
+
+function renderSignedIn(firebaseUser, profile) {
+  navActions.replaceChildren();
+
+  const menu = document.createElement('div');
+  menu.className = 'profile-menu';
+  const toggle = document.createElement('button');
+  toggle.className = 'profile-menu-button';
+  toggle.type = 'button';
+  toggle.setAttribute('aria-label', 'Open profile menu');
+  toggle.setAttribute('aria-haspopup', 'menu');
+  toggle.setAttribute('aria-expanded', 'false');
+  const renderAvatar = (photo) => {
+    toggle.replaceChildren();
+    if (photo) {
+      const image = document.createElement('img');
+      image.src = photo;
+      image.alt = '';
+      toggle.appendChild(image);
+    } else {
+      const initials = `${profile.firstName?.[0] || ''}${profile.lastName?.[0] || ''}`.toUpperCase() || 'U';
+      const initialsLabel = document.createElement('span');
+      initialsLabel.className = 'profile-menu-initials';
+      initialsLabel.textContent = initials;
+      toggle.appendChild(initialsLabel);
     }
   };
+  renderAvatar(profile.profilePhoto);
 
-  const getAccounts = () => {
-    let accounts = readJson(ACCOUNTS_KEY, []);
-    if (!Array.isArray(accounts)) accounts = [];
+  const dropdown = document.createElement('div');
+  dropdown.className = 'profile-menu-dropdown';
+  dropdown.hidden = true;
+  dropdown.setAttribute('role', 'menu');
 
-    const legacyUser = readJson(LEGACY_USER_KEY, null);
-    if (legacyUser && !accounts.some((account) => account.username === legacyUser.username || account.email === legacyUser.email)) {
-      accounts.push(legacyUser);
-      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-    }
+  const profileLink = document.createElement('a');
+  profileLink.href = 'profile.html';
+  profileLink.textContent = 'Profile';
+  profileLink.setAttribute('role', 'menuitem');
 
-    return accounts;
-  };
+  const photoButton = document.createElement('button');
+  photoButton.type = 'button';
+  photoButton.textContent = profile.profilePhoto ? 'Change photo' : 'Set profile photo';
+  photoButton.setAttribute('role', 'menuitem');
+  const photoInput = document.createElement('input');
+  photoInput.type = 'file';
+  photoInput.accept = 'image/*';
+  photoInput.hidden = true;
+  const photoStatus = document.createElement('span');
+  photoStatus.className = 'profile-menu-status';
+  photoStatus.setAttribute('role', 'status');
 
-  const saveAccounts = (accounts) => localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-
-  const getCurrentUser = () => {
-    const username = localStorage.getItem(CURRENT_USER_KEY);
-    if (!username) {
-      const legacyUser = readJson(LEGACY_USER_KEY, null);
-      if (legacyUser && localStorage.getItem(LEGACY_SESSION_KEY) === 'true') {
-        setCurrentUser(legacyUser);
-        return legacyUser;
-      }
-      return null;
-    }
-    return getAccounts().find((account) => account.username === username) || null;
-  };
-
-  const setCurrentUser = (user) => {
-    localStorage.setItem(CURRENT_USER_KEY, user.username);
-    localStorage.setItem(LEGACY_USER_KEY, JSON.stringify(user));
-    localStorage.setItem(LEGACY_SESSION_KEY, 'true');
-  };
-
-  const clearCurrentUser = () => {
-    localStorage.removeItem(CURRENT_USER_KEY);
-    localStorage.removeItem(LEGACY_SESSION_KEY);
-  };
-
-  const displayName = (user) => `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
-
-  const renderHeader = () => {
-    const navActions = document.querySelector('.nav-actions');
-    if (!navActions) return;
-
-    const user = getCurrentUser();
-    if (!user) {
-      navActions.innerHTML = `
-        <a class="btn btn-ghost" href="verification.html#login">Login</a>
-        <a class="btn btn-primary" href="verification.html#signup">Sign Up</a>
-      `;
+  photoButton.addEventListener('click', () => photoInput.click());
+  photoInput.addEventListener('change', async () => {
+    const file = photoInput.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/') || file.size > 10 * 1024 * 1024) {
+      photoStatus.textContent = 'Choose an image under 10 MB.';
+      photoInput.value = '';
       return;
     }
 
-    navActions.innerHTML = `
-      <a class="btn btn-ghost profile-link" href="profile.html">${displayName(user)}</a>
-    `;
-  };
+    try {
+      photoStatus.textContent = 'Saving photo…';
+      const image = await createImageBitmap(file);
+      const size = 256;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const context = canvas.getContext('2d');
+      const cropSize = Math.min(image.width, image.height);
+      context.drawImage(image, (image.width - cropSize) / 2, (image.height - cropSize) / 2, cropSize, cropSize, 0, 0, size, size);
+      image.close();
+      const photo = canvas.toDataURL('image/jpeg', 0.78);
+      if (photo.length > 300000) throw new Error('Choose a smaller image.');
+      await updateDoc(doc(db, 'users', firebaseUser.uid), { profilePhoto: photo });
+      profile.profilePhoto = photo;
+      renderAvatar(photo);
+      photoButton.textContent = 'Change photo';
+      photoStatus.textContent = 'Photo saved.';
+    } catch (error) {
+      photoStatus.textContent = error.message === 'Choose a smaller image.'
+        ? error.message
+        : 'Photo could not be saved. Try again.';
+    } finally {
+      photoInput.value = '';
+    }
+  });
 
-  window.MakingsAuth = {
-    getAccounts,
-    getCurrentUser,
-    saveAccounts,
-    setCurrentUser,
-    clearCurrentUser,
-    displayName
-  };
+  const logoutButton = document.createElement('button');
+  logoutButton.type = 'button';
+  logoutButton.textContent = 'Log out';
+  logoutButton.setAttribute('role', 'menuitem');
+  logoutButton.addEventListener('click', async () => {
+    await signOut(auth);
+    localStorage.removeItem('makingsCurrentUser');
+    localStorage.removeItem('makingsAuthUid');
+    window.location.href = 'verification.html#login';
+  });
 
-  document.addEventListener('DOMContentLoaded', renderHeader);
-})();
+  toggle.addEventListener('click', () => {
+    dropdown.hidden = !dropdown.hidden;
+    toggle.setAttribute('aria-expanded', String(!dropdown.hidden));
+  });
+  dropdown.append(profileLink, photoButton, photoInput, photoStatus, logoutButton);
+  menu.append(toggle, dropdown);
+  navActions.appendChild(menu);
+}
 
-// models/User.js
-const mongoose = require('mongoose');
-
-const UserSchema = new mongoose.Schema({
-  email: String,
-  passwordHash: String,
-  balance: Number,
-  trades: [{ symbol: String, side: String, quantity: Number, price: Number, date: Date }]
+document.addEventListener('click', (event) => {
+  const menu = navActions?.querySelector('.profile-menu');
+  if (!menu || menu.contains(event.target)) return;
+  menu.querySelector('.profile-menu-dropdown').hidden = true;
+  menu.querySelector('.profile-menu-button').setAttribute('aria-expanded', 'false');
 });
 
-module.exports = mongoose.model('User', UserSchema);
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  const menu = navActions?.querySelector('.profile-menu');
+  if (!menu) return;
+  menu.querySelector('.profile-menu-dropdown').hidden = true;
+  menu.querySelector('.profile-menu-button').setAttribute('aria-expanded', 'false');
+});
+
+onAuthStateChanged(auth, async (firebaseUser) => {
+  if (!navActions) return;
+  if (!firebaseUser) {
+    renderSignedOut();
+    return;
+  }
+
+  try {
+    const profileSnapshot = await getDoc(doc(db, 'users', firebaseUser.uid));
+    if (!profileSnapshot.exists()) {
+      renderSignedOut();
+      return;
+    }
+    const profile = profileSnapshot.data();
+    renderSignedIn(firebaseUser, profile);
+  } catch (error) {
+    console.error('Unable to load the signed-in profile for navigation:', error);
+    renderSignedIn(firebaseUser, {});
+  }
+});

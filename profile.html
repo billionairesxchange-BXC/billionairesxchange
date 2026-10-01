@@ -46,7 +46,7 @@
 
     <script type="module" src="auth.js"></script>
     <script type="module">
-      import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
       import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
       import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, orderBy, query, updateDoc } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
   import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-storage.js';
@@ -60,7 +60,7 @@
         appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
         measurementId: 'G-JCZ6FCKF3M'
       };
-      const app = initializeApp(firebaseConfig);
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
         const storage = getStorage(app);
