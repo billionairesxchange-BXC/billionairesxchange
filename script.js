@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const marketCapStat = document.getElementById('marketCapStat');
   const volumeStat = document.getElementById('volumeStat');
   const dominanceStat = document.getElementById('dominanceStat');
+  const priceLabel = document.getElementById('price');
   const marketSearch = document.getElementById('marketSearch');
   const filterButtons = document.querySelectorAll('.filter-chip');
   const positionsCandleChart = document.getElementById('positionsCandleChart');
@@ -17,10 +18,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const positionsChartWrap = document.querySelector('.positions-chart-wrap');
   const positionsChartResizer = document.getElementById('positionsChartResizer');
   const positionsMarketSelect = document.getElementById('positionsMarketSelect');
+  const positionsTimeButton = document.getElementById('positionsTimeButton');
+  const positionsTimeOptions = document.getElementById('positionsTimeOptions');
   const positionsToolsButton = document.getElementById('positionsToolsButton');
   const positionsToolsOptions = document.getElementById('positionsToolsOptions');
   const positionsBuyButton = document.getElementById('positionsBuyButton');
   const positionsSellButton = document.getElementById('positionsSellButton');
+  const positionsOrderQuantity = document.getElementById('positionsOrderQuantity');
+  const positionsOrderEstimate = document.getElementById('positionsOrderEstimate');
+  const positionsList = document.getElementById('positionsList');
+  const ordersList = document.getElementById('ordersList');
+  const paperBalance = document.getElementById('paperBalance');
 
   if (!assetGrid && !marketTableBody && !chartCanvas) {
     return;
@@ -47,7 +55,218 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   let assets = [];
+  const marketPositionsKey = 'makingsPositionMarketPositions';
+  const marketOrdersKey = 'makingsPaperOrders';
+  const marketBalanceKey = 'makingsPositionMarketBalance';
+  let marketPositions = JSON.parse(localStorage.getItem(marketPositionsKey) || '[]');
+  let marketOrders = JSON.parse(localStorage.getItem(marketOrdersKey) || '[]');
+  const savedMarketBalance = localStorage.getItem(marketBalanceKey);
+  let marketBalance = savedMarketBalance === null ? 10000 : Number(savedMarketBalance);
+  if (!Number.isFinite(marketBalance) || marketBalance < 0) marketBalance = 10000;
   const positionsChartTools = JSON.parse(localStorage.getItem('positionsChartTools') || '{"indicators":[],"candleStyle":{"bodyWidth":58,"wickWidth":1}}');
+  const tickerPairs = { BTC: 'btcusdt', ETH: 'ethusdt', XRP: 'xrpusdt', SOL: 'solusdt', DOGE: 'dogeusdt', ADA: 'adausdt', BNB: 'bnbusdt', TRX: 'trxusdt', USDC: 'usdcusdt' };
+  let tickerSocket = null;
+  let tickerSymbol = '';
+  let tickerRetryTimer = null;
+  let chartInterval = '1m';
+  let positionCandles = [];
+  let candleSocket = null;
+  let candleRetryTimer = null;
+  let candleRequestVersion = 0;
+  let candleStreamKey = '';
+  let candleLoading = false;
+
+  function getSelectedAsset() {
+    return assets.find((asset) => asset.symbol.toUpperCase() === marketConfig.selectedSymbol);
+  }
+
+  function connectLiveTicker(symbol) {
+    const pair = tickerPairs[symbol];
+    if (tickerSocket && tickerSymbol === symbol && tickerSocket.readyState <= WebSocket.OPEN) return;
+    if (tickerRetryTimer) window.clearTimeout(tickerRetryTimer);
+    if (tickerSocket) {
+      tickerSocket.onclose = null;
+      tickerSocket.close();
+      tickerSocket = null;
+    }
+    tickerSymbol = symbol;
+    if (!pair) {
+      if (positionsChartStatus) positionsChartStatus.textContent = `Live streaming is unavailable for ${symbol}; showing the latest market snapshot.`;
+      return;
+    }
+
+    if (positionsChartStatus) positionsChartStatus.textContent = `Connecting to the ${symbol} live price feed...`;
+    const socket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@ticker`);
+    tickerSocket = socket;
+    socket.addEventListener('open', () => {
+      if (tickerSocket === socket && positionsChartStatus && !tickerPairs[symbol]) positionsChartStatus.textContent = `${symbol} live price stream connected.`;
+    });
+    socket.addEventListener('message', (event) => {
+      if (tickerSocket !== socket || marketConfig.selectedSymbol !== symbol) return;
+      let price;
+      try {
+        price = Number(JSON.parse(event.data).c);
+      } catch (error) {
+        return;
+      }
+      if (!Number.isFinite(price) || price <= 0) return;
+
+      let asset = getSelectedAsset();
+      if (!asset) {
+        asset = {
+          id: `live-${symbol.toLowerCase()}`,
+          name: symbol,
+          symbol,
+          current_price: price,
+          market_cap: 0,
+          total_volume: 0,
+          price_change_percentage_24h: 0,
+          sparkline_in_7d: { price: [price] }
+        };
+        assets.push(asset);
+        renderAssetGrid();
+        renderWatchlist();
+      }
+      asset.current_price = price;
+      if (priceLabel) priceLabel.textContent = `${symbol}/USD ${formatCurrency(price)} · Live`;
+      if (positionsChartPrice) positionsChartPrice.textContent = formatCurrency(price);
+      if (positionsChartStatus && !tickerPairs[symbol]) positionsChartStatus.textContent = `${symbol} live price stream connected.`;
+      renderPaperPositions();
+    });
+    socket.addEventListener('error', () => {
+      if (tickerSocket === socket && positionsChartStatus) positionsChartStatus.textContent = `${symbol} live feed interrupted; reconnecting...`;
+      socket.close();
+    });
+    socket.addEventListener('close', () => {
+      if (tickerSocket !== socket) return;
+      tickerSocket = null;
+      if (positionsChartStatus) positionsChartStatus.textContent = `${symbol} live feed disconnected; reconnecting...`;
+      tickerRetryTimer = window.setTimeout(() => connectLiveTicker(symbol), 5000);
+    });
+  }
+
+  function getHeldQuantity(symbol) {
+    return marketPositions.find((position) => position.symbol === symbol)?.quantity || 0;
+  }
+
+  function renderMarketOrderControls() {
+    const asset = getSelectedAsset();
+    const price = Number(asset?.current_price) || 0;
+    const quantity = Number(positionsOrderQuantity?.value) || 0;
+    if (positionsOrderEstimate) {
+      positionsOrderEstimate.textContent = price && quantity > 0
+        ? `Estimated total: ${formatCurrency(price * quantity)}`
+        : 'Estimated total: --';
+    }
+    if (positionsBuyButton) positionsBuyButton.disabled = !price || quantity <= 0;
+    if (positionsSellButton) positionsSellButton.disabled = !price || quantity <= 0 || getHeldQuantity(marketConfig.selectedSymbol) < quantity;
+  }
+
+  function renderPaperPositions() {
+    if (positionsList) {
+      positionsList.replaceChildren();
+      if (!marketPositions.length) {
+        positionsList.className = 'empty-state';
+        positionsList.textContent = 'No open paper positions.';
+      } else {
+        positionsList.className = '';
+        marketPositions.forEach((position) => {
+          const row = document.createElement('div');
+          row.className = 'position-row';
+          const identity = document.createElement('div');
+          const symbol = document.createElement('strong');
+          symbol.textContent = position.symbol;
+          const quantity = document.createElement('small');
+          quantity.textContent = `${position.quantity.toLocaleString('en-US', { maximumFractionDigits: 8 })} units`;
+          identity.append(symbol, quantity);
+          const value = document.createElement('div');
+          const mark = assets.find((asset) => asset.symbol.toUpperCase() === position.symbol)?.current_price || position.averagePrice;
+          const marketValue = document.createElement('strong');
+          marketValue.textContent = formatCurrency(position.quantity * mark);
+          const entry = document.createElement('small');
+          entry.textContent = `Average entry ${formatCurrency(position.averagePrice)}`;
+          value.append(marketValue, entry);
+          row.append(identity, value);
+          positionsList.appendChild(row);
+        });
+      }
+    }
+    if (paperBalance) paperBalance.textContent = `${formatCurrency(marketBalance)} USDT`;
+    renderMarketOrderControls();
+  }
+
+  function renderPaperOrders() {
+    if (!ordersList) return;
+    ordersList.replaceChildren();
+    if (!marketOrders.length) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.textContent = 'Your paper orders will appear here.';
+      ordersList.appendChild(empty);
+      return;
+    }
+    marketOrders.slice(0, 8).forEach((order) => {
+      const row = document.createElement('div');
+      row.className = 'order-row';
+      const description = document.createElement('span');
+      const side = document.createElement('strong');
+      side.className = order.side === 'BUY' ? 'trend-up' : 'trend-down';
+      side.textContent = order.side;
+      description.append(side, ` ${order.symbol} `);
+      const execution = document.createElement('span');
+      execution.textContent = `${order.quantity} @ ${formatCurrency(order.price)}`;
+      const time = document.createElement('time');
+      time.textContent = new Date(order.time).toLocaleTimeString();
+      row.append(description, execution, time);
+      ordersList.appendChild(row);
+    });
+  }
+
+  function placePositionMarketOrder(side) {
+    const asset = getSelectedAsset();
+    const price = Number(asset?.current_price) || 0;
+    const quantity = Number(positionsOrderQuantity?.value);
+    if (!price || !Number.isFinite(quantity) || quantity <= 0) {
+      positionsChartStatus.textContent = 'Wait for a live market price and enter a valid quantity.';
+      return;
+    }
+
+    const symbol = asset.symbol.toUpperCase();
+    const total = price * quantity;
+    const positionIndex = marketPositions.findIndex((position) => position.symbol === symbol);
+    const position = marketPositions[positionIndex];
+    if (side === 'BUY') {
+      if (total > marketBalance) {
+        positionsChartStatus.textContent = 'Insufficient paper balance for this order.';
+        return;
+      }
+      marketBalance -= total;
+      if (position) {
+        position.averagePrice = ((position.averagePrice * position.quantity) + total) / (position.quantity + quantity);
+        position.quantity += quantity;
+      } else {
+        marketPositions.push({ symbol, quantity, averagePrice: price });
+      }
+    } else {
+      if (!position || quantity > position.quantity) {
+        positionsChartStatus.textContent = 'Sell quantity exceeds your available position.';
+        return;
+      }
+      marketBalance += total;
+      position.quantity -= quantity;
+      if (position.quantity < 0.000000005) marketPositions.splice(positionIndex, 1);
+    }
+
+    const order = { symbol, side, mode: 'spot', type: 'MARKET', quantity, price, time: Date.now() };
+    marketOrders.unshift(order);
+    marketOrders = marketOrders.slice(0, 100);
+    localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
+    localStorage.setItem(marketOrdersKey, JSON.stringify(marketOrders));
+    localStorage.setItem(marketBalanceKey, String(marketBalance));
+    positionsChartStatus.textContent = `Paper ${side.toLowerCase()} placed: ${quantity} ${symbol} at ${formatCurrency(price)}.`;
+    renderPaperPositions();
+    renderPaperOrders();
+  }
 
   function savePositionsChartTools() {
     localStorage.setItem('positionsChartTools', JSON.stringify(positionsChartTools));
@@ -121,11 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function drawPositionsChart() {
-    if (!positionsCandleChart || !assets.length) return;
-    const asset = assets.find((item) => item.symbol.toUpperCase() === marketConfig.selectedSymbol) || assets[0];
-    const prices = asset.sparkline_in_7d?.price || [];
-    const source = prices.slice(-36);
-    if (!source.length) return;
+    if (!positionsCandleChart) return;
     const bounds = positionsCandleChart.getBoundingClientRect();
     const ratio = window.devicePixelRatio || 1;
     const width = Math.max(320, bounds.width);
@@ -134,11 +349,12 @@ document.addEventListener('DOMContentLoaded', () => {
     positionsCandleChart.height = height * ratio;
     const context = positionsCandleChart.getContext('2d');
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    const candles = source.map((close, index) => {
-      const open = index ? source[index - 1] : close;
-      const spread = Math.max(close * 0.006, 0.000001);
-      return { time: Date.now() - (source.length - index) * 3600000, open, close, high: Math.max(open, close) + spread, low: Math.max(0.000001, Math.min(open, close) - spread) };
-    });
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = 'rgba(0, 0, 0, .2)';
+    context.fillRect(0, 0, width, height);
+    if (!positionCandles.length) return;
+    const candles = positionCandles.slice(-36);
+    const source = candles.map((candle) => candle.close);
     const padding = { top: 18, right: 72, bottom: 38, left: 12 };
     const values = candles.flatMap((candle) => [candle.high, candle.low]);
     const min = Math.min(...values) * .997;
@@ -146,10 +362,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const xStep = (width - padding.left - padding.right) / Math.max(candles.length - 1, 1);
     const y = (value) => padding.top + ((max - value) / (max - min || 1)) * (height - padding.top - padding.bottom);
     const formatPrice = (value) => '$' + value.toLocaleString('en-US', { maximumFractionDigits: value < 1 ? 6 : 2 });
-    const formatTime = (time) => new Date(time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    context.clearRect(0, 0, width, height);
-    context.fillStyle = 'rgba(0, 0, 0, .2)';
-    context.fillRect(0, 0, width, height);
+    const formatTime = (time) => new Date(time).toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+      ...(chartInterval === '1s' ? { second: '2-digit' } : {})
+    });
     context.font = '11px Inter, sans-serif';
     context.strokeStyle = 'rgba(212, 175, 55, .12)';
     context.fillStyle = '#cfc5a2';
@@ -196,9 +413,97 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (started) context.stroke();
     });
-    positionsChartTitle.textContent = `${asset.symbol.toUpperCase()} / USD`;
+    const asset = getSelectedAsset();
+    if (asset) positionsChartTitle.textContent = `${asset.symbol.toUpperCase()} / USD · ${chartInterval}`;
     positionsChartPrice.textContent = formatPrice(candles[candles.length - 1].close);
-    positionsChartStatus.textContent = 'Hourly candles • timestamps shown in local time';
+  }
+
+  function connectPositionCandleStream(symbol, interval, requestVersion) {
+    if (requestVersion !== candleRequestVersion) return;
+    const pair = tickerPairs[symbol];
+    if (!pair) return;
+    const streamKey = `${symbol}:${interval}`;
+    const socket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@kline_${interval}`);
+    candleSocket = socket;
+    socket.addEventListener('open', () => {
+      if (candleSocket === socket && positionsChartStatus) positionsChartStatus.textContent = `Live ${symbol} ${interval} chart connected.`;
+    });
+    socket.addEventListener('message', (event) => {
+      if (candleSocket !== socket || requestVersion !== candleRequestVersion) return;
+      let kline;
+      try {
+        kline = JSON.parse(event.data).k;
+      } catch (error) {
+        return;
+      }
+      if (!kline) return;
+      const candle = {
+        time: Number(kline.t),
+        open: Number(kline.o),
+        high: Number(kline.h),
+        low: Number(kline.l),
+        close: Number(kline.c)
+      };
+      const lastCandle = positionCandles[positionCandles.length - 1];
+      if (lastCandle?.time === candle.time) positionCandles[positionCandles.length - 1] = candle;
+      else positionCandles.push(candle);
+      positionCandles = positionCandles.slice(-36);
+      drawPositionsChart();
+    });
+    socket.addEventListener('error', () => socket.close());
+    socket.addEventListener('close', () => {
+      if (candleSocket !== socket || requestVersion !== candleRequestVersion) return;
+      candleSocket = null;
+      if (positionsChartStatus) positionsChartStatus.textContent = `Live ${symbol} ${interval} chart disconnected; reconnecting...`;
+      candleRetryTimer = window.setTimeout(() => {
+        candleRetryTimer = null;
+        if (candleStreamKey === streamKey) connectPositionCandleStream(symbol, interval, requestVersion);
+      }, 5000);
+    });
+  }
+
+  async function loadPositionCandles(symbol, interval) {
+    const streamKey = `${symbol}:${interval}`;
+    if (candleStreamKey === streamKey && (candleSocket || candleRetryTimer || candleLoading)) return;
+    candleStreamKey = streamKey;
+    const requestVersion = ++candleRequestVersion;
+    candleLoading = true;
+    if (candleRetryTimer) window.clearTimeout(candleRetryTimer);
+    candleRetryTimer = null;
+    if (candleSocket) {
+      candleSocket.close();
+      candleSocket = null;
+    }
+    positionCandles = [];
+    drawPositionsChart();
+
+    const pair = tickerPairs[symbol];
+    if (!pair) {
+      candleLoading = false;
+      if (positionsChartStatus) positionsChartStatus.textContent = `Candlestick intervals are unavailable for ${symbol}.`;
+      return;
+    }
+    if (positionsChartStatus) positionsChartStatus.textContent = `Loading ${symbol} ${interval} candles...`;
+    try {
+      const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${pair.toUpperCase()}&interval=${interval}&limit=36`);
+      if (!response.ok) throw new Error('Candle history unavailable');
+      const data = await response.json();
+      if (requestVersion !== candleRequestVersion) return;
+      positionCandles = data.map((item) => ({
+        time: Number(item[0]),
+        open: Number(item[1]),
+        high: Number(item[2]),
+        low: Number(item[3]),
+        close: Number(item[4])
+      }));
+      drawPositionsChart();
+    } catch (error) {
+      if (requestVersion !== candleRequestVersion) return;
+      if (positionsChartStatus) positionsChartStatus.textContent = `Candle history unavailable; building the ${interval} chart from live candles...`;
+    }
+    if (requestVersion !== candleRequestVersion) return;
+    candleLoading = false;
+    connectPositionCandleStream(symbol, interval, requestVersion);
   }
 
   const formatCurrency = (value) => {
@@ -396,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (chartTitle) {
       const asset = assets.find((item) => item.symbol.toUpperCase() === symbol) || assets[0];
-      chartTitle.textContent = `${asset.symbol.toUpperCase()} / USD live market`;
+      chartTitle.textContent = asset ? `${asset.symbol.toUpperCase()} / USD live market` : `${symbol} / USD live market`;
     }
 
     chartButtons.forEach((button) => {
@@ -408,6 +713,11 @@ document.addEventListener('DOMContentLoaded', () => {
     renderMarketTable();
     renderChart();
     drawPositionsChart();
+    renderPaperPositions();
+    const selectedAsset = getSelectedAsset();
+    if (priceLabel && selectedAsset) priceLabel.textContent = `${symbol}/USD ${formatCurrency(selectedAsset.current_price)} · Connecting live feed`;
+    connectLiveTicker(symbol);
+    loadPositionCandles(symbol, chartInterval);
   }
 
   async function fetchLiveMarketData() {
@@ -468,6 +778,16 @@ document.addEventListener('DOMContentLoaded', () => {
         setSelectedSymbol(marketConfig.selectedSymbol);
         return;
       }
+      if (tickerSocket?.readyState === WebSocket.OPEN && assets.length) {
+        if (positionsChartStatus) positionsChartStatus.textContent = 'Market snapshot refresh failed; live prices continue streaming.';
+        renderPaperPositions();
+        return;
+      }
+      assets = [];
+      if (priceLabel) priceLabel.textContent = 'Connecting to live price feed...';
+      if (positionsChartPrice) positionsChartPrice.textContent = '--';
+      if (positionsChartStatus) positionsChartStatus.textContent = 'Market snapshot unavailable. Connecting directly to the live price feed...';
+      renderPaperPositions();
       if (assetGrid) {
         assetGrid.innerHTML = `
           <div class="asset-card asset-card-fallback">
@@ -508,8 +828,37 @@ document.addEventListener('DOMContentLoaded', () => {
   if (positionsMarketSelect) {
     positionsMarketSelect.addEventListener('change', (event) => {
       setSelectedSymbol(event.target.value);
+      renderMarketOrderControls();
     });
   }
+  if (positionsTimeButton && positionsTimeOptions) {
+    positionsTimeButton.addEventListener('click', () => {
+      const isOpen = positionsTimeOptions.hidden;
+      positionsTimeOptions.hidden = !isOpen;
+      positionsTimeButton.setAttribute('aria-expanded', String(isOpen));
+    });
+    positionsTimeOptions.querySelectorAll('[data-chart-interval]').forEach((option) => {
+      option.addEventListener('click', () => {
+        chartInterval = option.dataset.chartInterval;
+        positionsTimeButton.textContent = `Time chart: ${chartInterval}`;
+        positionsTimeOptions.querySelectorAll('[data-chart-interval]').forEach((item) => item.classList.toggle('is-active', item === option));
+        positionsTimeOptions.hidden = true;
+        positionsTimeButton.setAttribute('aria-expanded', 'false');
+        loadPositionCandles(marketConfig.selectedSymbol, chartInterval);
+      });
+    });
+    document.addEventListener('click', (event) => {
+      if (positionsTimeButton.contains(event.target) || positionsTimeOptions.contains(event.target)) return;
+      positionsTimeOptions.hidden = true;
+      positionsTimeButton.setAttribute('aria-expanded', 'false');
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      positionsTimeOptions.hidden = true;
+      positionsTimeButton.setAttribute('aria-expanded', 'false');
+    });
+  }
+  if (positionsOrderQuantity) positionsOrderQuantity.addEventListener('input', renderMarketOrderControls);
 
   [
     [positionsBuyButton, 'BUY'],
@@ -517,8 +866,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ].forEach(([button, side]) => {
     if (!button) return;
     button.addEventListener('click', () => {
-      const symbol = marketConfig.selectedSymbol;
-      positionsChartStatus.textContent = `${side} selected for ${symbol}/USD. Use the position controls below to set quantity and risk. `;
+      placePositionMarketOrder(side);
     });
   });
 
@@ -609,6 +957,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  renderPaperPositions();
+  renderPaperOrders();
+  connectLiveTicker(marketConfig.selectedSymbol);
+  loadPositionCandles(marketConfig.selectedSymbol, chartInterval);
   fetchLiveMarketData();
   window.setInterval(fetchLiveMarketData, marketConfig.refreshMs);
   window.addEventListener('resize', drawPositionsChart);
