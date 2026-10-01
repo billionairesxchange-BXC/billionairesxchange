@@ -122,20 +122,21 @@
                     <option value="ETH">ETH / USD</option>
                   </select>
                 </label>
-                <div class="positions-time-menu">
-                  <button class="positions-tools-button" id="positionsTimeButton" type="button" aria-expanded="false" aria-controls="positionsTimeOptions">Time chart: 1m</button>
-                  <div class="positions-time-options" id="positionsTimeOptions" hidden>
-                    <strong>Seconds</strong>
-                    <button type="button" data-chart-interval="1s">1 second</button>
-                    <strong>Minutes</strong>
-                    <button type="button" data-chart-interval="1m">1 minute</button>
-                    <button type="button" data-chart-interval="5m">5 minutes</button>
-                    <button type="button" data-chart-interval="15m">15 minutes</button>
-                    <strong>Hours</strong>
-                    <button type="button" data-chart-interval="1h">1 hour</button>
-                    <button type="button" data-chart-interval="4h">4 hours</button>
-                  </div>
-                </div>
+                <label class="positions-market-selector positions-time-selector">
+                  <span>Time chart</span>
+                  <select id="positionsTimeSelect" aria-label="Choose chart timeframe">
+                    <optgroup label="Seconds"><option value="1s">1 second</option></optgroup>
+                    <optgroup label="Minutes">
+                      <option value="1m" selected>1 minute</option>
+                      <option value="5m">5 minutes</option>
+                      <option value="15m">15 minutes</option>
+                    </optgroup>
+                    <optgroup label="Hours">
+                      <option value="1h">1 hour</option>
+                      <option value="4h">4 hours</option>
+                    </optgroup>
+                  </select>
+                </label>
                 <div class="positions-tools-menu">
                   <button class="positions-tools-button" id="positionsToolsButton" type="button" aria-expanded="false" aria-controls="positionsToolsOptions">Tools</button>
                   <div class="positions-tools-options" id="positionsToolsOptions" hidden>

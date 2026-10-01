@@ -18,8 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const positionsChartWrap = document.querySelector('.positions-chart-wrap');
   const positionsChartResizer = document.getElementById('positionsChartResizer');
   const positionsMarketSelect = document.getElementById('positionsMarketSelect');
-  const positionsTimeButton = document.getElementById('positionsTimeButton');
-  const positionsTimeOptions = document.getElementById('positionsTimeOptions');
+  const positionsTimeSelect = document.getElementById('positionsTimeSelect');
   const positionsToolsButton = document.getElementById('positionsToolsButton');
   const positionsToolsOptions = document.getElementById('positionsToolsOptions');
   const positionsBuyButton = document.getElementById('positionsBuyButton');
@@ -880,31 +879,10 @@ document.addEventListener('DOMContentLoaded', () => {
       renderMarketOrderControls();
     });
   }
-  if (positionsTimeButton && positionsTimeOptions) {
-    positionsTimeButton.addEventListener('click', () => {
-      const isOpen = positionsTimeOptions.hidden;
-      positionsTimeOptions.hidden = !isOpen;
-      positionsTimeButton.setAttribute('aria-expanded', String(isOpen));
-    });
-    positionsTimeOptions.querySelectorAll('[data-chart-interval]').forEach((option) => {
-      option.addEventListener('click', () => {
-        chartInterval = option.dataset.chartInterval;
-        positionsTimeButton.textContent = `Time chart: ${chartInterval}`;
-        positionsTimeOptions.querySelectorAll('[data-chart-interval]').forEach((item) => item.classList.toggle('is-active', item === option));
-        positionsTimeOptions.hidden = true;
-        positionsTimeButton.setAttribute('aria-expanded', 'false');
-        loadPositionCandles(marketConfig.selectedSymbol, chartInterval);
-      });
-    });
-    document.addEventListener('click', (event) => {
-      if (positionsTimeButton.contains(event.target) || positionsTimeOptions.contains(event.target)) return;
-      positionsTimeOptions.hidden = true;
-      positionsTimeButton.setAttribute('aria-expanded', 'false');
-    });
-    document.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape') return;
-      positionsTimeOptions.hidden = true;
-      positionsTimeButton.setAttribute('aria-expanded', 'false');
+  if (positionsTimeSelect) {
+    positionsTimeSelect.addEventListener('change', (event) => {
+      chartInterval = event.target.value;
+      loadPositionCandles(marketConfig.selectedSymbol, chartInterval);
     });
   }
   if (positionsOrderQuantity) positionsOrderQuantity.addEventListener('input', renderMarketOrderControls);
