@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BillionairesXchange | Crypto Trading & Investment</title>
-    <link rel="icon" type="APP-Logo.png" href="APP-logo.png" />
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
     <meta
       name="description"
       content="BillionairesXchange is a crypto trading and investment platform with secure onboarding, wallet protection, live markets, bot trading, custom coin creation, and a marketplace."
@@ -74,16 +74,6 @@
         </div>
       </section>
 
-      <section class="world-home-feed section-shell" aria-labelledby="homeWorldFeedTitle">
-        <div class="world-feed-heading">
-          <div>
-            <span class="eyebrow">Billionaires World</span>
-            <h2 id="homeWorldFeedTitle">Community live feed</h2>
-          </div>
-          <a class="btn btn-ghost" href="billionaires-world.html">Open community</a>
-        </div>
-        <div class="world-feed" id="homeWorldFeed" aria-live="polite"></div>
-      </section>
     </main>
 
     <footer class="site-footer">
@@ -96,13 +86,7 @@
       (() => {
         const hasWorldAccess = () => {
           const username = localStorage.getItem('makingsCurrentUser');
-          if (!username) return false;
-          try {
-            const accounts = JSON.parse(localStorage.getItem('makingsAccounts') || '[]');
-            return Array.isArray(accounts) && accounts.some((account) => account.username === username);
-          } catch (error) {
-            return false;
-          }
+          return Boolean(username && localStorage.getItem('makingsAuthUid'));
         };
 
         document.querySelectorAll('a[href="billionaires-world.html"]').forEach((link) => {
@@ -113,53 +97,10 @@
           });
         });
 
-        const feed = document.getElementById('homeWorldFeed');
-        if (!feed) return;
-
-        function renderHomeFeed() {
-          let posts = [];
-          try { posts = JSON.parse(localStorage.getItem('worldFeed') || '[]'); } catch (error) { posts = []; }
-          feed.replaceChildren();
-          if (!posts.length) {
-            feed.innerHTML = '<p class="world-empty">No community posts yet. Open Billionaires World to share the first one.</p>';
-            return;
-          }
-          [...posts].reverse().slice(0, 6).forEach((post) => {
-            const item = document.createElement('article');
-            item.className = 'world-feed-post';
-            const heading = document.createElement('div');
-            heading.className = 'world-feed-post-heading';
-            const author = document.createElement('strong');
-            author.textContent = post.author || 'Community member';
-            const time = document.createElement('small');
-            time.textContent = post.createdAt ? new Date(post.createdAt).toLocaleString() : '';
-            heading.append(author, time);
-            item.appendChild(heading);
-            if (post.text) {
-              const text = document.createElement('p');
-              text.textContent = post.text;
-              item.appendChild(text);
-            }
-            if (post.media) {
-              const media = document.createElement(post.mediaType === 'video' ? 'video' : 'img');
-              media.className = 'world-feed-media';
-              media.src = post.media;
-              media.controls = post.mediaType === 'video';
-              media.alt = 'Billionaires World community media';
-              item.appendChild(media);
-            }
-            feed.appendChild(item);
-          });
-        }
-
-        renderHomeFeed();
-        window.addEventListener('storage', (event) => {
-          if (event.key === 'worldFeed') renderHomeFeed();
-        });
       })();
     </script>
     <script src="script.js"></script>
-    <script src="auth.js"></script>
+    <script type="module" src="auth.js"></script>
   </body>
 </html>
           <article class="news-card card-glass">
@@ -195,6 +136,6 @@
     <div id="toast" class="toast" aria-live="polite">To Our Kings & Queen In The Making Welcome.</div>
 
     <script src="script.js"></script>
-    <script src="auth.js"></script>
+    <script type="module" src="auth.js"></script>
   </body>
 </html>

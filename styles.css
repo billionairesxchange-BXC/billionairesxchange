@@ -115,6 +115,80 @@ header.topbar {
   white-space: nowrap;
 }
 
+.profile-menu {
+  position: absolute;
+  top: .75rem;
+  right: 1rem;
+  z-index: 110;
+}
+
+.profile-menu-button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--primary-gold);
+  border-radius: 50%;
+  background: rgba(212, 175, 55, .12);
+  color: var(--black);
+  cursor: pointer;
+}
+
+.profile-menu-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-menu-initials {
+  font-weight: 800;
+}
+
+.profile-menu-dropdown {
+  position: absolute;
+  top: calc(100% + .55rem);
+  right: 0;
+  z-index: 120;
+  display: grid;
+  min-width: 170px;
+  padding: .35rem;
+  border: 1px solid var(--primary-gold);
+  border-radius: 6px;
+  background: #111;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .45);
+}
+
+.profile-menu-dropdown[hidden] {
+  display: none;
+}
+
+.profile-menu-dropdown a,
+.profile-menu-dropdown button {
+  padding: .65rem .75rem;
+  border: 0;
+  background: transparent;
+  color: var(--white);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.profile-menu-dropdown a:hover,
+.profile-menu-dropdown button:hover,
+.profile-menu-dropdown a:focus-visible,
+.profile-menu-dropdown button:focus-visible {
+  background: rgba(212, 175, 55, .15);
+  color: var(--primary-gold);
+}
+
+.profile-menu-status {
+  padding: .4rem .75rem;
+  color: var(--light-gold);
+  font-size: .72rem;
+}
+
 .logout-btn {
   cursor: pointer;
 }
@@ -170,6 +244,28 @@ header.topbar {
   color: var(--primary-gold);
 }
 
+.profile-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  cursor: pointer;
+}
+
+.profile-details summary h2 {
+  margin: 0;
+}
+
+.profile-details summary::after {
+  content: "+";
+  color: var(--primary-gold);
+  font-size: 1.25rem;
+}
+
+.profile-details[open] summary::after {
+  content: "−";
+}
+
 .profile-identity p,
 .profile-empty p {
   color: var(--light-gold);
@@ -183,6 +279,139 @@ header.topbar {
   color: #18d77a;
   padding: 0.35rem 0.7rem;
   font-size: 0.8rem;
+}
+
+.profile-payment-methods {
+  grid-column: 1 / -1;
+  padding: 1.5rem;
+}
+
+.profile-card-controls {
+  margin: 1rem 0;
+}
+
+.profile-card-controls > label {
+  display: block;
+  margin-bottom: .4rem;
+  color: var(--light-gold);
+  font-size: .8rem;
+}
+
+.profile-card-controls select {
+  min-width: min(100%, 280px);
+}
+
+.profile-payment-heading p,
+.profile-payment-note,
+.profile-payment-status {
+  color: var(--light-gold);
+  font-size: .8rem;
+}
+
+.profile-payment-actions,
+.profile-payment-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+
+.profile-payment-actions {
+  justify-content: flex-start;
+  margin: 1rem 0;
+}
+
+.profile-online-bank {
+  margin-top: 1rem;
+  padding: .75rem;
+  border-left: 2px solid var(--primary-gold);
+  background: rgba(212, 175, 55, .04);
+}
+
+.profile-online-bank p {
+  margin: .45rem 0 0;
+  color: var(--light-gold);
+  font-size: .78rem;
+}
+
+.profile-payment-form {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(212, 175, 55, .3);
+  border-radius: 6px;
+  background: rgba(212, 175, 55, .04);
+}
+
+.profile-payment-form h3 {
+  margin: 0 0 1rem;
+  color: var(--primary-gold);
+}
+
+.profile-payment-form[hidden] {
+  display: none;
+}
+
+.profile-payment-note {
+  margin-top: 1rem;
+}
+
+.profile-payment-item {
+  margin-top: .5rem;
+  padding: .75rem;
+  border: 1px solid rgba(212, 175, 55, .2);
+  border-radius: 4px;
+}
+
+.profile-payment-item p {
+  margin: 0;
+  color: var(--white);
+}
+
+.profile-payment-remove {
+  border: 0;
+  background: transparent;
+  color: var(--light-gold);
+  cursor: pointer;
+}
+
+.profile-transactions,
+.profile-account-close {
+  grid-column: 1 / -1;
+  padding: 1.5rem;
+}
+
+.profile-transactions h2,
+.profile-account-close h2 {
+  color: var(--primary-gold);
+}
+
+.profile-transaction-list {
+  display: grid;
+  gap: .5rem;
+}
+
+.profile-transaction-list time {
+  color: var(--light-gold);
+  font-size: .75rem;
+}
+
+.profile-account-close {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-color: rgba(255, 102, 102, .25);
+}
+
+.profile-account-close p {
+  color: var(--light-gold);
+  font-size: .8rem;
+}
+
+.profile-account-close > .profile-payment-status {
+  flex-basis: 100%;
 }
 
 .details-list {
@@ -1800,6 +2029,59 @@ canvas {
   border-radius: 4px;
 }
 
+.bot-goal-panel {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(212, 175, 55, .2);
+}
+
+.bot-goal-panel h4 {
+  color: var(--primary-gold);
+}
+
+.bot-goal-panel p {
+  color: var(--light-gold);
+  font-size: .78rem;
+  margin: .4rem 0 .75rem;
+}
+
+.bot-goal-panel label {
+  display: block;
+  color: var(--light-gold);
+  font-size: .75rem;
+  margin-bottom: .35rem;
+}
+
+.bot-goal-controls {
+  display: flex;
+  gap: .5rem;
+}
+
+.bot-goal-controls input {
+  min-width: 0;
+  flex: 1;
+  padding: .65rem .7rem;
+  color: var(--primary-gold);
+  background: rgba(212, 175, 55, .1);
+  border: 1px solid var(--primary-gold);
+  border-radius: 4px;
+}
+
+.bot-goal-panel progress {
+  display: block;
+  width: 100%;
+  height: 8px;
+  margin-top: .9rem;
+  accent-color: #31d598;
+}
+
+.bot-learning-status {
+  margin-top: .65rem;
+  color: var(--light-gold);
+  font-size: .75rem;
+  line-height: 1.5;
+}
+
 .risk-management {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
@@ -3171,13 +3453,23 @@ canvas {
   .details-list {
     grid-template-columns: 1fr;
   }
+
+  .profile-payment-methods {
+    grid-column: 1;
+  }
 }
 
 @media (max-width: 480px) {
   .brand-wrap {
-    width: 100%;
-    justify-content: center;
+    width: calc(100% - 5rem);
+    gap: .5rem;
+    justify-content: flex-start;
   }
+
+  .brand-name { font-size: 16px; }
+  .brand-wrap small { font-size: 11px; }
+
+  .profile-menu { top: .6rem; right: .65rem; }
 
   .main-nav {
     width: 100%;
@@ -3416,6 +3708,141 @@ canvas {
   display: grid;
   grid-template-rows: auto minmax(260px, 1fr) auto;
   gap: 1rem;
+}
+
+.world-page-actions {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+
+.live-feed-section {
+  max-width: 1040px;
+}
+
+.live-feed-composer {
+  display: grid;
+  gap: .75rem;
+  padding: 1.25rem;
+}
+
+.live-feed-composer label {
+  color: var(--primary-gold);
+  font-weight: 700;
+}
+
+.live-feed-composer textarea,
+.live-comment-form input {
+  width: 100%;
+  min-width: 0;
+  padding: .8rem;
+  border: 1px solid rgba(212, 175, 55, .35);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, .35);
+  color: var(--white);
+  resize: vertical;
+}
+
+.live-feed-composer-actions,
+.live-post-heading,
+.live-post-actions,
+.live-comment-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.live-feed-composer-actions small,
+.live-feed-status,
+.live-post-heading time {
+  color: var(--light-gold);
+  font-size: .78rem;
+}
+
+.live-feed-status {
+  min-height: 1.3em;
+  margin: .65rem 0;
+}
+
+.live-post-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.live-post {
+  padding: 1.15rem;
+  border-radius: 6px;
+}
+
+.live-post-heading strong {
+  color: var(--primary-gold);
+}
+
+.live-post-heading time {
+  text-align: right;
+}
+
+.live-post-body {
+  margin: .8rem 0;
+  color: var(--white);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.live-post-actions {
+  justify-content: flex-start;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid rgba(212, 175, 55, .16);
+}
+
+.live-like-button {
+  padding: .45rem .7rem;
+  border: 1px solid rgba(212, 175, 55, .35);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--light-gold);
+  cursor: pointer;
+}
+
+.live-like-button.is-liked {
+  border-color: var(--primary-gold);
+  color: var(--primary-gold);
+}
+
+.live-comments {
+  display: grid;
+  gap: .45rem;
+  margin: .75rem 0;
+}
+
+.live-comment {
+  padding: .6rem .7rem;
+  border-left: 2px solid rgba(212, 175, 55, .42);
+  background: rgba(212, 175, 55, .035);
+}
+
+.live-comment strong {
+  color: var(--primary-gold);
+  font-size: .8rem;
+}
+
+.live-comment p {
+  margin: .2rem 0 0;
+  color: var(--white);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.live-comment-form input {
+  flex: 1;
+}
+
+.live-feed-empty {
+  padding: 1rem;
+  color: var(--light-gold);
+  text-align: center;
 }
 
 .world-feed-panel {

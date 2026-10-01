@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BillionairesXchange | Profile</title>
-    <link rel="icon" type="APP-Logo.png" href="APP-logo.png" />
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -44,10 +44,11 @@
       <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
     </footer>
 
+    <script type="module" src="auth.js"></script>
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
       import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
-      import { doc, getDoc, getFirestore } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+      import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, orderBy, query, updateDoc } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 
       const firebaseConfig = {
         apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
@@ -113,13 +114,94 @@
             <p>@${user.username}</p>
             <span class="profile-status">Account active</span>
           </div>
-          <div class="profile-details card-glass">
-            <h2>Account details</h2>
+          <details class="profile-details card-glass">
+            <summary><h2>Account details</h2></summary>
             <div class="details-list">
               ${details.map(([label, value]) => `<div><span>${label}</span><strong>${value || 'Not provided'}</strong></div>`).join('')}
             </div>
             <button class="btn btn-primary profile-logout" type="button">Log out</button>
-          </div>
+          </details>
+          <section class="profile-payment-methods card-glass" aria-labelledby="profilePaymentTitle">
+            <div class="profile-payment-heading">
+              <div>
+                <span class="eyebrow">Payment methods</span>
+                <h2 id="profilePaymentTitle">Manage payment methods</h2>
+                <p>Bank accounts and cards are managed separately.</p>
+              </div>
+            </div>
+            <div class="profile-payment-actions">
+              <button class="btn btn-secondary" id="showBankMethodForm" type="button">Add bank account</button>
+              <button class="btn btn-secondary" id="showCardMethodForm" type="button">Add credit or debit card</button>
+            </div>
+            <div class="profile-card-controls">
+              <label for="managedCardSelect">Freeze or unfreeze a card</label>
+              <div class="profile-payment-actions">
+                <select id="managedCardSelect"><option value="">Choose a saved card</option></select>
+                <button class="btn btn-secondary" id="toggleCardFreeze" type="button" disabled>Freeze card</button>
+              </div>
+              <p id="cardFreezeStatus" class="profile-payment-status" role="status" aria-live="polite"></p>
+            </div>
+            <form class="profile-payment-form" id="bankMethodForm" hidden>
+              <h3>Add bank account</h3>
+              <p>Select your country or region to see banks listed in the Treasury.</p>
+              <div class="form-grid">
+                <label>Country or region<select name="bankCountry" id="profileBankCountry" required><option value="">Choose country or region</option><option>Jamaica</option><option>Bahamas</option><option>Barbados</option><option>Belize</option><option>Bermuda</option><option>Cayman Islands</option><option>Guyana</option><option>Puerto Rico</option><option>Saint Lucia</option><option>Trinidad and Tobago</option><option>Other Caribbean country</option><option>United States</option><option>United Kingdom</option></select></label>
+                <label>Bank name<select name="bankName" id="profileBankName" required disabled><option value="">Choose country first</option></select></label>
+                <label>Account holder<input name="holderName" maxlength="80" autocomplete="name" required /></label>
+                <label>Account type<select name="accountType" required><option value="">Choose type</option><option>Checking</option><option>Savings</option></select></label>
+                <label>Account number<input name="accountNumber" inputmode="numeric" pattern="[0-9]{4,20}" maxlength="20" autocomplete="off" required /></label>
+                <label>Routing or branch number<input name="routingNumber" inputmode="numeric" pattern="[0-9]{4,20}" maxlength="20" autocomplete="off" required /></label>
+              </div>
+              <div class="profile-online-bank">
+                <button class="btn btn-ghost" id="profileBankOnlineConnect" type="button">Connect online bank login</button>
+                <p id="profileBankOnlineStatus" role="status" aria-live="polite">Secure bank authorization is not connected yet. Never enter your bank password on this site.</p>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Save bank account</button>
+                <button class="btn btn-ghost" data-cancel-payment-form type="button">Cancel</button>
+              </div>
+            </form>
+            <form class="profile-payment-form" id="cardMethodForm" hidden>
+              <h3>Add credit or debit card</h3>
+              <div class="form-grid">
+                <label>Card network<select name="cardNetwork" required><option value="">Choose network</option><option>Visa</option><option>Mastercard</option><option>American Express</option><option>Discover</option><option>Other</option></select></label>
+                <label>Card type<select name="cardType" required><option value="">Choose type</option><option>Credit card</option><option>Debit card</option></select></label>
+                <label>Name on card<input name="holderName" maxlength="80" autocomplete="cc-name" required /></label>
+                <label>Card number<input name="cardNumber" inputmode="numeric" pattern="[0-9 ]{12,23}" maxlength="23" autocomplete="cc-number" required /></label>
+                <label>Expiry date<input name="expiry" inputmode="numeric" pattern="(0[1-9]|1[0-2])/[0-9]{2}" maxlength="5" placeholder="MM/YY" autocomplete="cc-exp" required /></label>
+                <label>Security code (3 digits; AmEx 4)<input name="securityCode" type="password" inputmode="numeric" pattern="[0-9]{3,4}" maxlength="4" autocomplete="cc-csc" required /></label>
+              </div>
+              <div class="form-section-divider"><h4>Billing address</h4></div>
+              <div class="form-grid">
+                <label class="form-field-wide">Street address<input name="billingStreet" autocomplete="billing street-address" maxlength="120" required /></label>
+                <label>City<input name="billingCity" autocomplete="billing address-level2" maxlength="80" required /></label>
+                <label>State or province<input name="billingState" autocomplete="billing address-level1" maxlength="80" required /></label>
+                <label>Postal code<input name="billingPostal" autocomplete="billing postal-code" maxlength="20" required /></label>
+                <label>Country<input name="billingCountry" autocomplete="billing country-name" maxlength="80" required /></label>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Save card</button>
+                <button class="btn btn-ghost" data-cancel-payment-form type="button">Cancel</button>
+              </div>
+            </form>
+            <p class="profile-payment-note">Only last-four digits and billing details are saved. Full account/card numbers and security codes are not stored. Payment processing and bank authorization are not connected.</p>
+            <p class="profile-payment-status" id="profilePaymentStatus" role="status" aria-live="polite"></p>
+            <div class="profile-payment-list" id="profilePaymentList" aria-live="polite"></div>
+          </section>
+          <section class="profile-transactions card-glass" aria-labelledby="profileTransactionsTitle">
+            <h2 id="profileTransactionsTitle">Track transactions</h2>
+            <p class="profile-payment-note">Shows recorded account activity and this user’s paper-trading history. Deposits and withdrawals are not connected.</p>
+            <div class="profile-transaction-list" id="profileTransactionList" aria-live="polite"></div>
+          </section>
+          <section class="profile-account-close card-glass" aria-labelledby="profileCloseTitle">
+            <div>
+              <span class="eyebrow">Account management</span>
+              <h2 id="profileCloseTitle">Close account</h2>
+              <p>Submit a closure request for review. Your account will not be deleted automatically.</p>
+            </div>
+            <button class="btn btn-danger" id="requestAccountClosure" type="button">Request account closure</button>
+            <p class="profile-payment-status" id="accountClosureStatus" role="status" aria-live="polite"></p>
+          </section>
           <section class="profile-media card-glass">
             <div class="profile-media-heading">
               <div>
@@ -140,6 +222,285 @@
             <div class="profile-media-feed" id="profileMediaFeed" aria-live="polite"></div>
           </section>
         `;
+
+        const paymentStatus = document.getElementById('profilePaymentStatus');
+        const paymentList = document.getElementById('profilePaymentList');
+        const bankMethodForm = document.getElementById('bankMethodForm');
+        const cardMethodForm = document.getElementById('cardMethodForm');
+        const bankCountrySelect = document.getElementById('profileBankCountry');
+        const bankNameSelect = document.getElementById('profileBankName');
+        const paymentMethodsRef = collection(db, 'users', firebaseUser.uid, 'paymentMethods');
+        const accountActivityRef = collection(db, 'users', firebaseUser.uid, 'transactions');
+        const closureRequestsRef = collection(db, 'users', firebaseUser.uid, 'accountClosureRequests');
+        const managedCardSelect = document.getElementById('managedCardSelect');
+        const toggleCardFreeze = document.getElementById('toggleCardFreeze');
+        const cardFreezeStatus = document.getElementById('cardFreezeStatus');
+        const profileTransactionList = document.getElementById('profileTransactionList');
+        const requestAccountClosure = document.getElementById('requestAccountClosure');
+        const accountClosureStatus = document.getElementById('accountClosureStatus');
+        let savedCardsById = new Map();
+
+        async function recordAccountActivity(type, description) {
+          try {
+            await addDoc(accountActivityRef, { type, description, createdAt: new Date() });
+            await renderAccountTransactions();
+          } catch (error) {
+            console.error('Unable to save account activity:', error);
+          }
+        }
+
+        async function renderAccountTransactions() {
+          profileTransactionList.replaceChildren();
+          let entries = [];
+          try {
+            const activitySnapshot = await getDocs(query(accountActivityRef, orderBy('createdAt', 'desc')));
+            entries = activitySnapshot.docs.map((item) => ({
+              description: item.data().description,
+              createdAt: item.data().createdAt?.toDate?.() || new Date()
+            }));
+          } catch (error) {
+            const errorMessage = document.createElement('p');
+            errorMessage.className = 'profile-payment-status';
+            errorMessage.textContent = 'Could not load account activity.';
+            profileTransactionList.appendChild(errorMessage);
+            return;
+          }
+
+          try {
+            const botMemory = JSON.parse(localStorage.getItem(`makingsBotMemory:${user.username}`) || '{}');
+            (Array.isArray(botMemory.closedTrades) ? botMemory.closedTrades : []).forEach((trade) => {
+              entries.push({
+                description: `Paper trade closed: ${trade.strategy || 'Strategy'} ${trade.symbol || ''} · ${Number(trade.pnl) >= 0 ? '+' : ''}${Number(trade.pnl || 0).toFixed(2)} USD`,
+                createdAt: new Date(trade.closedAt || Date.now())
+              });
+            });
+          } catch (error) {
+            console.error('Unable to load this user’s paper-trading history:', error);
+          }
+
+          entries.sort((left, right) => right.createdAt - left.createdAt);
+          if (!entries.length) {
+            const empty = document.createElement('p');
+            empty.className = 'profile-payment-note';
+            empty.textContent = 'No account activity or closed paper trades have been recorded yet.';
+            profileTransactionList.appendChild(empty);
+            return;
+          }
+
+          entries.forEach((entry) => {
+            const row = document.createElement('article');
+            row.className = 'profile-payment-item';
+            const description = document.createElement('p');
+            description.textContent = entry.description;
+            const timestamp = document.createElement('time');
+            timestamp.dateTime = entry.createdAt.toISOString();
+            timestamp.textContent = entry.createdAt.toLocaleString();
+            row.append(description, timestamp);
+            profileTransactionList.appendChild(row);
+          });
+        }
+        const banksByCountry = {
+          Jamaica: ['Bank of Jamaica', 'National Commercial Bank Jamaica', 'NCB', 'Scotiabank Jamaica', 'JMMB Bank', 'GraceKennedy Financial', 'FirstCaribbean International Bank', 'CIBC Caribbean', 'RBC Royal Bank Caribbean'],
+          Bahamas: ['Bank of the Bahamas', 'FirstCaribbean International Bank', 'CIBC Caribbean', 'RBC Royal Bank Caribbean'],
+          Barbados: ['Republic Bank Barbados', 'Barbados National Bank', 'FirstCaribbean International Bank', 'CIBC Caribbean', 'RBC Royal Bank Caribbean'],
+          Belize: ['FirstCaribbean International Bank', 'CIBC Caribbean', 'RBC Royal Bank Caribbean'],
+          Bermuda: ['Butterfield Bank'],
+          'Cayman Islands': ['Butterfield Bank', 'CIBC Caribbean', 'RBC Royal Bank Caribbean', 'FirstCaribbean International Bank'],
+          Guyana: ['Republic Bank Guyana'],
+          'Puerto Rico': ['FirstBank Puerto Rico'],
+          'Saint Lucia': ['Bank of Saint Lucia', 'FirstCaribbean International Bank', 'CIBC Caribbean', 'RBC Royal Bank Caribbean'],
+          'Trinidad and Tobago': ['Bank of Trinidad and Tobago', 'Republic Bank', 'FirstCaribbean International Bank', 'CIBC Caribbean', 'RBC Royal Bank Caribbean', 'JMMB Bank'],
+          'Other Caribbean country': ['Republic Bank', 'FirstCaribbean International Bank', 'CIBC Caribbean', 'RBC Royal Bank Caribbean', 'JMMB Bank', 'Butterfield Bank'],
+          'United States': ['JPMorgan Chase', 'Bank of America', 'Wells Fargo', 'Citibank', 'U.S. Bank', 'PNC Bank', 'Truist', 'Capital One', 'TD Bank USA', 'Goldman Sachs'],
+          'United Kingdom': ['Barclays', 'HSBC UK', 'Lloyds Bank', 'NatWest', 'Royal Bank of Scotland', 'Halifax', 'Nationwide Building Society', 'Santander UK', 'Monzo', 'Starling Bank']
+        };
+
+        function updateProfileBankList() {
+          const banks = banksByCountry[bankCountrySelect.value] || [];
+          bankNameSelect.replaceChildren(new Option(banks.length ? 'Choose your bank' : 'Choose country first', ''));
+          banks.forEach((bank) => bankNameSelect.add(new Option(bank, bank)));
+          bankNameSelect.disabled = !banks.length;
+        }
+
+        bankCountrySelect.addEventListener('change', updateProfileBankList);
+        document.getElementById('profileBankOnlineConnect').addEventListener('click', () => {
+          document.getElementById('profileBankOnlineStatus').textContent = 'A secure bank authorization provider is not configured yet. No bank login details were requested or saved.';
+        });
+
+        document.getElementById('showBankMethodForm').addEventListener('click', () => {
+          bankMethodForm.hidden = false;
+          cardMethodForm.hidden = true;
+          bankMethodForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+        document.getElementById('showCardMethodForm').addEventListener('click', () => {
+          cardMethodForm.hidden = false;
+          bankMethodForm.hidden = true;
+          cardMethodForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+        document.querySelectorAll('[data-cancel-payment-form]').forEach((button) => {
+          button.addEventListener('click', () => {
+            bankMethodForm.hidden = true;
+            cardMethodForm.hidden = true;
+          });
+        });
+
+        async function renderPaymentMethods() {
+          try {
+            const methods = await getDocs(paymentMethodsRef);
+            paymentList.replaceChildren();
+            savedCardsById = new Map();
+            const currentCardId = managedCardSelect.value;
+            managedCardSelect.replaceChildren(new Option('Choose a saved card', ''));
+            methods.forEach((methodSnapshot) => {
+              const method = methodSnapshot.data();
+              const item = document.createElement('article');
+              item.className = 'profile-payment-item';
+              const description = document.createElement('p');
+              description.textContent = method.type === 'bank'
+                ? `${method.bankName} (${method.bankCountry}) · ${method.accountType} · •••• ${method.accountLast4}`
+                : `${method.cardNetwork} ${method.cardType} · •••• ${method.cardLast4} · ${method.expiry} · ${method.status === 'frozen' ? 'Frozen' : 'Active'}`;
+              if (method.type === 'card') {
+                savedCardsById.set(methodSnapshot.id, { ...method, id: methodSnapshot.id });
+                managedCardSelect.add(new Option(`${method.cardNetwork} •••• ${method.cardLast4}`, methodSnapshot.id));
+              }
+              const removeButton = document.createElement('button');
+              removeButton.className = 'profile-payment-remove';
+              removeButton.type = 'button';
+              removeButton.textContent = 'Remove';
+              removeButton.addEventListener('click', async () => {
+                await deleteDoc(doc(paymentMethodsRef, methodSnapshot.id));
+                await recordAccountActivity('payment-method-removed', `${method.type === 'bank' ? 'Bank account' : 'Card'} ending in ${method.accountLast4 || method.cardLast4} removed.`);
+                await renderPaymentMethods();
+              });
+              item.append(description, removeButton);
+              paymentList.appendChild(item);
+            });
+            managedCardSelect.value = savedCardsById.has(currentCardId) ? currentCardId : '';
+            updateCardFreezeControl();
+          } catch (error) {
+            paymentStatus.textContent = 'Could not load saved payment methods.';
+          }
+        }
+
+        function updateCardFreezeControl() {
+          const selectedCard = savedCardsById.get(managedCardSelect.value);
+          toggleCardFreeze.disabled = !selectedCard;
+          toggleCardFreeze.textContent = selectedCard?.status === 'frozen' ? 'Unfreeze card' : 'Freeze card';
+        }
+
+        managedCardSelect.addEventListener('change', updateCardFreezeControl);
+        toggleCardFreeze.addEventListener('click', async () => {
+          const card = savedCardsById.get(managedCardSelect.value);
+          if (!card) return;
+          const nextStatus = card.status === 'frozen' ? 'active' : 'frozen';
+          try {
+            await updateDoc(doc(paymentMethodsRef, card.id), { status: nextStatus });
+            cardFreezeStatus.textContent = nextStatus === 'frozen' ? 'Card frozen in this account.' : 'Card unfrozen in this account.';
+            await recordAccountActivity(`card-${nextStatus}`, `${card.cardNetwork} card ending in ${card.cardLast4} ${nextStatus === 'frozen' ? 'frozen' : 'unfrozen'} in this account.`);
+            await renderPaymentMethods();
+          } catch (error) {
+            cardFreezeStatus.textContent = 'Could not update the card status. Try again.';
+          }
+        });
+
+        requestAccountClosure.addEventListener('click', async () => {
+          if (!window.confirm('Submit an account-closure request for review? Your account will not be deleted immediately.')) return;
+          requestAccountClosure.disabled = true;
+          try {
+            await addDoc(closureRequestsRef, { status: 'requested', requestedAt: new Date() });
+            accountClosureStatus.textContent = 'Account closure request submitted for review.';
+            await recordAccountActivity('account-closure-requested', 'Account closure requested for review.');
+          } catch (error) {
+            requestAccountClosure.disabled = false;
+            accountClosureStatus.textContent = 'Could not submit the closure request. Try again.';
+          }
+        });
+
+        getDocs(closureRequestsRef).then((requests) => {
+          if (!requests.empty) {
+            requestAccountClosure.disabled = true;
+            accountClosureStatus.textContent = 'An account-closure request is already pending review.';
+          }
+        }).catch(() => {
+          accountClosureStatus.textContent = 'Account-closure request status is unavailable.';
+        });
+
+        bankMethodForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!bankMethodForm.reportValidity()) return;
+          const formData = new FormData(bankMethodForm);
+          const accountNumber = String(formData.get('accountNumber') || '').replace(/\D/g, '');
+          const routingNumber = String(formData.get('routingNumber') || '').replace(/\D/g, '');
+          if (accountNumber.length < 4 || routingNumber.length < 4) {
+            paymentStatus.textContent = 'Enter valid account and routing numbers.';
+            return;
+          }
+          try {
+            await addDoc(paymentMethodsRef, {
+              type: 'bank',
+              bankCountry: formData.get('bankCountry'),
+              bankName: String(formData.get('bankName')).trim(),
+              holderName: String(formData.get('holderName')).trim(),
+              accountType: formData.get('accountType'),
+              accountLast4: accountNumber.slice(-4),
+              routingLast4: routingNumber.slice(-4),
+              createdAt: new Date()
+            });
+            bankMethodForm.reset();
+            bankMethodForm.hidden = true;
+            paymentStatus.textContent = 'Bank account added. Only its last four digits were saved.';
+            await recordAccountActivity('bank-account-added', `${formData.get('bankName')} bank account ending in ${accountNumber.slice(-4)} added.`);
+            await renderPaymentMethods();
+          } catch (error) {
+            paymentStatus.textContent = 'Could not save the bank account. Try again.';
+          }
+        });
+
+        cardMethodForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!cardMethodForm.reportValidity()) return;
+          const formData = new FormData(cardMethodForm);
+          const cardNumber = String(formData.get('cardNumber') || '').replace(/\D/g, '');
+          const securityCodeInput = cardMethodForm.querySelector('[name="securityCode"]');
+          const securityCode = String(formData.get('securityCode') || '');
+          if (cardNumber.length < 12 || cardNumber.length > 19) {
+            paymentStatus.textContent = 'Enter a card number with 12 to 19 digits.';
+            return;
+          }
+          if (!/^\d{3,4}$/.test(securityCode)) {
+            paymentStatus.textContent = 'Enter a 3-digit security code, or 4 digits for American Express.';
+            return;
+          }
+          formData.delete('securityCode');
+          securityCodeInput.value = '';
+          try {
+            await addDoc(paymentMethodsRef, {
+              type: 'card',
+              cardNetwork: formData.get('cardNetwork'),
+              cardType: formData.get('cardType'),
+              status: 'active',
+              holderName: String(formData.get('holderName')).trim(),
+              cardLast4: cardNumber.slice(-4),
+              expiry: formData.get('expiry'),
+              billingStreet: String(formData.get('billingStreet')).trim(),
+              billingCity: String(formData.get('billingCity')).trim(),
+              billingState: String(formData.get('billingState')).trim(),
+              billingPostal: String(formData.get('billingPostal')).trim(),
+              billingCountry: String(formData.get('billingCountry')).trim(),
+              createdAt: new Date()
+            });
+            cardMethodForm.reset();
+            cardMethodForm.hidden = true;
+            paymentStatus.textContent = 'Card added. Only its last four digits were saved.';
+            await recordAccountActivity('card-added', `${formData.get('cardNetwork')} ${formData.get('cardType')} ending in ${cardNumber.slice(-4)} added.`);
+            await renderPaymentMethods();
+          } catch (error) {
+            paymentStatus.textContent = 'Could not save the card. Try again.';
+          }
+        });
+
+        renderPaymentMethods();
+        renderAccountTransactions();
 
         const mediaForm = document.getElementById('profileMediaForm');
         const mediaInput = document.getElementById('profileMediaInput');

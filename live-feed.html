@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Live Feed</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange" width="100" />
+        <div><p class="brand-name">BillionairesXchange</p><small>Community</small></div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="billionaires-world.html">Billionaires World</a>
+        <a href="trade.html">Trade</a>
+      </nav>
+      <div class="nav-actions"></div>
+    </header>
+
+    <main>
+      <section class="live-feed-section section-shell">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Billionaires World</span>
+            <h1>Live Feed</h1>
+            <p>Posts and conversations from community accounts.</p>
+          </div>
+          <a class="btn btn-ghost" href="billionaires-world.html">Back to community</a>
+        </div>
+
+        <form class="live-feed-composer card-glass" id="livePostForm">
+          <label for="livePostText">Create a post</label>
+          <textarea id="livePostText" maxlength="2000" rows="4" placeholder="Share an update with the community..." required></textarea>
+          <div class="live-feed-composer-actions">
+            <small id="livePostCount">0 / 2000</small>
+            <button class="btn btn-primary" type="submit">Post</button>
+          </div>
+        </form>
+
+        <p class="live-feed-status" id="liveFeedStatus" role="status" aria-live="polite"></p>
+        <div class="live-post-list" id="livePostList" aria-live="polite">
+          <p class="live-feed-empty">Loading community posts...</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><p>© 2026 BillionairesXchange | Community.</p></footer>
+
+    <script type="module" src="auth.js"></script>
+    <script type="module">
+      import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import {
+        addDoc,
+        collection,
+        deleteDoc,
+        doc,
+        getDoc,
+        getDocs,
+        getFirestore,
+        limit,
+        orderBy,
+        query,
+        serverTimestamp,
+        setDoc
+      } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
+        authDomain: 'billionairesxchange-e8162.firebaseapp.com',
+        projectId: 'billionairesxchange-e8162',
+        storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
+        messagingSenderId: '872942229296',
+        appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
+        measurementId: 'G-JCZ6FCKF3M'
+      };
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const postForm = document.getElementById('livePostForm');
+      const postText = document.getElementById('livePostText');
+      const postCount = document.getElementById('livePostCount');
+      const postList = document.getElementById('livePostList');
+      const feedStatus = document.getElementById('liveFeedStatus');
+      const postsQuery = query(collection(db, 'communityPosts'), orderBy('createdAt', 'desc'), limit(30));
+      let currentUser = null;
+      let currentProfile = null;
+      let latestPostDocs = [];
+      let renderVersion = 0;
+
+      postText.addEventListener('input', () => {
+        postCount.textContent = `${postText.value.length} / 2000`;
+      });
+
+      function createComment(comment) {
+        const item = document.createElement('div');
+        item.className = 'live-comment';
+        const author = document.createElement('strong');
+        author.textContent = `@${comment.authorName || 'member'}`;
+        const text = document.createElement('p');
+        text.textContent = comment.text;
+        item.append(author, text);
+        return item;
+      }
+
+      async function createPostCard(postSnapshot) {
+        const post = postSnapshot.data();
+        const postRef = doc(db, 'communityPosts', postSnapshot.id);
+        const likesRef = collection(postRef, 'likes');
+        const commentsRef = collection(postRef, 'comments');
+        const [likesSnapshot, myLike, commentsSnapshot] = await Promise.all([
+          getDocs(likesRef),
+          getDoc(doc(likesRef, currentUser.uid)),
+          getDocs(query(commentsRef, orderBy('createdAt', 'asc'), limit(50)))
+        ]);
+
+        const article = document.createElement('article');
+        article.className = 'live-post card-glass';
+        const heading = document.createElement('div');
+        heading.className = 'live-post-heading';
+        const author = document.createElement('strong');
+        author.textContent = `@${post.authorName || 'member'}`;
+        const time = document.createElement('time');
+        const createdAt = post.createdAt?.toDate?.() || new Date();
+        time.dateTime = createdAt.toISOString();
+        time.textContent = createdAt.toLocaleString();
+        heading.append(author, time);
+
+        const body = document.createElement('p');
+        body.className = 'live-post-body';
+        body.textContent = post.text;
+
+        const actions = document.createElement('div');
+        actions.className = 'live-post-actions';
+        const likeButton = document.createElement('button');
+        likeButton.className = `live-like-button${myLike.exists() ? ' is-liked' : ''}`;
+        likeButton.type = 'button';
+        likeButton.setAttribute('aria-pressed', String(myLike.exists()));
+        likeButton.textContent = `${myLike.exists() ? 'Liked' : 'Like'} · ${likesSnapshot.size}`;
+        likeButton.addEventListener('click', async () => {
+          likeButton.disabled = true;
+          try {
+            const likeRef = doc(likesRef, currentUser.uid);
+            if (myLike.exists()) {
+              await deleteDoc(likeRef);
+            } else {
+              await setDoc(likeRef, { uid: currentUser.uid, createdAt: serverTimestamp() });
+            }
+            await refreshPosts();
+          } catch (error) {
+            feedStatus.textContent = 'Could not update your like. Try again.';
+            likeButton.disabled = false;
+          }
+        });
+        actions.appendChild(likeButton);
+
+        const comments = document.createElement('div');
+        comments.className = 'live-comments';
+        commentsSnapshot.forEach((commentSnapshot) => comments.appendChild(createComment(commentSnapshot.data())));
+
+        const commentForm = document.createElement('form');
+        commentForm.className = 'live-comment-form';
+        const commentInput = document.createElement('input');
+        commentInput.type = 'text';
+        commentInput.maxLength = 1000;
+        commentInput.placeholder = 'Write a comment...';
+        commentInput.setAttribute('aria-label', 'Write a comment');
+        commentInput.required = true;
+        const commentButton = document.createElement('button');
+        commentButton.className = 'btn btn-secondary';
+        commentButton.type = 'submit';
+        commentButton.textContent = 'Comment';
+        commentForm.append(commentInput, commentButton);
+        commentForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const text = commentInput.value.trim();
+          if (!text) return;
+          commentButton.disabled = true;
+          try {
+            await addDoc(commentsRef, {
+              authorUid: currentUser.uid,
+              authorName: currentProfile.username,
+              text,
+              createdAt: serverTimestamp()
+            });
+            await refreshPosts();
+          } catch (error) {
+            feedStatus.textContent = 'Could not post your comment. Try again.';
+            commentButton.disabled = false;
+          }
+        });
+
+        article.append(heading, body, actions, comments, commentForm);
+        return article;
+      }
+
+      async function renderPosts(postDocs) {
+        const version = ++renderVersion;
+        if (!postDocs.length) {
+          postList.innerHTML = '<p class="live-feed-empty">No posts yet. Share the first update.</p>';
+          return;
+        }
+        try {
+          const cards = await Promise.all(postDocs.map(createPostCard));
+          if (version !== renderVersion) return;
+          postList.replaceChildren(...cards);
+        } catch (error) {
+          feedStatus.textContent = 'Could not load the community feed. Try refreshing the page.';
+        }
+      }
+
+      async function refreshPosts() {
+        const snapshot = await getDocs(postsQuery);
+        latestPostDocs = snapshot.docs;
+        await renderPosts(latestPostDocs);
+      }
+
+      postForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const text = postText.value.trim();
+        if (!text || !currentUser || !currentProfile) return;
+        const submitButton = postForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        feedStatus.textContent = 'Publishing post...';
+        try {
+          await addDoc(collection(db, 'communityPosts'), {
+            authorUid: currentUser.uid,
+            authorName: currentProfile.username,
+            text,
+            createdAt: serverTimestamp()
+          });
+          postForm.reset();
+          postCount.textContent = '0 / 2000';
+          feedStatus.textContent = 'Post published to the community.';
+          await refreshPosts();
+        } catch (error) {
+          feedStatus.textContent = 'Could not publish your post. Check your connection and try again.';
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+
+      onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+        if (!user) {
+          postForm.hidden = true;
+          postList.innerHTML = '<p class="live-feed-empty">Sign in to view and post in the community feed.</p><a class="btn btn-primary" href="verification.html#login">Sign in</a>';
+          return;
+        }
+        try {
+          const profileSnapshot = await getDoc(doc(db, 'users', user.uid));
+          if (!profileSnapshot.exists()) throw new Error('Account profile not found.');
+          currentProfile = profileSnapshot.data();
+          postForm.hidden = false;
+          await refreshPosts();
+        } catch (error) {
+          postForm.hidden = true;
+          postList.innerHTML = '<p class="live-feed-empty">Could not load your account or community feed.</p>';
+        }
+      });
+    </script>
+  </body>
+</html>

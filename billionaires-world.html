@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BillionairesXchange | Billionaires World</title>
-    <link rel="icon" type="APP-Logo.png" href="APP-logo.png" />
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -15,7 +15,7 @@
       </div>
       <nav class="main-nav" aria-label="Main navigation">
         <a href="index.html#home">Home</a><a href="trade.html">Trade</a><a href="shop.html">Shop</a>
-        <a href="bot-trading.html">Bot Trading</a><a href="treasury.html">Treasury/Wallet</a><a href="create-coin.html">Create Coin</a>
+        <a href="bot-trading.html">Bot Trading</a><a href="treasury.html">Treasury/Wallet</a><a href="create-coin.html">Create Coin</a><a href="live-feed.html">Live Feed</a>
       </nav>
       <div class="nav-actions"><a class="btn btn-ghost" href="verification.html">Login</a><a class="btn btn-primary" href="verification.html">Sign Up</a></div>
     </header>
@@ -24,7 +24,10 @@
       <section class="world-page section-shell">
         <div class="section-head">
           <div><span class="eyebrow">Private community</span><h1>Billionaires World</h1><p>Connect, share, build groups, and move value with your trading circle.</p></div>
-          <a class="btn btn-ghost" href="index.html#home">Back home</a>
+          <div class="world-page-actions">
+            <a class="btn btn-primary" href="live-feed.html">Open Live Feed</a>
+            <a class="btn btn-ghost" href="index.html#home">Back home</a>
+          </div>
         </div>
         <div class="world-page-layout">
           <aside class="card-glass world-page-sidebar">
@@ -47,14 +50,8 @@
             <form class="world-message-form" id="worldMessageForm"><textarea id="worldMessageText" placeholder="Write a message..." maxlength="1000" aria-label="Message"></textarea><div class="world-message-actions"><label class="world-media-label" for="worldMediaInput">Photo or video</label><input id="worldMediaInput" type="file" accept="image/*,video/*" /><span id="worldMediaName">No media selected</span><button class="btn btn-primary" type="submit">Send</button></div></form>
           </section>
         </div>
-        <section class="card-glass world-feed-panel" aria-labelledby="worldFeedTitle">
-          <div class="world-feed-heading">
-            <div><span class="eyebrow">Community activity</span><h2 id="worldFeedTitle">Live feed</h2></div>
-            <span class="world-chat-status">Latest posts</span>
-          </div>
-          <div class="world-feed" id="worldFeed" aria-live="polite"></div>
-        </section>
       </section>
+      <div id="worldFeed" hidden></div>
     </main>
     <footer class="site-footer"><p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p></footer>
     <script>
@@ -95,10 +92,10 @@
         $('worldUserSearch').addEventListener('input', renderPeople); $('worldCreateGroupButton').addEventListener('click', () => { $('worldGroupForm').hidden = !$('worldGroupForm').hidden; if (!$('worldGroupForm').hidden) $('worldGroupName').focus(); });
         $('worldGroupForm').addEventListener('submit', (event) => { event.preventDefault(); const name = $('worldGroupName').value.trim(); if (!name || state.groups.includes(name)) return; state.groups.push(name); save('worldGroups', state.groups); event.target.reset(); event.target.hidden = true; renderGroups(); });
         $('worldMediaInput').addEventListener('change', () => { $('worldMediaName').textContent = $('worldMediaInput').files[0]?.name || 'No media selected'; });
-        $('worldMessageForm').addEventListener('submit', (event) => { event.preventDefault(); if (!state.selected) { $('worldChatStatus').textContent = 'Select a user before sending a message.'; return; } const file = $('worldMediaInput').files[0]; const publish = (media, mediaType) => { const text = $('worldMessageText').value.trim(); const thread = state.messages[state.selected] || []; thread.push({ text, media, mediaType, mine: true }); state.messages[state.selected] = thread; state.feed.push({ author: 'You', text, media, mediaType, createdAt: Date.now() }); save('worldMessages', state.messages); save('worldFeed', state.feed); event.target.reset(); $('worldMediaName').textContent = 'No media selected'; renderMessages(); renderFeed(); $('worldChatStatus').textContent = 'Message sent and added to the live feed.'; }; if (!file) { publish('', ''); return; } const reader = new FileReader(); reader.addEventListener('load', () => publish(reader.result, file.type.startsWith('video/') ? 'video' : 'image')); reader.readAsDataURL(file); });
+        $('worldMessageForm').addEventListener('submit', (event) => { event.preventDefault(); if (!state.selected) { $('worldChatStatus').textContent = 'Select a user before sending a message.'; return; } const file = $('worldMediaInput').files[0]; const publish = (media, mediaType) => { const text = $('worldMessageText').value.trim(); const thread = state.messages[state.selected] || []; thread.push({ text, media, mediaType, mine: true }); state.messages[state.selected] = thread; state.feed.push({ author: 'You', text, media, mediaType, createdAt: Date.now() }); save('worldMessages', state.messages); save('worldFeed', state.feed); event.target.reset(); $('worldMediaName').textContent = 'No media selected'; renderMessages(); renderFeed(); $('worldChatStatus').textContent = 'Message sent to conversation.'; }; if (!file) { publish('', ''); return; } const reader = new FileReader(); reader.addEventListener('load', () => publish(reader.result, file.type.startsWith('video/') ? 'video' : 'image')); reader.readAsDataURL(file); });
         $('worldSendPaymentButton').addEventListener('click', () => payment('send')); $('worldRequestPaymentButton').addEventListener('click', () => payment('request')); renderPeople(); renderGroups(); renderMessages(); renderFeed();
       })();
     </script>
-    <script src="auth.js"></script>
+    <script type="module" src="auth.js"></script>
   </body>
 </html>

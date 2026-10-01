@@ -29,10 +29,170 @@ service cloud.firestore {
           'countryBirth',
           'emailVerified',
           'phoneVerified',
+          'profilePhoto',
           'createdAt'
         ]);
       allow get: if isSignedIn() && request.auth.uid == userId;
-      allow list, update, delete: if false;
+      allow update: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['profilePhoto'])
+        && request.resource.data.profilePhoto is string
+        && request.resource.data.profilePhoto.size() <= 300000;
+      allow list, delete: if false;
+
+      match /paymentMethods/{methodId} {
+        function isOwner() {
+          return isSignedIn() && request.auth.uid == userId;
+        }
+
+        allow get, list: if isOwner();
+        allow create: if isOwner()
+          && request.resource.data.keys().hasOnly([
+            'type',
+            'bankCountry',
+            'bankName',
+            'holderName',
+            'accountType',
+            'accountLast4',
+            'routingLast4',
+            'cardNetwork',
+            'cardType',
+            'status',
+            'cardLast4',
+            'expiry',
+            'billingStreet',
+            'billingCity',
+            'billingState',
+            'billingPostal',
+            'billingCountry',
+            'createdAt'
+          ])
+          && request.resource.data.keys().hasAll(['type', 'holderName', 'createdAt'])
+          && request.resource.data.holderName is string
+          && request.resource.data.holderName.size() <= 80
+          && request.resource.data.createdAt is timestamp
+          && (
+            (request.resource.data.type == 'bank'
+              && request.resource.data.keys().hasAll(['bankCountry', 'bankName', 'accountType', 'accountLast4', 'routingLast4'])
+              && request.resource.data.bankCountry is string
+              && request.resource.data.bankCountry.size() <= 80
+              && request.resource.data.bankName is string
+              && request.resource.data.bankName.size() <= 80
+              && request.resource.data.accountType in ['Checking', 'Savings']
+              && request.resource.data.accountLast4 is string
+              && request.resource.data.accountLast4.size() == 4
+              && request.resource.data.routingLast4 is string
+              && request.resource.data.routingLast4.size() == 4)
+            ||
+            (request.resource.data.type == 'card'
+              && request.resource.data.keys().hasAll([
+                'cardNetwork',
+                'cardType',
+                'status',
+                'cardLast4',
+                'expiry',
+                'billingStreet',
+                'billingCity',
+                'billingState',
+                'billingPostal',
+                'billingCountry'
+              ])
+              && request.resource.data.cardNetwork in ['Visa', 'Mastercard', 'American Express', 'Discover', 'Other']
+              && request.resource.data.cardType in ['Credit card', 'Debit card']
+              && request.resource.data.status == 'active'
+              && request.resource.data.cardLast4 is string
+              && request.resource.data.cardLast4.size() == 4
+              && request.resource.data.expiry is string
+              && request.resource.data.expiry.matches('^(0[1-9]|1[0-2])/[0-9]{2}$')
+              && request.resource.data.billingStreet is string
+              && request.resource.data.billingStreet.size() <= 120
+              && request.resource.data.billingCity is string
+              && request.resource.data.billingCity.size() <= 80
+              && request.resource.data.billingState is string
+              && request.resource.data.billingState.size() <= 80
+              && request.resource.data.billingPostal is string
+              && request.resource.data.billingPostal.size() <= 20
+              && request.resource.data.billingCountry is string
+              && request.resource.data.billingCountry.size() <= 80)
+          );
+        allow update: if isOwner()
+          && resource.data.type == 'card'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status in ['active', 'frozen'];
+        allow delete: if isOwner();
+      }
+
+      match /transactions/{transactionId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn()
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['type', 'description', 'createdAt'])
+          && request.resource.data.keys().hasAll(['type', 'description', 'createdAt'])
+          && request.resource.data.type in [
+            'bank-account-added',
+            'card-added',
+            'payment-method-removed',
+            'card-frozen',
+            'card-active',
+            'account-closure-requested'
+          ]
+          && request.resource.data.description is string
+          && request.resource.data.description.size() <= 240
+          && request.resource.data.createdAt is timestamp;
+        allow update, delete: if false;
+      }
+
+      match /accountClosureRequests/{requestId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn()
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['status', 'requestedAt'])
+          && request.resource.data.status == 'requested'
+          && request.resource.data.requestedAt is timestamp;
+        allow update, delete: if false;
+      }
+    }
+
+    match /communityPosts/{postId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['authorUid', 'authorName', 'text', 'createdAt'])
+        && request.resource.data.keys().hasAll(['authorUid', 'authorName', 'text', 'createdAt'])
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.authorName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 2000
+        && request.resource.data.createdAt is timestamp;
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.authorUid == request.auth.uid;
+
+      match /comments/{commentId} {
+        allow get, list: if isSignedIn();
+        allow create: if isSignedIn()
+          && request.resource.data.keys().hasOnly(['authorUid', 'authorName', 'text', 'createdAt'])
+          && request.resource.data.keys().hasAll(['authorUid', 'authorName', 'text', 'createdAt'])
+          && request.resource.data.authorUid == request.auth.uid
+          && request.resource.data.authorName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 1000
+          && request.resource.data.createdAt is timestamp;
+        allow update: if false;
+        allow delete: if isSignedIn() && resource.data.authorUid == request.auth.uid;
+      }
+
+      match /likes/{userId} {
+        allow get: if isSignedIn() && request.auth.uid == userId;
+        allow list: if isSignedIn();
+        allow create: if isSignedIn()
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['uid', 'createdAt'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.createdAt is timestamp;
+        allow update: if false;
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
     }
 
     match /usernames/{username} {
