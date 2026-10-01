@@ -68,6 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let tickerSocket = null;
   let tickerSymbol = '';
   let tickerRetryTimer = null;
+  const binanceApiBases = ['https://data-api.binance.vision', 'https://api.binance.com'];
+  const binanceSocketBases = ['wss://data-stream.binance.vision', 'wss://stream.binance.com:9443'];
   let chartInterval = '1m';
   let positionCandles = [];
   let candleSocket = null;
@@ -80,7 +82,21 @@ document.addEventListener('DOMContentLoaded', () => {
     return assets.find((asset) => asset.symbol.toUpperCase() === marketConfig.selectedSymbol);
   }
 
-  function connectLiveTicker(symbol) {
+  async function fetchBinanceData(path) {
+    let lastError;
+    for (const base of binanceApiBases) {
+      try {
+        const response = await fetch(`${base}${path}`);
+        if (!response.ok) throw new Error(`Market data request failed (${response.status})`);
+        return await response.json();
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError || new Error('Market data unavailable');
+  }
+
+  function connectLiveTicker(symbol, hostIndex = 0) {
     const pair = tickerPairs[symbol];
     if (tickerSocket && tickerSymbol === symbol && tickerSocket.readyState <= WebSocket.OPEN) return;
     if (tickerRetryTimer) window.clearTimeout(tickerRetryTimer);
@@ -96,7 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (positionsChartStatus) positionsChartStatus.textContent = `Connecting to the ${symbol} live price feed...`;
-    const socket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@ticker`);
+    const socketBase = binanceSocketBases[hostIndex % binanceSocketBases.length];
+    const socket = new WebSocket(`${socketBase}/ws/${pair}@ticker`);
     tickerSocket = socket;
     socket.addEventListener('open', () => {
       if (tickerSocket === socket && positionsChartStatus && !tickerPairs[symbol]) positionsChartStatus.textContent = `${symbol} live price stream connected.`;
@@ -141,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tickerSocket !== socket) return;
       tickerSocket = null;
       if (positionsChartStatus) positionsChartStatus.textContent = `${symbol} live feed disconnected; reconnecting...`;
-      tickerRetryTimer = window.setTimeout(() => connectLiveTicker(symbol), 5000);
+      tickerRetryTimer = window.setTimeout(() => connectLiveTicker(symbol, (hostIndex + 1) % binanceSocketBases.length), 5000);
     });
   }
 
@@ -418,12 +435,13 @@ document.addEventListener('DOMContentLoaded', () => {
     positionsChartPrice.textContent = formatPrice(candles[candles.length - 1].close);
   }
 
-  function connectPositionCandleStream(symbol, interval, requestVersion) {
+  function connectPositionCandleStream(symbol, interval, requestVersion, hostIndex = 0) {
     if (requestVersion !== candleRequestVersion) return;
     const pair = tickerPairs[symbol];
     if (!pair) return;
     const streamKey = `${symbol}:${interval}`;
-    const socket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@kline_${interval}`);
+    const socketBase = binanceSocketBases[hostIndex % binanceSocketBases.length];
+    const socket = new WebSocket(`${socketBase}/ws/${pair}@kline_${interval}`);
     candleSocket = socket;
     socket.addEventListener('open', () => {
       if (candleSocket === socket && positionsChartStatus) positionsChartStatus.textContent = `Live ${symbol} ${interval} chart connected.`;
@@ -457,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (positionsChartStatus) positionsChartStatus.textContent = `Live ${symbol} ${interval} chart disconnected; reconnecting...`;
       candleRetryTimer = window.setTimeout(() => {
         candleRetryTimer = null;
-        if (candleStreamKey === streamKey) connectPositionCandleStream(symbol, interval, requestVersion);
+        if (candleStreamKey === streamKey) connectPositionCandleStream(symbol, interval, requestVersion, (hostIndex + 1) % binanceSocketBases.length);
       }, 5000);
     });
   }
@@ -485,9 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (positionsChartStatus) positionsChartStatus.textContent = `Loading ${symbol} ${interval} candles...`;
     try {
-      const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${pair.toUpperCase()}&interval=${interval}&limit=36`);
-      if (!response.ok) throw new Error('Candle history unavailable');
-      const data = await response.json();
+      const data = await fetchBinanceData(`/api/v3/klines?symbol=${pair.toUpperCase()}&interval=${interval}&limit=36`);
       if (requestVersion !== candleRequestVersion) return;
       positionCandles = data.map((item) => ({
         time: Number(item[0]),
@@ -767,6 +783,39 @@ document.addEventListener('DOMContentLoaded', () => {
       setSelectedSymbol(marketConfig.selectedSymbol);
     } catch (error) {
       console.error('Market data error:', error);
+      try {
+        const symbols = ['BTC', 'ETH', 'XRP', 'SOL', 'DOGE', 'ADA', 'BNB', 'TRX', 'USDC'];
+        const tickers = await fetchBinanceData(`/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols.map((symbol) => `${symbol}USDT`)))}`);
+        const names = { BTC: 'Bitcoin', ETH: 'Ethereum', XRP: 'XRP', SOL: 'Solana', DOGE: 'Dogecoin', ADA: 'Cardano', BNB: 'BNB', TRX: 'TRON', USDC: 'USD Coin' };
+        const fallbackAssets = tickers.map((ticker) => {
+          const symbol = ticker.symbol.replace(/USDT$/, '');
+          const currentPrice = Number(ticker.lastPrice);
+          return {
+            id: `binance-${symbol.toLowerCase()}`,
+            name: names[symbol] || symbol,
+            symbol,
+            current_price: currentPrice,
+            market_cap: 0,
+            total_volume: Number(ticker.quoteVolume) || 0,
+            market_cap_rank: null,
+            price_change_percentage_24h: Number(ticker.priceChangePercent) || 0,
+            sparkline_in_7d: { price: [currentPrice] }
+          };
+        }).filter((asset) => Number.isFinite(asset.current_price) && asset.current_price > 0);
+        const customAssets = getCustomAssets();
+        assets = [...customAssets, ...fallbackAssets.filter((asset) => !customAssets.some((customAsset) => customAsset.symbol === asset.symbol))];
+        addCustomMarketOptions(customAssets);
+        if (assets.length) {
+          if (!assets.some((asset) => asset.symbol === marketConfig.selectedSymbol)) marketConfig.selectedSymbol = assets[0].symbol;
+          renderWatchlist();
+          renderAssetGrid();
+          renderMarketTable();
+          setSelectedSymbol(marketConfig.selectedSymbol);
+          return;
+        }
+      } catch (fallbackError) {
+        console.error('Binance market snapshot fallback failed:', fallbackError);
+      }
       const customAssets = getCustomAssets();
       if (customAssets.length) {
         assets = customAssets;
