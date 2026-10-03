@@ -29,11 +29,11 @@
 
       <nav class="main-nav" aria-label="Main navigation">
         <a href="index.html#home">Home</a>
-        <a href="index.html#trade">Trade</a>
+        <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Bot Trading</a>
-        <a href="index.html#wallet">Treasury/Wallet</a>
-        <a href="index.html#create-coin">Create Coin</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
       </nav>
 
       <div class="nav-actions">
@@ -288,8 +288,16 @@
                     <button type="button" data-bot-chart-tool="import">Import Indicator</button>
                     <button type="button" data-bot-chart-tool="create">Create Indicator</button>
                     <button type="button" data-bot-chart-tool="custom-candles">Custom Candlesticks</button>
+                    <button type="button" data-bot-chart-tool="layout">Chart margins</button>
                   </div>
                 </div>
+                <label class="positions-market-selector">
+                  <span>Pointer</span>
+                  <select id="botChartMode" aria-label="Choose bot chart pointer tool">
+                    <option value="crosshair">Crosshair</option>
+                    <option value="ruler">Ruler</option>
+                  </select>
+                </label>
               </div>
               <div class="bot-chart-wrap">
                 <canvas id="botCanvas" width="600" height="320" aria-label="BillionairesXchange live trading bot candlestick chart"></canvas>
@@ -376,6 +384,7 @@
       const botChartTimeOptions = document.getElementById('botChartTimeOptions');
       const botChartToolsButton = document.getElementById('botChartToolsButton');
       const botChartToolsOptions = document.getElementById('botChartToolsOptions');
+      const botChartMode = document.getElementById('botChartMode');
       const botChartStatus = document.getElementById('botChartStatus');
       const tradeFeed = document.getElementById('tradeFeed');
       const botPnl = document.getElementById('botPnl');
@@ -414,10 +423,36 @@
             candleStyle: {
               bodyWidth: Number(saved.candleStyle?.bodyWidth) || 58,
               wickWidth: Number(saved.candleStyle?.wickWidth) || 1
-            }
+            },
+            margins: {
+              top: Number.isFinite(Number(saved.margins?.top)) ? Math.min(80, Math.max(0, Number(saved.margins.top))) : 18,
+              right: Number.isFinite(Number(saved.margins?.right)) ? Math.min(180, Math.max(40, Number(saved.margins.right))) : 76,
+              bottom: Number.isFinite(Number(saved.margins?.bottom)) ? Math.min(100, Math.max(20, Number(saved.margins.bottom))) : 38,
+              left: Number.isFinite(Number(saved.margins?.left)) ? Math.min(100, Math.max(0, Number(saved.margins.left))) : 12
+            },
+            mode: saved.mode === 'ruler' ? 'ruler' : 'crosshair',
+            height: Number(saved.height) >= 260 && Number(saved.height) <= 720 ? Number(saved.height) : 320,
+            width: Number(saved.width) >= 320 && Number(saved.width) <= 4000 ? Number(saved.width) : null,
+            interval: ['1s', '1m', '5m', '15m', '1h', '4h'].includes(saved.interval) ? saved.interval : '1m',
+            market: typeof saved.market === 'string' ? saved.market.toUpperCase() : '',
+            ruler: saved.ruler?.start && saved.ruler?.end
+              && Number.isFinite(saved.ruler.start.x) && Number.isFinite(saved.ruler.start.price)
+              && Number.isFinite(saved.ruler.end.x) && Number.isFinite(saved.ruler.end.price)
+              ? saved.ruler
+              : null
           };
         } catch (error) {
-          return { indicators: [], candleStyle: { bodyWidth: 58, wickWidth: 1 } };
+          return {
+            indicators: [],
+            candleStyle: { bodyWidth: 58, wickWidth: 1 },
+            margins: { top: 18, right: 76, bottom: 38, left: 12 },
+            mode: 'crosshair',
+            height: 320,
+            width: null,
+            interval: '1m',
+            market: '',
+            ruler: null
+          };
         }
       })();
 
@@ -462,13 +497,23 @@
         marketSymbol: null,
         marketRetryTimer: null,
         chartCandles: [],
-        chartInterval: '1m',
+        chartInterval: botChartTools.interval,
         chartSocket: null,
         chartRequestVersion: 0,
         chartRetryTimer: null,
         history: [65000, 65750, 66100, 66420, 66380, 66940, 67150],
         positionRecords: JSON.parse(localStorage.getItem('botPositionRecords') || '[]')
       };
+      let botChartPointer = null;
+      let botRulerAnchor = null;
+      let botRulerDraft = null;
+      const botChartGeometry = { padding: botChartTools.margins, min: 0, max: 0, plotWidth: 0, plotHeight: 0, candles: [] };
+      if (botChartMode) botChartMode.value = botChartTools.mode;
+      if (botChartWrap) {
+        botChartWrap.style.height = `${botChartTools.height}px`;
+        botChartWrap.style.minHeight = `${botChartTools.height}px`;
+        if (botChartTools.width) botChartWrap.style.width = `${Math.min(botChartTools.width, botChartWrap.parentElement.clientWidth)}px`;
+      }
 
       const coinPrices = {
         BTC: 66940,
@@ -1037,12 +1082,21 @@
         return botState.analysis;
       }
 
+      function saveBotChartPreferences() {
+        botChartTools.mode = botChartMode?.value || botChartTools.mode;
+        botChartTools.height = botChartWrap?.getBoundingClientRect().height || botChartTools.height;
+        botChartTools.width = botChartWrap?.getBoundingClientRect().width || botChartTools.width;
+        botChartTools.interval = botState.chartInterval;
+        botChartTools.market = coinSelect.value;
+        localStorage.setItem('makingsBotChartTools', JSON.stringify(botChartTools));
+      }
+
       function renderBotChart() {
         const ctx = botCanvas.getContext('2d');
         const bounds = botCanvas.getBoundingClientRect();
         const ratio = window.devicePixelRatio || 1;
         const width = Math.max(320, bounds.width);
-        const height = 320;
+        const height = Math.max(260, botChartWrap.clientHeight || botChartTools.height);
         botCanvas.width = width * ratio;
         botCanvas.height = height * ratio;
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -1057,12 +1111,20 @@
           return;
         }
         const history = candles.map((candle) => candle.close);
-        const padding = { top: 18, right: 76, bottom: 38, left: 12 };
+        const padding = botChartTools.margins;
         const prices = candles.flatMap((candle) => [candle.high, candle.low]);
         const min = Math.min(...prices) * .997;
         const max = Math.max(...prices) * 1.003;
         const xStep = (width - padding.left - padding.right) / Math.max(candles.length - 1, 1);
+        const plotWidth = width - padding.left - padding.right;
+        const plotHeight = height - padding.top - padding.bottom;
         const y = (value) => padding.top + ((max - value) / (max - min || 1)) * (height - padding.top - padding.bottom);
+        botChartGeometry.min = min;
+        botChartGeometry.max = max;
+        botChartGeometry.plotWidth = plotWidth;
+        botChartGeometry.plotHeight = plotHeight;
+        botChartGeometry.padding = padding;
+        botChartGeometry.candles = candles;
         const formatPrice = (value) => '$' + value.toLocaleString('en-US', { maximumFractionDigits: value < 1 ? 6 : 2 });
         const formatTime = (time) => new Date(time).toLocaleTimeString([], {
           hour: 'numeric',
@@ -1120,6 +1182,43 @@
           });
           if (started) ctx.stroke();
         });
+        const drawRuler = (start, end) => {
+          if (!start || !end) return;
+          const startX = padding.left + start.x * plotWidth;
+          const endX = padding.left + end.x * plotWidth;
+          const startY = y(start.price);
+          const endY = y(end.price);
+          const change = end.price - start.price;
+          ctx.save();
+          ctx.strokeStyle = '#f3c969';
+          ctx.fillStyle = '#f3c969';
+          ctx.setLineDash([5, 4]);
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(endX, endY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillText(`${formatMoney(change)} (${start.price ? (change / start.price * 100).toFixed(2) : '0.00'}%)`, Math.min(startX, endX) + 8, Math.max(16, Math.min(startY, endY) - 8));
+          ctx.restore();
+        };
+        if (botChartTools.ruler || botRulerAnchor) {
+          drawRuler(botRulerAnchor || botChartTools.ruler?.start, botRulerDraft || botChartTools.ruler?.end || botRulerAnchor);
+        }
+        if (botChartPointer && ['crosshair', 'ruler'].includes(botChartTools.mode)) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(243, 201, 105, .7)';
+          ctx.fillStyle = '#f3c969';
+          ctx.setLineDash([3, 4]);
+          ctx.beginPath();
+          ctx.moveTo(botChartPointer.x, padding.top);
+          ctx.lineTo(botChartPointer.x, height - padding.bottom);
+          ctx.moveTo(padding.left, botChartPointer.y);
+          ctx.lineTo(width - padding.right, botChartPointer.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillText(formatMoney(botChartPointer.price), Math.max(padding.left + 4, width - padding.right + 6), Math.max(12, botChartPointer.y - 5));
+          ctx.restore();
+        }
         const chartSymbol = coinSelect.value || 'Market';
         ctx.fillStyle = '#f5deb3';
         ctx.fillText(`${chartSymbol} / USDT · ${botState.chartInterval}`, padding.left, 14);
@@ -1474,6 +1573,7 @@
       coinSelect.addEventListener('change', updateSummary);
       coinSelect.addEventListener('change', () => {
         if (botChartMarketSelect) botChartMarketSelect.value = coinSelect.value;
+        saveBotChartPreferences();
       });
       coinSelect.addEventListener('change', () => connectLiveMarket(coinSelect.value));
       coinSelect.addEventListener('change', () => { updateLeaderboard(); updateLearningStatus(); });
@@ -1493,8 +1593,19 @@
           botChartTimeOptions.querySelectorAll('[data-bot-chart-interval]').forEach((item) => item.classList.toggle('is-active', item === option));
           botChartTimeOptions.hidden = true;
           botChartTimeButton.setAttribute('aria-expanded', 'false');
+          saveBotChartPreferences();
           loadBotChartMarket(coinSelect.value);
         });
+      });
+      botChartMode.addEventListener('change', () => {
+        botChartTools.mode = botChartMode.value;
+        botRulerAnchor = null;
+        botRulerDraft = null;
+        saveBotChartPreferences();
+        renderBotChart();
+        botChartStatus.textContent = botChartTools.mode === 'ruler'
+          ? 'Ruler selected. Click twice on the chart to measure a price and time move.'
+          : 'Crosshair selected. Move over the chart to inspect time and price.';
       });
       botChartToolsButton.addEventListener('click', () => {
         const isOpen = botChartToolsOptions.hidden;
@@ -1513,7 +1624,7 @@
               const period = Number(indicator.period);
               if (!indicator.name || !['sma', 'ema'].includes(indicator.type) || !Number.isInteger(period) || period < 2 || period > 100) throw new Error('Invalid indicator');
               botChartTools.indicators.push({ name: indicator.name, type: indicator.type, period, color: /^#[0-9a-f]{6}$/i.test(indicator.color) ? indicator.color : '#f3c969' });
-              localStorage.setItem('makingsBotChartTools', JSON.stringify(botChartTools));
+              saveBotChartPreferences();
               renderBotChart();
               botChartStatus.textContent = `${indicator.name} imported on the ${botState.chartInterval} chart.`;
             } catch (error) {
@@ -1529,7 +1640,7 @@
               return;
             }
             botChartTools.indicators.push({ name, type, period, color: '#ffb86b' });
-            localStorage.setItem('makingsBotChartTools', JSON.stringify(botChartTools));
+            saveBotChartPreferences();
             renderBotChart();
             botChartStatus.textContent = `${name} ${type.toUpperCase()} (${period}) added to the chart.`;
           }
@@ -1541,11 +1652,74 @@
               return;
             }
             botChartTools.candleStyle = { bodyWidth, wickWidth };
-            localStorage.setItem('makingsBotChartTools', JSON.stringify(botChartTools));
+            saveBotChartPreferences();
             renderBotChart();
             botChartStatus.textContent = `Custom candlesticks applied: ${bodyWidth}% body width and ${wickWidth}px wick width.`;
           }
+          if (tool.dataset.botChartTool === 'layout') {
+            const current = botChartTools.margins;
+            const top = Number(window.prompt('Top chart margin (0-80 px)', String(current.top)));
+            const right = Number(window.prompt('Right price-scale margin (40-180 px)', String(current.right)));
+            const bottom = Number(window.prompt('Bottom time-scale margin (20-100 px)', String(current.bottom)));
+            const left = Number(window.prompt('Left chart margin (0-100 px)', String(current.left)));
+            if (![top, right, bottom, left].every(Number.isFinite) || top < 0 || top > 80 || right < 40 || right > 180 || bottom < 20 || bottom > 100 || left < 0 || left > 100) {
+              botChartStatus.textContent = 'Chart margins unchanged. Enter values within the displayed ranges.';
+              return;
+            }
+            botChartTools.margins = { top, right, bottom, left };
+            saveBotChartPreferences();
+            renderBotChart();
+            botChartStatus.textContent = 'Chart margins saved.';
+          }
         });
+      });
+      const getBotChartPoint = (event) => {
+        const bounds = botCanvas.getBoundingClientRect();
+        const x = event.clientX - bounds.left;
+        const y = event.clientY - bounds.top;
+        const { padding, min, max, plotWidth, plotHeight, candles } = botChartGeometry;
+        if (!candles.length || !plotWidth || x < padding.left || x > bounds.width - padding.right || y < padding.top || y > bounds.height - padding.bottom) return null;
+        return {
+          x,
+          y,
+          normalizedX: Math.max(0, Math.min(1, (x - padding.left) / plotWidth)),
+          price: max - ((y - padding.top) / plotHeight) * (max - min)
+        };
+      };
+      botCanvas.addEventListener('pointermove', (event) => {
+        const point = getBotChartPoint(event);
+        if (!point) {
+          botChartPointer = null;
+          if (botChartTools.mode === 'crosshair') renderBotChart();
+          return;
+        }
+        botChartPointer = point;
+        if (botChartTools.mode === 'ruler' && botRulerAnchor) botRulerDraft = { x: point.normalizedX, price: point.price };
+        renderBotChart();
+      });
+      botCanvas.addEventListener('pointerleave', () => {
+        botChartPointer = null;
+        if (botChartTools.mode === 'crosshair') renderBotChart();
+      });
+      botCanvas.addEventListener('click', (event) => {
+        if (botChartTools.mode !== 'ruler') return;
+        const point = getBotChartPoint(event);
+        if (!point) return;
+        if (!botRulerAnchor) {
+          botRulerAnchor = { x: point.normalizedX, price: point.price };
+          botRulerDraft = null;
+          botChartStatus.textContent = 'Ruler start set. Click another point to finish the measurement.';
+        } else {
+          botChartTools.ruler = {
+            start: { ...botRulerAnchor },
+            end: { x: point.normalizedX, price: point.price }
+          };
+          botRulerAnchor = null;
+          botRulerDraft = null;
+          saveBotChartPreferences();
+          botChartStatus.textContent = `Ruler set: ${formatMoney(point.price - botChartTools.ruler.start.price)} change across the chart.`;
+        }
+        renderBotChart();
       });
       document.addEventListener('click', (event) => {
         if (!botChartTimeButton.contains(event.target) && !botChartTimeOptions.contains(event.target)) {
@@ -1666,6 +1840,8 @@
             const nextHeight = Math.min(720, Math.max(260, startHeight + moveEvent.clientY - startY));
             botChartWrap.style.width = `${nextWidth}px`;
             botChartWrap.style.height = `${nextHeight}px`;
+            botChartWrap.style.minHeight = `${nextHeight}px`;
+            saveBotChartPreferences();
             renderBotChart();
           };
           const stopResize = () => {
@@ -1681,6 +1857,16 @@
 
       favoriteState.favorites = favoriteState.favorites.filter((symbol) => coinMarketIds[symbol] || favoriteState.marketData[symbol]?.custom);
       renderFavoriteCards();
+      if (botState.chartInterval) {
+        botChartTimeButton.textContent = `Time chart: ${botState.chartInterval}`;
+        botChartTimeOptions.querySelectorAll('[data-bot-chart-interval]').forEach((item) => {
+          item.classList.toggle('is-active', item.dataset.botChartInterval === botState.chartInterval);
+        });
+      }
+      if (botChartTools.market && coinSelect.querySelector(`option[value="${botChartTools.market}"]`)) {
+        coinSelect.value = botChartTools.market;
+        botChartMarketSelect.value = botChartTools.market;
+      }
       if (coinSelect.value) {
         if (favoriteState.favorites.includes(coinSelect.value)) applyAutomaticSettings(coinSelect.value);
         coinSelect.dispatchEvent(new Event('change'));

@@ -21,8 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const positionsTimeSelect = document.getElementById('positionsTimeSelect');
   const positionsToolsButton = document.getElementById('positionsToolsButton');
   const positionsToolsOptions = document.getElementById('positionsToolsOptions');
+  const positionsChartMode = document.getElementById('positionsChartMode');
+  const positionsChartToolHint = document.getElementById('positionsChartToolHint');
+  const positionsRiskLevelButtons = document.querySelectorAll('[data-risk-level]');
+  const positionsClearRiskLevels = document.getElementById('positionsClearRiskLevels');
   const positionsBuyButton = document.getElementById('positionsBuyButton');
   const positionsSellButton = document.getElementById('positionsSellButton');
+  const positionsChartBuyButton = document.getElementById('positionsChartBuyButton');
+  const positionsChartSellButton = document.getElementById('positionsChartSellButton');
   const positionsOrderQuantity = document.getElementById('positionsOrderQuantity');
   const positionsOrderEstimate = document.getElementById('positionsOrderEstimate');
   const positionsList = document.getElementById('positionsList');
@@ -48,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ],
     currency: 'usd',
     refreshMs: 30000,
-    selectedSymbol: 'XRP',
+    selectedSymbol: 'ETH',
     selectedFilter: 'all',
     searchText: ''
   };
@@ -57,19 +63,90 @@ document.addEventListener('DOMContentLoaded', () => {
   const marketPositionsKey = 'makingsPositionMarketPositions';
   const marketOrdersKey = 'makingsPaperOrders';
   const marketBalanceKey = 'makingsPositionMarketBalance';
+  const chartPreferencesKey = 'makingsTradeChartPreferences';
+  const validChartIntervals = ['1s', '1m', '5m', '15m', '1h', '4h'];
+  const chartPreferences = (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(chartPreferencesKey) || '{}');
+      const oldTools = JSON.parse(localStorage.getItem('positionsChartTools') || '{}');
+      const margins = saved.margins || {};
+      const candleStyle = saved.candleStyle || oldTools.candleStyle || {};
+      return {
+        indicators: Array.isArray(saved.indicators) ? saved.indicators : Array.isArray(oldTools.indicators) ? oldTools.indicators : [],
+        candleStyle: {
+          bodyWidth: Number(candleStyle.bodyWidth) >= 10 && Number(candleStyle.bodyWidth) <= 90 ? Number(candleStyle.bodyWidth) : 58,
+          wickWidth: Number(candleStyle.wickWidth) >= 1 && Number(candleStyle.wickWidth) <= 5 ? Number(candleStyle.wickWidth) : 1
+        },
+        margins: {
+          top: Number.isFinite(Number(margins.top)) ? Math.min(80, Math.max(0, Number(margins.top))) : 18,
+          right: Number.isFinite(Number(margins.right)) ? Math.min(180, Math.max(40, Number(margins.right))) : 72,
+          bottom: Number.isFinite(Number(margins.bottom)) ? Math.min(100, Math.max(20, Number(margins.bottom))) : 38,
+          left: Number.isFinite(Number(margins.left)) ? Math.min(100, Math.max(0, Number(margins.left))) : 12
+        },
+        mode: ['crosshair', 'ruler', 'entry'].includes(saved.mode) ? saved.mode : 'crosshair',
+        height: Number(saved.height) >= 260 && Number(saved.height) <= 720 ? Number(saved.height) : 320,
+        width: Number(saved.width) >= 320 && Number(saved.width) <= 4000 ? Number(saved.width) : null,
+        selectedPrice: Number(saved.selectedPrice) > 0 ? Number(saved.selectedPrice) : null,
+        stopLoss: Number(saved.stopLoss) > 0 ? Number(saved.stopLoss) : '',
+        takeProfit: Number(saved.takeProfit) > 0 ? Number(saved.takeProfit) : '',
+        ruler: saved.ruler?.start && saved.ruler?.end
+          && Number.isFinite(saved.ruler.start.x) && Number.isFinite(saved.ruler.start.price)
+          && Number.isFinite(saved.ruler.end.x) && Number.isFinite(saved.ruler.end.price)
+          ? saved.ruler
+          : null,
+        market: typeof saved.market === 'string' ? saved.market.toUpperCase() : 'ETH',
+        interval: validChartIntervals.includes(saved.interval) ? saved.interval : '1m'
+      };
+    } catch (error) {
+      return {
+        indicators: [],
+        candleStyle: { bodyWidth: 58, wickWidth: 1 },
+        margins: { top: 18, right: 72, bottom: 38, left: 12 },
+        mode: 'crosshair',
+        height: 320,
+        width: null,
+        selectedPrice: null,
+        stopLoss: '',
+        takeProfit: '',
+        ruler: null,
+        market: 'ETH',
+        interval: '1m'
+      };
+    }
+  })();
   let marketPositions = JSON.parse(localStorage.getItem(marketPositionsKey) || '[]');
   let marketOrders = JSON.parse(localStorage.getItem(marketOrdersKey) || '[]');
   const savedMarketBalance = localStorage.getItem(marketBalanceKey);
   let marketBalance = savedMarketBalance === null ? 10000 : Number(savedMarketBalance);
   if (!Number.isFinite(marketBalance) || marketBalance < 0) marketBalance = 10000;
-  const positionsChartTools = JSON.parse(localStorage.getItem('positionsChartTools') || '{"indicators":[],"candleStyle":{"bodyWidth":58,"wickWidth":1}}');
+  const positionsChartTools = chartPreferences;
   const tickerPairs = { BTC: 'btcusdt', ETH: 'ethusdt', XRP: 'xrpusdt', SOL: 'solusdt', DOGE: 'dogeusdt', ADA: 'adausdt', BNB: 'bnbusdt', TRX: 'trxusdt', USDC: 'usdcusdt' };
   let tickerSocket = null;
   let tickerSymbol = '';
   let tickerRetryTimer = null;
   const binanceApiBases = ['https://data-api.binance.vision', 'https://api.binance.com'];
   const binanceSocketBases = ['wss://data-stream.binance.vision', 'wss://stream.binance.com:9443'];
-  let chartInterval = '1m';
+  let chartInterval = chartPreferences.interval;
+  let positionsSelectedPrice = chartPreferences.selectedPrice;
+  let chartPointer = null;
+  let chartRiskPlacement = null;
+  let rulerAnchor = null;
+  let rulerDraft = null;
+  const chartGeometry = { padding: chartPreferences.margins, min: 0, max: 0, plotWidth: 0, plotHeight: 0, candles: [] };
+  if (positionsMarketSelect && chartPreferences.market) {
+    marketConfig.selectedSymbol = chartPreferences.market;
+    const savedOption = positionsMarketSelect.querySelector(`option[value="${chartPreferences.market}"]`);
+    if (savedOption) positionsMarketSelect.value = chartPreferences.market;
+  }
+  if (positionsTimeSelect) positionsTimeSelect.value = chartInterval;
+  if (positionsChartMode) positionsChartMode.value = chartPreferences.mode;
+  if (positionsChartWrap) {
+    positionsChartWrap.style.height = `${chartPreferences.height}px`;
+    positionsChartWrap.style.minHeight = `${chartPreferences.height}px`;
+    if (chartPreferences.width) {
+      positionsChartWrap.style.width = `${Math.min(chartPreferences.width, positionsChartWrap.parentElement.clientWidth)}px`;
+    }
+  }
   let positionCandles = [];
   let candleSocket = null;
   let candleRetryTimer = null;
@@ -147,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (priceLabel) priceLabel.textContent = `${symbol}/USD ${formatCurrency(price)} · Live`;
       if (positionsChartPrice) positionsChartPrice.textContent = formatCurrency(price);
       if (positionsChartStatus && !tickerPairs[symbol]) positionsChartStatus.textContent = `${symbol} live price stream connected.`;
+      checkPositionProtection(symbol, price);
       renderPaperPositions();
     });
     socket.addEventListener('error', () => {
@@ -171,11 +249,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const quantity = Number(positionsOrderQuantity?.value) || 0;
     if (positionsOrderEstimate) {
       positionsOrderEstimate.textContent = price && quantity > 0
-        ? `Estimated total: ${formatCurrency(price * quantity)}`
+        ? `Estimated total: ${formatCurrency((positionsSelectedPrice || price) * quantity)}${positionsSelectedPrice ? ' · chart price' : ''}`
         : 'Estimated total: --';
     }
     if (positionsBuyButton) positionsBuyButton.disabled = !price || quantity <= 0;
     if (positionsSellButton) positionsSellButton.disabled = !price || quantity <= 0 || getHeldQuantity(marketConfig.selectedSymbol) < quantity;
+    if (positionsChartBuyButton) positionsChartBuyButton.disabled = !positionsSelectedPrice || quantity <= 0;
+    if (positionsChartSellButton) positionsChartSellButton.disabled = !positionsSelectedPrice || quantity <= 0 || getHeldQuantity(marketConfig.selectedSymbol) < quantity;
   }
 
   function renderPaperPositions() {
@@ -200,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const marketValue = document.createElement('strong');
           marketValue.textContent = formatCurrency(position.quantity * mark);
           const entry = document.createElement('small');
-          entry.textContent = `Average entry ${formatCurrency(position.averagePrice)}`;
+          entry.textContent = `Average entry ${formatCurrency(position.averagePrice)} · SL ${position.stopLoss ? formatCurrency(position.stopLoss) : '--'} · TP ${position.takeProfit ? formatCurrency(position.takeProfit) : '--'}`;
           value.append(marketValue, entry);
           row.append(identity, value);
           positionsList.appendChild(row);
@@ -238,19 +318,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function placePositionMarketOrder(side) {
+  function placePositionMarketOrder(side, chartPrice = null) {
     const asset = getSelectedAsset();
-    const price = Number(asset?.current_price) || 0;
+    const price = Number(chartPrice) > 0 ? Number(chartPrice) : Number(asset?.current_price) || 0;
     const quantity = Number(positionsOrderQuantity?.value);
     if (!price || !Number.isFinite(quantity) || quantity <= 0) {
       positionsChartStatus.textContent = 'Wait for a live market price and enter a valid quantity.';
       return;
     }
-
-    const symbol = asset.symbol.toUpperCase();
-    const total = price * quantity;
+    const symbol = asset?.symbol.toUpperCase() || marketConfig.selectedSymbol;
     const positionIndex = marketPositions.findIndex((position) => position.symbol === symbol);
     const position = marketPositions[positionIndex];
+    const stopLoss = side === 'BUY' ? Number(positionsChartTools.stopLoss) || Number(position?.stopLoss) || 0 : 0;
+    const takeProfit = side === 'BUY' ? Number(positionsChartTools.takeProfit) || Number(position?.takeProfit) || 0 : 0;
+    if (side === 'BUY' && ((stopLoss && stopLoss >= price) || (takeProfit && takeProfit <= price))) {
+      positionsChartStatus.textContent = 'For a buy, stop loss must be below the order price and take profit must be above it.';
+      return;
+    }
+
+    const total = price * quantity;
     if (side === 'BUY') {
       if (total > marketBalance) {
         positionsChartStatus.textContent = 'Insufficient paper balance for this order.';
@@ -260,8 +346,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (position) {
         position.averagePrice = ((position.averagePrice * position.quantity) + total) / (position.quantity + quantity);
         position.quantity += quantity;
+        if (stopLoss) position.stopLoss = stopLoss;
+        if (takeProfit) position.takeProfit = takeProfit;
       } else {
-        marketPositions.push({ symbol, quantity, averagePrice: price });
+        marketPositions.push({ symbol, quantity, averagePrice: price, stopLoss: stopLoss || null, takeProfit: takeProfit || null });
       }
     } else {
       if (!position || quantity > position.quantity) {
@@ -273,19 +361,60 @@ document.addEventListener('DOMContentLoaded', () => {
       if (position.quantity < 0.000000005) marketPositions.splice(positionIndex, 1);
     }
 
-    const order = { symbol, side, mode: 'spot', type: 'MARKET', quantity, price, time: Date.now() };
+    const order = { symbol, side, mode: 'spot', type: 'PAPER', quantity, price, stopLoss: stopLoss || null, takeProfit: takeProfit || null, time: Date.now() };
     marketOrders.unshift(order);
     marketOrders = marketOrders.slice(0, 100);
     localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
     localStorage.setItem(marketOrdersKey, JSON.stringify(marketOrders));
     localStorage.setItem(marketBalanceKey, String(marketBalance));
-    positionsChartStatus.textContent = `Paper ${side.toLowerCase()} placed: ${quantity} ${symbol} at ${formatCurrency(price)}.`;
+    positionsSelectedPrice = price;
+    savePositionsChartTools();
+    positionsChartStatus.textContent = `Paper ${side.toLowerCase()} placed: ${quantity} ${symbol} at ${formatCurrency(price)}${stopLoss || takeProfit ? ` with ${stopLoss ? `stop ${formatCurrency(stopLoss)}` : ''}${stopLoss && takeProfit ? ' and ' : ''}${takeProfit ? `target ${formatCurrency(takeProfit)}` : ''}` : ''}.`;
+    drawPositionsChart();
+    renderPaperPositions();
+    renderPaperOrders();
+  }
+
+  function checkPositionProtection(symbol, price) {
+    const index = marketPositions.findIndex((position) => position.symbol === symbol && position.quantity > 0);
+    if (index < 0) return;
+    const position = marketPositions[index];
+    const stopHit = Number(position.stopLoss) > 0 && price <= Number(position.stopLoss);
+    const targetHit = Number(position.takeProfit) > 0 && price >= Number(position.takeProfit);
+    if (!stopHit && !targetHit) return;
+    const quantity = position.quantity;
+    marketBalance += quantity * price;
+    marketOrders.unshift({
+      symbol,
+      side: 'SELL',
+      mode: 'spot',
+      type: stopHit ? 'STOP_LOSS' : 'TAKE_PROFIT',
+      quantity,
+      price,
+      time: Date.now()
+    });
+    marketPositions.splice(index, 1);
+    marketOrders = marketOrders.slice(0, 100);
+    localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
+    localStorage.setItem(marketOrdersKey, JSON.stringify(marketOrders));
+    localStorage.setItem(marketBalanceKey, String(marketBalance));
+    if (positionsChartStatus) positionsChartStatus.textContent = `Paper ${stopHit ? 'stop loss' : 'take profit'} triggered: ${quantity} ${symbol} closed at ${formatCurrency(price)}.`;
     renderPaperPositions();
     renderPaperOrders();
   }
 
   function savePositionsChartTools() {
-    localStorage.setItem('positionsChartTools', JSON.stringify(positionsChartTools));
+    positionsChartTools.mode = positionsChartMode?.value || positionsChartTools.mode;
+    positionsChartTools.height = positionsChartWrap?.getBoundingClientRect().height || positionsChartTools.height;
+    positionsChartTools.width = positionsChartWrap?.getBoundingClientRect().width || positionsChartTools.width;
+    positionsChartTools.selectedPrice = positionsSelectedPrice;
+    positionsChartTools.market = marketConfig.selectedSymbol;
+    positionsChartTools.interval = chartInterval;
+    localStorage.setItem(chartPreferencesKey, JSON.stringify(positionsChartTools));
+    localStorage.setItem('positionsChartTools', JSON.stringify({
+      indicators: positionsChartTools.indicators,
+      candleStyle: positionsChartTools.candleStyle
+    }));
   }
 
   function calculateIndicator(values, type, period) {
@@ -371,11 +500,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!positionCandles.length) return;
     const candles = positionCandles.slice(-36);
     const source = candles.map((candle) => candle.close);
-    const padding = { top: 18, right: 72, bottom: 38, left: 12 };
+    const padding = positionsChartTools.margins;
+    const heldPosition = marketPositions.find((position) => position.symbol === marketConfig.selectedSymbol);
+    const stopLevel = Number(positionsChartTools.stopLoss) || Number(heldPosition?.stopLoss);
+    const targetLevel = Number(positionsChartTools.takeProfit) || Number(heldPosition?.takeProfit);
     const values = candles.flatMap((candle) => [candle.high, candle.low]);
+    if (positionsSelectedPrice) values.push(positionsSelectedPrice);
+    if (stopLevel > 0) values.push(stopLevel);
+    if (targetLevel > 0) values.push(targetLevel);
     const min = Math.min(...values) * .997;
     const max = Math.max(...values) * 1.003;
     const xStep = (width - padding.left - padding.right) / Math.max(candles.length - 1, 1);
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
     const y = (value) => padding.top + ((max - value) / (max - min || 1)) * (height - padding.top - padding.bottom);
     const formatPrice = (value) => '$' + value.toLocaleString('en-US', { maximumFractionDigits: value < 1 ? 6 : 2 });
     const formatTime = (time) => new Date(time).toLocaleTimeString([], {
@@ -385,7 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     context.font = '11px Inter, sans-serif';
     context.strokeStyle = 'rgba(212, 175, 55, .12)';
-    context.fillStyle = '#cfc5a2';
+    context.fillStyle = '#fff';
     for (let row = 0; row < 5; row += 1) {
       const value = min + (max - min) * row / 4;
       const lineY = y(value);
@@ -395,6 +532,12 @@ document.addEventListener('DOMContentLoaded', () => {
       context.stroke();
       context.fillText(formatPrice(value), width - padding.right + 8, lineY + 4);
     }
+    chartGeometry.min = min;
+    chartGeometry.max = max;
+    chartGeometry.plotWidth = plotWidth;
+    chartGeometry.plotHeight = plotHeight;
+    chartGeometry.candles = candles;
+    chartGeometry.padding = padding;
     const candleWidth = Math.max(4, xStep * (positionsChartTools.candleStyle.bodyWidth / 100));
     candles.forEach((candle, index) => {
       const pointX = padding.left + index * xStep;
@@ -429,6 +572,63 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (started) context.stroke();
     });
+    const drawPriceLevel = (value, color, label) => {
+      if (!Number.isFinite(value) || value < min || value > max) return;
+      const lineY = y(value);
+      context.save();
+      context.setLineDash([6, 4]);
+      context.strokeStyle = color;
+      context.fillStyle = color;
+      context.beginPath();
+      context.moveTo(padding.left, lineY);
+      context.lineTo(width - padding.right, lineY);
+      context.stroke();
+      context.setLineDash([]);
+      context.fillText(`${label} ${formatPrice(value)}`, Math.max(padding.left + 4, width - padding.right + 6), Math.max(12, lineY - 5));
+      context.restore();
+    };
+    if (positionsSelectedPrice) drawPriceLevel(positionsSelectedPrice, '#f3c969', 'Order');
+    if (stopLevel > 0) drawPriceLevel(stopLevel, '#ff6b7a', 'Stop');
+    if (targetLevel > 0) drawPriceLevel(targetLevel, '#31d598', 'Target');
+    const drawRuler = (start, end) => {
+      if (!start || !end) return;
+      const startX = padding.left + start.x * plotWidth;
+      const endX = padding.left + end.x * plotWidth;
+      const startY = y(start.price);
+      const endY = y(end.price);
+      context.save();
+      context.strokeStyle = '#f3c969';
+      context.fillStyle = '#fff';
+      context.setLineDash([5, 4]);
+      context.beginPath();
+      context.moveTo(startX, startY);
+      context.lineTo(endX, endY);
+      context.stroke();
+      context.setLineDash([]);
+      const change = end.price - start.price;
+      const percent = start.price ? change / start.price * 100 : 0;
+      context.fillText(`${formatPrice(change)} (${percent.toFixed(2)}%)`, Math.min(startX, endX) + 8, Math.max(16, Math.min(startY, endY) - 8));
+      context.restore();
+    };
+    if (positionsChartTools.ruler || rulerAnchor) {
+      drawRuler(rulerAnchor || positionsChartTools.ruler?.start, rulerDraft || positionsChartTools.ruler?.end || rulerAnchor);
+    }
+    if (chartPointer && ['crosshair', 'ruler'].includes(positionsChartTools.mode)) {
+      const { x: pointerX, y: pointerY, price } = chartPointer;
+      context.save();
+      context.strokeStyle = 'rgba(243, 201, 105, .7)';
+      context.fillStyle = '#f3c969';
+      context.setLineDash([3, 4]);
+      context.beginPath();
+      context.moveTo(pointerX, padding.top);
+      context.lineTo(pointerX, height - padding.bottom);
+      context.moveTo(padding.left, pointerY);
+      context.lineTo(width - padding.right, pointerY);
+      context.stroke();
+      context.setLineDash([]);
+      context.fillText(formatPrice(price), Math.max(padding.left + 4, width - padding.right + 6), Math.max(12, Math.min(height - padding.bottom, pointerY - 5)));
+      context.restore();
+    }
     const asset = getSelectedAsset();
     if (asset) positionsChartTitle.textContent = `${asset.symbol.toUpperCase()} / USD · ${chartInterval}`;
     positionsChartPrice.textContent = formatPrice(candles[candles.length - 1].close);
@@ -710,7 +910,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setSelectedSymbol(symbol) {
+    const marketChanged = marketConfig.selectedSymbol !== symbol;
     marketConfig.selectedSymbol = symbol;
+    if (marketChanged) {
+      positionsSelectedPrice = null;
+      const heldPosition = marketPositions.find((position) => position.symbol === symbol);
+      positionsChartTools.stopLoss = heldPosition?.stopLoss || '';
+      positionsChartTools.takeProfit = heldPosition?.takeProfit || '';
+    }
     if (positionsMarketSelect && positionsMarketSelect.querySelector(`option[value="${symbol}"]`)) {
       positionsMarketSelect.value = symbol;
     }
@@ -733,6 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (priceLabel && selectedAsset) priceLabel.textContent = `${symbol}/USD ${formatCurrency(selectedAsset.current_price)} · Connecting live feed`;
     connectLiveTicker(symbol);
     loadPositionCandles(symbol, chartInterval);
+    savePositionsChartTools();
   }
 
   async function fetchLiveMarketData() {
@@ -876,12 +1084,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (positionsMarketSelect) {
     positionsMarketSelect.addEventListener('change', (event) => {
       setSelectedSymbol(event.target.value);
+      positionsSelectedPrice = null;
+      savePositionsChartTools();
       renderMarketOrderControls();
+      drawPositionsChart();
     });
   }
   if (positionsTimeSelect) {
     positionsTimeSelect.addEventListener('change', (event) => {
       chartInterval = event.target.value;
+      savePositionsChartTools();
       loadPositionCandles(marketConfig.selectedSymbol, chartInterval);
     });
   }
@@ -889,11 +1101,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   [
     [positionsBuyButton, 'BUY'],
-    [positionsSellButton, 'SELL']
+    [positionsSellButton, 'SELL'],
+    [positionsChartBuyButton, 'BUY'],
+    [positionsChartSellButton, 'SELL']
   ].forEach(([button, side]) => {
     if (!button) return;
     button.addEventListener('click', () => {
-      placePositionMarketOrder(side);
+      placePositionMarketOrder(side, positionsSelectedPrice);
     });
   });
 
@@ -920,6 +1134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         positionsChartWrap.style.width = `${nextWidth}px`;
         positionsChartWrap.style.height = `${nextHeight}px`;
         positionsChartWrap.style.minHeight = `${nextHeight}px`;
+        savePositionsChartTools();
         drawPositionsChart();
       };
       const stopResize = () => {
@@ -930,6 +1145,129 @@ document.addEventListener('DOMContentLoaded', () => {
       positionsChartResizer.addEventListener('pointermove', resizeChart);
       positionsChartResizer.addEventListener('pointerup', stopResize);
       positionsChartResizer.addEventListener('pointercancel', stopResize);
+    });
+  }
+
+  if (positionsChartMode) {
+    positionsChartMode.addEventListener('change', () => {
+      positionsChartTools.mode = positionsChartMode.value;
+      rulerAnchor = null;
+      rulerDraft = null;
+      if (positionsChartToolHint) {
+        const modeText = {
+          crosshair: 'Move over the chart to inspect time and price.',
+          ruler: 'Click twice on the chart to measure a price and time move.',
+          entry: 'Click the chart to choose a paper order price, then Buy or Sell.',
+        };
+        positionsChartToolHint.textContent = modeText[positionsChartMode.value];
+      }
+      savePositionsChartTools();
+      drawPositionsChart();
+    });
+  }
+  positionsRiskLevelButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      chartRiskPlacement = chartRiskPlacement === button.dataset.riskLevel ? null : button.dataset.riskLevel;
+      positionsRiskLevelButtons.forEach((riskButton) => {
+        riskButton.setAttribute('aria-pressed', String(riskButton.dataset.riskLevel === chartRiskPlacement));
+      });
+      if (positionsChartToolHint) {
+        positionsChartToolHint.textContent = chartRiskPlacement
+          ? `Click the chart to set ${chartRiskPlacement === 'stopLoss' ? 'stop loss' : 'take profit'}.`
+          : 'Choose a risk level, then click the chart to place it.';
+      }
+    });
+  });
+  if (positionsClearRiskLevels) {
+    positionsClearRiskLevels.addEventListener('click', () => {
+      positionsChartTools.stopLoss = '';
+      positionsChartTools.takeProfit = '';
+      const heldPosition = marketPositions.find((position) => position.symbol === marketConfig.selectedSymbol);
+      if (heldPosition) {
+        delete heldPosition.stopLoss;
+        delete heldPosition.takeProfit;
+        localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
+        renderPaperPositions();
+      }
+      savePositionsChartTools();
+      drawPositionsChart();
+      positionsChartStatus.textContent = 'Stop loss and take profit levels cleared.';
+    });
+  }
+  if (positionsCandleChart) {
+    const chartPoint = (event) => {
+      const bounds = positionsCandleChart.getBoundingClientRect();
+      const x = event.clientX - bounds.left;
+      const y = event.clientY - bounds.top;
+      const { padding, min, max, plotWidth, plotHeight, candles } = chartGeometry;
+      if (!candles.length || !plotWidth || x < padding.left || x > bounds.width - padding.right || y < padding.top || y > bounds.height - padding.bottom) return null;
+      const normalizedX = Math.max(0, Math.min(1, (x - padding.left) / plotWidth));
+      const price = max - ((y - padding.top) / plotHeight) * (max - min);
+      const candleIndex = Math.min(candles.length - 1, Math.max(0, Math.round(normalizedX * (candles.length - 1))));
+      return { x, y, normalizedX, price, candle: candles[candleIndex] };
+    };
+    positionsCandleChart.addEventListener('pointermove', (event) => {
+      const point = chartPoint(event);
+      if (!point) {
+        chartPointer = null;
+        if (positionsChartTools.mode === 'crosshair') drawPositionsChart();
+        return;
+      }
+      chartPointer = point;
+      if (positionsChartTools.mode === 'ruler' && rulerAnchor) {
+        rulerDraft = { x: point.normalizedX, price: point.price };
+      }
+      drawPositionsChart();
+    });
+    positionsCandleChart.addEventListener('pointerleave', () => {
+      chartPointer = null;
+      if (positionsChartTools.mode === 'crosshair') drawPositionsChart();
+    });
+    positionsCandleChart.addEventListener('click', (event) => {
+      const point = chartPoint(event);
+      if (!point) return;
+      const mode = positionsChartTools.mode;
+      if (chartRiskPlacement) {
+        const heldPosition = marketPositions.find((position) => position.symbol === marketConfig.selectedSymbol);
+        const referencePrice = heldPosition?.averagePrice || positionsSelectedPrice || Number(getSelectedAsset()?.current_price) || Number(positionCandles[positionCandles.length - 1]?.close);
+        const isStopLoss = chartRiskPlacement === 'stopLoss';
+        if (!referencePrice || (isStopLoss && point.price >= referencePrice) || (!isStopLoss && point.price <= referencePrice)) {
+          positionsChartStatus.textContent = `Choose a ${isStopLoss ? 'stop loss below' : 'take profit above'} the current order or position price.`;
+          return;
+        }
+        positionsChartTools[chartRiskPlacement] = point.price;
+        if (heldPosition) {
+          heldPosition[chartRiskPlacement] = point.price;
+          localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
+          renderPaperPositions();
+        }
+        chartRiskPlacement = null;
+        positionsRiskLevelButtons.forEach((button) => button.setAttribute('aria-pressed', 'false'));
+        if (positionsChartToolHint) positionsChartToolHint.textContent = 'Choose a risk level, then click the chart to place it.';
+        positionsChartStatus.textContent = `${isStopLoss ? 'Stop loss' : 'Take profit'} set to ${formatCurrency(point.price)}.`;
+        savePositionsChartTools();
+      } else if (mode === 'ruler') {
+        if (!rulerAnchor) {
+          rulerAnchor = { x: point.normalizedX, price: point.price };
+          rulerDraft = null;
+          positionsChartStatus.textContent = 'Ruler start set. Click another point to finish the measurement.';
+        } else {
+          positionsChartTools.ruler = {
+            start: { ...rulerAnchor },
+            end: { x: point.normalizedX, price: point.price }
+          };
+          rulerAnchor = null;
+          rulerDraft = null;
+          savePositionsChartTools();
+          positionsChartStatus.textContent = `Ruler: ${formatCurrency(point.price - positionsChartTools.ruler.start.price)} price change across the chart.`;
+        }
+      } else if (mode === 'entry') {
+        positionsSelectedPrice = point.price;
+        positionsChartStatus.textContent = `Paper order price set to ${formatCurrency(point.price)}. Choose Buy or Sell below the chart.`;
+        savePositionsChartTools();
+      }
+      drawPositionsChart();
+      renderMarketOrderControls();
     });
   }
 
@@ -980,6 +1318,21 @@ document.addEventListener('DOMContentLoaded', () => {
         savePositionsChartTools();
         drawPositionsChart();
         positionsChartStatus.textContent = `Custom candlesticks applied: ${bodyWidth}% body width and ${wickWidth}px wick width.`;
+      }
+      if (tool.dataset.chartTool === 'layout') {
+        const current = positionsChartTools.margins;
+        const top = Number(window.prompt('Top chart margin (0-80 px)', String(current.top)));
+        const right = Number(window.prompt('Right price-scale margin (40-180 px)', String(current.right)));
+        const bottom = Number(window.prompt('Bottom time-scale margin (20-100 px)', String(current.bottom)));
+        const left = Number(window.prompt('Left chart margin (0-100 px)', String(current.left)));
+        if (![top, right, bottom, left].every(Number.isFinite) || top < 0 || top > 80 || right < 40 || right > 180 || bottom < 20 || bottom > 100 || left < 0 || left > 100) {
+          positionsChartStatus.textContent = 'Chart margins unchanged. Enter values within the displayed ranges.';
+          return;
+        }
+        positionsChartTools.margins = { top, right, bottom, left };
+        savePositionsChartTools();
+        drawPositionsChart();
+        positionsChartStatus.textContent = 'Chart margins saved.';
       }
     });
   });

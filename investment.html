@@ -54,7 +54,7 @@
             <div>
               <span class="eyebrow">Allocate treasury funds</span>
               <h3>Choose an investment type</h3>
-              <p>Select where you would like to start allocating Treasury funds.</p>
+              <p>Select an investment area to review its available options.</p>
             </div>
           </div>
           <div class="investment-choice-grid">
@@ -190,44 +190,47 @@
                 </div>
               </div>
               <label class="contract-check"><input id="companyContractAgreement" type="checkbox" required /> I agree to create and uphold the investment contract, provide accurate business information, and accept legal review before funds are allocated.</label>
+              <button class="btn btn-primary" type="submit">Save company</button>
             </form>
             <div class="company-investment-terms">
-              <label class="investment-amount-field">Investment amount<span class="investment-amount-inputs">
-                <select id="investmentCurrency" aria-label="Investment currency">
-                  <optgroup label="Caribbean">
-                    <option value="jmd">JMD - Jamaican Dollar</option><option value="bbd">BBD - Barbadian Dollar</option><option value="ttd">TTD - Trinidad and Tobago Dollar</option><option value="xcd">XCD - East Caribbean Dollar</option><option value="bsd">BSD - Bahamian Dollar</option><option value="bzd">BZD - Belize Dollar</option><option value="gyd">GYD - Guyanese Dollar</option><option value="htg">HTG - Haitian Gourde</option><option value="dop">DOP - Dominican Peso</option><option value="cup">CUP - Cuban Peso</option><option value="kyd">KYD - Cayman Islands Dollar</option><option value="awg">AWG - Aruban Florin</option><option value="ang">ANG - Netherlands Antillean Guilder</option><option value="usd" selected>USD - US Dollar</option>
-                  </optgroup>
-                  <optgroup label="Americas">
-                    <option value="cad">CAD - Canadian Dollar</option><option value="mxn">MXN - Mexican Peso</option><option value="brl">BRL - Brazilian Real</option><option value="ars">ARS - Argentine Peso</option><option value="clp">CLP - Chilean Peso</option><option value="cop">COP - Colombian Peso</option><option value="pen">PEN - Peruvian Sol</option><option value="uyu">UYU - Uruguayan Peso</option><option value="pyg">PYG - Paraguayan Guarani</option><option value="bob">BOB - Bolivian Boliviano</option><option value="crc">CRC - Costa Rican Colon</option><option value="gtq">GTQ - Guatemalan Quetzal</option><option value="hnl">HNL - Honduran Lempira</option><option value="nio">NIO - Nicaraguan Cordoba</option><option value="pab">PAB - Panamanian Balboa</option>
-                  </optgroup>
-                  <optgroup label="Europe">
-                    <option value="eur">EUR - Euro</option><option value="gbp">GBP - Pound Sterling</option><option value="chf">CHF - Swiss Franc</option><option value="sek">SEK - Swedish Krona</option><option value="nok">NOK - Norwegian Krone</option><option value="dkk">DKK - Danish Krone</option><option value="isk">ISK - Icelandic Krona</option><option value="pln">PLN - Polish Zloty</option><option value="czk">CZK - Czech Koruna</option><option value="huf">HUF - Hungarian Forint</option><option value="ron">RON - Romanian Leu</option><option value="bgn">BGN - Bulgarian Lev</option><option value="rsd">RSD - Serbian Dinar</option><option value="rub">RUB - Russian Ruble</option><option value="try">TRY - Turkish Lira</option><option value="uah">UAH - Ukrainian Hryvnia</option>
-                  </optgroup>
-                  <optgroup label="Asia">
-                    <option value="jpy">JPY - Japanese Yen</option><option value="cny">CNY - Chinese Yuan</option><option value="hkd">HKD - Hong Kong Dollar</option><option value="twd">TWD - New Taiwan Dollar</option><option value="krw">KRW - South Korean Won</option><option value="inr">INR - Indian Rupee</option><option value="pkr">PKR - Pakistani Rupee</option><option value="bdt">BDT - Bangladeshi Taka</option><option value="lkr">LKR - Sri Lankan Rupee</option><option value="npr">NPR - Nepalese Rupee</option><option value="sgd">SGD - Singapore Dollar</option><option value="myr">MYR - Malaysian Ringgit</option><option value="idr">IDR - Indonesian Rupiah</option><option value="php">PHP - Philippine Peso</option><option value="thb">THB - Thai Baht</option><option value="vnd">VND - Vietnamese Dong</option><option value="kzt">KZT - Kazakhstani Tenge</option><option value="uzs">UZS - Uzbekistani Som</option>
-                  </optgroup>
-                  <optgroup label="Middle East and Africa">
-                    <option value="aed">AED - UAE Dirham</option><option value="sar">SAR - Saudi Riyal</option><option value="qar">QAR - Qatari Riyal</option><option value="kwd">KWD - Kuwaiti Dinar</option><option value="bhd">BHD - Bahraini Dinar</option><option value="omr">OMR - Omani Rial</option><option value="jod">JOD - Jordanian Dinar</option><option value="ils">ILS - Israeli New Shekel</option><option value="egp">EGP - Egyptian Pound</option><option value="ngn">NGN - Nigerian Naira</option><option value="kes">KES - Kenyan Shilling</option><option value="ghs">GHS - Ghanaian Cedi</option><option value="zar">ZAR - South African Rand</option><option value="tzs">TZS - Tanzanian Shilling</option><option value="ugx">UGX - Ugandan Shilling</option><option value="mad">MAD - Moroccan Dirham</option><option value="dzd">DZD - Algerian Dinar</option><option value="etb">ETB - Ethiopian Birr</option><option value="xof">XOF - West African CFA Franc</option><option value="xaf">XAF - Central African CFA Franc</option>
-                  </optgroup>
-                  <optgroup label="Oceania">
-                    <option value="aud">AUD - Australian Dollar</option><option value="nzd">NZD - New Zealand Dollar</option><option value="fjd">FJD - Fijian Dollar</option><option value="pgk">PGK - Papua New Guinea Kina</option><option value="wst">WST - Samoan Tala</option><option value="top">TOP - Tongan Pa'anga</option><option value="vuv">VUV - Vanuatu Vatu</option>
-                  </optgroup>
-                </select>
-                <input id="companyInvestmentAmount" type="number" min="1" step="0.01" placeholder="Amount" required />
-              </span></label>
+              <div class="investment-amount-option" id="investmentAmountOption">
+                <label class="investment-amount-field">Investment amount<span class="investment-amount-inputs">
+                  <select id="investmentCurrency" aria-label="Investment currency">
+                    <optgroup label="Caribbean">
+                      <option value="jmd">JMD - Jamaican Dollar</option><option value="bbd">BBD - Barbadian Dollar</option><option value="ttd">TTD - Trinidad and Tobago Dollar</option><option value="xcd">XCD - East Caribbean Dollar</option><option value="bsd">BSD - Bahamian Dollar</option><option value="bzd">BZD - Belize Dollar</option><option value="gyd">GYD - Guyanese Dollar</option><option value="htg">HTG - Haitian Gourde</option><option value="dop">DOP - Dominican Peso</option><option value="cup">CUP - Cuban Peso</option><option value="kyd">KYD - Cayman Islands Dollar</option><option value="awg">AWG - Aruban Florin</option><option value="ang">ANG - Netherlands Antillean Guilder</option><option value="usd" selected>USD - US Dollar</option>
+                    </optgroup>
+                    <optgroup label="Americas">
+                      <option value="cad">CAD - Canadian Dollar</option><option value="mxn">MXN - Mexican Peso</option><option value="brl">BRL - Brazilian Real</option><option value="ars">ARS - Argentine Peso</option><option value="clp">CLP - Chilean Peso</option><option value="cop">COP - Colombian Peso</option><option value="pen">PEN - Peruvian Sol</option><option value="uyu">UYU - Uruguayan Peso</option><option value="pyg">PYG - Paraguayan Guarani</option><option value="bob">BOB - Bolivian Boliviano</option><option value="crc">CRC - Costa Rican Colon</option><option value="gtq">GTQ - Guatemalan Quetzal</option><option value="hnl">HNL - Honduran Lempira</option><option value="nio">NIO - Nicaraguan Cordoba</option><option value="pab">PAB - Panamanian Balboa</option>
+                    </optgroup>
+                    <optgroup label="Europe">
+                      <option value="eur">EUR - Euro</option><option value="gbp">GBP - Pound Sterling</option><option value="chf">CHF - Swiss Franc</option><option value="sek">SEK - Swedish Krona</option><option value="nok">NOK - Norwegian Krone</option><option value="dkk">DKK - Danish Krone</option><option value="isk">ISK - Icelandic Krona</option><option value="pln">PLN - Polish Zloty</option><option value="czk">CZK - Czech Koruna</option><option value="huf">HUF - Hungarian Forint</option><option value="ron">RON - Romanian Leu</option><option value="bgn">BGN - Bulgarian Lev</option><option value="rsd">RSD - Serbian Dinar</option><option value="rub">RUB - Russian Ruble</option><option value="try">TRY - Turkish Lira</option><option value="uah">UAH - Ukrainian Hryvnia</option>
+                    </optgroup>
+                    <optgroup label="Asia">
+                      <option value="jpy">JPY - Japanese Yen</option><option value="cny">CNY - Chinese Yuan</option><option value="hkd">HKD - Hong Kong Dollar</option><option value="twd">TWD - New Taiwan Dollar</option><option value="krw">KRW - South Korean Won</option><option value="inr">INR - Indian Rupee</option><option value="pkr">PKR - Pakistani Rupee</option><option value="bdt">BDT - Bangladeshi Taka</option><option value="lkr">LKR - Sri Lankan Rupee</option><option value="npr">NPR - Nepalese Rupee</option><option value="sgd">SGD - Singapore Dollar</option><option value="myr">MYR - Malaysian Ringgit</option><option value="idr">IDR - Indonesian Rupiah</option><option value="php">PHP - Philippine Peso</option><option value="thb">THB - Thai Baht</option><option value="vnd">VND - Vietnamese Dong</option><option value="kzt">KZT - Kazakhstani Tenge</option><option value="uzs">UZS - Uzbekistani Som</option>
+                    </optgroup>
+                    <optgroup label="Middle East and Africa">
+                      <option value="aed">AED - UAE Dirham</option><option value="sar">SAR - Saudi Riyal</option><option value="qar">QAR - Qatari Riyal</option><option value="kwd">KWD - Kuwaiti Dinar</option><option value="bhd">BHD - Bahraini Dinar</option><option value="omr">OMR - Omani Rial</option><option value="jod">JOD - Jordanian Dinar</option><option value="ils">ILS - Israeli New Shekel</option><option value="egp">EGP - Egyptian Pound</option><option value="ngn">NGN - Nigerian Naira</option><option value="kes">KES - Kenyan Shilling</option><option value="ghs">GHS - Ghanaian Cedi</option><option value="zar">ZAR - South African Rand</option><option value="tzs">TZS - Tanzanian Shilling</option><option value="ugx">UGX - Ugandan Shilling</option><option value="mad">MAD - Moroccan Dirham</option><option value="dzd">DZD - Algerian Dinar</option><option value="etb">ETB - Ethiopian Birr</option><option value="xof">XOF - West African CFA Franc</option><option value="xaf">XAF - Central African CFA Franc</option>
+                    </optgroup>
+                    <optgroup label="Oceania">
+                      <option value="aud">AUD - Australian Dollar</option><option value="nzd">NZD - New Zealand Dollar</option><option value="fjd">FJD - Fijian Dollar</option><option value="pgk">PGK - Papua New Guinea Kina</option><option value="wst">WST - Samoan Tala</option><option value="top">TOP - Tongan Pa'anga</option><option value="vuv">VUV - Vanuatu Vatu</option>
+                    </optgroup>
+                  </select>
+                  <input id="companyInvestmentAmount" type="number" min="1" step="0.01" placeholder="Amount" required />
+                </span></label>
+              </div>
               <label>Investment term<select id="companyInvestmentTerm"><option value="12 months">12 months</option><option value="24 months">24 months</option><option value="36 months">36 months</option><option value="60 months">60 months</option></select></label>
             </div>
             <p class="contract-note">This demo stores your draft contract and signature but does not execute or verify a legally binding agreement. Have qualified legal counsel review all terms.</p>
           </div>
           <div class="company-investment-setup coin-investment-setup" id="coinsInvestmentSetup" hidden>
             <div class="coin-investment-head">
-              <p class="company-choice-label">Choose a published coin to invest in</p>
+              <p class="company-choice-label">Choose a coin available in Trade or published through Create Coin</p>
               <a class="btn btn-secondary" href="create-coin.html">Create a coin</a>
             </div>
             <div class="company-option-grid" id="customCoinChoices" role="group" aria-label="Published custom coins"></div>
-            <p class="coin-investment-empty" id="coinInvestmentEmpty" hidden>No coins created yet. Create a coin to add it to this investment list.</p>
+            <p class="contract-pdf-status" id="coinInvestmentStatus" role="status"></p>
+            <p class="coin-investment-empty" id="coinInvestmentEmpty" hidden>No coins are available yet. Create a coin to add it to this investment list.</p>
           </div>
-          <button class="btn btn-primary" id="startInvestmentBtn" type="button" disabled>Start investment</button>
         </div>
       </section>
     </main>

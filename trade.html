@@ -111,7 +111,7 @@
           <div class="positions-chart-header">
             <div>
               <span class="eyebrow">Position market view</span>
-              <h3 id="positionsChartTitle">XRP / USD</h3>
+              <h3 id="positionsChartTitle">ETH / USD</h3>
               <div class="positions-market-row">
                 <label class="positions-market-selector">
                   <span>Choose market</span>
@@ -119,7 +119,7 @@
                     <option value="BTC">BTC / USD</option>
                     <option value="XRP">XRP / USD</option>
                     <option value="BNB">BNB / USD</option>
-                    <option value="ETH">ETH / USD</option>
+                    <option value="ETH" selected>ETH / USD</option>
                   </select>
                 </label>
                 <label class="positions-market-selector positions-time-selector">
@@ -137,12 +137,21 @@
                     </optgroup>
                   </select>
                 </label>
+                <label class="positions-market-selector">
+                  <span>Pointer</span>
+                  <select id="positionsChartMode" aria-label="Choose chart pointer tool">
+                    <option value="crosshair">Crosshair</option>
+                    <option value="ruler">Ruler</option>
+                    <option value="entry">Set order price</option>
+                  </select>
+                </label>
                 <div class="positions-tools-menu">
                   <button class="positions-tools-button" id="positionsToolsButton" type="button" aria-expanded="false" aria-controls="positionsToolsOptions">Tools</button>
                   <div class="positions-tools-options" id="positionsToolsOptions" hidden>
                     <button type="button" data-chart-tool="import">Import Indicator</button>
                     <button type="button" data-chart-tool="create">Create Indicator</button>
                     <button type="button" data-chart-tool="custom-candles">Custom Candlesticks</button>
+                    <button type="button" data-chart-tool="layout">Chart margins</button>
                   </div>
                 </div>
               </div>
@@ -152,6 +161,16 @@
           <div id="price">Waiting for live data...</div>
           <div class="positions-chart-wrap">
             <canvas id="positionsCandleChart" aria-label="Candlestick chart with timestamps for the selected market"></canvas>
+            <div class="positions-chart-quick-trades" role="group" aria-label="Place paper trade at the selected chart price">
+              <button class="positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy at chart price</button>
+              <button class="positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell at chart price</button>
+            </div>
+            <div class="positions-chart-risk-tools" role="group" aria-label="Set chart stop loss and take profit">
+              <button type="button" data-risk-level="stopLoss" aria-pressed="false">Set stop loss</button>
+              <button type="button" data-risk-level="takeProfit" aria-pressed="false">Set take profit</button>
+              <button type="button" id="positionsClearRiskLevels">Clear levels</button>
+              <span id="positionsChartToolHint" role="status">Choose a risk level, then click the chart to place it.</span>
+            </div>
             <p id="positionsChartStatus">Loading market candles...</p>
             <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
           </div>
@@ -210,6 +229,3 @@
     <script type="module" src="auth.js"></script>
   </body>
 </html>
-
-
-

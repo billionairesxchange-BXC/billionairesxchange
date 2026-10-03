@@ -29,10 +29,10 @@
 
       <nav class="main-nav" aria-label="Main navigation">
         <a href="index.html#home">Home</a>
-        <a href="index.html#trade">Trade</a>
+        <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Bot Trading</a>
-        <a href="index.html#wallet">Treasury/Wallet</a>
+        <a href="treasury.html">Treasury/Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
 
@@ -92,6 +92,31 @@
             <div>
               <span class="eyebrow">Your market</span>
               <h3 id="coinMarketTitle">Publish a coin to view its chart</h3>
+              <div class="positions-market-row coin-market-controls">
+                <label class="positions-market-selector">
+                  <span>Time chart</span>
+                  <select id="coinTimeSelect" aria-label="Choose chart timeframe">
+                    <optgroup label="Seconds"><option value="1s">1 second</option></optgroup>
+                    <optgroup label="Minutes">
+                      <option value="1m">1 minute</option>
+                      <option value="5m">5 minutes</option>
+                      <option value="15m" selected>15 minutes</option>
+                    </optgroup>
+                    <optgroup label="Hours">
+                      <option value="1h">1 hour</option>
+                      <option value="4h">4 hours</option>
+                    </optgroup>
+                  </select>
+                </label>
+                <div class="positions-tools-menu">
+                  <button class="positions-tools-button" id="coinToolsButton" type="button" aria-expanded="false" aria-controls="coinToolsOptions">Tools</button>
+                  <div class="positions-tools-options" id="coinToolsOptions" hidden>
+                    <button type="button" data-coin-chart-tool="import">Import Indicator</button>
+                    <button type="button" data-coin-chart-tool="create">Create Indicator</button>
+                    <button type="button" data-coin-chart-tool="custom-candles">Custom Candlesticks</button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="coin-price-readout">
               <strong id="coinCurrentPrice">--</strong>
@@ -195,6 +220,9 @@
       const coinCandleStatus = document.getElementById('coinCandleStatus');
       const coinChartWrap = document.querySelector('.coin-chart-wrap');
       const coinChartResizer = document.getElementById('coinChartResizer');
+      const coinTimeSelect = document.getElementById('coinTimeSelect');
+      const coinToolsButton = document.getElementById('coinToolsButton');
+      const coinToolsOptions = document.getElementById('coinToolsOptions');
       const stopMarketForm = document.getElementById('stopMarketForm');
       const stopMarketSide = document.getElementById('stopMarketSide');
       const stopMarketPrice = document.getElementById('stopMarketPrice');
@@ -203,9 +231,16 @@
       const stopMarketStatus = document.getElementById('stopMarketStatus');
       let activeCoin = JSON.parse(localStorage.getItem('createdCoin') || 'null');
       let candles = [];
+      let coinChartInterval = coinTimeSelect.value;
+      const coinChartTools = { indicators: [], candleStyle: { bodyWidth: 56, wickWidth: 1 } };
+      const coinChartIntervalMs = { '1s': 1000, '1m': 60000, '5m': 300000, '15m': 900000, '1h': 3600000, '4h': 14400000 };
 
       const formatPrice = (value) => '$' + value.toFixed(value < 1 ? 6 : 2);
-      const formatTime = (timestamp) => new Intl.DateTimeFormat([], { hour: 'numeric', minute: '2-digit' }).format(new Date(timestamp));
+      const formatTime = (timestamp) => new Intl.DateTimeFormat([], {
+        hour: 'numeric',
+        minute: '2-digit',
+        ...(coinChartInterval === '1s' ? { second: '2-digit' } : {})
+      }).format(new Date(timestamp));
 
       function seedCandles(coin) {
         let seed = [...(coin.symbol + coin.name)].reduce((total, character) => total + character.charCodeAt(0), 0);
@@ -217,31 +252,43 @@
           const low = Math.min(open, close) * 0.994;
           seed = (seed * 9301 + 49297) % 233280;
           price = close;
-          return { time: Date.now() - (31 - index) * 900000, open, high, low, close };
+          return { time: Date.now() - (31 - index) * coinChartIntervalMs[coinChartInterval], open, high, low, close };
         });
       }
 
       function drawCoinChart() {
-        if (!activeCoin || !candles.length) return;
+        if (!activeCoin || !candles.length) {
+          coinChart.width = Math.max(320, coinChart.clientWidth || 320);
+          coinChart.height = Math.max(260, coinChart.clientHeight || 260);
+          const emptyContext = coinChart.getContext('2d');
+          emptyContext.clearRect(0, 0, coinChart.width, coinChart.height);
+          return;
+        }
         const bounds = coinChart.getBoundingClientRect();
         const ratio = window.devicePixelRatio || 1;
-        coinChart.width = Math.max(320, bounds.width * ratio);
+        const width = Math.max(320, bounds.width);
         const height = Math.max(260, coinChart.clientHeight || 310);
+        coinChart.width = width * ratio;
         coinChart.height = height * ratio;
         const context = coinChart.getContext('2d');
         context.setTransform(ratio, 0, 0, ratio, 0, 0);
-        const width = Math.max(320, bounds.width);
-        const pad = { top: 22, right: 62, bottom: 36, left: 12 };
-        const visibleCandles = candles.slice(-24);
-        const prices = visibleCandles.flatMap((candle) => [candle.high, candle.low]);
+        const pad = { top: 18, right: 72, bottom: 38, left: 12 };
+        const visibleCandles = candles.slice(-36);
+        const intervalMs = coinChartIntervalMs[coinChartInterval];
+        const latestTime = Math.floor(Date.now() / intervalMs) * intervalMs;
+        const chartCandles = visibleCandles.map((candle, index) => ({
+          ...candle,
+          time: latestTime - (visibleCandles.length - 1 - index) * intervalMs
+        }));
+        const prices = chartCandles.flatMap((candle) => [candle.high, candle.low]);
         const min = Math.min(...prices) * 0.997;
         const max = Math.max(...prices) * 1.003;
-        const candleWidth = (width - pad.left - pad.right) / visibleCandles.length;
-        const y = (price) => pad.top + (max - price) / (max - min) * (height - pad.top - pad.bottom);
+        const xStep = (width - pad.left - pad.right) / Math.max(chartCandles.length - 1, 1);
+        const y = (price) => pad.top + (max - price) / (max - min || 1) * (height - pad.top - pad.bottom);
         context.clearRect(0, 0, width, height);
         context.fillStyle = 'rgba(0, 0, 0, .18)';
         context.fillRect(0, 0, width, height);
-        context.font = '12px Inter, sans-serif';
+        context.font = '11px Inter, sans-serif';
         context.strokeStyle = 'rgba(212, 175, 55, .12)';
         context.fillStyle = '#cfc5a2';
         for (let row = 0; row < 5; row += 1) {
@@ -253,25 +300,53 @@
           context.stroke();
           context.fillText(formatPrice(price), width - pad.right + 8, lineY + 4);
         }
-        visibleCandles.forEach((candle, index) => {
-          const centerX = pad.left + index * candleWidth + candleWidth / 2;
+        chartCandles.forEach((candle, index) => {
+          const centerX = pad.left + index * xStep;
           const rising = candle.close >= candle.open;
           const color = rising ? '#31d598' : '#ff6b7a';
           context.strokeStyle = color;
           context.fillStyle = color;
+          context.lineWidth = coinChartTools.candleStyle.wickWidth;
           context.beginPath();
           context.moveTo(centerX, y(candle.high));
           context.lineTo(centerX, y(candle.low));
           context.stroke();
           const bodyTop = y(Math.max(candle.open, candle.close));
           const bodyHeight = Math.max(2, Math.abs(y(candle.open) - y(candle.close)));
-          context.fillRect(centerX - Math.max(3, candleWidth * .28), bodyTop, Math.max(6, candleWidth * .56), bodyHeight);
-          if (index === 0 || index === visibleCandles.length - 1 || index % 6 === 0) {
+          const bodyWidth = Math.max(4, xStep * coinChartTools.candleStyle.bodyWidth / 100);
+          context.fillRect(centerX - bodyWidth / 2, bodyTop, bodyWidth, bodyHeight);
+          if (index === 0 || index === chartCandles.length - 1 || index % 9 === 0) {
             context.fillStyle = '#cfc5a2';
-            context.fillText(formatTime(candle.time), centerX - 20, height - 12);
+            context.fillText(formatTime(candle.time), centerX - 18, height - 12);
           }
         });
-        coinCurrentPrice.textContent = formatPrice(visibleCandles[visibleCandles.length - 1].close);
+        const closeValues = chartCandles.map((candle) => candle.close);
+        coinChartTools.indicators.forEach((indicator) => {
+          const values = closeValues.map((value, index) => {
+            const start = Math.max(0, index - indicator.period + 1);
+            const points = closeValues.slice(start, index + 1);
+            if (points.length < indicator.period) return null;
+            if (indicator.type === 'sma') return points.reduce((sum, point) => sum + point, 0) / points.length;
+            const multiplier = 2 / (indicator.period + 1);
+            return points.reduce((ema, point, pointIndex) => pointIndex === 0 ? point : point * multiplier + ema * (1 - multiplier), points[0]);
+          });
+          context.beginPath();
+          context.lineWidth = 2;
+          context.strokeStyle = indicator.color;
+          let started = false;
+          values.forEach((value, index) => {
+            if (value === null) return;
+            const pointX = pad.left + index * xStep;
+            if (!started) {
+              context.moveTo(pointX, y(value));
+              started = true;
+            } else {
+              context.lineTo(pointX, y(value));
+            }
+          });
+          if (started) context.stroke();
+        });
+        coinCurrentPrice.textContent = formatPrice(chartCandles[chartCandles.length - 1].close);
       }
 
       function showCoin(coin) {
@@ -288,8 +363,8 @@
           : seedCandles(coin);
         savedHistory[coin.symbol] = candles;
         localStorage.setItem('customCoinMarketHistory', JSON.stringify(savedHistory));
-        coinMarketTitle.textContent = coin.name + ' (' + coin.symbol + ')';
-        coinCandleStatus.textContent = '15m candles • local market feed';
+        coinMarketTitle.textContent = `${coin.name} (${coin.symbol}) · ${coinChartInterval}`;
+        coinCandleStatus.textContent = `${coinChartInterval} candles • local market feed`;
         coinChartEmpty.hidden = true;
         stopMarketPrice.value = candles[candles.length - 1].close.toFixed(6);
         drawCoinChart();
@@ -309,6 +384,64 @@
 
       stopMarketSide.addEventListener('change', updateStopMarketButton);
       updateStopMarketButton();
+      coinTimeSelect.addEventListener('change', () => {
+        coinChartInterval = coinTimeSelect.value;
+        if (activeCoin) coinMarketTitle.textContent = `${activeCoin.name} (${activeCoin.symbol}) · ${coinChartInterval}`;
+        coinCandleStatus.textContent = `${coinChartInterval} candles • local market feed`;
+        drawCoinChart();
+      });
+      coinToolsButton.addEventListener('click', () => {
+        const isOpen = coinToolsOptions.hidden;
+        coinToolsOptions.hidden = !isOpen;
+        coinToolsButton.setAttribute('aria-expanded', String(isOpen));
+      });
+      document.querySelectorAll('[data-coin-chart-tool]').forEach((tool) => {
+        tool.addEventListener('click', () => {
+          coinToolsOptions.hidden = true;
+          coinToolsButton.setAttribute('aria-expanded', 'false');
+          if (tool.dataset.coinChartTool === 'import') {
+            const imported = window.prompt('Paste indicator JSON');
+            if (!imported) {
+              coinCandleStatus.textContent = 'Indicator import cancelled.';
+              return;
+            }
+            try {
+              const indicator = JSON.parse(imported);
+              if (!indicator.name || !['sma', 'ema'].includes(indicator.type)) throw new Error('Unsupported indicator');
+              const period = Number(indicator.period);
+              if (!Number.isInteger(period) || period < 2 || period > 100) throw new Error('Invalid period');
+              coinChartTools.indicators.push({ name: indicator.name, type: indicator.type, period, color: indicator.color || '#f3c969' });
+              drawCoinChart();
+              coinCandleStatus.textContent = `${indicator.name} imported and drawn on the local market chart.`;
+            } catch (error) {
+              coinCandleStatus.textContent = 'Import failed. Use JSON with name, type (sma or ema), period, and optional color.';
+            }
+          }
+          if (tool.dataset.coinChartTool === 'create') {
+            const name = window.prompt('Indicator name');
+            const type = (window.prompt('Indicator type: sma or ema', 'sma') || '').toLowerCase();
+            const period = Number(window.prompt('Period (2-100)', '20'));
+            if (!name || !['sma', 'ema'].includes(type) || !Number.isInteger(period) || period < 2 || period > 100) {
+              coinCandleStatus.textContent = 'Indicator creation cancelled or invalid.';
+              return;
+            }
+            coinChartTools.indicators.push({ name, type, period, color: '#ffb86b' });
+            drawCoinChart();
+            coinCandleStatus.textContent = `${name} ${type.toUpperCase()} (${period}) drawn on the local market chart.`;
+          }
+          if (tool.dataset.coinChartTool === 'custom-candles') {
+            const bodyWidth = Number(window.prompt('Candle body width (10-90%)', String(coinChartTools.candleStyle.bodyWidth)));
+            const wickWidth = Number(window.prompt('Candle wick width (1-5px)', String(coinChartTools.candleStyle.wickWidth)));
+            if (!Number.isFinite(bodyWidth) || !Number.isFinite(wickWidth) || bodyWidth < 10 || bodyWidth > 90 || wickWidth < 1 || wickWidth > 5) {
+              coinCandleStatus.textContent = 'Custom candlestick settings cancelled or invalid.';
+              return;
+            }
+            coinChartTools.candleStyle = { bodyWidth, wickWidth };
+            drawCoinChart();
+            coinCandleStatus.textContent = `Custom candlesticks applied: ${bodyWidth}% body width and ${wickWidth}px wick width.`;
+          }
+        });
+      });
       window.addEventListener('resize', drawCoinChart);
       if (coinChartResizer && coinChartWrap) {
         coinChartResizer.addEventListener('pointerdown', (event) => {

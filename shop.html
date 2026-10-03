@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BillionairesXchange | Shop</title>
-    <link rel="icon" type="APP-Logo.png" href="APP-logo.png" />
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
     <meta
       name="description"
       content="BillinairesXchange marketplace - Buy Bitcoin Miners, Gaming Gear, Phones, Laptops, Tablets, and Gift Cards"
@@ -29,11 +29,11 @@
 
       <nav class="main-nav" aria-label="Main navigation">
         <a href="index.html#home">Home</a>
-        <a href="index.html#trade">Trade</a>
+        <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
-        <a href="index.html#bot-trading">Bot Trading</a>
-        <a href="index.html#wallet">Treasury/Wallet</a>
-        <a href="index.html#create-coin">Create Coin</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
       </nav>
 
       <div class="nav-actions">
@@ -47,52 +47,101 @@
         <div class="section-head">
           <div>
             <span class="eyebrow">Marketplace</span>
-            <h2>Buy digital and physical items</h2>
+            <h2>Shop technology, gaming gear, and gift cards</h2>
+            <p>Browse our product categories. We sell Bitcoin miners, gaming gear, phones, laptops, and tablets, and buy and sell gift cards.</p>
           </div>
         </div>
 
-        <div class="shop-grid">
-          <article class="product-card card-glass">
-            <div class="product-icon">⛏️</div>
-            <h3>Bitcoin Miners</h3>
-            <p>High-performance mining hardware and accessories.</p>
-          </article>
-
-          <article class="product-card card-glass">
-            <div class="product-icon">🎮</div>
-            <h3>Gaming Gear</h3>
-            <p>Consoles, accessories, and digital entertainment packages.</p>
-          </article>
-
-          <article class="product-card card-glass">
-            <div class="product-icon">📱</div>
-            <h3>Phones</h3>
-            <p>Mobile devices, upgrades, and premium hardware bundles.</p>
-          </article>
-
-          <article class="product-card card-glass">
-            <div class="product-icon">💻</div>
-            <h3>Laptops & Computers</h3>
-            <p>Workstations for trading, content creation, and gaming.</p>
-          </article>
-
-          <article class="product-card card-glass">
-            <div class="product-icon">📟</div>
-            <h3>Tablets</h3>
-            <p>Portable productivity and entertainment devices.</p>
-          </article>
-
-          <article class="product-card card-glass">
-            <div class="product-icon">🎁</div>
-            <h3>Gift Cards</h3>
-            <p>Digital vouchers and branded store credits.</p>
-          </article>
+        <div class="shop-category-grid" role="group" aria-label="Shop categories">
+          <button class="shop-category-button is-active" type="button" data-shop-category="gadgets" aria-pressed="true">
+            <span class="product-icon" aria-hidden="true">📱</span>
+            <strong>Gadgets</strong>
+            <span>Phones, laptops, and tablets</span>
+          </button>
+          <button class="shop-category-button" type="button" data-shop-category="gaming" aria-pressed="false">
+            <span class="product-icon" aria-hidden="true">🎮</span>
+            <strong>Gaming</strong>
+            <span>Gaming gear and accessories</span>
+          </button>
+          <button class="shop-category-button" type="button" data-shop-category="miners" aria-pressed="false">
+            <span class="product-icon" aria-hidden="true">⛏️</span>
+            <strong>Bitcoin Miners</strong>
+            <span>Mining hardware and accessories</span>
+          </button>
+          <button class="shop-category-button" type="button" data-shop-category="gift-cards" aria-pressed="false">
+            <span class="product-icon" aria-hidden="true">🎁</span>
+            <strong>Gift Cards</strong>
+            <span>We buy and sell gift cards</span>
+          </button>
         </div>
 
-        <div class="shop-visit-wrap">
-          <a class="btn btn-primary shop-visit-button" href="shop.html">Visit Shop</a>
+        <section class="shop-category-details card-glass" id="shopCategoryDetails" aria-live="polite" aria-labelledby="shopCategoryTitle">
+          <span class="eyebrow">Featured category</span>
+          <h3 id="shopCategoryTitle">Gadgets</h3>
+          <p id="shopCategoryDescription">Shop phones, laptops, and tablets for everyday use, work, and entertainment.</p>
+          <ul id="shopCategoryProducts" class="shop-category-products">
+            <li>Phones</li>
+            <li>Laptops</li>
+            <li>Tablets</li>
+          </ul>
+          <section id="giftCardMarketplace" class="gift-card-marketplace" hidden aria-label="Gift card marketplace">
+            <div class="gift-card-marketplace-tabs" role="group" aria-label="Gift card actions">
+              <button class="btn btn-primary" id="buyGiftCardsButton" type="button" aria-pressed="true">Buy</button>
+              <button class="btn btn-secondary" id="sellGiftCardsButton" type="button" aria-pressed="false">Sell</button>
+            </div>
+            <section id="buyGiftCardsPanel" aria-labelledby="buyGiftCardsHeading">
+              <h4 id="buyGiftCardsHeading">Gift cards for sale</h4>
+              <p class="gift-card-help">Gift card values and asking prices are listed in USD. Choose a card to enter the amount you want; the estimate will convert the proportional asking price into your payment currency using current exchange rates. Confirm details with the seller before paying, and never share gift card codes in a listing.</p>
+              <p class="gift-card-status" id="giftCardBuyStatus" role="status"></p>
+              <div class="gift-card-listings" id="giftCardListings"></div>
+            </section>
+            <section id="sellGiftCardsPanel" aria-labelledby="sellGiftCardsHeading" hidden>
+              <h4 id="sellGiftCardsHeading">List a gift card for sale</h4>
+              <p class="gift-card-help">Enter the card's listed value and your asking price. Buyers will see the effective rate. Do not enter or upload the card number, PIN, or redemption code.</p>
+              <form id="sellGiftCardForm" class="gift-card-sell-form">
+                <label>Gift card type
+                  <select name="cardType" id="giftCardType" required>
+                    <option value="">Choose a gift card</option>
+                    <option>American Express Gift Card</option>
+                    <option>Green Dot MoneyPak</option>
+                    <option>Scratch Card</option>
+                    <option>Vanilla Visa Gift Card</option>
+                    <option>Visa Gift Card</option>
+                    <option>Mastercard Gift Card</option>
+                    <option>PlayStation Gift Card</option>
+                    <option>Xbox Gift Card</option>
+                    <option>DoorDash Gift Card</option>
+                    <option>Uber Gift Card</option>
+                    <option value="Other">Other gift card</option>
+                  </select>
+                </label>
+                <label class="gift-card-custom-type" id="giftCardCustomTypeWrap" hidden>Gift card name
+                  <input name="customCardType" id="giftCardCustomType" type="text" maxlength="80" />
+                </label>
+                <div class="gift-card-price-fields">
+                  <label>Listed card value (USD)
+                    <input name="faceValue" type="number" min="0.01" step="0.01" required placeholder="100.00" />
+                  </label>
+                  <label>Asking price (USD)
+                    <input name="askingPrice" type="number" min="0.01" step="0.01" required placeholder="80.00" />
+                  </label>
+                </div>
+                <label>Details (optional)
+                  <textarea name="description" rows="3" maxlength="300" placeholder="Add non-sensitive details such as the card region or format. Do not include codes or PINs."></textarea>
+                </label>
+                <label>Gift card logo or image (optional)
+                  <input name="cardImage" id="giftCardImage" type="file" accept="image/png,image/jpeg,image/webp" />
+                  <small class="field-help">Image is resized before it is added to the listing.</small>
+                </label>
+                <div class="gift-card-image-preview" id="giftCardImagePreview" hidden>
+                  <img id="giftCardImagePreviewImage" alt="Gift card image preview" />
+                </div>
+                <p class="gift-card-status" id="giftCardSellStatus" role="status"></p>
+                <button class="btn btn-primary" id="publishGiftCardButton" type="submit">Publish gift card</button>
+              </form>
+            </section>
+          </section>
         </div>
-
       </section>
     </main>
 
@@ -102,7 +151,463 @@
 
     <div id="toast" class="toast" aria-live="polite">Welcome to Makings Shop.</div>
 
+    <script type="module">
+      import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { addDoc, collection, getDoc, getDocs, getFirestore, doc, orderBy, query, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+      (() => {
+        const firebaseConfig = {
+          apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
+          authDomain: 'billionairesxchange-e8162.firebaseapp.com',
+          projectId: 'billionairesxchange-e8162',
+          storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
+          messagingSenderId: '872942229296',
+          appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
+          measurementId: 'G-JCZ6FCKF3M'
+        };
+        const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const categories = {
+          gadgets: {
+            title: 'Gadgets',
+            description: 'Shop phones, laptops, and tablets for everyday use, work, and entertainment.',
+            products: ['Phones', 'Laptops', 'Tablets']
+          },
+          gaming: {
+            title: 'Gaming',
+            description: 'Browse gaming gear and accessories for your gaming setup.',
+            products: ['Gaming gear', 'Consoles and accessories', 'Gaming equipment']
+          },
+          miners: {
+            title: 'Bitcoin Miners',
+            description: 'Shop Bitcoin mining hardware and supporting accessories.',
+            products: ['Bitcoin miners', 'Mining hardware', 'Miner accessories']
+          },
+          'gift-cards': {
+            title: 'Gift Cards',
+            description: 'Browse gift cards listed by users or publish your own listing.',
+            products: []
+          }
+        };
+        const title = document.getElementById('shopCategoryTitle');
+        const description = document.getElementById('shopCategoryDescription');
+        const products = document.getElementById('shopCategoryProducts');
+        const giftCardMarketplace = document.getElementById('giftCardMarketplace');
+        const buyPanel = document.getElementById('buyGiftCardsPanel');
+        const sellPanel = document.getElementById('sellGiftCardsPanel');
+        const buyButton = document.getElementById('buyGiftCardsButton');
+        const sellButton = document.getElementById('sellGiftCardsButton');
+        const listingContainer = document.getElementById('giftCardListings');
+        const buyStatus = document.getElementById('giftCardBuyStatus');
+        const sellStatus = document.getElementById('giftCardSellStatus');
+        const sellForm = document.getElementById('sellGiftCardForm');
+        const cardTypeSelect = document.getElementById('giftCardType');
+        const customCardTypeWrap = document.getElementById('giftCardCustomTypeWrap');
+        const customCardType = document.getElementById('giftCardCustomType');
+        const imageInput = document.getElementById('giftCardImage');
+        const imagePreview = document.getElementById('giftCardImagePreview');
+        const imagePreviewImage = document.getElementById('giftCardImagePreviewImage');
+        const publishButton = document.getElementById('publishGiftCardButton');
+        let signedInUser = null;
+        let signedInUsername = '';
+        let giftCardImageData = '';
+        const giftCardCollection = collection(db, 'giftCardListings');
+        const money = (amount, currency = 'USD') => new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+        const paymentCurrencies = [
+          ['USD', 'US Dollar'], ['JMD', 'Jamaican Dollar'], ['BBD', 'Barbadian Dollar'],
+          ['TTD', 'Trinidad and Tobago Dollar'], ['XCD', 'East Caribbean Dollar'],
+          ['BSD', 'Bahamian Dollar'], ['BZD', 'Belize Dollar'], ['GYD', 'Guyanese Dollar'],
+          ['HTG', 'Haitian Gourde'], ['DOP', 'Dominican Peso'], ['CUP', 'Cuban Peso'],
+          ['KYD', 'Cayman Islands Dollar'], ['AWG', 'Aruban Florin'], ['ANG', 'Netherlands Antillean Guilder'],
+          ['CAD', 'Canadian Dollar'], ['MXN', 'Mexican Peso'], ['BRL', 'Brazilian Real'],
+          ['ARS', 'Argentine Peso'], ['CLP', 'Chilean Peso'], ['COP', 'Colombian Peso'],
+          ['PEN', 'Peruvian Sol'], ['UYU', 'Uruguayan Peso'], ['PYG', 'Paraguayan Guarani'],
+          ['BOB', 'Bolivian Boliviano'], ['CRC', 'Costa Rican Colon'], ['GTQ', 'Guatemalan Quetzal'],
+          ['HNL', 'Honduran Lempira'], ['NIO', 'Nicaraguan Cordoba'], ['PAB', 'Panamanian Balboa'],
+          ['EUR', 'Euro'], ['GBP', 'Pound Sterling'], ['CHF', 'Swiss Franc'],
+          ['SEK', 'Swedish Krona'], ['NOK', 'Norwegian Krone'], ['DKK', 'Danish Krone'],
+          ['ISK', 'Icelandic Krona'], ['PLN', 'Polish Zloty'], ['CZK', 'Czech Koruna'],
+          ['HUF', 'Hungarian Forint'], ['RON', 'Romanian Leu'], ['BGN', 'Bulgarian Lev'],
+          ['RSD', 'Serbian Dinar'], ['RUB', 'Russian Ruble'], ['TRY', 'Turkish Lira'],
+          ['UAH', 'Ukrainian Hryvnia'], ['JPY', 'Japanese Yen'], ['CNY', 'Chinese Yuan'],
+          ['HKD', 'Hong Kong Dollar'], ['TWD', 'New Taiwan Dollar'], ['KRW', 'South Korean Won'],
+          ['INR', 'Indian Rupee'], ['PKR', 'Pakistani Rupee'], ['BDT', 'Bangladeshi Taka'],
+          ['LKR', 'Sri Lankan Rupee'], ['NPR', 'Nepalese Rupee'], ['SGD', 'Singapore Dollar'],
+          ['MYR', 'Malaysian Ringgit'], ['IDR', 'Indonesian Rupiah'], ['PHP', 'Philippine Peso'],
+          ['THB', 'Thai Baht'], ['VND', 'Vietnamese Dong'], ['KZT', 'Kazakhstani Tenge'],
+          ['UZS', 'Uzbekistani Som'], ['AED', 'UAE Dirham'], ['SAR', 'Saudi Riyal'],
+          ['QAR', 'Qatari Riyal'], ['KWD', 'Kuwaiti Dinar'], ['BHD', 'Bahraini Dinar'],
+          ['OMR', 'Omani Rial'], ['JOD', 'Jordanian Dinar'], ['ILS', 'Israeli New Shekel'],
+          ['EGP', 'Egyptian Pound'], ['NGN', 'Nigerian Naira'], ['KES', 'Kenyan Shilling'],
+          ['GHS', 'Ghanaian Cedi'], ['ZAR', 'South African Rand'], ['TZS', 'Tanzanian Shilling'],
+          ['UGX', 'Ugandan Shilling'], ['MAD', 'Moroccan Dirham'], ['DZD', 'Algerian Dinar'],
+          ['ETB', 'Ethiopian Birr'], ['XOF', 'West African CFA Franc'], ['XAF', 'Central African CFA Franc'],
+          ['AUD', 'Australian Dollar'], ['NZD', 'New Zealand Dollar'], ['FJD', 'Fijian Dollar'],
+          ['PGK', 'Papua New Guinea Kina'], ['WST', 'Samoan Tala'], ['TOP', 'Tongan Pa’anga'],
+          ['VUV', 'Vanuatu Vatu']
+        ];
+        let exchangeRates = { USD: 1 };
+        let exchangeRateUpdatedAt = null;
+        let exchangeRatesPromise = null;
+
+        async function loadExchangeRates() {
+          if (exchangeRatesPromise) return exchangeRatesPromise;
+          exchangeRatesPromise = (async () => {
+            const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+            if (!response.ok) throw new Error(`Exchange-rate request failed (${response.status}).`);
+            const data = await response.json();
+            if (data.base !== 'USD' || !data.rates || typeof data.rates !== 'object') {
+              throw new Error('The exchange-rate response was invalid.');
+            }
+            exchangeRates = { ...data.rates, USD: 1 };
+            exchangeRateUpdatedAt = Number.isFinite(data.time_last_updated)
+              ? new Date(data.time_last_updated * 1000)
+              : new Date();
+          })();
+          try {
+            await exchangeRatesPromise;
+          } catch (error) {
+            exchangeRatesPromise = null;
+            throw error;
+          }
+        }
+
+        function updateGiftCardAction(action) {
+          const isBuy = action === 'buy';
+          buyPanel.hidden = !isBuy;
+          sellPanel.hidden = isBuy;
+          buyButton.classList.toggle('btn-primary', isBuy);
+          buyButton.classList.toggle('btn-secondary', !isBuy);
+          sellButton.classList.toggle('btn-primary', !isBuy);
+          sellButton.classList.toggle('btn-secondary', isBuy);
+          buyButton.setAttribute('aria-pressed', String(isBuy));
+          sellButton.setAttribute('aria-pressed', String(!isBuy));
+          if (isBuy) loadGiftCardListings();
+        }
+
+        function renderGiftCardListings(listings) {
+          listingContainer.replaceChildren();
+          if (!listings.length) {
+            const empty = document.createElement('p');
+            empty.className = 'gift-card-empty';
+            empty.textContent = 'No gift cards are listed right now. Check back later or add your own with Sell.';
+            listingContainer.appendChild(empty);
+            return;
+          }
+
+          listings.forEach((listing) => {
+            const card = document.createElement('article');
+            card.className = 'gift-card-listing card-glass';
+            const logo = document.createElement('div');
+            logo.className = 'gift-card-listing-logo';
+            if (listing.imageData) {
+              const image = document.createElement('img');
+              image.src = listing.imageData;
+              image.alt = `${listing.cardType} logo`;
+              logo.appendChild(image);
+            } else {
+              logo.textContent = listing.cardType.split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toUpperCase();
+              logo.setAttribute('aria-label', `${listing.cardType} icon`);
+            }
+
+            const details = document.createElement('div');
+            details.className = 'gift-card-listing-details';
+            const cardName = document.createElement('h5');
+            cardName.textContent = listing.cardType;
+            const seller = document.createElement('p');
+            seller.textContent = `Seller: ${listing.sellerUsername || 'Member'}`;
+            const amounts = document.createElement('dl');
+            amounts.className = 'gift-card-listing-amounts';
+            const value = document.createElement('div');
+            const valueLabel = document.createElement('dt');
+            valueLabel.textContent = 'Listed card value';
+            const valueAmount = document.createElement('dd');
+            valueAmount.textContent = money(listing.faceValue);
+            value.append(valueLabel, valueAmount);
+            const price = document.createElement('div');
+            const priceLabel = document.createElement('dt');
+            priceLabel.textContent = 'Asking price';
+            const priceAmount = document.createElement('dd');
+            priceAmount.textContent = money(listing.askingPrice);
+            price.append(priceLabel, priceAmount);
+            const rate = document.createElement('div');
+            const rateLabel = document.createElement('dt');
+            rateLabel.textContent = 'Effective rate';
+            const rateAmount = document.createElement('dd');
+            rateAmount.textContent = `${(listing.askingPrice / listing.faceValue * 100).toFixed(1)}% of listed value`;
+            rate.append(rateLabel, rateAmount);
+            amounts.append(value, price, rate);
+            details.append(cardName, seller, amounts);
+            if (listing.description) {
+              const note = document.createElement('p');
+              note.className = 'gift-card-listing-note';
+              note.textContent = listing.description;
+              details.appendChild(note);
+            }
+            const purchase = document.createElement('div');
+            purchase.className = 'gift-card-purchase';
+            const chooseAmountButton = document.createElement('button');
+            chooseAmountButton.className = 'btn btn-secondary';
+            chooseAmountButton.type = 'button';
+            chooseAmountButton.textContent = 'Choose amount';
+            chooseAmountButton.setAttribute('aria-expanded', 'false');
+
+            const purchaseControls = document.createElement('div');
+            purchaseControls.className = 'gift-card-purchase-controls';
+            purchaseControls.hidden = true;
+            const amountLabel = document.createElement('label');
+            amountLabel.textContent = 'Gift card amount to buy (USD)';
+            const amountInput = document.createElement('input');
+            amountInput.type = 'number';
+            amountInput.min = '0.01';
+            amountInput.max = String(listing.faceValue);
+            amountInput.step = '0.01';
+            amountInput.value = String(listing.faceValue);
+            amountInput.inputMode = 'decimal';
+            amountLabel.appendChild(amountInput);
+            const currencyLabel = document.createElement('label');
+            currencyLabel.textContent = 'Pay in';
+            const currencySelect = document.createElement('select');
+            paymentCurrencies.forEach(([code, name]) => {
+              const currencyOption = document.createElement('option');
+              currencyOption.value = code;
+              currencyOption.textContent = `${code} - ${name}`;
+              currencySelect.appendChild(currencyOption);
+            });
+            currencyLabel.appendChild(currencySelect);
+            const estimate = document.createElement('p');
+            estimate.className = 'gift-card-purchase-estimate';
+            estimate.setAttribute('aria-live', 'polite');
+            const rateInfo = document.createElement('small');
+            rateInfo.className = 'gift-card-exchange-rate';
+            purchaseControls.append(amountLabel, currencyLabel, estimate, rateInfo);
+
+            const updateEstimate = () => {
+              const amount = Number(amountInput.value);
+              const currency = currencySelect.value;
+              const usdAskingPrice = Number(listing.askingPrice);
+              const usdFaceValue = Number(listing.faceValue);
+              if (!Number.isFinite(amount) || amount <= 0 || amount > usdFaceValue) {
+                estimate.textContent = `Enter an amount from $0.01 to ${money(usdFaceValue)} USD.`;
+                rateInfo.textContent = '';
+                return;
+              }
+              const proportionalPrice = amount * usdAskingPrice / usdFaceValue;
+              const exchangeRate = exchangeRates[currency];
+              if (!Number.isFinite(exchangeRate) || exchangeRate <= 0) {
+                estimate.textContent = currency === 'USD'
+                  ? `Estimated price: ${money(proportionalPrice)} USD`
+                  : 'Current exchange rate is unavailable. Select USD or try again later.';
+                rateInfo.textContent = '';
+                return;
+              }
+              const convertedPrice = proportionalPrice * exchangeRate;
+              estimate.textContent = `Estimated price: ${money(proportionalPrice)} USD · ${money(convertedPrice, currency)} ${currency}`;
+              rateInfo.textContent = currency === 'USD'
+                ? '1 USD = 1.00 USD'
+                : `1 USD = ${exchangeRate.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${currency}${exchangeRateUpdatedAt ? ` · Rate updated ${exchangeRateUpdatedAt.toLocaleTimeString()}` : ''}`;
+            };
+
+            chooseAmountButton.addEventListener('click', async () => {
+              const isOpening = purchaseControls.hidden;
+              purchaseControls.hidden = !isOpening;
+              chooseAmountButton.setAttribute('aria-expanded', String(isOpening));
+              chooseAmountButton.textContent = isOpening ? 'Hide estimate' : 'Choose amount';
+              if (!isOpening) return;
+              try {
+                await loadExchangeRates();
+              } catch (error) {
+                console.error('Unable to load currency exchange rates:', error);
+                rateInfo.textContent = 'Live exchange rates could not be loaded. USD estimates remain available.';
+              }
+              updateEstimate();
+            });
+            amountInput.addEventListener('input', updateEstimate);
+            currencySelect.addEventListener('change', async () => {
+              if (currencySelect.value !== 'USD' && !Number.isFinite(exchangeRates[currencySelect.value])) {
+                try {
+                  await loadExchangeRates();
+                } catch (error) {
+                  console.error('Unable to load currency exchange rates:', error);
+                  rateInfo.textContent = 'Live exchange rates could not be loaded. USD estimates remain available.';
+                }
+              }
+              updateEstimate();
+            });
+            purchase.append(chooseAmountButton, purchaseControls);
+            card.append(logo, details, purchase);
+            listingContainer.appendChild(card);
+          });
+        }
+
+        async function loadGiftCardListings() {
+          if (!signedInUser) {
+            buyStatus.innerHTML = 'Sign in to view gift card listings. <a href="verification.html#login">Sign in</a>';
+            listingContainer.replaceChildren();
+            return;
+          }
+          buyStatus.textContent = 'Loading gift card listings...';
+          try {
+            const snapshot = await getDocs(query(giftCardCollection, orderBy('createdAt', 'desc')));
+            renderGiftCardListings(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })));
+            buyStatus.textContent = `${snapshot.size} gift card listing${snapshot.size === 1 ? '' : 's'}. Confirm availability and payment details with the seller before any transaction.`;
+          } catch (error) {
+            console.error('Unable to load gift card listings:', error);
+            buyStatus.textContent = 'Could not load listings. Sign in and check the connection and Firestore rules.';
+          }
+        }
+
+        function resizeGiftCardImage(file) {
+          return createImageBitmap(file).then((image) => {
+            const canvas = document.createElement('canvas');
+            const size = 256;
+            const scale = Math.min(size / image.width, size / image.height, 1);
+            canvas.width = Math.max(1, Math.round(image.width * scale));
+            canvas.height = Math.max(1, Math.round(image.height * scale));
+            canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+            image.close();
+            return canvas.toDataURL('image/jpeg', 0.78);
+          });
+        }
+
+        function showToast(message) {
+          const toast = document.getElementById('toast');
+          toast.textContent = message;
+          toast.classList.add('show');
+          window.setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+          signedInUser = user;
+          signedInUsername = '';
+          if (user) {
+            try {
+              const profile = await getDoc(doc(db, 'users', user.uid));
+              signedInUsername = profile.exists() ? (profile.data().username || '') : '';
+            } catch (error) {
+              console.error('Unable to load gift card seller profile:', error);
+              sellStatus.textContent = 'Your account profile could not be loaded. Try again before publishing.';
+            }
+          }
+          if (!buyPanel.hidden) loadGiftCardListings();
+          if (!user) {
+            sellStatus.innerHTML = 'Sign in to publish a gift card listing. <a href="verification.html#login">Sign in</a>';
+            publishButton.disabled = true;
+          } else {
+            publishButton.disabled = false;
+          }
+        });
+
+        document.querySelectorAll('[data-shop-category]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const category = categories[button.dataset.shopCategory];
+            if (!category) return;
+
+            document.querySelectorAll('[data-shop-category]').forEach((item) => {
+              const isActive = item === button;
+              item.classList.toggle('is-active', isActive);
+              item.setAttribute('aria-pressed', String(isActive));
+            });
+            title.textContent = category.title;
+            description.textContent = category.description;
+            giftCardMarketplace.hidden = button.dataset.shopCategory !== 'gift-cards';
+            products.replaceChildren(...category.products.map((product) => {
+              const item = document.createElement('li');
+              item.textContent = product;
+              return item;
+            }));
+            if (button.dataset.shopCategory === 'gift-cards') updateGiftCardAction('buy');
+          });
+        });
+
+        buyButton.addEventListener('click', () => updateGiftCardAction('buy'));
+        sellButton.addEventListener('click', () => updateGiftCardAction('sell'));
+
+        cardTypeSelect.addEventListener('change', () => {
+          const isOther = cardTypeSelect.value === 'Other';
+          customCardTypeWrap.hidden = !isOther;
+          customCardType.required = isOther;
+          if (!isOther) customCardType.value = '';
+        });
+
+        imageInput.addEventListener('change', async () => {
+          const file = imageInput.files[0];
+          giftCardImageData = '';
+          imagePreview.hidden = true;
+          if (!file) return;
+          if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
+            sellStatus.textContent = 'Choose a gift card image under 5 MB.';
+            imageInput.value = '';
+            return;
+          }
+          try {
+            giftCardImageData = await resizeGiftCardImage(file);
+            if (giftCardImageData.length > 250000) throw new Error('Choose a smaller or simpler image.');
+            imagePreviewImage.src = giftCardImageData;
+            imagePreview.hidden = false;
+            sellStatus.textContent = '';
+          } catch (error) {
+            sellStatus.textContent = error.message || 'Could not read this image. Choose another file.';
+            imageInput.value = '';
+          }
+        });
+
+        sellForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!signedInUser) {
+            sellStatus.innerHTML = 'Sign in to publish a gift card listing. <a href="verification.html#login">Sign in</a>';
+            return;
+          }
+          if (!signedInUsername) {
+            sellStatus.textContent = 'Your account username is unavailable. Complete your account profile before publishing.';
+            return;
+          }
+
+          const formData = new FormData(sellForm);
+          const faceValue = Number(formData.get('faceValue'));
+          const askingPrice = Number(formData.get('askingPrice'));
+          const cardType = formData.get('cardType') === 'Other'
+            ? String(formData.get('customCardType')).trim()
+            : String(formData.get('cardType'));
+          if (!cardType || !Number.isFinite(faceValue) || faceValue <= 0 || !Number.isFinite(askingPrice) || askingPrice <= 0) {
+            sellStatus.textContent = 'Enter a gift card type, listed value, and asking price greater than zero.';
+            return;
+          }
+
+          publishButton.disabled = true;
+          sellStatus.textContent = 'Publishing your listing...';
+          try {
+            await addDoc(giftCardCollection, {
+              sellerUid: signedInUser.uid,
+              sellerUsername: signedInUsername,
+              cardType,
+              faceValue,
+              askingPrice,
+              currency: 'USD',
+              description: String(formData.get('description') || '').trim(),
+              imageData: giftCardImageData,
+              createdAt: serverTimestamp()
+            });
+            sellForm.reset();
+            giftCardImageData = '';
+            imagePreview.hidden = true;
+            customCardTypeWrap.hidden = true;
+            customCardType.required = false;
+            sellStatus.textContent = 'Your gift card listing is live.';
+            showToast('Gift card listing published.');
+            updateGiftCardAction('buy');
+          } catch (error) {
+            console.error('Unable to publish gift card listing:', error);
+            sellStatus.textContent = 'Could not publish this listing. Check your connection and Firestore rules, then try again.';
+          } finally {
+            publishButton.disabled = !signedInUser;
+          }
+        });
+      })();
+    </script>
     <script src="script.js"></script>
-    <script src="auth.js"></script>
+    <script type="module" src="auth.js"></script>
   </body>
 </html>

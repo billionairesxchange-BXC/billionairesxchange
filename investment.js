@@ -17,7 +17,6 @@ const db = getFirestore(app);
 let signedInAccount = auth.currentUser;
 
 const investmentSelection = document.getElementById('investmentSelection');
-const startInvestmentBtn = document.getElementById('startInvestmentBtn');
 const companyInvestmentSetup = document.getElementById('companyInvestmentSetup');
 const existingCompanyPanel = document.getElementById('existingCompanyPanel');
 const registerCompanyPanel = document.getElementById('registerCompanyPanel');
@@ -25,7 +24,7 @@ const existingCompanyChoices = document.getElementById('existingCompanyChoices')
 const coinsInvestmentSetup = document.getElementById('coinsInvestmentSetup');
 const customCoinChoices = document.getElementById('customCoinChoices');
 const coinInvestmentEmpty = document.getElementById('coinInvestmentEmpty');
-const companyRegistrationForm = registerCompanyPanel;
+const coinInvestmentStatus = document.getElementById('coinInvestmentStatus');
 const selectedCompanyDetails = document.getElementById('selectedCompanyDetails');
 const selectedCompanyLogo = document.getElementById('selectedCompanyLogo');
 const selectedCompanyContractStatus = document.getElementById('selectedCompanyContractStatus');
@@ -40,6 +39,7 @@ const selectedCompanyAgreementPdfName = document.getElementById('selectedCompany
 const downloadSelectedCompanyAgreement = document.getElementById('downloadSelectedCompanyAgreement');
 const sendContractToInboxButton = document.getElementById('sendContractToInbox');
 const companyInvestmentAmount = document.getElementById('companyInvestmentAmount');
+const investmentAmountOption = document.getElementById('investmentAmountOption');
 const companyInvestmentTerm = document.getElementById('companyInvestmentTerm');
 const investmentCurrencySelect = document.getElementById('investmentCurrency');
 const companyLogoInput = document.getElementById('companyLogo');
@@ -64,10 +64,7 @@ signatureContext.strokeStyle = '#f7e8aa';
 signatureContext.lineWidth = 3;
 signatureContext.lineCap = 'round';
 signatureContext.lineJoin = 'round';
-let selectedInvestment = '';
 let selectedCompanyPath = 'existing';
-let selectedExistingCompany = '';
-let selectedCoin = null;
 let signatureHasInk = false;
 let isDrawingSignature = false;
 let contractPdfObjectUrl = '';
@@ -557,60 +554,189 @@ investorTypedSignature.addEventListener('input', () => {
 
 document.querySelectorAll('[data-investment]').forEach((choice) => {
   choice.addEventListener('click', () => {
-    selectedInvestment = choice.dataset.investment;
+    const selectedInvestment = choice.dataset.investment;
     document.querySelectorAll('[data-investment]').forEach((item) => item.classList.toggle('is-selected', item === choice));
-    investmentSelection.textContent = `${selectedInvestment} selected. Review your choice, then start your investment.`;
+    investmentSelection.textContent = `${selectedInvestment} selected. Review the available options.`;
     companyInvestmentSetup.hidden = selectedInvestment !== 'Company';
     coinsInvestmentSetup.hidden = selectedInvestment !== 'Coins';
-    selectedCoin = null;
+    if (selectedInvestment === 'Coins') loadInvestmentCoins();
     customCoinChoices.querySelectorAll('.company-option').forEach((item) => {
       item.classList.remove('is-selected');
       item.setAttribute('aria-pressed', 'false');
     });
-    startInvestmentBtn.disabled = false;
   });
 });
 
-const savedCoins = JSON.parse(localStorage.getItem('customCoins') || '[]');
-const availableCoins = Array.isArray(savedCoins) ? savedCoins : [];
-coinInvestmentEmpty.hidden = availableCoins.length > 0;
-availableCoins.forEach((coin) => {
-  if (!coin.name || !coin.symbol) return;
-  const option = document.createElement('button');
-  option.className = 'company-option';
-  option.type = 'button';
-  option.setAttribute('aria-pressed', 'false');
+const tradeCoins = [
+  { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC' },
+  { id: 'ethereum', name: 'Ethereum', symbol: 'ETH' },
+  { id: 'ripple', name: 'XRP', symbol: 'XRP' },
+  { id: 'solana', name: 'Solana', symbol: 'SOL' },
+  { id: 'polkadot', name: 'Polkadot', symbol: 'DOT' },
+  { id: 'dogecoin', name: 'Dogecoin', symbol: 'DOGE' },
+  { id: 'cardano', name: 'Cardano', symbol: 'ADA' },
+  { id: 'binancecoin', name: 'BNB', symbol: 'BNB' },
+  { id: 'tron', name: 'TRON', symbol: 'TRX' },
+  { id: 'tether', name: 'Tether', symbol: 'USDT' },
+  { id: 'usd-coin', name: 'USD Coin', symbol: 'USDC' }
+];
+let coinLoadVersion = 0;
 
-  const logo = document.createElement(coin.logo && /^data:image\/(png|webp|jpeg);base64,/i.test(coin.logo) ? 'img' : 'span');
-  logo.className = 'company-option-logo';
-  logo.setAttribute('aria-hidden', 'true');
-  if (logo instanceof HTMLImageElement) {
-    logo.src = coin.logo;
-    logo.alt = '';
-  } else {
-    logo.textContent = coin.symbol.slice(0, 4).toUpperCase();
+function getSavedCustomCoins() {
+  const saved = JSON.parse(localStorage.getItem('customCoins') || '[]');
+  const savedCoins = Array.isArray(saved) ? saved : [];
+  const legacyCoin = JSON.parse(localStorage.getItem('createdCoin') || 'null');
+  const coins = legacyCoin && !savedCoins.some((coin) => coin.symbol === legacyCoin.symbol)
+    ? [...savedCoins, legacyCoin]
+    : savedCoins;
+  return coins.filter((coin) => coin?.name && /^[A-Z0-9]{2,8}$/i.test(coin.symbol));
+}
+
+function renderInvestmentCoins(coins) {
+  customCoinChoices.replaceChildren();
+  coinInvestmentEmpty.hidden = coins.length > 0;
+  coins.forEach((coin) => {
+    const option = document.createElement('button');
+    option.className = 'company-option';
+    option.type = 'button';
+    option.setAttribute('aria-pressed', 'false');
+
+    const logoUrl = typeof coin.logo === 'string' && /^data:image\/(png|webp|jpeg);base64,/i.test(coin.logo)
+      ? coin.logo
+      : typeof coin.image === 'string' && /^https:\/\/.*\.(?:png|webp|jpe?g)(?:\?.*)?$/i.test(coin.image)
+        ? coin.image
+        : '';
+    const logo = document.createElement('span');
+    logo.className = 'company-option-logo';
+    logo.setAttribute('aria-hidden', 'true');
+    if (logoUrl) {
+      const image = document.createElement('img');
+      image.src = logoUrl;
+      image.alt = '';
+      image.addEventListener('error', () => {
+        logo.textContent = coin.symbol.slice(0, 4).toUpperCase();
+      }, { once: true });
+      logo.appendChild(image);
+    } else {
+      logo.textContent = coin.symbol.slice(0, 4).toUpperCase();
+    }
+
+    const details = document.createElement('span');
+    details.className = 'company-option-details';
+    const coinName = document.createElement('strong');
+    coinName.textContent = coin.name;
+    const coinSymbol = document.createElement('small');
+    coinSymbol.textContent = coin.symbol.toUpperCase();
+    details.append(coinName, coinSymbol);
+    option.append(logo, details);
+
+    option.addEventListener('click', () => {
+      customCoinChoices.querySelectorAll('.company-option').forEach((item) => {
+        const isSelected = item === option;
+        item.classList.toggle('is-selected', isSelected);
+        item.setAttribute('aria-pressed', String(isSelected));
+      });
+      investmentSelection.textContent = `${coin.name} (${coin.symbol.toUpperCase()}) selected.`;
+    });
+
+    customCoinChoices.appendChild(option);
+  });
+}
+
+async function loadInvestmentCoins() {
+  const version = ++coinLoadVersion;
+  let customCoins = [];
+  let customCoinsWarning = '';
+  try {
+    customCoins = getSavedCustomCoins();
+  } catch (error) {
+    customCoinsWarning = ` Saved created coins could not be loaded: ${error.message}`;
+  }
+  const coinsBySymbol = new Map();
+  tradeCoins.forEach((coin) => coinsBySymbol.set(coin.symbol, { ...coin }));
+  customCoins.forEach((coin) => coinsBySymbol.set(coin.symbol.toUpperCase(), coin));
+  renderInvestmentCoins([...coinsBySymbol.values()]);
+  coinInvestmentStatus.textContent = 'Loading Trade market coin logos...';
+
+  try {
+    const ids = tradeCoins.map((coin) => coin.id).join(',');
+    const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=20&page=1&sparkline=false`);
+    if (!response.ok) throw new Error(`Market coin request failed (${response.status}).`);
+    const marketCoins = await response.json();
+    if (version !== coinLoadVersion) return;
+
+    marketCoins.forEach((coin) => {
+      const symbol = coin.symbol.toUpperCase();
+      const savedCustomCoin = customCoins.find((custom) => custom.symbol.toUpperCase() === symbol);
+      coinsBySymbol.set(symbol, {
+        ...(savedCustomCoin || {}),
+        name: savedCustomCoin?.name || coin.name,
+        symbol,
+        image: coin.image,
+        logo: savedCustomCoin?.logo || null
+      });
+    });
+    const allCoins = [...coinsBySymbol.values()];
+    renderInvestmentCoins(allCoins);
+    coinInvestmentStatus.textContent = `${allCoins.length} coin${allCoins.length === 1 ? '' : 's'} available.${customCoinsWarning}`;
+  } catch (error) {
+    if (version !== coinLoadVersion) return;
+    coinInvestmentStatus.textContent = `Market logos could not be loaded. Showing available coins with symbol icons. ${error.message}${customCoinsWarning}`;
+  }
+}
+
+registerCompanyPanel.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!uploadedContractPdfDataUrl && !companyContractDocument.value.trim()) {
+    contractPdfStatus.textContent = 'Write a company contract or upload a PDF contract.';
+    return;
   }
 
-  const details = document.createElement('span');
-  details.className = 'company-option-details';
-  const coinName = document.createElement('strong');
-  coinName.textContent = coin.name;
-  const coinSymbol = document.createElement('small');
-  coinSymbol.textContent = coin.symbol.toUpperCase();
-  details.append(coinName, coinSymbol);
-  option.append(logo, details);
+  let companyLogo = '';
+  if (companyLogoInput.files[0]) {
+    try {
+      companyLogo = await drawCompanyLogo(companyLogoInput.files[0]);
+    } catch {
+      contractPdfStatus.textContent = 'The company logo could not be processed. Choose another image.';
+      return;
+    }
+  }
 
-  option.addEventListener('click', () => {
-    selectedCoin = coin;
-    customCoinChoices.querySelectorAll('.company-option').forEach((item) => {
-      const isSelected = item === option;
-      item.classList.toggle('is-selected', isSelected);
-      item.setAttribute('aria-pressed', String(isSelected));
-    });
-    investmentSelection.textContent = `${coin.name} (${coin.symbol.toUpperCase()}) selected. Start your investment when ready.`;
-  });
+  const companyDetails = {
+    name: document.getElementById('companyName').value.trim(),
+    registrationNumber: document.getElementById('companyRegistration').value.trim(),
+    currency: investmentCurrencySelect.value.toUpperCase(),
+    logo: companyLogo || null,
+    email: document.getElementById('companyEmail').value.trim(),
+    phone: document.getElementById('companyPhone').value.trim(),
+    address: document.getElementById('companyAddress').value.trim(),
+    country: document.getElementById('companyCountry').value.trim(),
+    type: document.getElementById('companyType').value,
+    description: document.getElementById('companyDescription').value.trim(),
+    investorPurpose: document.getElementById('companyInvestorPurpose').value.trim(),
+    contractDocument: companyContractDocument.value.trim(),
+    contractPdfDataUrl: uploadedContractPdfDataUrl || null,
+    contractPdfName: companyContractPdfInput.files[0]?.name || null,
+    contractSource: uploadedContractPdfDataUrl ? 'uploaded-pdf' : 'company-text',
+    contractAcknowledged: document.getElementById('companyContractAgreement').checked,
+    isRegistered: true
+  };
 
-  customCoinChoices.appendChild(option);
+  let companies;
+  try {
+    companies = JSON.parse(localStorage.getItem('makingsRegisteredCompanies') || '[]');
+    if (!Array.isArray(companies)) throw new Error('Saved company data is invalid.');
+  } catch (error) {
+    contractPdfStatus.textContent = error.message || 'Saved company data could not be read.';
+    return;
+  }
+
+  try {
+    localStorage.setItem('makingsRegisteredCompanies', JSON.stringify([...companies, companyDetails]));
+    contractPdfStatus.textContent = 'Company saved. It will be available under Choose existing company after reloading the Investment Center.';
+  } catch {
+    contractPdfStatus.textContent = 'Browser storage is full. Use a smaller PDF or choose the Default Agreement.';
+  }
 });
 
 const savedCompanies = JSON.parse(localStorage.getItem('makingsRegisteredCompanies') || '[]');
@@ -652,14 +778,13 @@ availableCompanies.forEach((company) => {
   option.append(logo, details);
 
   option.addEventListener('click', () => {
-    selectedExistingCompany = name;
     renderSelectedCompanyDetails(company);
     existingCompanyChoices.querySelectorAll('.company-option').forEach((item) => {
       const isSelected = item === option;
       item.classList.toggle('is-selected', isSelected);
       item.setAttribute('aria-pressed', String(isSelected));
     });
-    investmentSelection.textContent = `${name} selected. Enter an amount and term to continue.`;
+    investmentSelection.textContent = `${name} selected. Enter investor details and prepare the contract when ready.`;
   });
 
   existingCompanyChoices.appendChild(option);
@@ -671,108 +796,8 @@ document.querySelectorAll('[data-company-path]').forEach((pathButton) => {
     document.querySelectorAll('[data-company-path]').forEach((item) => item.classList.toggle('is-active', item === pathButton));
     existingCompanyPanel.hidden = selectedCompanyPath !== 'existing';
     registerCompanyPanel.hidden = selectedCompanyPath !== 'register';
+    investmentAmountOption.hidden = selectedCompanyPath !== 'existing';
   });
-});
-
-startInvestmentBtn.addEventListener('click', async () => {
-  if (!selectedInvestment) return;
-  const amount = Number(companyInvestmentAmount.value);
-  let companyDetails = null;
-  let coinDetails = null;
-  if (selectedInvestment === 'Coins') {
-    if (!selectedCoin) {
-      investmentSelection.textContent = 'Choose a coin before starting your investment.';
-      return;
-    }
-    coinDetails = { name: selectedCoin.name, symbol: selectedCoin.symbol, logo: selectedCoin.logo || null };
-  }
-  if (selectedInvestment === 'Company') {
-    if (!amount || amount < 1 || !companyInvestmentTerm.value) {
-      investmentSelection.textContent = 'Enter an investment amount and term before starting.';
-      return;
-    }
-    if (selectedCompanyPath === 'register') {
-      if (!uploadedContractPdfDataUrl && !companyContractDocument.value.trim()) {
-        contractPdfStatus.textContent = 'Write a company contract or upload a PDF contract.';
-        return;
-      }
-      if (!companyRegistrationForm.reportValidity()) return;
-      let companyLogo = '';
-      if (companyLogoInput.files[0]) {
-        try {
-          companyLogo = await drawCompanyLogo(companyLogoInput.files[0]);
-        } catch {
-          investmentSelection.textContent = 'The company logo could not be processed. Choose another image.';
-          return;
-        }
-      }
-      companyDetails = {
-        name: document.getElementById('companyName').value.trim(),
-        registrationNumber: document.getElementById('companyRegistration').value.trim(),
-        currency: investmentCurrencySelect.value.toUpperCase(),
-        logo: companyLogo || null,
-        email: document.getElementById('companyEmail').value.trim(),
-        phone: document.getElementById('companyPhone').value.trim(),
-        address: document.getElementById('companyAddress').value.trim(),
-        country: document.getElementById('companyCountry').value.trim(),
-        type: document.getElementById('companyType').value,
-        description: document.getElementById('companyDescription').value.trim(),
-        investorPurpose: document.getElementById('companyInvestorPurpose').value.trim(),
-        contractDocument: document.getElementById('companyContractDocument').value.trim(),
-        contractPdfDataUrl: uploadedContractPdfDataUrl || null,
-        contractPdfName: companyContractPdfInput.files[0]?.name || null,
-        contractSource: uploadedContractPdfDataUrl ? 'uploaded-pdf' : 'company-text',
-        contractAcknowledged: document.getElementById('companyContractAgreement').checked
-      };
-      const companies = JSON.parse(localStorage.getItem('makingsRegisteredCompanies') || '[]');
-      companyDetails.isRegistered = true;
-      companies.push(companyDetails);
-      try {
-        localStorage.setItem('makingsRegisteredCompanies', JSON.stringify(companies));
-      } catch {
-        contractPdfStatus.textContent = 'Browser storage is full. Use a smaller PDF or choose the Default Agreement.';
-        return;
-      }
-    } else {
-      if (!selectedExistingCompany) {
-        investmentSelection.textContent = 'Choose a company before starting your investment.';
-        return;
-      }
-      if (!investorNameInput.value.trim()) {
-        investorSignatureStatus.textContent = 'Enter the investor name before continuing.';
-        investorNameInput.focus();
-        return;
-      }
-      if (!signatureHasInk && !investorTypedSignature.value.trim()) {
-        investorSignatureStatus.textContent = 'Sign the default contract or type your full legal name before continuing.';
-        investorTypedSignature.focus();
-        return;
-      }
-      if (!selectedCompanyAgreementDocument.value.trim() || !selectedAgreementPdfObjectUrl) {
-        selectedCompanyAgreementStatus.textContent = 'Generate and review the default contract before continuing.';
-        return;
-      }
-      companyDetails = {
-        name: selectedCompanyRecord.name,
-        contractAcknowledged: true,
-        investor: {
-          name: investorNameInput.value.trim(),
-          type: investorTypeInput.value,
-          company: investorCompanyInput.value.trim() || null,
-          signatureDataUrl: signatureHasInk ? investorSignatureCanvas.toDataURL('image/png') : null,
-          typedSignature: investorTypedSignature.value.trim() || null,
-          signedAt: new Date().toISOString()
-        },
-        contractDocument: selectedCompanyAgreementDocument.value.trim()
-      };
-    }
-  }
-  const investment = { type: selectedInvestment, amount: amount || null, currency: investmentCurrencySelect.value.toUpperCase(), term: selectedInvestment === 'Company' ? companyInvestmentTerm.value : null, company: companyDetails, coin: coinDetails, createdAt: new Date().toISOString() };
-  localStorage.setItem('makingsSelectedInvestment', JSON.stringify(investment));
-  const toast = document.getElementById('toast');
-  toast.textContent = `${selectedInvestment} investment started. Your Treasury plan is ready for review.`;
-  toast.classList.add('show');
-  window.setTimeout(() => toast.classList.remove('show'), 3200);
 });
 
 sendContractToInboxButton.addEventListener('click', async () => {
@@ -806,7 +831,7 @@ sendContractToInboxButton.addEventListener('click', async () => {
       investorType: investorTypeInput.value,
       investorCompany: investorCompanyInput.value.trim() || null,
       companyName,
-      amount: Number(companyInvestmentAmount.value),
+      amount: Number(companyInvestmentAmount.value) || null,
       currency: investmentCurrencySelect.value.toUpperCase(),
       term: companyInvestmentTerm.value,
       contractFileName: fileName,

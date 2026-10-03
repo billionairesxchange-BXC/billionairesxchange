@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Request an ATM Card</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <meta name="description" content="Choose a metal ATM card design and submit a card request." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading &amp; Investment</small>
+        </div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="treasury.html">Back to Treasury</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="section-shell request-card-page">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">ATM card request</span>
+            <h1>Choose your card</h1>
+            <p>Choose Metal for the Black Platinum or Bronze Day to Day design, or choose Plastic for the regular white card.</p>
+          </div>
+        </div>
+
+        <section class="card-glass request-card-panel" aria-labelledby="cardMaterialHeading">
+          <h2 id="cardMaterialHeading">Choose card material</h2>
+          <div class="request-card-materials" role="group" aria-label="Card material">
+            <button class="btn btn-secondary" type="button" data-card-material="Metal" aria-pressed="false">Metal</button>
+            <button class="btn btn-secondary" type="button" data-card-material="Plastic" aria-pressed="false">Plastic</button>
+          </div>
+          <p class="request-card-status" id="materialStatus" role="status" aria-live="polite">Choose a material to view available card designs.</p>
+
+          <section id="metalCardOptions" class="metal-card-options" hidden aria-labelledby="metalCardHeading">
+            <h3 id="metalCardHeading">Metal card designs</h3>
+            <div class="metal-card-grid">
+              <button class="metal-card-choice" type="button" data-card-style="black-platinum" aria-pressed="false">
+                <span class="metal-card-preview metal-card-preview-black" aria-hidden="true">
+                  <span>MAKINGS</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>PLATINUM</small>
+                </span>
+                <strong>Black Platinum</strong>
+                <span>Black metal premium card</span>
+              </button>
+              <button class="metal-card-choice" type="button" data-card-style="bronze-day-to-day" aria-pressed="false">
+                <span class="metal-card-preview metal-card-preview-bronze" aria-hidden="true">
+                  <span>MAKINGS</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>DAY TO DAY</small>
+                </span>
+                <strong>Bronze Day to Day</strong>
+                <span>Bronze metal everyday card</span>
+              </button>
+            </div>
+          </section>
+          <section id="plasticCardOptions" class="plastic-card-options" hidden aria-labelledby="plasticCardHeading">
+            <h3 id="plasticCardHeading">Regular white plastic card</h3>
+            <p class="request-card-help">The white blank card is the default. Upload a photo design below to preview it on the card.</p>
+            <div class="plastic-card-preview" aria-label="Regular white plastic card preview">
+              <img class="plastic-card-full-artwork" id="plasticCardArtwork" alt="Uploaded design covering the plastic card preview" hidden />
+              <div class="plastic-card-preview-brand">MAKINGS <span aria-hidden="true">▦</span></div>
+              <span class="plastic-card-artwork-placeholder" id="plasticCardArtworkPlaceholder">Your card design will appear here</span>
+              <strong id="plasticCardPreviewName">YOUR NAME</strong>
+              <small>REGULAR PLASTIC</small>
+            </div>
+          </section>
+        </section>
+
+        <section id="cardRequestFormPanel" class="card-glass request-card-panel" hidden aria-labelledby="requestDetailsHeading">
+          <h2 id="requestDetailsHeading">Request details</h2>
+          <p class="request-card-help">Your request is saved to your account. Card requests are subject to review and approval.</p>
+          <form id="cardRequestForm" class="request-card-form">
+            <label>
+              Name to display on card
+              <input id="cardEngraving" name="engravingText" type="text" maxlength="20" autocomplete="name" required />
+            </label>
+            <label>
+              Design notes (optional)
+              <textarea id="cardDesignNote" name="designNote" rows="3" maxlength="300" placeholder="Share any additional design preferences."></textarea>
+            </label>
+            <label>
+              Upload a card design photo (optional)
+              <input id="cardDesignImage" name="designImage" type="file" accept="image/png,image/jpeg,image/webp" />
+              <small class="field-help">For Plastic, the uploaded photo appears on the white card preview. Image is resized before it is saved.</small>
+            </label>
+            <div id="cardDesignImagePreview" class="request-card-image-preview" hidden>
+              <img id="cardDesignImagePreviewImg" alt="Card design reference preview" />
+            </div>
+            <p class="request-card-status" id="cardRequestStatus" role="status" aria-live="polite"></p>
+            <button class="btn btn-primary" id="submitCardRequest" type="submit">Submit card request</button>
+          </form>
+        </section>
+
+        <section class="card-glass request-card-panel" aria-labelledby="myCardRequestsHeading">
+          <h2 id="myCardRequestsHeading">My card requests</h2>
+          <p class="request-card-status" id="myCardRequestsStatus" role="status" aria-live="polite">Checking your account...</p>
+          <div id="myCardRequests" class="my-card-requests"></div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2026 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
+    </footer>
+
+    <script type="module">
+      import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { addDoc, collection, doc, getDocs, getFirestore, orderBy, query, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
+        authDomain: 'billionairesxchange-e8162.firebaseapp.com',
+        projectId: 'billionairesxchange-e8162',
+        storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
+        messagingSenderId: '872942229296',
+        appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
+        measurementId: 'G-JCZ6FCKF3M'
+      };
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const materialStatus = document.getElementById('materialStatus');
+      const metalCardOptions = document.getElementById('metalCardOptions');
+      const plasticCardOptions = document.getElementById('plasticCardOptions');
+      const cardRequestFormPanel = document.getElementById('cardRequestFormPanel');
+      const cardRequestForm = document.getElementById('cardRequestForm');
+      const cardRequestStatus = document.getElementById('cardRequestStatus');
+      const submitButton = document.getElementById('submitCardRequest');
+      const requestList = document.getElementById('myCardRequests');
+      const requestListStatus = document.getElementById('myCardRequestsStatus');
+      const designImageInput = document.getElementById('cardDesignImage');
+      const designImagePreview = document.getElementById('cardDesignImagePreview');
+      const designImagePreviewImg = document.getElementById('cardDesignImagePreviewImg');
+      const plasticCardArtwork = document.getElementById('plasticCardArtwork');
+      const plasticCardArtworkPlaceholder = document.getElementById('plasticCardArtworkPlaceholder');
+      const plasticCardPreviewName = document.getElementById('plasticCardPreviewName');
+      const engravingInput = document.getElementById('cardEngraving');
+      let signedInUser = null;
+      let selectedMaterial = '';
+      let selectedStyle = null;
+      let designImageData = '';
+
+      const cardStyles = {
+        'black-platinum': { name: 'Black Platinum', material: 'Metal' },
+        'bronze-day-to-day': { name: 'Bronze Day to Day', material: 'Metal' },
+        'white-plastic-regular': { name: 'White Regular', material: 'Plastic' }
+      };
+
+      function setMaterial(material) {
+        selectedMaterial = material;
+        selectedStyle = null;
+        document.querySelectorAll('[data-card-material]').forEach((button) => {
+          const active = button.dataset.cardMaterial === material;
+          button.classList.toggle('btn-primary', active);
+          button.classList.toggle('btn-secondary', !active);
+          button.setAttribute('aria-pressed', String(active));
+        });
+        document.querySelectorAll('[data-card-style]').forEach((button) => {
+          button.classList.remove('is-selected');
+          button.setAttribute('aria-pressed', 'false');
+        });
+        cardRequestFormPanel.hidden = true;
+        metalCardOptions.hidden = material !== 'Metal';
+        plasticCardOptions.hidden = material !== 'Plastic';
+        designImagePreview.hidden = !designImageData || material !== 'Metal';
+        if (designImageData && material === 'Plastic') {
+          plasticCardArtwork.src = designImageData;
+          plasticCardArtwork.hidden = false;
+          plasticCardArtworkPlaceholder.hidden = true;
+        }
+        if (material === 'Metal') {
+          materialStatus.textContent = 'Choose one of the available metal card designs.';
+        } else {
+          selectedStyle = 'white-plastic-regular';
+          cardRequestFormPanel.hidden = false;
+          materialStatus.textContent = 'Regular white plastic card selected. Upload a design photo to preview it on the card, or request the blank white card.';
+        }
+      }
+
+      function formatRequestDate(value) {
+        const date = value?.toDate ? value.toDate() : new Date(value);
+        return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleString();
+      }
+
+      async function loadMyRequests(user) {
+        requestList.replaceChildren();
+        requestListStatus.textContent = 'Loading your card requests...';
+        try {
+          const requestsRef = collection(db, 'users', user.uid, 'cardRequests');
+          const snapshot = await getDocs(query(requestsRef, orderBy('createdAt', 'desc')));
+          if (!snapshot.size) {
+            requestListStatus.textContent = 'You have not submitted a card request yet.';
+            return;
+          }
+          requestListStatus.textContent = `${snapshot.size} card request${snapshot.size === 1 ? '' : 's'}.`;
+          snapshot.forEach((item) => {
+            const request = item.data();
+            const article = document.createElement('article');
+            article.className = 'my-card-request';
+            if (request.designImageData) {
+              const image = document.createElement('img');
+              image.className = 'my-card-request-image';
+              image.src = request.designImageData;
+              image.alt = `${request.cardStyle || 'ATM card'} design`;
+              article.appendChild(image);
+            }
+            const title = document.createElement('h3');
+            title.textContent = request.cardStyle || 'ATM card';
+            const details = document.createElement('p');
+            details.textContent = `Material: ${request.material} · Engraving: ${request.engravingText || 'Not provided'}`;
+            const status = document.createElement('p');
+            status.textContent = `Status: ${request.status || 'Submitted'} · ${formatRequestDate(request.createdAt)}`;
+            article.append(title, details, status);
+            requestList.appendChild(article);
+          });
+        } catch (error) {
+          console.error('Unable to load card requests:', error);
+          requestListStatus.textContent = 'Could not load your requests. Check your connection and Firestore rules.';
+        }
+      }
+
+      function resizeDesignImage(file) {
+        return createImageBitmap(file).then((image) => {
+          const maxSize = 256;
+          const scale = Math.min(maxSize / image.width, maxSize / image.height, 1);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(image.width * scale));
+          canvas.height = Math.max(1, Math.round(image.height * scale));
+          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+          image.close();
+          return canvas.toDataURL('image/jpeg', 0.75);
+        });
+      }
+
+      document.querySelectorAll('[data-card-material]').forEach((button) => {
+        button.addEventListener('click', () => setMaterial(button.dataset.cardMaterial));
+      });
+
+      document.querySelectorAll('[data-card-style]').forEach((button) => {
+        button.addEventListener('click', () => {
+          selectedStyle = button.dataset.cardStyle;
+          document.querySelectorAll('[data-card-style]').forEach((item) => {
+            const active = item === button;
+            item.classList.toggle('is-selected', active);
+            item.setAttribute('aria-pressed', String(active));
+          });
+          cardRequestFormPanel.hidden = false;
+          cardRequestFormPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+      });
+
+      designImageInput.addEventListener('change', async () => {
+        const file = designImageInput.files[0];
+        designImageData = '';
+        designImagePreview.hidden = true;
+        if (!file) return;
+        if (!file.type.match(/^image\/(png|jpeg|webp)$/) || file.size > 5 * 1024 * 1024) {
+          cardRequestStatus.textContent = 'Choose a PNG, JPEG, or WebP image smaller than 5 MB.';
+          designImageInput.value = '';
+          return;
+        }
+        try {
+          designImageData = await resizeDesignImage(file);
+          if (designImageData.length > 240000) throw new Error('Choose a smaller or simpler reference image.');
+          designImagePreviewImg.src = designImageData;
+          designImagePreview.hidden = selectedMaterial === 'Plastic';
+          if (selectedMaterial === 'Plastic') {
+            plasticCardArtwork.src = designImageData;
+            plasticCardArtwork.hidden = false;
+            plasticCardArtworkPlaceholder.hidden = true;
+          }
+          cardRequestStatus.textContent = '';
+        } catch (error) {
+          cardRequestStatus.textContent = error.message || 'The image could not be processed. Choose another file.';
+          designImageInput.value = '';
+        }
+      });
+
+      engravingInput.addEventListener('input', () => {
+        plasticCardPreviewName.textContent = engravingInput.value.trim().toUpperCase() || 'YOUR NAME';
+      });
+
+      onAuthStateChanged(auth, (user) => {
+        signedInUser = user;
+        if (!user) {
+          submitButton.disabled = true;
+          cardRequestStatus.innerHTML = 'Sign in to submit a card request. <a href="verification.html#login">Sign in</a>';
+          requestList.replaceChildren();
+          requestListStatus.innerHTML = 'Sign in to view your card requests. <a href="verification.html#login">Sign in</a>';
+          return;
+        }
+        submitButton.disabled = false;
+        loadMyRequests(user);
+      });
+
+      cardRequestForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!signedInUser) {
+          cardRequestStatus.innerHTML = 'Sign in to submit a card request. <a href="verification.html#login">Sign in</a>';
+          return;
+        }
+        if (!cardStyles[selectedStyle] || cardStyles[selectedStyle].material !== selectedMaterial) {
+          cardRequestStatus.textContent = 'Choose a card material and design before submitting.';
+          return;
+        }
+        const engravingText = document.getElementById('cardEngraving').value.trim();
+        if (!engravingText) {
+          cardRequestStatus.textContent = 'Enter the name you want engraved on the card.';
+          return;
+        }
+
+        const submittedCardRequest = {
+          material: selectedMaterial,
+          cardStyle: cardStyles[selectedStyle].name,
+          styleId: selectedStyle,
+          engravingText,
+          designNote: document.getElementById('cardDesignNote').value.trim(),
+          designImageData
+        };
+        submitButton.disabled = true;
+        cardRequestStatus.textContent = 'Submitting your card request...';
+        let requestSaved = false;
+        try {
+          await addDoc(collection(db, 'users', signedInUser.uid, 'cardRequests'), {
+            ...submittedCardRequest,
+            status: 'Submitted',
+            createdAt: serverTimestamp()
+          });
+          requestSaved = true;
+          cardRequestForm.reset();
+          designImageData = '';
+          designImagePreview.hidden = true;
+          plasticCardArtwork.removeAttribute('src');
+          plasticCardArtwork.hidden = true;
+          plasticCardArtworkPlaceholder.hidden = false;
+          plasticCardPreviewName.textContent = 'YOUR NAME';
+          selectedStyle = selectedMaterial === 'Plastic' ? 'white-plastic-regular' : null;
+          designImageInput.value = '';
+          document.querySelectorAll('[data-card-style]').forEach((button) => {
+            button.classList.remove('is-selected');
+            button.setAttribute('aria-pressed', 'false');
+          });
+          cardRequestFormPanel.hidden = selectedMaterial !== 'Plastic';
+          await loadMyRequests(signedInUser);
+          const emailResponse = await fetch('/api/card-request-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${await signedInUser.getIdToken()}`
+            },
+            body: JSON.stringify(submittedCardRequest)
+          });
+          const emailResult = await emailResponse.json();
+          if (!emailResponse.ok) {
+            throw new Error(emailResult.error || 'Email notification could not be sent.');
+          }
+          materialStatus.textContent = 'Your request was submitted and sent to the card team. Choose a card design to submit another request.';
+          cardRequestStatus.textContent = 'Request submitted and email notification sent.';
+        } catch (error) {
+          console.error('Unable to submit card request:', error);
+          if (requestSaved) {
+            materialStatus.textContent = 'Your request was saved. Email notification could not be sent; contact support or try again later.';
+            cardRequestStatus.textContent = error.message || 'Your request was saved, but the email notification could not be sent.';
+          } else {
+            cardRequestStatus.textContent = 'Could not save your request. Check your connection and Firestore rules, then try again.';
+          }
+        } finally {
+          submitButton.disabled = !signedInUser;
+        }
+      });
+    </script>
+  </body>
+</html>

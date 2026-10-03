@@ -29,7 +29,7 @@
 
       <nav class="main-nav" aria-label="Main navigation">
         <a href="index.html#home">Home</a>
-        <a href="index.html#trade">Trade</a>
+        <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Bot Trading</a>
         <a href="treasury.html">Treasury/Wallet</a>
@@ -59,7 +59,7 @@
               <button class="btn btn-action btn-transfer" id="transferBtn" type="button" role="menuitem">↔️ Transfer</button>
               <button class="btn btn-action btn-send" id="sendBtn" type="button" role="menuitem">📤 Send</button>
               <button class="btn btn-action btn-bills" id="billsBtn" type="button" role="menuitem">📋 Pay Bills</button>
-              <button class="btn btn-action btn-investment" id="requestCardBtn" type="button" role="menuitem">💳 Request Card</button>
+              <a class="btn btn-action btn-investment" href="request-card.html" role="menuitem">💳 Request Card</a>
               <a class="btn btn-action btn-investment" href="investment.html" role="menuitem">📈 Investment</a>
               <button class="btn btn-action btn-insurance" id="insuranceBtn" type="button" role="menuitem">🛡️ Insurance</button>
               <button class="btn btn-action btn-mortgage" id="mortgageBtn" type="button" role="menuitem">🏠 Mortgage</button>
@@ -331,77 +331,6 @@
             <p class="payment-status" id="paymentStatus" role="status" aria-live="polite"></p>
           </div>
 
-        <div class="banks-panel card-glass">
-          <div class="card-customizer">
-            <div class="card-customizer-header">
-              <div>
-                <span class="eyebrow">ATM card customisation</span>
-                <h3>Choose your card style</h3>
-              </div>
-            </div>
-
-            <div class="card-customizer-grid">
-              <div class="custom-field">
-                <label>
-                  Card material
-                  <select name="cardMaterial" aria-label="Select card material">
-                    <option value="">Choose material</option>
-                    <option>Metal</option>
-                    <option>Plastic</option>
-                  </select>
-                </label>
-              </div>
-
-              <div class="custom-field">
-                <label>
-                  Card finish
-                  <select name="cardFinish" aria-label="Select card finish">
-                    <option value="">Choose finish</option>
-                    <option>Silver</option>
-                    <option>Gold</option>
-                    <option>Black</option>
-                  </select>
-                </label>
-              </div>
-
-              <div class="custom-field form-field-wide">
-                <label>
-                  Engraving text
-                  <input type="text" name="engravingText" maxlength="20" placeholder="e.g. KING JASPER" />
-                </label>
-              </div>
-
-              <div class="custom-field form-field-wide">
-                <label>
-                  Upload card design reference
-                  <input type="file" name="cardDesignImage" accept="image/*" />
-                </label>
-              </div>
-
-              <div class="custom-field form-field-wide">
-                <label>
-                  Describe your preferred card look
-                  <textarea name="cardDesignNote" rows="4" placeholder="Example: Matte black metal card with gold edges, embossed initials, and a minimalist crest."></textarea>
-                </label>
-              </div>
-            </div>
-
-            <div class="card-preview" aria-label="Card preview">
-              <div class="card-preview-inner">
-                <span class="preview-brand">Makings</span>
-                <span class="preview-chip">●●●</span>
-                <strong>YOUR NAME</strong>
-                <small>Silver • Metal • Engraved</small>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button class="btn btn-primary" type="button">Request custom card</button>
-              <button class="btn btn-ghost" type="button">Use default</button>
-            </div>
-          </div>
-        </div>
-
         <div class="atm-locator card-glass">
           <div class="atm-locator-head">
             <div>
@@ -610,13 +539,6 @@
         if (event.key !== 'Escape') return;
         closeTreasuryQuickMenu();
         treasuryQuickMenuTrigger.focus();
-      });
-
-      document.getElementById('requestCardBtn').addEventListener('click', () => {
-        const paymentMethodsSection = document.getElementById('paymentMethodsSection');
-        paymentMethodsSection.hidden = false;
-        document.getElementById('addCardBtn').click();
-        paymentMethodsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
 
     </script>
