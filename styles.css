@@ -108,6 +108,20 @@ header.topbar {
   margin-left: auto;
 }
 
+header.topbar .nav-actions .btn {
+  background: transparent;
+  color: var(--white);
+  border-color: var(--primary-gold);
+  box-shadow: none;
+}
+
+header.topbar .nav-actions .btn:hover {
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--light-gold);
+  border-color: var(--primary-gold);
+  box-shadow: none;
+}
+
 .profile-link {
   max-width: 180px;
   overflow: hidden;
@@ -1809,45 +1823,25 @@ canvas {
   border-color: #ff6b7a;
 }
 
-.positions-chart-risk-tools {
+.positions-save-risk-button {
   position: absolute;
   top: .55rem;
   right: .65rem;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: .35rem;
-  max-width: calc(100% - 1.3rem);
-}
-
-.positions-chart-risk-tools button {
-  border: 1px solid rgba(245, 245, 245, .55);
+  padding: .4rem .6rem;
+  border: 1px solid #31d598;
   border-radius: 4px;
-  padding: .35rem .5rem;
   background: #000;
-  color: var(--white);
+  color: #31d598;
   cursor: pointer;
   font: inherit;
-  font-size: .7rem;
+  font-size: .72rem;
   font-weight: 700;
 }
 
-.positions-chart-risk-tools button:hover,
-.positions-chart-risk-tools button:focus-visible,
-.positions-chart-risk-tools button[aria-pressed="true"] {
-  border-color: var(--primary-gold);
-  background: #000;
-  color: var(--primary-gold);
-}
-
-.positions-chart-risk-tools span {
-  flex-basis: 100%;
-  color: var(--white);
-  font-size: .68rem;
-  text-align: right;
-  text-shadow: 0 1px 3px #000;
+.positions-save-risk-button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
 }
 
 #botCanvas {
@@ -1884,6 +1878,115 @@ canvas {
 
 .positions-chart-actions .btn {
   min-width: 130px;
+}
+
+.trade-balances {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(220px, 1.2fr);
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.trade-balance-card {
+  display: grid;
+  gap: .25rem;
+}
+
+.trade-balance-card strong {
+  color: var(--white);
+  font-size: 1.35rem;
+}
+
+.trade-balance-card small,
+.trade-balance-actions > small {
+  color: var(--light-gold);
+  font-size: .72rem;
+}
+
+.trade-balance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+}
+
+.trade-balance-actions > small {
+  flex-basis: 100%;
+}
+
+.trade-balance-actions button:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+.trade-balance-dialog {
+  width: min(420px, calc(100% - 2rem));
+  padding: 1.5rem;
+  border: 1px solid var(--primary-gold);
+  border-radius: 10px;
+  background: #111;
+  color: var(--white);
+}
+
+.trade-balance-dialog::backdrop {
+  background: rgba(0, 0, 0, .72);
+}
+
+.trade-balance-dialog form {
+  display: grid;
+  gap: .75rem;
+}
+
+.trade-balance-dialog h3 {
+  margin: 0;
+  color: var(--primary-gold);
+}
+
+.trade-balance-dialog p {
+  margin: 0;
+  color: var(--light-gold);
+  font-size: .85rem;
+}
+
+.trade-balance-dialog label {
+  font-size: .8rem;
+}
+
+.trade-balance-dialog input {
+  padding: .65rem .75rem;
+  border: 1px solid rgba(212, 175, 55, .6);
+  border-radius: 4px;
+  background: #000;
+  color: var(--white);
+  font: inherit;
+}
+
+.trade-balance-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+  margin-top: .4rem;
+}
+
+@media (max-width: 760px) {
+  .trade-balances {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .trade-balance-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .trade-balances {
+    grid-template-columns: 1fr;
+  }
+
+  .trade-balance-actions {
+    grid-column: auto;
+  }
 }
 
 .positions-buy-button {
@@ -2297,9 +2400,30 @@ canvas {
   gap: 2rem;
 }
 
+.bot-control-panels {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.bot-settings-toggle {
+  margin-bottom: .5rem;
+}
+
+.risk-settings-toggle {
+  margin-bottom: .75rem;
+}
+
+#riskSettingsStatus {
+  min-height: 1.2em;
+  margin: .7rem 0 0;
+  color: var(--light-gold);
+  font-size: .8rem;
+}
+
 .bot-controls h3 {
   color: var(--primary-gold);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .bot-controls label {
@@ -2319,12 +2443,11 @@ canvas {
 }
 
 .bot-goal-panel {
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(212, 175, 55, .2);
+  margin: 0;
 }
 
-.bot-goal-panel h4 {
+.bot-goal-panel h4,
+.risk-management h3 {
   color: var(--primary-gold);
 }
 
@@ -2372,14 +2495,11 @@ canvas {
 }
 
 .risk-management {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  margin: 0;
 }
 
-.risk-management h4 {
-  color: var(--primary-gold);
-  margin-bottom: 1rem;
+.risk-management h3 {
+  margin: 0 0 1rem;
 }
 
 .risk-management label {
@@ -2390,7 +2510,8 @@ canvas {
   gap: 0.5rem;
 }
 
-.risk-management input {
+.risk-management input,
+.risk-management select {
   background: rgba(212, 175, 55, 0.1);
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
@@ -2398,7 +2519,8 @@ canvas {
   border-radius: 4px;
 }
 
-.risk-management input:focus {
+.risk-management input:focus,
+.risk-management select:focus {
   outline: none;
   border-color: var(--light-gold);
   box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
@@ -2435,8 +2557,6 @@ canvas {
 }
 
 .ai-analyst {
-  margin: 1.25rem 0 1.5rem;
-  padding: 1rem;
   border: 1px solid rgba(212, 175, 55, 0.45);
   border-radius: 8px;
   background: rgba(212, 175, 55, 0.08);
@@ -2461,9 +2581,7 @@ canvas {
 .manual-actions button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 
 .bot-performance {
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(212, 175, 55, .25);
 }
 
 .bot-performance h4 {
@@ -2473,7 +2591,7 @@ canvas {
 
 .bot-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
   gap: 0.9rem;
   margin-bottom: 1rem;
 }
@@ -2508,6 +2626,41 @@ canvas {
   overflow: hidden;
   border: 1px solid rgba(212, 175, 55, .2);
   background: rgba(0, 0, 0, .2);
+}
+
+.bot-chart-section {
+  min-width: 0;
+}
+
+.market-scan-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid rgba(212, 175, 55, .25);
+  border-radius: 10px;
+  background: rgba(212, 175, 55, .05);
+}
+
+.market-scan-panel h4,
+.market-scan-panel p {
+  margin: 0 0 .35rem;
+}
+
+.market-scan-panel p {
+  color: var(--light-gold);
+  font-size: .88rem;
+}
+
+.market-scan-panel button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .market-scan-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }
 
 .bot-chart-toolbar {
@@ -2552,9 +2705,7 @@ canvas {
 }
 
 .bot-positions-panel {
-  margin-top: 1.25rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(212, 175, 55, .2);
+  border: 1px solid rgba(212, 175, 55, .25);
 }
 
 .bot-positions-heading,
@@ -2567,6 +2718,19 @@ canvas {
 
 .bot-positions-heading h4 {
   margin-top: .25rem;
+}
+
+.bot-positions-heading h3 {
+  margin: .25rem 0 0;
+}
+
+.leaderboard-wrap,
+.recent-trades-panel {
+  border: 1px solid rgba(212, 175, 55, .25);
+}
+
+.recent-trades-panel .trade-feed {
+  margin-top: 0;
 }
 
 .bot-positions-count,
@@ -2672,6 +2836,45 @@ canvas {
 .bot-stream h3 {
   color: var(--primary-gold);
   margin-bottom: 1rem;
+}
+
+.bot-stream {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+}
+
+.bot-summary-section,
+.ai-analyst,
+.bot-performance,
+.bot-chart-section,
+.market-scan-panel,
+.bot-positions-panel,
+.leaderboard-wrap,
+.recent-trades-panel {
+  margin: 0;
+  padding: 1.25rem;
+}
+
+.bot-summary-section > h3,
+.bot-chart-section > h3,
+.market-scan-panel h3,
+.bot-positions-heading h3,
+.leaderboard-wrap h3,
+.recent-trades-panel h3,
+.ai-analyst-heading h3 {
+  color: var(--primary-gold);
+  margin: 0 0 1rem;
+}
+
+.leaderboard-wrap h3,
+.recent-trades-panel h3 {
+  font-size: 1rem;
+}
+
+.ai-analyst-heading h4 {
+  margin: .25rem 0 0;
+  color: var(--primary-gold);
 }
 
 .trade-feed {
@@ -3597,11 +3800,123 @@ canvas {
 .tag {
   display: inline-block;
   background: var(--bright-red);
-  color: var(--primary-gold);
+  color: #fff;
   padding: 0.25rem 0.75rem;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
+}
+
+.home-company-status {
+  color: var(--light-gold);
+  margin: 0 0 1rem;
+}
+
+.home-company-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.home-company-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: .85rem;
+  padding: .85rem 1rem;
+  border: 1px solid rgba(212, 175, 55, .28);
+  border-radius: 10px;
+  background: rgba(212, 175, 55, .04);
+  transition: border-color .2s ease, transform .2s ease, background .2s ease;
+}
+
+.home-company-card:hover,
+.home-company-card:focus-within {
+  border-color: var(--primary-gold);
+  background: rgba(212, 175, 55, .09);
+  transform: translateY(-2px);
+}
+
+.home-company-identity {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: .85rem;
+}
+
+.home-company-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: .85rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-company-trigger:focus-visible {
+  outline: 2px solid var(--primary-gold);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.home-company-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, .45);
+  border-radius: 50%;
+  background: rgba(212, 175, 55, .12);
+  color: var(--primary-gold);
+  font-weight: 800;
+}
+
+.home-company-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-company-identity h3 {
+  margin: 0 0 .25rem;
+  color: var(--primary-gold);
+  overflow-wrap: anywhere;
+}
+
+.home-company-details {
+  display: grid;
+  gap: .7rem;
+  padding-top: .25rem;
+}
+
+.home-company-details[hidden],
+.home-company-link[hidden] {
+  display: none;
+}
+
+.home-company-details dt {
+  color: var(--primary-gold);
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.home-company-details dd {
+  margin-top: .15rem;
+  color: var(--light-gold);
+  font-size: .85rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.home-company-link {
+  align-self: flex-start;
 }
 
 /* Shop Section */

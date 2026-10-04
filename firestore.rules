@@ -151,6 +151,124 @@ service cloud.firestore {
           && request.resource.data.requestedAt is timestamp;
         allow update, delete: if false;
       }
+
+      match /cardRequests/{requestId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn()
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly([
+            'material',
+            'cardStyle',
+            'styleId',
+            'engravingText',
+            'designNote',
+            'designImageData',
+            'status',
+            'createdAt'
+          ])
+          && request.resource.data.keys().hasAll([
+            'material',
+            'cardStyle',
+            'styleId',
+            'engravingText',
+            'designNote',
+            'designImageData',
+            'status',
+            'createdAt'
+          ])
+          && (
+            (request.resource.data.material == 'Metal'
+              && request.resource.data.styleId == 'black-platinum'
+              && request.resource.data.cardStyle == 'Black Platinum')
+            || (request.resource.data.material == 'Metal'
+              && request.resource.data.styleId == 'bronze-day-to-day'
+              && request.resource.data.cardStyle == 'Bronze Day to Day')
+            || (request.resource.data.material == 'Plastic'
+              && request.resource.data.styleId == 'white-plastic-regular'
+              && request.resource.data.cardStyle == 'White Regular')
+          )
+          && request.resource.data.engravingText is string
+          && request.resource.data.engravingText.size() > 0
+          && request.resource.data.engravingText.size() <= 20
+          && request.resource.data.designNote is string
+          && request.resource.data.designNote.size() <= 300
+          && request.resource.data.designImageData is string
+          && request.resource.data.designImageData.size() <= 240000
+          && (request.resource.data.designImageData == ''
+            || request.resource.data.designImageData.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$'))
+          && request.resource.data.status == 'Submitted'
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+
+      match /communityInbox/{messageId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn()
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly([
+            'type',
+            'subject',
+            'senderUid',
+            'recipientUid',
+            'investorName',
+            'investorType',
+            'investorCompany',
+            'companyName',
+            'amount',
+            'currency',
+            'term',
+            'contractFileName',
+            'contractPdfDataUrl',
+            'contractText',
+            'createdAt'
+          ])
+          && request.resource.data.keys().hasAll([
+            'type',
+            'subject',
+            'senderUid',
+            'recipientUid',
+            'investorName',
+            'investorType',
+            'companyName',
+            'amount',
+            'currency',
+            'term',
+            'contractFileName',
+            'contractPdfDataUrl',
+            'contractText',
+            'createdAt'
+          ])
+          && request.resource.data.type == 'signed-investment-contract'
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.recipientUid == userId
+          && request.resource.data.subject is string
+          && request.resource.data.subject.size() <= 180
+          && request.resource.data.investorName is string
+          && request.resource.data.investorName.size() > 0
+          && request.resource.data.investorName.size() <= 120
+          && request.resource.data.investorType in ['Individual', 'Company']
+          && (!request.resource.data.keys().hasAny(['investorCompany'])
+            || request.resource.data.investorCompany == null
+            || (request.resource.data.investorCompany is string
+              && request.resource.data.investorCompany.size() <= 120))
+          && request.resource.data.companyName is string
+          && request.resource.data.companyName.size() > 0
+          && request.resource.data.companyName.size() <= 160
+          && request.resource.data.amount is number
+          && request.resource.data.amount > 0
+          && request.resource.data.currency is string
+          && request.resource.data.currency.matches('^[A-Z]{3}$')
+          && request.resource.data.term in ['12 months', '24 months', '36 months', '60 months']
+          && request.resource.data.contractFileName is string
+          && request.resource.data.contractFileName.size() <= 180
+          && request.resource.data.contractPdfDataUrl is string
+          && request.resource.data.contractPdfDataUrl.size() <= 800000
+          && request.resource.data.contractPdfDataUrl.matches('^data:application/pdf;base64,[A-Za-z0-9+/=]+$')
+          && request.resource.data.contractText is string
+          && request.resource.data.contractText.size() <= 30000
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
     }
 
     match /communityPosts/{postId} {
@@ -231,6 +349,54 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['username'])
         && request.resource.data.username == getAfter(/databases/$(database)/documents/users/$(userId)).data.username;
       allow update, delete: if false;
+    }
+
+    match /giftCardListings/{listingId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          'sellerUid',
+          'sellerUsername',
+          'cardType',
+          'faceValue',
+          'askingPrice',
+          'currency',
+          'description',
+          'imageData',
+          'createdAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'sellerUid',
+          'sellerUsername',
+          'cardType',
+          'faceValue',
+          'askingPrice',
+          'currency',
+          'description',
+          'imageData',
+          'createdAt'
+        ])
+        && request.resource.data.sellerUid == request.auth.uid
+        && request.resource.data.sellerUsername == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username
+        && request.resource.data.cardType is string
+        && request.resource.data.cardType.size() > 0
+        && request.resource.data.cardType.size() <= 80
+        && request.resource.data.faceValue is number
+        && request.resource.data.faceValue > 0
+        && request.resource.data.faceValue <= 1000000
+        && request.resource.data.askingPrice is number
+        && request.resource.data.askingPrice > 0
+        && request.resource.data.askingPrice <= 1000000
+        && request.resource.data.currency == 'USD'
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 300
+        && request.resource.data.imageData is string
+        && request.resource.data.imageData.size() <= 250000
+        && (request.resource.data.imageData == ''
+          || request.resource.data.imageData.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$'))
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.sellerUid == request.auth.uid;
     }
 
     match /{document=**} {

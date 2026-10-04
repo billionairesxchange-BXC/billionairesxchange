@@ -4,14 +4,46 @@ const WebSocket = require('ws');
 const axios = require('axios');
 const crypto = require('crypto');
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
+const allowedOrigins = new Set(
+  (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
 
 app.use(express.json({ limit: '400kb' }));
-app.use(express.static(__dirname));
+app.use((req, res, next) => {
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+
+  const origin = req.get('Origin');
+  if (!origin || process.env.NODE_ENV !== 'production') return next();
+  if (!allowedOrigins.has(origin)) {
+    return res.status(403).json({ error: 'This website origin is not allowed.' });
+  }
+
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+app.get('/healthz', (_req, res) => res.status(200).json({ ok: true }));
+if (process.env.NODE_ENV !== 'production') app.use(express.static(__dirname));
 
 const FIREBASE_WEB_API_KEY = process.env.FIREBASE_WEB_API_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
+const BINANCE_API_KEY = process.env.BINANCE_API_KEY;
+const BINANCE_API_SECRET = process.env.BINANCE_API_SECRET;
+const BINANCE_ALLOWED_UIDS = new Set(
+  (process.env.BINANCE_ALLOWED_UIDS || '')
+    .split(',')
+    .map((uid) => uid.trim())
+    .filter(Boolean)
+);
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({
@@ -127,8 +159,45 @@ app.get('/api/price/:symbol', async (req, res) => {
   }
 });
 
-const BINANCE_API_KEY = process.env.BINANCE_API_KEY;
-const BINANCE_API_SECRET = process.env.BINANCE_API_SECRET;
+async function requireAllowedBinanceUser(req, res, next) {
+  const idToken = (req.get('authorization') || '').match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!idToken) return res.status(401).json({ error: 'Sign in to use Binance account features.' });
+  if (!FIREBASE_WEB_API_KEY) {
+    return res.status(503).json({ error: 'Account verification is not configured on the server.' });
+  }
+  if (BINANCE_ALLOWED_UIDS.size === 0) {
+    return res.status(503).json({ error: 'Binance access is not configured for any account.' });
+  }
+
+  let firebaseAccount;
+  try {
+    const accountResponse = await axios.post(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(FIREBASE_WEB_API_KEY)}`,
+      { idToken },
+      { timeout: 10000 }
+    );
+    firebaseAccount = accountResponse.data.users?.[0];
+  } catch (error) {
+    if (error.response?.status === 400) {
+      return res.status(401).json({ error: 'Your sign-in session is invalid or expired. Sign in again.' });
+    }
+    console.error('Firebase token verification failed for Binance request:', error.message);
+    return res.status(502).json({ error: 'Could not verify your account. Try again later.' });
+  }
+
+  if (!firebaseAccount?.localId) {
+    return res.status(401).json({ error: 'Your signed-in account could not be verified.' });
+  }
+  if (!BINANCE_ALLOWED_UIDS.has(firebaseAccount.localId)) {
+    return res.status(403).json({ error: 'This account is not authorized to use Binance account features.' });
+  }
+  if (!BINANCE_API_KEY || !BINANCE_API_SECRET) {
+    return res.status(503).json({ error: 'Binance credentials are not configured on the server.' });
+  }
+
+  req.firebaseAccount = firebaseAccount;
+  next();
+}
 
 // Helper: sign query string
 function signQuery(queryString) {
@@ -138,56 +207,77 @@ function signQuery(queryString) {
 }
 
 // Place order endpoint
-app.post('/api/order', async (req, res) => {
-  const { symbol, side, type, quantity, price } = req.body;
+app.post('/api/order', requireAllowedBinanceUser, async (req, res) => {
+  const { symbol, side, type, quantity, price } = req.body || {};
+  const normalizedSymbol = typeof symbol === 'string' ? symbol.trim().toUpperCase() : '';
+  const normalizedSide = typeof side === 'string' ? side.toUpperCase() : '';
+  const normalizedType = typeof type === 'string' ? type.toUpperCase() : '';
+  const orderQuantity = Number(quantity);
+  const orderPrice = price === undefined || price === null || price === '' ? null : Number(price);
+
+  if (!/^[A-Z0-9]{5,20}$/.test(normalizedSymbol)) {
+    return res.status(400).json({ error: 'Enter a valid Binance trading symbol.' });
+  }
+  if (!['BUY', 'SELL'].includes(normalizedSide)) {
+    return res.status(400).json({ error: 'Order side must be BUY or SELL.' });
+  }
+  if (!['MARKET', 'LIMIT'].includes(normalizedType)) {
+    return res.status(400).json({ error: 'Order type must be MARKET or LIMIT.' });
+  }
+  if (!Number.isFinite(orderQuantity) || orderQuantity <= 0) {
+    return res.status(400).json({ error: 'Order quantity must be a positive number.' });
+  }
+  if (normalizedType === 'LIMIT' && (!Number.isFinite(orderPrice) || orderPrice <= 0)) {
+    return res.status(400).json({ error: 'Limit orders require a positive price.' });
+  }
 
   try {
-    const timestamp = Date.now();
-    let queryString = `symbol=${symbol}&side=${side}&type=${type}&quantity=${quantity}&timestamp=${timestamp}`;
-
-    if (price) {
-      queryString += `&price=${price}`;
+    const params = new URLSearchParams({
+      symbol: normalizedSymbol,
+      side: normalizedSide,
+      type: normalizedType,
+      quantity: String(orderQuantity),
+      timestamp: String(Date.now())
+    });
+    if (normalizedType === 'LIMIT') {
+      params.set('price', String(orderPrice));
+      params.set('timeInForce', 'GTC');
     }
-
-    const signature = signQuery(queryString);
+    const queryString = params.toString();
+    params.set('signature', signQuery(queryString));
 
     const response = await axios.post(
-      'https://api.binance.com/api/v3/order',
+      `https://api.binance.com/api/v3/order?${params.toString()}`,
       null,
-      {
-        params: { ...req.body, timestamp, signature },
-        headers: { 'X-MBX-APIKEY': BINANCE_API_KEY }
-      }
+      { headers: { 'X-MBX-APIKEY': BINANCE_API_KEY }, timeout: 15000 }
     );
-
     res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: error.response?.data || error.message });
+    console.error('Binance order request failed:', error.response?.data?.msg || error.message);
+    res.status(error.response?.status === 400 ? 400 : 502).json({
+      error: error.response?.data?.msg || 'Binance could not process the order.'
+    });
   }
 });
 
 // Example: get account info
-app.get('/api/account', async (req, res) => {
+app.get('/api/account', requireAllowedBinanceUser, async (_req, res) => {
   try {
-    const timestamp = Date.now();
-    const queryString = `timestamp=${timestamp}`;
-    const signature = signQuery(queryString);
+    const params = new URLSearchParams({ timestamp: String(Date.now()) });
+    params.set('signature', signQuery(params.toString()));
 
     const response = await axios.get(
-      'https://api.binance.com/api/v3/account',
-      {
-        params: { timestamp, signature },
-        headers: { 'X-MBX-APIKEY': BINANCE_API_KEY }
-      }
+      `https://api.binance.com/api/v3/account?${params.toString()}`,
+      { headers: { 'X-MBX-APIKEY': BINANCE_API_KEY }, timeout: 15000 }
     );
-
     res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: error.response?.data || error.message });
+    console.error('Binance account request failed:', error.response?.data?.msg || error.message);
+    res.status(502).json({ error: error.response?.data?.msg || 'Binance account information is unavailable.' });
   }
 });
 
-const server = app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+const server = app.listen(PORT, '0.0.0.0', () => console.log(`Server listening on port ${PORT}`));
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
@@ -218,4 +308,3 @@ wss.on('connection', (ws) => {
     socket.close();
   });
 });
-

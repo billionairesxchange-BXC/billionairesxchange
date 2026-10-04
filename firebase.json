@@ -1,4 +1,31 @@
 {
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "server.js",
+      "app.js",
+      "firebase.ts",
+      "package.json",
+      "package-lock.json",
+      "*.rules",
+      "files if needed/**",
+      "*.log"
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Strict-Transport-Security",
+            "value": "max-age=31536000"
+          }
+        ]
+      }
+    ]
+  },
   "firestore": {
     "rules": "firestore.rules"
   },

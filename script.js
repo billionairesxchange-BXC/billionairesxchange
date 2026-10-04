@@ -22,18 +22,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const positionsToolsButton = document.getElementById('positionsToolsButton');
   const positionsToolsOptions = document.getElementById('positionsToolsOptions');
   const positionsChartMode = document.getElementById('positionsChartMode');
-  const positionsChartToolHint = document.getElementById('positionsChartToolHint');
-  const positionsRiskLevelButtons = document.querySelectorAll('[data-risk-level]');
-  const positionsClearRiskLevels = document.getElementById('positionsClearRiskLevels');
   const positionsBuyButton = document.getElementById('positionsBuyButton');
   const positionsSellButton = document.getElementById('positionsSellButton');
   const positionsChartBuyButton = document.getElementById('positionsChartBuyButton');
   const positionsChartSellButton = document.getElementById('positionsChartSellButton');
+  const positionsSaveRiskSetup = document.getElementById('positionsSaveRiskSetup');
   const positionsOrderQuantity = document.getElementById('positionsOrderQuantity');
   const positionsOrderEstimate = document.getElementById('positionsOrderEstimate');
   const positionsList = document.getElementById('positionsList');
   const ordersList = document.getElementById('ordersList');
   const paperBalance = document.getElementById('paperBalance');
+  const paperBalanceSummary = document.getElementById('paperBalanceSummary');
+  const tradeAccountBalanceElement = document.getElementById('tradeAccountBalance');
+  const tradeDepositButton = document.getElementById('tradeDepositButton');
+  const tradeTransferButton = document.getElementById('tradeTransferButton');
+  const tradeBalanceDialog = document.getElementById('tradeBalanceDialog');
+  const tradeBalanceForm = document.getElementById('tradeBalanceForm');
+  const tradeBalanceAmount = document.getElementById('tradeBalanceAmount');
+  const tradeBalanceDialogTitle = document.getElementById('tradeBalanceDialogTitle');
+  const tradeBalanceDialogDescription = document.getElementById('tradeBalanceDialogDescription');
+  const tradeBalanceSubmit = document.getElementById('tradeBalanceSubmit');
+  const tradeBalanceCancel = document.getElementById('tradeBalanceCancel');
 
   if (!assetGrid && !marketTableBody && !chartCanvas) {
     return;
@@ -63,6 +72,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const marketPositionsKey = 'makingsPositionMarketPositions';
   const marketOrdersKey = 'makingsPaperOrders';
   const marketBalanceKey = 'makingsPositionMarketBalance';
+  const marketAccountBalanceKey = 'makingsTradePaperAccountBalance';
+  const realizedProfitKey = 'makingsTradeRealizedProfit';
   const chartPreferencesKey = 'makingsTradeChartPreferences';
   const validChartIntervals = ['1s', '1m', '5m', '15m', '1h', '4h'];
   const chartPreferences = (() => {
@@ -89,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedPrice: Number(saved.selectedPrice) > 0 ? Number(saved.selectedPrice) : null,
         stopLoss: Number(saved.stopLoss) > 0 ? Number(saved.stopLoss) : '',
         takeProfit: Number(saved.takeProfit) > 0 ? Number(saved.takeProfit) : '',
+        riskSetupVisible: typeof saved.riskSetupVisible === 'boolean' ? saved.riskSetupVisible : true,
         ruler: saved.ruler?.start && saved.ruler?.end
           && Number.isFinite(saved.ruler.start.x) && Number.isFinite(saved.ruler.start.price)
           && Number.isFinite(saved.ruler.end.x) && Number.isFinite(saved.ruler.end.price)
@@ -108,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedPrice: null,
         stopLoss: '',
         takeProfit: '',
+        riskSetupVisible: true,
         ruler: null,
         market: 'ETH',
         interval: '1m'
@@ -119,6 +132,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedMarketBalance = localStorage.getItem(marketBalanceKey);
   let marketBalance = savedMarketBalance === null ? 10000 : Number(savedMarketBalance);
   if (!Number.isFinite(marketBalance) || marketBalance < 0) marketBalance = 10000;
+  let tradeAccountBalance = Number(localStorage.getItem(marketAccountBalanceKey));
+  if (!Number.isFinite(tradeAccountBalance) || tradeAccountBalance < 0) tradeAccountBalance = 0;
+  let realizedProfitAvailable = Number(localStorage.getItem(realizedProfitKey));
+  if (!Number.isFinite(realizedProfitAvailable)) realizedProfitAvailable = 0;
+  let tradeBalanceAction = null;
   const positionsChartTools = chartPreferences;
   const tickerPairs = { BTC: 'btcusdt', ETH: 'ethusdt', XRP: 'xrpusdt', SOL: 'solusdt', DOGE: 'dogeusdt', ADA: 'adausdt', BNB: 'bnbusdt', TRX: 'trxusdt', USDC: 'usdcusdt' };
   let tickerSocket = null;
@@ -128,8 +146,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const binanceSocketBases = ['wss://data-stream.binance.vision', 'wss://stream.binance.com:9443'];
   let chartInterval = chartPreferences.interval;
   let positionsSelectedPrice = chartPreferences.selectedPrice;
+  let positionsSelectedCandleTime = null;
   let chartPointer = null;
-  let chartRiskPlacement = null;
+  let chartRiskDragging = null;
+  let chartRiskDragRange = null;
+  let chartRiskDraft = null;
+  let chartRiskVisible = chartPreferences.riskSetupVisible;
   let rulerAnchor = null;
   let rulerDraft = null;
   const chartGeometry = { padding: chartPreferences.margins, min: 0, max: 0, plotWidth: 0, plotHeight: 0, candles: [] };
@@ -156,6 +178,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getSelectedAsset() {
     return assets.find((asset) => asset.symbol.toUpperCase() === marketConfig.selectedSymbol);
+  }
+
+  function getChartRiskLevels() {
+    const position = marketPositions.find((item) => item.symbol === marketConfig.selectedSymbol);
+    return {
+      stopLoss: Number(chartRiskDraft?.stopLoss) || Number(positionsChartTools.stopLoss) || Number(position?.stopLoss) || 0,
+      takeProfit: Number(chartRiskDraft?.takeProfit) || Number(positionsChartTools.takeProfit) || Number(position?.takeProfit) || 0,
+      side: chartRiskDraft?.side || position?.side || 'BUY'
+    };
   }
 
   async function fetchBinanceData(path) {
@@ -239,10 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function getHeldQuantity(symbol) {
-    return marketPositions.find((position) => position.symbol === symbol)?.quantity || 0;
-  }
-
   function renderMarketOrderControls() {
     const asset = getSelectedAsset();
     const price = Number(asset?.current_price) || 0;
@@ -252,10 +279,17 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `Estimated total: ${formatCurrency((positionsSelectedPrice || price) * quantity)}${positionsSelectedPrice ? ' · chart price' : ''}`
         : 'Estimated total: --';
     }
-    if (positionsBuyButton) positionsBuyButton.disabled = !price || quantity <= 0;
-    if (positionsSellButton) positionsSellButton.disabled = !price || quantity <= 0 || getHeldQuantity(marketConfig.selectedSymbol) < quantity;
-    if (positionsChartBuyButton) positionsChartBuyButton.disabled = !positionsSelectedPrice || quantity <= 0;
-    if (positionsChartSellButton) positionsChartSellButton.disabled = !positionsSelectedPrice || quantity <= 0 || getHeldQuantity(marketConfig.selectedSymbol) < quantity;
+    const position = marketPositions.find((item) => item.symbol === marketConfig.selectedSymbol);
+    const canPlace = (side, orderPrice) => {
+      if (!orderPrice || quantity <= 0) return false;
+      const positionSide = position?.side || 'BUY';
+      if (position && positionSide !== side) return quantity <= position.quantity;
+      return orderPrice * quantity <= marketBalance;
+    };
+    if (positionsBuyButton) positionsBuyButton.disabled = !canPlace('BUY', price);
+    if (positionsSellButton) positionsSellButton.disabled = !canPlace('SELL', price);
+    if (positionsChartBuyButton) positionsChartBuyButton.disabled = !canPlace('BUY', positionsSelectedPrice);
+    if (positionsChartSellButton) positionsChartSellButton.disabled = !canPlace('SELL', positionsSelectedPrice);
   }
 
   function renderPaperPositions() {
@@ -273,7 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
           const symbol = document.createElement('strong');
           symbol.textContent = position.symbol;
           const quantity = document.createElement('small');
-          quantity.textContent = `${position.quantity.toLocaleString('en-US', { maximumFractionDigits: 8 })} units`;
+          const positionSide = position.side || 'BUY';
+          quantity.textContent = `${positionSide === 'BUY' ? 'Long' : 'Short'} · ${position.quantity.toLocaleString('en-US', { maximumFractionDigits: 8 })} units`;
           identity.append(symbol, quantity);
           const value = document.createElement('div');
           const mark = assets.find((asset) => asset.symbol.toUpperCase() === position.symbol)?.current_price || position.averagePrice;
@@ -288,7 +323,56 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     if (paperBalance) paperBalance.textContent = `${formatCurrency(marketBalance)} USDT`;
+    renderTradeBalances();
     renderMarketOrderControls();
+  }
+
+  function renderTradeBalances() {
+    if (paperBalanceSummary) paperBalanceSummary.textContent = `${formatCurrency(marketBalance)} USDT`;
+    if (tradeAccountBalanceElement) tradeAccountBalanceElement.textContent = `${formatCurrency(tradeAccountBalance)} USDT`;
+    if (positionsSaveRiskSetup) {
+      const hasRiskLevels = Boolean(getChartRiskLevels().stopLoss && getChartRiskLevels().takeProfit);
+      positionsSaveRiskSetup.disabled = !chartRiskDraft && !hasRiskLevels;
+      positionsSaveRiskSetup.textContent = chartRiskDraft ? 'Save risk setup' : chartRiskVisible ? 'Hide risk setup' : 'Show risk setup';
+      positionsSaveRiskSetup.setAttribute('aria-pressed', String(chartRiskVisible));
+    }
+    if (tradeTransferButton) {
+      tradeTransferButton.disabled = realizedProfitAvailable <= 0;
+      tradeTransferButton.title = realizedProfitAvailable > 0
+        ? `${formatCurrency(realizedProfitAvailable)} realized profit available to transfer`
+        : 'Realized paper profits will be available here after profitable trades close';
+    }
+  }
+
+  window.addEventListener('storage', (event) => {
+    if (event.key === marketBalanceKey) {
+      const balance = Number(event.newValue);
+      if (Number.isFinite(balance) && balance >= 0) marketBalance = balance;
+    } else if (event.key === marketAccountBalanceKey) {
+      const balance = Number(event.newValue);
+      if (Number.isFinite(balance) && balance >= 0) tradeAccountBalance = balance;
+    } else if (event.key === realizedProfitKey) {
+      const profit = Number(event.newValue);
+      if (Number.isFinite(profit)) realizedProfitAvailable = profit;
+    } else {
+      return;
+    }
+    renderPaperPositions();
+  });
+
+  function openTradeBalanceDialog(action) {
+    if (!tradeBalanceDialog || !tradeBalanceAmount) return;
+    tradeBalanceAction = action;
+    const isDeposit = action === 'deposit';
+    tradeBalanceDialogTitle.textContent = isDeposit ? 'Deposit paper funds' : 'Transfer realized profits';
+    tradeBalanceDialogDescription.textContent = isDeposit
+      ? 'Simulation only: enter an amount to add to your Trade paper balance. No bank is contacted and no real money moves.'
+      : `Transfer realized paper profits into your local Account balance. Up to ${formatCurrency(Math.max(0, realizedProfitAvailable))} is available. This is not a real bank transfer.`;
+    tradeBalanceSubmit.textContent = isDeposit ? 'Add paper funds' : 'Transfer profits';
+    tradeBalanceAmount.max = isDeposit ? '' : String(Math.max(0, realizedProfitAvailable));
+    tradeBalanceAmount.value = '';
+    tradeBalanceDialog.showModal();
+    tradeBalanceAmount.focus();
   }
 
   function renderPaperOrders() {
@@ -329,39 +413,81 @@ document.addEventListener('DOMContentLoaded', () => {
     const symbol = asset?.symbol.toUpperCase() || marketConfig.selectedSymbol;
     const positionIndex = marketPositions.findIndex((position) => position.symbol === symbol);
     const position = marketPositions[positionIndex];
-    const stopLoss = side === 'BUY' ? Number(positionsChartTools.stopLoss) || Number(position?.stopLoss) || 0 : 0;
-    const takeProfit = side === 'BUY' ? Number(positionsChartTools.takeProfit) || Number(position?.takeProfit) || 0 : 0;
-    if (side === 'BUY' && ((stopLoss && stopLoss >= price) || (takeProfit && takeProfit <= price))) {
-      positionsChartStatus.textContent = 'For a buy, stop loss must be below the order price and take profit must be above it.';
+    const positionSide = position?.side || 'BUY';
+    const isClosingPosition = Boolean(position && positionSide !== side);
+    if (isClosingPosition && quantity > position.quantity) {
+      positionsChartStatus.textContent = `Trade quantity exceeds the ${positionSide === 'BUY' ? 'long' : 'short'} position available to close.`;
       return;
     }
 
+    const nextAveragePrice = position && !isClosingPosition
+      ? ((position.averagePrice * position.quantity) + (price * quantity)) / (position.quantity + quantity)
+      : price;
     const total = price * quantity;
-    if (side === 'BUY') {
+    let stopLoss = 0;
+    let takeProfit = 0;
+    let realizedPnl = 0;
+
+    if (isClosingPosition) {
+      if (positionSide === 'BUY') {
+        marketBalance += total;
+        realizedPnl = (price - Number(position.averagePrice)) * quantity;
+      } else {
+        const margin = Number(position.margin) || Number(position.averagePrice) * position.quantity;
+        const releasedMargin = margin * (quantity / position.quantity);
+        realizedPnl = (Number(position.averagePrice) - price) * quantity;
+        marketBalance += Math.max(0, releasedMargin + realizedPnl);
+        position.margin = Math.max(0, margin - releasedMargin);
+      }
+      realizedProfitAvailable += realizedPnl;
+      localStorage.setItem(realizedProfitKey, String(realizedProfitAvailable));
+      position.quantity -= quantity;
+      if (position.quantity < 0.000000005) {
+        marketPositions.splice(positionIndex, 1);
+        positionsChartTools.stopLoss = '';
+        positionsChartTools.takeProfit = '';
+        chartRiskDraft = null;
+      }
+    } else {
+      const savedStopLoss = Number(position?.stopLoss) || Number(positionsChartTools.stopLoss);
+      const savedTakeProfit = Number(position?.takeProfit) || Number(positionsChartTools.takeProfit);
+      stopLoss = side === 'BUY'
+        ? (savedStopLoss > 0 && savedStopLoss < nextAveragePrice ? savedStopLoss : nextAveragePrice * .99)
+        : (savedStopLoss > nextAveragePrice ? savedStopLoss : nextAveragePrice * 1.01);
+      takeProfit = side === 'BUY'
+        ? (savedTakeProfit > nextAveragePrice ? savedTakeProfit : nextAveragePrice * 1.02)
+        : (savedTakeProfit > 0 && savedTakeProfit < nextAveragePrice ? savedTakeProfit : nextAveragePrice * .98);
+      const validRiskLevels = side === 'BUY'
+        ? stopLoss < nextAveragePrice && takeProfit > nextAveragePrice && stopLoss < takeProfit
+        : stopLoss > nextAveragePrice && takeProfit < nextAveragePrice && takeProfit < stopLoss;
+      if (!validRiskLevels) {
+        positionsChartStatus.textContent = side === 'BUY'
+          ? 'For a buy/long, Stop Loss must be below entry and Take Profit above it.'
+          : 'For a sell/short, Stop Loss must be above entry and Take Profit below it.';
+        return;
+      }
       if (total > marketBalance) {
-        positionsChartStatus.textContent = 'Insufficient paper balance for this order.';
+        positionsChartStatus.textContent = 'Insufficient Trade paper balance for this order.';
         return;
       }
       marketBalance -= total;
       if (position) {
-        position.averagePrice = ((position.averagePrice * position.quantity) + total) / (position.quantity + quantity);
+        position.averagePrice = nextAveragePrice;
         position.quantity += quantity;
-        if (stopLoss) position.stopLoss = stopLoss;
-        if (takeProfit) position.takeProfit = takeProfit;
+        position.side = side;
+        if (side === 'SELL') position.margin = (Number(position.margin) || (position.averagePrice * (position.quantity - quantity))) + total;
+        position.stopLoss = stopLoss;
+        position.takeProfit = takeProfit;
       } else {
-        marketPositions.push({ symbol, quantity, averagePrice: price, stopLoss: stopLoss || null, takeProfit: takeProfit || null });
+        marketPositions.push({ symbol, side, quantity, averagePrice: price, margin: side === 'SELL' ? total : undefined, stopLoss, takeProfit });
       }
-    } else {
-      if (!position || quantity > position.quantity) {
-        positionsChartStatus.textContent = 'Sell quantity exceeds your available position.';
-        return;
-      }
-      marketBalance += total;
-      position.quantity -= quantity;
-      if (position.quantity < 0.000000005) marketPositions.splice(positionIndex, 1);
+      positionsChartTools.stopLoss = stopLoss;
+      positionsChartTools.takeProfit = takeProfit;
+      chartRiskDraft = null;
+      chartRiskVisible = true;
     }
 
-    const order = { symbol, side, mode: 'spot', type: 'PAPER', quantity, price, stopLoss: stopLoss || null, takeProfit: takeProfit || null, time: Date.now() };
+    const order = { symbol, side, mode: 'spot', type: 'PAPER', quantity, price, stopLoss: isClosingPosition ? null : stopLoss, takeProfit: isClosingPosition ? null : takeProfit, time: Date.now() };
     marketOrders.unshift(order);
     marketOrders = marketOrders.slice(0, 100);
     localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
@@ -369,7 +495,10 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem(marketBalanceKey, String(marketBalance));
     positionsSelectedPrice = price;
     savePositionsChartTools();
-    positionsChartStatus.textContent = `Paper ${side.toLowerCase()} placed: ${quantity} ${symbol} at ${formatCurrency(price)}${stopLoss || takeProfit ? ` with ${stopLoss ? `stop ${formatCurrency(stopLoss)}` : ''}${stopLoss && takeProfit ? ' and ' : ''}${takeProfit ? `target ${formatCurrency(takeProfit)}` : ''}` : ''}.`;
+    renderTradeBalances();
+    positionsChartStatus.textContent = isClosingPosition
+      ? `Paper ${side.toLowerCase()} closed ${quantity} ${symbol} at ${formatCurrency(price)}. Realized P/L: ${realizedPnl >= 0 ? '+' : ''}${formatCurrency(realizedPnl)}.`
+      : `Paper ${side === 'BUY' ? 'long buy' : 'short sell'} placed: ${quantity} ${symbol} at ${formatCurrency(price)} with Stop Loss ${formatCurrency(stopLoss)} and Take Profit ${formatCurrency(takeProfit)}. Drag the ${side === 'BUY' ? 'green' : 'red'} risk-zone boundary to adjust, then save it.`;
     drawPositionsChart();
     renderPaperPositions();
     renderPaperOrders();
@@ -379,26 +508,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const index = marketPositions.findIndex((position) => position.symbol === symbol && position.quantity > 0);
     if (index < 0) return;
     const position = marketPositions[index];
-    const stopHit = Number(position.stopLoss) > 0 && price <= Number(position.stopLoss);
-    const targetHit = Number(position.takeProfit) > 0 && price >= Number(position.takeProfit);
+    const isShort = position.side === 'SELL';
+    const stopHit = Number(position.stopLoss) > 0 && (isShort ? price >= Number(position.stopLoss) : price <= Number(position.stopLoss));
+    const targetHit = Number(position.takeProfit) > 0 && (isShort ? price <= Number(position.takeProfit) : price >= Number(position.takeProfit));
     if (!stopHit && !targetHit) return;
     const quantity = position.quantity;
-    marketBalance += quantity * price;
+    const exitPrice = stopHit ? Number(position.stopLoss) : Number(position.takeProfit);
+    const realizedPnl = (isShort ? Number(position.averagePrice) - exitPrice : exitPrice - Number(position.averagePrice)) * quantity;
+    const margin = Number(position.margin) || Number(position.averagePrice) * quantity;
+    const proceeds = isShort ? Math.max(0, margin + realizedPnl) : quantity * exitPrice;
+    marketBalance += proceeds;
+    realizedProfitAvailable += realizedPnl;
+    localStorage.setItem(realizedProfitKey, String(realizedProfitAvailable));
     marketOrders.unshift({
       symbol,
-      side: 'SELL',
+      side: isShort ? 'BUY' : 'SELL',
       mode: 'spot',
+      positionSide: isShort ? 'SHORT' : 'LONG',
       type: stopHit ? 'STOP_LOSS' : 'TAKE_PROFIT',
       quantity,
-      price,
+      price: exitPrice,
       time: Date.now()
     });
     marketPositions.splice(index, 1);
+    if (marketConfig.selectedSymbol === symbol) {
+      positionsChartTools.stopLoss = '';
+      positionsChartTools.takeProfit = '';
+      chartRiskDraft = null;
+      savePositionsChartTools();
+    }
     marketOrders = marketOrders.slice(0, 100);
     localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
     localStorage.setItem(marketOrdersKey, JSON.stringify(marketOrders));
     localStorage.setItem(marketBalanceKey, String(marketBalance));
-    if (positionsChartStatus) positionsChartStatus.textContent = `Paper ${stopHit ? 'stop loss' : 'take profit'} triggered: ${quantity} ${symbol} closed at ${formatCurrency(price)}.`;
+    renderTradeBalances();
+    if (positionsChartStatus) {
+      positionsChartStatus.textContent = `Paper ${isShort ? 'short ' : ''}${stopHit ? 'stop loss' : 'take profit'} triggered at ${formatCurrency(exitPrice)}. ${formatCurrency(proceeds)} proceeds (P/L ${realizedPnl >= 0 ? '+' : ''}${formatCurrency(realizedPnl)}) credited to your Trade paper balance.`;
+    }
+    drawPositionsChart();
     renderPaperPositions();
     renderPaperOrders();
   }
@@ -408,6 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
     positionsChartTools.height = positionsChartWrap?.getBoundingClientRect().height || positionsChartTools.height;
     positionsChartTools.width = positionsChartWrap?.getBoundingClientRect().width || positionsChartTools.width;
     positionsChartTools.selectedPrice = positionsSelectedPrice;
+    positionsChartTools.riskSetupVisible = chartRiskVisible;
     positionsChartTools.market = marketConfig.selectedSymbol;
     positionsChartTools.interval = chartInterval;
     localStorage.setItem(chartPreferencesKey, JSON.stringify(positionsChartTools));
@@ -501,15 +649,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const candles = positionCandles.slice(-36);
     const source = candles.map((candle) => candle.close);
     const padding = positionsChartTools.margins;
-    const heldPosition = marketPositions.find((position) => position.symbol === marketConfig.selectedSymbol);
-    const stopLevel = Number(positionsChartTools.stopLoss) || Number(heldPosition?.stopLoss);
-    const targetLevel = Number(positionsChartTools.takeProfit) || Number(heldPosition?.takeProfit);
+    const { stopLoss: stopLevel, takeProfit: targetLevel, side: riskSide } = getChartRiskLevels();
     const values = candles.flatMap((candle) => [candle.high, candle.low]);
     if (positionsSelectedPrice) values.push(positionsSelectedPrice);
     if (stopLevel > 0) values.push(stopLevel);
     if (targetLevel > 0) values.push(targetLevel);
-    const min = Math.min(...values) * .997;
-    const max = Math.max(...values) * 1.003;
+    const min = chartRiskDragRange?.min ?? Math.min(...values) * .997;
+    const max = chartRiskDragRange?.max ?? Math.max(...values) * 1.003;
     const xStep = (width - padding.left - padding.right) / Math.max(candles.length - 1, 1);
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
@@ -542,6 +688,16 @@ document.addEventListener('DOMContentLoaded', () => {
     candles.forEach((candle, index) => {
       const pointX = padding.left + index * xStep;
       const color = candle.close >= candle.open ? '#31d598' : '#ff6b7a';
+      const isSelected = candle.time === positionsSelectedCandleTime;
+      if (isSelected) {
+        context.save();
+        context.fillStyle = 'rgba(243, 201, 105, .24)';
+        context.strokeStyle = '#f3c969';
+        context.lineWidth = 2;
+        context.fillRect(pointX - candleWidth, padding.top, candleWidth * 2, plotHeight);
+        context.strokeRect(pointX - candleWidth / 2 - 2, Math.min(y(candle.open), y(candle.close), y(candle.high)), candleWidth + 4, Math.max(4, Math.max(y(candle.open), y(candle.close), y(candle.low)) - Math.min(y(candle.open), y(candle.close), y(candle.high))));
+        context.restore();
+      }
       context.strokeStyle = color;
       context.fillStyle = color;
       context.beginPath();
@@ -588,8 +744,30 @@ document.addEventListener('DOMContentLoaded', () => {
       context.restore();
     };
     if (positionsSelectedPrice) drawPriceLevel(positionsSelectedPrice, '#f3c969', 'Order');
-    if (stopLevel > 0) drawPriceLevel(stopLevel, '#ff6b7a', 'Stop');
-    if (targetLevel > 0) drawPriceLevel(targetLevel, '#31d598', 'Target');
+    const riskTop = riskSide === 'SELL' ? stopLevel : targetLevel;
+    const riskBottom = riskSide === 'SELL' ? targetLevel : stopLevel;
+    const riskColor = riskSide === 'SELL' ? '#ff6b7a' : '#31d598';
+    if (chartRiskVisible && riskTop > 0 && riskBottom > 0 && riskTop > riskBottom) {
+      const topY = y(riskTop);
+      const bottomY = y(riskBottom);
+      context.save();
+      context.fillStyle = riskSide === 'SELL'
+        ? (chartRiskDraft ? 'rgba(255, 107, 122, .11)' : 'rgba(255, 107, 122, .18)')
+        : (chartRiskDraft ? 'rgba(49, 213, 152, .11)' : 'rgba(49, 213, 152, .18)');
+      context.strokeStyle = riskColor;
+      context.lineWidth = chartRiskDraft ? 1 : 1.5;
+      context.fillRect(padding.left, topY, plotWidth, bottomY - topY);
+      context.strokeRect(padding.left, topY, plotWidth, bottomY - topY);
+      context.setLineDash([]);
+      context.fillStyle = riskColor;
+      context.font = '600 11px Inter, sans-serif';
+      context.fillText(`${riskSide === 'SELL' ? 'Stop Loss' : 'Take Profit'} ${formatPrice(riskTop)}`, padding.left + 8, Math.min(bottomY - 4, topY + 14));
+      context.fillText(`${riskSide === 'SELL' ? 'Take Profit' : 'Stop Loss'} ${formatPrice(riskBottom)}`, padding.left + 8, Math.max(topY + 14, bottomY - 5));
+      context.restore();
+    } else if (chartRiskVisible) {
+      if (stopLevel > 0) drawPriceLevel(stopLevel, riskColor, 'Stop Loss');
+      if (targetLevel > 0) drawPriceLevel(targetLevel, riskColor, 'Take Profit');
+    }
     const drawRuler = (start, end) => {
       if (!start || !end) return;
       const startX = padding.left + start.x * plotWidth;
@@ -770,7 +948,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const filteredAssets = getFilteredAssets();
 
     assetGrid.innerHTML = filteredAssets
-      .slice(0, 6)
       .map((asset) => {
         const change = asset.price_change_percentage_24h ?? 0;
         return `
@@ -914,6 +1091,8 @@ document.addEventListener('DOMContentLoaded', () => {
     marketConfig.selectedSymbol = symbol;
     if (marketChanged) {
       positionsSelectedPrice = null;
+      positionsSelectedCandleTime = null;
+      chartRiskDraft = null;
       const heldPosition = marketPositions.find((position) => position.symbol === symbol);
       positionsChartTools.stopLoss = heldPosition?.stopLoss || '';
       positionsChartTools.takeProfit = heldPosition?.takeProfit || '';
@@ -1111,6 +1290,48 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  if (tradeDepositButton) {
+    tradeDepositButton.addEventListener('click', () => openTradeBalanceDialog('deposit'));
+  }
+  if (tradeTransferButton) {
+    tradeTransferButton.addEventListener('click', () => openTradeBalanceDialog('transfer'));
+  }
+  if (tradeBalanceCancel && tradeBalanceDialog) {
+    tradeBalanceCancel.addEventListener('click', () => tradeBalanceDialog.close());
+  }
+  if (tradeBalanceForm && tradeBalanceDialog && tradeBalanceAmount) {
+    tradeBalanceForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const amount = Number(tradeBalanceAmount.value);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        tradeBalanceAmount.setCustomValidity('Enter an amount greater than zero.');
+        tradeBalanceAmount.reportValidity();
+        return;
+      }
+      tradeBalanceAmount.setCustomValidity('');
+      if (tradeBalanceAction === 'deposit') {
+        marketBalance += amount;
+        localStorage.setItem(marketBalanceKey, String(marketBalance));
+        if (positionsChartStatus) positionsChartStatus.textContent = `${formatCurrency(amount)} added to the Trade paper balance. Simulation only; no bank transfer occurred.`;
+      } else if (tradeBalanceAction === 'transfer') {
+        if (amount > realizedProfitAvailable || realizedProfitAvailable <= 0) {
+          tradeBalanceAmount.setCustomValidity(`Transfer cannot exceed available realized profits (${formatCurrency(Math.max(0, realizedProfitAvailable))}).`);
+          tradeBalanceAmount.reportValidity();
+          return;
+        }
+        realizedProfitAvailable -= amount;
+        tradeAccountBalance += amount;
+        localStorage.setItem(realizedProfitKey, String(realizedProfitAvailable));
+        localStorage.setItem(marketAccountBalanceKey, String(tradeAccountBalance));
+        if (positionsChartStatus) positionsChartStatus.textContent = `${formatCurrency(amount)} transferred to your local Account balance. Paper simulation only; no bank transfer occurred.`;
+      } else {
+        return;
+      }
+      tradeBalanceDialog.close();
+      renderPaperPositions();
+    });
+  }
+
   if (positionsToolsButton) {
     positionsToolsButton.addEventListener('click', () => {
       const isOpen = positionsToolsOptions.hidden;
@@ -1153,48 +1374,61 @@ document.addEventListener('DOMContentLoaded', () => {
       positionsChartTools.mode = positionsChartMode.value;
       rulerAnchor = null;
       rulerDraft = null;
-      if (positionsChartToolHint) {
-        const modeText = {
-          crosshair: 'Move over the chart to inspect time and price.',
-          ruler: 'Click twice on the chart to measure a price and time move.',
-          entry: 'Click the chart to choose a paper order price, then Buy or Sell.',
-        };
-        positionsChartToolHint.textContent = modeText[positionsChartMode.value];
-      }
+      const modeText = {
+        crosshair: 'Crosshair pointer selected.',
+        ruler: 'Click twice on the chart to measure a price and time move.',
+        entry: 'Click the chart to choose a paper order price, then Buy or Sell.'
+      };
+      if (positionsChartStatus) positionsChartStatus.textContent = modeText[positionsChartMode.value];
+      if (positionsCandleChart) positionsCandleChart.style.cursor = 'crosshair';
       savePositionsChartTools();
       drawPositionsChart();
     });
   }
-  positionsRiskLevelButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      chartRiskPlacement = chartRiskPlacement === button.dataset.riskLevel ? null : button.dataset.riskLevel;
-      positionsRiskLevelButtons.forEach((riskButton) => {
-        riskButton.setAttribute('aria-pressed', String(riskButton.dataset.riskLevel === chartRiskPlacement));
-      });
-      if (positionsChartToolHint) {
-        positionsChartToolHint.textContent = chartRiskPlacement
-          ? `Click the chart to set ${chartRiskPlacement === 'stopLoss' ? 'stop loss' : 'take profit'}.`
-          : 'Choose a risk level, then click the chart to place it.';
+  if (positionsSaveRiskSetup) {
+    positionsSaveRiskSetup.addEventListener('click', () => {
+      if (!chartRiskDraft) {
+        const { stopLoss, takeProfit } = getChartRiskLevels();
+        if (!stopLoss || !takeProfit) return;
+        chartRiskVisible = !chartRiskVisible;
+        savePositionsChartTools();
+        renderTradeBalances();
+        drawPositionsChart();
+        if (positionsChartStatus) positionsChartStatus.textContent = chartRiskVisible
+          ? 'Saved risk setup displayed on the chart.'
+          : 'Saved risk setup hidden for a cleaner chart. The protective levels remain active.';
+        return;
       }
-    });
-  });
-  if (positionsClearRiskLevels) {
-    positionsClearRiskLevels.addEventListener('click', () => {
-      positionsChartTools.stopLoss = '';
-      positionsChartTools.takeProfit = '';
-      const heldPosition = marketPositions.find((position) => position.symbol === marketConfig.selectedSymbol);
-      if (heldPosition) {
-        delete heldPosition.stopLoss;
-        delete heldPosition.takeProfit;
+      const { stopLoss, takeProfit, side } = getChartRiskLevels();
+      const position = marketPositions.find((item) => item.symbol === marketConfig.selectedSymbol);
+      const referencePrice = Number(position?.averagePrice) || Number(positionsSelectedPrice) || Number(getSelectedAsset()?.current_price);
+      const validRiskLevels = side === 'SELL'
+        ? stopLoss > referencePrice && takeProfit < referencePrice && takeProfit < stopLoss
+        : stopLoss < referencePrice && takeProfit > referencePrice && stopLoss < takeProfit;
+      if (!referencePrice || !stopLoss || !takeProfit || !validRiskLevels) {
+        if (positionsChartStatus) positionsChartStatus.textContent = side === 'SELL'
+          ? 'Risk setup not saved: for a short position, Stop Loss must be above entry and Take Profit below entry.'
+          : 'Risk setup not saved: for a long position, Stop Loss must be below entry and Take Profit above entry.';
+        return;
+      }
+      positionsChartTools.stopLoss = stopLoss;
+      positionsChartTools.takeProfit = takeProfit;
+      if (position) {
+        position.stopLoss = stopLoss;
+        position.takeProfit = takeProfit;
         localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
-        renderPaperPositions();
       }
+      chartRiskDraft = null;
+      chartRiskVisible = false;
       savePositionsChartTools();
+      renderTradeBalances();
+      renderPaperPositions();
       drawPositionsChart();
-      positionsChartStatus.textContent = 'Stop loss and take profit levels cleared.';
+      if (positionsChartStatus) positionsChartStatus.textContent = `Risk setup saved and hidden for a cleaner chart. Take Profit: ${formatCurrency(takeProfit)} · Stop Loss: ${formatCurrency(stopLoss)}. Click Show risk setup to display it again.`;
     });
   }
   if (positionsCandleChart) {
+    let draggedRiskLevel = false;
     const chartPoint = (event) => {
       const bounds = positionsCandleChart.getBoundingClientRect();
       const x = event.clientX - bounds.left;
@@ -1204,49 +1438,93 @@ document.addEventListener('DOMContentLoaded', () => {
       const normalizedX = Math.max(0, Math.min(1, (x - padding.left) / plotWidth));
       const price = max - ((y - padding.top) / plotHeight) * (max - min);
       const candleIndex = Math.min(candles.length - 1, Math.max(0, Math.round(normalizedX * (candles.length - 1))));
-      return { x, y, normalizedX, price, candle: candles[candleIndex] };
+      return { x, y, normalizedX, price, candle: candles[candleIndex], candleIndex };
+    };
+    const riskLevelAtPoint = (point) => {
+      const { stopLoss, takeProfit } = getChartRiskLevels();
+      const levels = [
+        ['stopLoss', stopLoss],
+        ['takeProfit', takeProfit]
+      ];
+      for (const [key, level] of levels) {
+        if (!level || !chartGeometry.max || chartGeometry.max === chartGeometry.min) continue;
+        const levelY = chartGeometry.padding.top + ((chartGeometry.max - level) / (chartGeometry.max - chartGeometry.min)) * chartGeometry.plotHeight;
+        if (Math.abs(point.y - levelY) <= 10) return key;
+      }
+      return null;
     };
     positionsCandleChart.addEventListener('pointermove', (event) => {
       const point = chartPoint(event);
       if (!point) {
         chartPointer = null;
-        if (positionsChartTools.mode === 'crosshair') drawPositionsChart();
+        if (!chartRiskDragging && positionsChartTools.mode === 'crosshair') drawPositionsChart();
         return;
       }
       chartPointer = point;
+      if (chartRiskDragging) {
+        const { side } = getChartRiskLevels();
+        const isShort = side === 'SELL';
+        const isStopLoss = chartRiskDragging === 'stopLoss';
+        const heldPosition = marketPositions.find((position) => position.symbol === marketConfig.selectedSymbol);
+        const referencePrice = heldPosition?.averagePrice || positionsSelectedPrice || Number(getSelectedAsset()?.current_price) || Number(positionCandles[positionCandles.length - 1]?.close);
+        const currentLevels = getChartRiskLevels();
+        const proposed = { ...currentLevels, [chartRiskDragging]: point.price };
+        const validRiskLevels = isShort
+          ? proposed.stopLoss > referencePrice && proposed.takeProfit < referencePrice && proposed.takeProfit < proposed.stopLoss
+          : proposed.stopLoss < referencePrice && proposed.takeProfit > referencePrice && proposed.stopLoss < proposed.takeProfit;
+        if (referencePrice && validRiskLevels) {
+          chartRiskDraft = proposed;
+          chartRiskVisible = true;
+          renderTradeBalances();
+          drawPositionsChart();
+        }
+        return;
+      }
+      positionsCandleChart.style.cursor = riskLevelAtPoint(point) ? 'ns-resize' : 'crosshair';
       if (positionsChartTools.mode === 'ruler' && rulerAnchor) {
         rulerDraft = { x: point.normalizedX, price: point.price };
       }
       drawPositionsChart();
     });
+    positionsCandleChart.addEventListener('pointerdown', (event) => {
+      const point = chartPoint(event);
+      if (!point) return;
+      const key = riskLevelAtPoint(point);
+      if (!key) return;
+      chartRiskDragging = key;
+      chartRiskDragRange = { min: chartGeometry.min, max: chartGeometry.max };
+      draggedRiskLevel = true;
+      positionsCandleChart.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    const finishRiskDrag = () => {
+      if (!chartRiskDragging) return;
+      chartRiskDragging = null;
+      chartRiskDragRange = null;
+      if (chartRiskDraft && positionsChartStatus) {
+        const zoneColor = getChartRiskLevels().side === 'SELL' ? 'red' : 'green';
+        positionsChartStatus.textContent = `Review the ${zoneColor} risk zone, then choose Save risk setup to apply the adjusted levels.`;
+      }
+      drawPositionsChart();
+    };
+    positionsCandleChart.addEventListener('pointerup', finishRiskDrag);
+    positionsCandleChart.addEventListener('pointercancel', () => {
+      finishRiskDrag();
+      draggedRiskLevel = false;
+    });
     positionsCandleChart.addEventListener('pointerleave', () => {
       chartPointer = null;
-      if (positionsChartTools.mode === 'crosshair') drawPositionsChart();
+      if (!chartRiskDragging && positionsChartTools.mode === 'crosshair') drawPositionsChart();
     });
     positionsCandleChart.addEventListener('click', (event) => {
+      if (draggedRiskLevel) {
+        draggedRiskLevel = false;
+        return;
+      }
       const point = chartPoint(event);
       if (!point) return;
       const mode = positionsChartTools.mode;
-      if (chartRiskPlacement) {
-        const heldPosition = marketPositions.find((position) => position.symbol === marketConfig.selectedSymbol);
-        const referencePrice = heldPosition?.averagePrice || positionsSelectedPrice || Number(getSelectedAsset()?.current_price) || Number(positionCandles[positionCandles.length - 1]?.close);
-        const isStopLoss = chartRiskPlacement === 'stopLoss';
-        if (!referencePrice || (isStopLoss && point.price >= referencePrice) || (!isStopLoss && point.price <= referencePrice)) {
-          positionsChartStatus.textContent = `Choose a ${isStopLoss ? 'stop loss below' : 'take profit above'} the current order or position price.`;
-          return;
-        }
-        positionsChartTools[chartRiskPlacement] = point.price;
-        if (heldPosition) {
-          heldPosition[chartRiskPlacement] = point.price;
-          localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
-          renderPaperPositions();
-        }
-        chartRiskPlacement = null;
-        positionsRiskLevelButtons.forEach((button) => button.setAttribute('aria-pressed', 'false'));
-        if (positionsChartToolHint) positionsChartToolHint.textContent = 'Choose a risk level, then click the chart to place it.';
-        positionsChartStatus.textContent = `${isStopLoss ? 'Stop loss' : 'Take profit'} set to ${formatCurrency(point.price)}.`;
-        savePositionsChartTools();
-      } else if (mode === 'ruler') {
+      if (mode === 'ruler') {
         if (!rulerAnchor) {
           rulerAnchor = { x: point.normalizedX, price: point.price };
           rulerDraft = null;
@@ -1262,8 +1540,26 @@ document.addEventListener('DOMContentLoaded', () => {
           positionsChartStatus.textContent = `Ruler: ${formatCurrency(point.price - positionsChartTools.ruler.start.price)} price change across the chart.`;
         }
       } else if (mode === 'entry') {
+        positionsSelectedCandleTime = null;
         positionsSelectedPrice = point.price;
-        positionsChartStatus.textContent = `Paper order price set to ${formatCurrency(point.price)}. Choose Buy or Sell below the chart.`;
+        positionsChartStatus.textContent = `Chart order price selected at ${formatCurrency(point.price)}. Choose Buy or Sell below the chart.`;
+        savePositionsChartTools();
+      } else {
+        const candles = chartGeometry.candles;
+        const xStep = chartGeometry.plotWidth / Math.max(candles.length - 1, 1);
+        const candleX = chartGeometry.padding.left + point.candleIndex * xStep;
+        const candleTolerance = Math.max(4, xStep * (positionsChartTools.candleStyle.bodyWidth / 100) / 2) + 3;
+        const priceTolerance = (chartGeometry.max - chartGeometry.min) * .015;
+        const clickedCandle = Math.abs(point.x - candleX) <= candleTolerance
+          && point.price >= point.candle.low - priceTolerance
+          && point.price <= point.candle.high + priceTolerance;
+        if (!clickedCandle) {
+          positionsChartStatus.textContent = 'Click a candlestick to highlight it and use its close as the trade price.';
+          return;
+        }
+        positionsSelectedCandleTime = point.candle.time;
+        positionsSelectedPrice = point.candle.close;
+        positionsChartStatus.textContent = `Selected candle highlighted at ${formatCurrency(point.candle.close)}. Place a Buy or Sell trade at this candle close. Buy positions get a Stop Loss and Take Profit; drag the red and green chart lines to adjust them.`;
         savePositionsChartTools();
       }
       drawPositionsChart();
@@ -1426,7 +1722,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   ui.symbol.addEventListener('change', () => { state.symbol = ui.symbol.value; refreshMarket(); }); ui.timeframe.forEach((button) => button.addEventListener('click', () => { state.interval = button.dataset.timeframe; ui.timeframe.forEach((item) => item.classList.toggle('is-active', item === button)); loadCandles(); })); document.querySelectorAll('[data-trade-mode]').forEach((button) => button.addEventListener('click', () => { state.mode = button.dataset.tradeMode; document.querySelectorAll('[data-trade-mode]').forEach((item) => item.classList.toggle('is-active', item === button)); refreshMarket(); })); document.querySelectorAll('[data-order-side]').forEach((button) => button.addEventListener('click', () => { state.side = button.dataset.orderSide; document.querySelectorAll('[data-order-side]').forEach((item) => item.classList.toggle('is-active', item === button)); })); ui.quantity.addEventListener('input', () => { ui.estimate.textContent = `$${(state.price * (Number(ui.quantity.value) || 0)).toLocaleString('en-US', { maximumFractionDigits: 2 })}`; }); ui.orderType.addEventListener('change', () => { ui.orderPrice.disabled = ui.orderType.value === 'MARKET'; });
-  ui.orderForm.addEventListener('submit', async (event) => { event.preventDefault(); const price = ui.orderType.value === 'MARKET' ? state.price : Number(ui.orderPrice.value); const quantity = Number(ui.quantity.value); const stopLoss = Number(ui.stopLoss.value) || 0; const takeProfit = Number(ui.takeProfit.value) || 0; if (!price || !quantity || (stopLoss && takeProfit && ((state.side === 'BUY' && (stopLoss >= price || takeProfit <= price)) || (state.side === 'SELL' && (stopLoss <= price || takeProfit >= price))))) { ui.chartStatus.textContent = 'Check price, quantity, and protective exit levels.'; ui.chartStatus.hidden = false; return; } if (state.connected) { if (stopLoss || takeProfit) { ui.chartStatus.textContent = 'Remove protective exits before placing a live order.'; ui.chartStatus.hidden = false; return; } try { const response = await fetch('/api/binance/order', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ symbol: state.symbol, side: state.side, mode: state.mode, type: ui.orderType.value, quantity, price }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Live order failed.'); ui.chartStatus.textContent = `Live order accepted: ${result.order.orderId}`; ui.chartStatus.hidden = false; } catch (error) { ui.chartStatus.textContent = error.message; ui.chartStatus.hidden = false; } return; } const order = { symbol: state.symbol, side: state.side, mode: state.mode, quantity, price, stopLoss, takeProfit, time: Date.now() }; state.orders.unshift(order); state.positions.unshift(order); saveState(); renderOrders(); renderPositions(); ui.chartStatus.textContent = 'Paper order placed with risk controls.'; ui.chartStatus.hidden = false; }); ui.clearOrders.addEventListener('click', () => { state.orders = []; saveState(); renderOrders(); });
+  ui.orderForm.addEventListener('submit', async (event) => { event.preventDefault(); const price = ui.orderType.value === 'MARKET' ? state.price : Number(ui.orderPrice.value); const quantity = Number(ui.quantity.value); const stopLoss = Number(ui.stopLoss.value) || 0; const takeProfit = Number(ui.takeProfit.value) || 0; if (!price || !quantity || (stopLoss && takeProfit && ((state.side === 'BUY' && (stopLoss >= price || takeProfit <= price)) || (state.side === 'SELL' && (stopLoss <= price || takeProfit >= price))))) { ui.chartStatus.textContent = 'Check price, quantity, and protective exit levels.'; ui.chartStatus.hidden = false; return; } if (state.connected) { if (stopLoss || takeProfit) { ui.chartStatus.textContent = 'Remove protective exits before placing a live order.'; ui.chartStatus.hidden = false; return; } try { const idToken = await window.makingsGetIdToken?.(); if (!idToken) throw new Error('Sign in to place a live Binance order.'); const apiBaseUrl = window.MAKINGS_API_BASE_URL || window.location.origin; const response = await fetch(`${apiBaseUrl}/api/order`, { method: 'POST', headers: { 'content-type': 'application/json', Authorization: `Bearer ${idToken}` }, body: JSON.stringify({ symbol: state.symbol, side: state.side, type: ui.orderType.value, quantity, price }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Live order failed.'); ui.chartStatus.textContent = `Live order accepted: ${result.orderId}`; ui.chartStatus.hidden = false; } catch (error) { ui.chartStatus.textContent = error.message; ui.chartStatus.hidden = false; } return; } const order = { symbol: state.symbol, side: state.side, mode: state.mode, quantity, price, stopLoss, takeProfit, time: Date.now() }; state.orders.unshift(order); state.positions.unshift(order); saveState(); renderOrders(); renderPositions(); ui.chartStatus.textContent = 'Paper order placed with risk controls.'; ui.chartStatus.hidden = false; }); ui.clearOrders.addEventListener('click', () => { state.orders = []; saveState(); renderOrders(); });
   setExecutionMode();
   const openIndicatorWorkspace = () => { ui.indicatorPanel.hidden = false; ui.indicatorSearch.focus(); ui.indicatorPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
   ui.indicatorButton.addEventListener('click', () => { if (ui.indicatorPanel.hidden) openIndicatorWorkspace(); else ui.indicatorPanel.hidden = true; }); ui.marketCreateIndicator.addEventListener('click', openIndicatorWorkspace); ui.closeIndicatorPanel.addEventListener('click', () => { ui.indicatorPanel.hidden = true; }); ui.indicatorSearch.addEventListener('input', renderIndicators);

@@ -37,6 +37,7 @@
       </nav>
 
       <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
         <a class="btn btn-ghost" href="verification.html">Login</a>
         <a class="btn btn-primary" href="verification.html">Sign Up</a>
       </div>
@@ -74,6 +75,15 @@
         </div>
       </section>
 
+      <section class="section-shell" aria-labelledby="top-investments-heading">
+        <div class="section-heading">
+          <span class="eyebrow">Investment Center companies</span>
+          <h2 id="top-investments-heading">Companies Available for Investment</h2>
+          <p>Explore company profiles currently listed in the Investment Center. Company information is provided for review, not as investment advice.</p>
+        </div>
+        <p id="homeCompanyStatus" class="home-company-status" aria-live="polite">Loading company profiles...</p>
+        <div class="home-company-grid" id="homeCompanyGrid" aria-label="Companies available for investment"></div>
+      </section>
     </main>
 
     <footer class="site-footer">
@@ -82,6 +92,115 @@
 
     <div id="toast" class="toast" aria-live="polite">To Our Kings & Queen In The Making Welcome.</div>
 
+    <script>
+      (() => {
+        const companyGrid = document.getElementById('homeCompanyGrid');
+        const companyStatus = document.getElementById('homeCompanyStatus');
+        const featuredCompanies = [
+          {
+            name: 'Caribbean Renewables Ltd',
+            description: 'A renewable energy company focused on clean power projects across the Caribbean.',
+            investorPurpose: 'Seeking investment to support renewable energy development.'
+          },
+          {
+            name: 'Harbor Technology Group',
+            description: 'A technology business focused on digital services and software solutions.',
+            investorPurpose: 'Seeking investment to expand technology products and services.'
+          },
+          {
+            name: 'Island Foods Co.',
+            description: 'A food business serving local and regional customers.',
+            investorPurpose: 'Seeking investment to grow production and distribution.'
+          }
+        ];
+
+        const makeText = (tagName, className, text) => {
+          const element = document.createElement(tagName);
+          if (className) element.className = className;
+          element.textContent = text;
+          return element;
+        };
+
+        let registeredCompanies = [];
+        let registrationWarning = '';
+        try {
+          const saved = JSON.parse(localStorage.getItem('makingsRegisteredCompanies') || '[]');
+          if (!Array.isArray(saved)) throw new Error('Saved company list is not valid.');
+          registeredCompanies = saved.filter((company) => company && typeof company.name === 'string' && company.name.trim());
+        } catch (error) {
+          registrationWarning = ` Registered company profiles could not be loaded: ${error.message}`;
+        }
+
+        const seen = new Set();
+        const companies = [...featuredCompanies, ...registeredCompanies].filter((company) => {
+          const name = company.name.trim();
+          const key = name.toLocaleLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        companies.forEach((company) => {
+          const name = company.name.trim();
+          const card = document.createElement('article');
+          card.className = 'home-company-card card-glass';
+
+          const identity = document.createElement('button');
+          identity.className = 'home-company-trigger';
+          identity.type = 'button';
+          identity.setAttribute('aria-expanded', 'false');
+          identity.setAttribute('aria-label', `Show ${name} details`);
+          const logo = document.createElement('span');
+          logo.className = 'home-company-icon';
+          logo.setAttribute('aria-hidden', 'true');
+          if (typeof company.logo === 'string' && /^data:image\/png;base64,/i.test(company.logo)) {
+            const image = document.createElement('img');
+            image.src = company.logo;
+            image.alt = '';
+            logo.appendChild(image);
+          } else {
+            logo.textContent = name.split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toUpperCase();
+          }
+
+          const identityText = document.createElement('div');
+          identityText.append(makeText('h3', '', name));
+          identity.append(logo, identityText);
+
+          const details = document.createElement('dl');
+          details.className = 'home-company-details';
+          details.hidden = true;
+          const detailRows = [
+            ['Business type', company.type || 'Company'],
+            ['Country', company.country || 'Not provided'],
+            ['About', company.description || 'Open the Investment Center to review this company profile.'],
+            ['Investment purpose', company.investorPurpose || 'View the company profile and investment details.']
+          ];
+          detailRows.forEach(([label, value]) => {
+            const row = document.createElement('div');
+            row.append(makeText('dt', '', label), makeText('dd', '', value));
+            details.appendChild(row);
+          });
+
+          const investmentLink = document.createElement('a');
+          investmentLink.className = 'btn btn-secondary home-company-link';
+          investmentLink.href = `investment.html?company=${encodeURIComponent(name)}`;
+          investmentLink.textContent = 'View in Company Investment Center';
+          investmentLink.hidden = true;
+          identity.addEventListener('click', () => {
+            const isExpanded = identity.getAttribute('aria-expanded') === 'true';
+            identity.setAttribute('aria-expanded', String(!isExpanded));
+            identity.setAttribute('aria-label', `${isExpanded ? 'Show' : 'Hide'} ${name} details`);
+            details.hidden = isExpanded;
+            investmentLink.hidden = isExpanded;
+          });
+
+          card.append(identity, details, investmentLink);
+          companyGrid.appendChild(card);
+        });
+
+        companyStatus.textContent = `${companies.length} company profile${companies.length === 1 ? '' : 's'} available.${registrationWarning}`;
+      })();
+    </script>
     <script>
       (() => {
         const hasWorldAccess = () => {
@@ -99,42 +218,6 @@
 
       })();
     </script>
-    <script src="script.js"></script>
-    <script type="module" src="auth.js"></script>
-  </body>
-</html>
-          <article class="news-card card-glass">
-            <span class="tag">Crypto</span>
-            <h3>Bitcoin demand surges as ETFs fund inflow remains strong.</h3>
-            <p>Large institutional buyers continue to accumulate BTC across major exchanges and treasury desks.</p>
-          </article>
-          <article class="news-card card-glass">
-            <span class="tag">Stocks</span>
-            <h3>Nasdaq momentum keeps Tesla and Apple active in high-volume trading.</h3>
-            <p>Tech stocks continue to drive sentiment while commodity names stay steady on supply concerns.</p>
-          </article>
-          <article class="news-card card-glass">
-            <span class="tag">Commodities</span>
-            <h3>Oil, gold, and copper attract safe-haven traders amid global volatility.</h3>
-            <p>Investors rotate into hard assets as inflation and rate expectations continue to shift.</p>
-          </article>
-          <article class="news-card card-glass">
-            <span class="tag">Consumer</span>
-            <h3>Wendy’s, McDonald’s, KFC, and Burger King remain market bellwethers.</h3>
-            <p>Food-service stocks remain highly watched as margins and consumer demand recover regionally.</p>
-          </article>
-        </div>
-      </section>
-
-
-    </main>
-
-    <footer class="site-footer">
-      <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
-    </footer>
-
-    <div id="toast" class="toast" aria-live="polite">To Our Kings & Queen In The Making Welcome.</div>
-
     <script src="script.js"></script>
     <script type="module" src="auth.js"></script>
   </body>

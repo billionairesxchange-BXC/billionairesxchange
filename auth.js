@@ -15,6 +15,7 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+window.makingsGetIdToken = async () => auth.currentUser ? auth.currentUser.getIdToken() : null;
 const navActions = document.querySelector('.nav-actions');
 
 function addLink(label, href, className) {
@@ -167,6 +168,13 @@ onAuthStateChanged(auth, async (firebaseUser) => {
       return;
     }
     const profile = profileSnapshot.data();
+    const preferredCurrency = String(profile.preferredCurrency || '').toUpperCase();
+    if (['USD', 'JMD', 'EUR'].includes(preferredCurrency)) {
+      localStorage.setItem('preferredCurrency', preferredCurrency.toLowerCase());
+    }
+    window.dispatchEvent(new CustomEvent('makings:account-currency-changed', {
+      detail: { ...profile, uid: firebaseUser.uid, preferredCurrency }
+    }));
     renderSignedIn(firebaseUser, profile);
   } catch (error) {
     console.error('Unable to load the signed-in profile for navigation:', error);

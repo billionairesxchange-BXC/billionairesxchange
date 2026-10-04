@@ -37,6 +37,7 @@
       </nav>
 
       <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
         <a class="btn btn-ghost" href="verification.html">Login</a>
         <a class="btn btn-primary" href="verification.html">Sign Up</a>
       </div>
@@ -82,7 +83,7 @@
             <div class="market-toolbar">
               <div class="filter-row">
                 <button class="filter-chip is-active" data-filter="all" type="button">All</button>
-                <button class="filter-chip" data-filter="layer1" type="button">Layer 1</button>
+                <button class="filter-chip" data-filter="layer1" type="button">Coin</button>
                 <button class="filter-chip" data-filter="meme" type="button">Meme</button>
                 <button class="filter-chip" data-filter="stable" type="button">Stable</button>
               </div>
@@ -165,12 +166,7 @@
               <button class="positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy at chart price</button>
               <button class="positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell at chart price</button>
             </div>
-            <div class="positions-chart-risk-tools" role="group" aria-label="Set chart stop loss and take profit">
-              <button type="button" data-risk-level="stopLoss" aria-pressed="false">Set stop loss</button>
-              <button type="button" data-risk-level="takeProfit" aria-pressed="false">Set take profit</button>
-              <button type="button" id="positionsClearRiskLevels">Clear levels</button>
-              <span id="positionsChartToolHint" role="status">Choose a risk level, then click the chart to place it.</span>
-            </div>
+            <button class="positions-save-risk-button" id="positionsSaveRiskSetup" type="button" disabled>Save risk setup</button>
             <p id="positionsChartStatus">Loading market candles...</p>
             <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
           </div>
@@ -182,6 +178,35 @@
             <button class="btn positions-sell-button" id="positionsSellButton" type="button" disabled>Sell</button>
           </div>
         </div>
+        <div class="trade-balances card-glass" aria-label="Trade account balances">
+          <div class="trade-balance-card">
+            <span class="eyebrow">Trade paper balance</span>
+            <strong id="paperBalanceSummary">$10,000.00</strong>
+            <small>Available for paper trades</small>
+          </div>
+          <div class="trade-balance-card">
+            <span class="eyebrow">Account balance</span>
+            <strong id="tradeAccountBalance">$0.00</strong>
+            <small>Paper profits transferred out of trading</small>
+          </div>
+          <div class="trade-balance-actions">
+            <button class="btn btn-primary" id="tradeDepositButton" type="button">Deposit from bank</button>
+            <button class="btn btn-ghost" id="tradeTransferButton" type="button">Transfer profits</button>
+            <small>Paper simulation only. No real bank transfer is made.</small>
+          </div>
+        </div>
+        <dialog class="trade-balance-dialog" id="tradeBalanceDialog" aria-labelledby="tradeBalanceDialogTitle">
+          <form id="tradeBalanceForm">
+            <h3 id="tradeBalanceDialogTitle">Trade balance</h3>
+            <p id="tradeBalanceDialogDescription"></p>
+            <label for="tradeBalanceAmount">Amount (USDT)</label>
+            <input id="tradeBalanceAmount" type="number" min="0.01" step="0.01" required />
+            <div class="trade-balance-dialog-actions">
+              <button class="btn btn-ghost" id="tradeBalanceCancel" type="button">Cancel</button>
+              <button class="btn btn-primary" type="submit" id="tradeBalanceSubmit">Confirm</button>
+            </div>
+          </form>
+        </dialog>
         <div class="terminal-lower-grid"><div class="card-glass data-panel"><div class="panel-title"><div><span class="eyebrow">Positions</span><h3>Open positions</h3></div><strong id="paperBalance">10,000.00 USDT</strong></div><div id="positionsList" class="empty-state">No open paper positions.</div></div></div>
         <div class="card-glass data-panel orders-history"><div class="panel-title"><div><span class="eyebrow">Execution log</span><h3>Recent orders</h3></div><button class="text-button" id="clearOrders" type="button">Clear</button></div><div id="ordersList" class="orders-list"><div class="empty-state">Your paper orders will appear here.</div></div></div>
       </section>
@@ -225,6 +250,7 @@
 
     <div id="toast" class="toast" aria-live="polite">Welcome to BillionairesXchange Trade Center.</div>
 
+    <script src="api-config.js"></script>
     <script src="script.js"></script>
     <script type="module" src="auth.js"></script>
   </body>

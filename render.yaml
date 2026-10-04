@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: billionairesxchange-api
+    runtime: node
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ALLOWED_ORIGINS
+        value: https://billionairesxchange-e8162.web.app,https://billionairesxchange-e8162.firebaseapp.com
+      - key: FIREBASE_WEB_API_KEY
+        sync: false
+      - key: BINANCE_API_KEY
+        sync: false
+      - key: BINANCE_API_SECRET
+        sync: false
+      - key: BINANCE_ALLOWED_UIDS
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false

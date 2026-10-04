@@ -778,6 +778,15 @@ availableCompanies.forEach((company) => {
   option.append(logo, details);
 
   option.addEventListener('click', () => {
+    if (selectedCompanyRecord === company && !selectedCompanyDetails.hidden) {
+      selectedCompanyRecord = null;
+      selectedCompanyDetails.hidden = true;
+      option.classList.remove('is-selected');
+      option.setAttribute('aria-pressed', 'false');
+      investmentSelection.textContent = 'Company details hidden. Choose a company to view its profile.';
+      return;
+    }
+
     renderSelectedCompanyDetails(company);
     existingCompanyChoices.querySelectorAll('.company-option').forEach((item) => {
       const isSelected = item === option;
@@ -789,6 +798,20 @@ availableCompanies.forEach((company) => {
 
   existingCompanyChoices.appendChild(option);
 });
+
+const requestedCompanyName = new URLSearchParams(window.location.search).get('company');
+if (requestedCompanyName) {
+  const requestedCompany = [...existingCompanyChoices.querySelectorAll('[data-company-name]')]
+    .find((option) => option.dataset.companyName.toLocaleLowerCase() === requestedCompanyName.trim().toLocaleLowerCase());
+  if (requestedCompany) {
+    document.querySelector('[data-investment="Company"]').click();
+    requestedCompany.click();
+    selectedCompanyDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    investmentSelection.textContent = `“${requestedCompanyName}” is not currently listed. Review the available company profiles below.`;
+    document.querySelector('[data-investment="Company"]').click();
+  }
+}
 
 document.querySelectorAll('[data-company-path]').forEach((pathButton) => {
   pathButton.addEventListener('click', () => {
