@@ -31,7 +31,7 @@
         <a href="index.html#home">Home</a>
         <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
-        <a href="bot-trading.html">Bot Trading</a>
+        <a href="bot-trading.html">Trading Bot</a>
         <a href="treasury.html">Treasury/Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
@@ -54,21 +54,30 @@
         </div>
 
         <div class="shop-category-grid" role="group" aria-label="Shop categories">
-          <button class="shop-category-button is-active" type="button" data-shop-category="gadgets" aria-pressed="true">
-            <span class="product-icon" aria-hidden="true">📱</span>
-            <strong>Gadgets</strong>
-            <span>Phones, laptops, and tablets</span>
-          </button>
-          <button class="shop-category-button" type="button" data-shop-category="gaming" aria-pressed="false">
-            <span class="product-icon" aria-hidden="true">🎮</span>
-            <strong>Gaming</strong>
-            <span>Gaming gear and accessories</span>
-          </button>
-          <button class="shop-category-button" type="button" data-shop-category="miners" aria-pressed="false">
-            <span class="product-icon" aria-hidden="true">⛏️</span>
-            <strong>Bitcoin Miners</strong>
-            <span>Mining hardware and accessories</span>
-          </button>
+          <div class="shop-category-item">
+            <a class="shop-category-button" href="gadgets.html" aria-label="Browse gadgets for sale">
+              <span class="product-icon" aria-hidden="true">📱</span>
+              <strong>Gadgets</strong>
+              <span>Phones, laptops, and tablets</span>
+            </a>
+            <a class="btn btn-primary shop-category-visit" href="gadgets.html">Visit Shop</a>
+          </div>
+          <div class="shop-category-item">
+            <a class="shop-category-button" href="gaming.html" aria-label="Browse gaming items for sale">
+              <span class="product-icon" aria-hidden="true">🎮</span>
+              <strong>Gaming</strong>
+              <span>Gaming gear and accessories</span>
+            </a>
+            <a class="btn btn-primary shop-category-visit" href="gaming.html">Visit Shop</a>
+          </div>
+          <div class="shop-category-item">
+            <a class="shop-category-button" href="bitcoin-miners.html" aria-label="Browse Bitcoin miners for sale">
+              <span class="product-icon" aria-hidden="true">⛏️</span>
+              <strong>Bitcoin Miners</strong>
+              <span>Mining hardware and accessories</span>
+            </a>
+            <a class="btn btn-primary shop-category-visit" href="bitcoin-miners.html">Visit Shop</a>
+          </div>
           <button class="shop-category-button" type="button" data-shop-category="gift-cards" aria-pressed="false">
             <span class="product-icon" aria-hidden="true">🎁</span>
             <strong>Gift Cards</strong>
@@ -171,20 +180,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const categories = {
-          gadgets: {
-            title: 'Gadgets',
-            description: 'Shop phones, laptops, and tablets for everyday use, work, and entertainment.',
-            products: ['Phones', 'Laptops', 'Tablets']
-          },
-          gaming: {
-            title: 'Gaming',
-            description: 'Browse gaming gear and accessories for your gaming setup.',
-            products: ['Gaming gear', 'Consoles and accessories', 'Gaming equipment']
-          },
-          miners: {
-            title: 'Bitcoin Miners',
-            description: 'Shop Bitcoin mining hardware and supporting accessories.',
-            products: ['Bitcoin miners', 'Mining hardware', 'Miner accessories']
+          'gift-cards': {
+            title: 'Gift Cards',
+            description: 'Purchase gift cards for various products and services.',
+            products: []
           },
           'gift-cards': {
             title: 'Gift Cards',
@@ -501,12 +500,17 @@
           }
         });
 
-        document.querySelectorAll('[data-shop-category]').forEach((button) => {
+        const shopCategoryButtons = document.querySelectorAll('[data-shop-category]');
+        shopCategoryButtons.forEach((button) => {
           button.addEventListener('click', () => {
             const category = categories[button.dataset.shopCategory];
             if (!category) return;
 
-            document.querySelectorAll('[data-shop-category]').forEach((item) => {
+            const categoryUrl = new URL(window.location.href);
+            categoryUrl.hash = button.dataset.shopCategory;
+            window.history.replaceState(window.history.state, '', categoryUrl);
+
+            shopCategoryButtons.forEach((item) => {
               const isActive = item === button;
               item.classList.toggle('is-active', isActive);
               item.setAttribute('aria-pressed', String(isActive));
@@ -520,6 +524,17 @@
               return item;
             }));
             if (button.dataset.shopCategory === 'gift-cards') updateGiftCardAction('buy');
+          });
+        });
+
+        const initialCategoryButton = [...shopCategoryButtons].find((button) => button.dataset.shopCategory === window.location.hash.slice(1));
+        if (initialCategoryButton) initialCategoryButton.click();
+
+        document.querySelectorAll('[data-shop-visit]').forEach((link) => {
+          link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const categoryButton = [...shopCategoryButtons].find((button) => button.dataset.shopCategory === link.dataset.shopVisit);
+            categoryButton?.click();
           });
         });
 

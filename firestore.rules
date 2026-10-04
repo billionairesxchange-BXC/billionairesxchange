@@ -399,6 +399,71 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.sellerUid == request.auth.uid;
     }
 
+    match /shopProductListings/{listingId} {
+      allow get, list: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          'sellerUid', 'sellerUsername', 'category', 'title', 'description', 'condition', 'price', 'createdAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'sellerUid', 'sellerUsername', 'category', 'title', 'description', 'condition', 'price', 'createdAt'
+        ])
+        && request.resource.data.sellerUid == request.auth.uid
+        && request.resource.data.sellerUsername == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username
+        && request.resource.data.category in ['gadgets', 'gaming', 'miners']
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.description is string
+        && request.resource.data.description.size() > 0
+        && request.resource.data.description.size() <= 1000
+        && request.resource.data.condition in ['New', 'Like new', 'Good', 'Fair', 'For parts']
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.price <= 10000000
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.sellerUid == request.auth.uid;
+    }
+
+    match /shopPurchaseRequests/{requestId} {
+      function matchesListedItem() {
+        let listing = get(/databases/$(database)/documents/shopProductListings/$(request.resource.data.listingId)).data;
+        return listing.sellerUid == request.resource.data.sellerUid
+          && listing.sellerUsername == request.resource.data.sellerUsername
+          && listing.category == request.resource.data.category
+          && listing.title == request.resource.data.listingTitle;
+      }
+
+      allow get, list: if isSignedIn()
+        && (resource.data.buyerUid == request.auth.uid || resource.data.sellerUid == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          'listingId', 'category', 'listingTitle', 'sellerUid', 'sellerUsername',
+          'buyerUid', 'buyerUsername', 'buyerMessage', 'status', 'createdAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'listingId', 'category', 'listingTitle', 'sellerUid', 'sellerUsername',
+          'buyerUid', 'buyerUsername', 'buyerMessage', 'status', 'createdAt'
+        ])
+        && request.resource.data.buyerUid == request.auth.uid
+        && request.resource.data.buyerUsername == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username
+        && request.resource.data.sellerUid != request.auth.uid
+        && request.resource.data.category in ['gadgets', 'gaming', 'miners']
+        && request.resource.data.listingId is string
+        && matchesListedItem()
+        && request.resource.data.buyerMessage is string
+        && request.resource.data.buyerMessage.size() <= 500
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time;
+      allow update: if isSignedIn()
+        && resource.data.sellerUid == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['accepted', 'declined'];
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

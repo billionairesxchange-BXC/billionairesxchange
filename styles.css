@@ -2383,6 +2383,186 @@ canvas {
   opacity: 1;
 }
 
+.trade-page .positions-market-row {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.trade-page .positions-chart-actions {
+  justify-content: flex-start;
+}
+
+@media (max-width: 760px) {
+  .trade-page header.topbar {
+    gap: .75rem;
+  }
+
+  .trade-page .main-nav {
+    width: 100%;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: .2rem;
+    scrollbar-width: thin;
+  }
+
+  .trade-page .main-nav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .trade-page .positions-chart-header {
+    flex-direction: column;
+  }
+
+  .trade-page .positions-chart-header > div {
+    width: 100%;
+  }
+
+  .trade-page .positions-chart-header > strong {
+    font-size: 1.35rem;
+  }
+
+  .trade-page .positions-market-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    gap: .65rem;
+  }
+
+  .trade-page .positions-market-selector {
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: .3rem;
+  }
+
+  .trade-page .positions-market-selector select,
+  .trade-page .positions-tools-button {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .trade-page .positions-tools-menu {
+    min-width: 0;
+  }
+
+  .trade-page .positions-chart-wrap {
+    height: 300px !important;
+    min-height: 280px !important;
+    width: 100% !important;
+  }
+
+  .trade-page .positions-chart-quick-trades button {
+    min-height: 38px;
+  }
+
+  .trade-page .positions-chart-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .6rem;
+  }
+
+  .trade-page .positions-chart-actions > label,
+  .trade-page .positions-chart-actions #positionsOrderQuantity,
+  .trade-page .positions-chart-actions #positionsOrderEstimate {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .trade-page .positions-chart-actions .btn {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .trade-page section {
+    margin: 2rem 0;
+  }
+
+  .trade-page .section-head {
+    margin-bottom: 1.25rem;
+  }
+
+  .trade-page .section-head h2 {
+    font-size: 1.55rem;
+  }
+
+  .trade-page .market-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .trade-page .market-panel,
+  .trade-page .watch-panel,
+  .trade-page .positions-chart-panel {
+    padding: 1rem;
+  }
+
+  .trade-page .positions-market-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .55rem;
+  }
+
+  .trade-page .positions-market-selector {
+    font-size: .7rem;
+  }
+
+  .trade-page .positions-market-selector select {
+    padding: .45rem .4rem;
+    font-size: .78rem;
+  }
+
+  .trade-page .positions-chart-wrap {
+    height: 280px !important;
+    min-height: 260px !important;
+  }
+
+  .trade-page .positions-chart-quick-trades {
+    left: .4rem;
+    top: .4rem;
+    gap: .3rem;
+  }
+
+  .trade-page .positions-chart-quick-trades button {
+    padding: .35rem .4rem;
+    font-size: .65rem;
+  }
+
+  .trade-page .positions-save-risk-button {
+    top: 3rem;
+    right: .4rem;
+    padding: .35rem .4rem;
+    font-size: .65rem;
+  }
+
+  .trade-page .trade-balances {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+  }
+
+  .trade-page .trade-balance-card strong {
+    font-size: 1.05rem;
+    overflow-wrap: anywhere;
+  }
+
+  .trade-page .trade-balance-actions {
+    grid-column: 1 / -1;
+  }
+
+  .trade-page .trade-balance-actions button {
+    flex: 1 1 100%;
+  }
+
+  .trade-page .positions-chart-actions {
+    gap: .5rem;
+  }
+
+  .trade-page .positions-chart-actions .btn {
+    padding: .65rem .45rem;
+  }
+}
+
 .chart-header {
   display: flex;
   justify-content: space-between;
@@ -4469,6 +4649,257 @@ canvas {
   background: rgba(38, 38, 38, .045);
   color: var(--light-gold);
   font: inherit;
+  text-decoration: none;
+  .product-marketplace-section h1,
+  .product-marketplace-section h2 {
+    color: var(--primary-gold);
+  }
+
+  .product-category-nav,
+  .product-marketplace-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin: 1.25rem 0;
+  }
+
+  .product-category-nav a,
+  .product-marketplace-tabs button {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    padding: .55rem .85rem;
+    border: 1px solid rgba(212, 175, 55, .35);
+    border-radius: 4px;
+    background: #111;
+    color: var(--light-gold);
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .product-category-nav a.is-active,
+  .product-marketplace-tabs button.is-active,
+  .product-category-nav a:hover,
+  .product-marketplace-tabs button:hover {
+    border-color: var(--primary-gold);
+    color: var(--primary-gold);
+  }
+
+  .product-marketplace-tabs button:focus-visible,
+  .product-category-nav a:focus-visible {
+    outline: 2px solid var(--gold-soft);
+    outline-offset: 2px;
+  }
+
+  .product-marketplace-panel[hidden] {
+    display: none;
+  }
+
+  .product-marketplace-panel {
+    margin-top: 1.5rem;
+  }
+
+  .product-marketplace-panel-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .product-marketplace-panel-head h2,
+  .product-marketplace-panel h2 {
+    margin: .25rem 0;
+    font-size: 1.4rem;
+  }
+
+  .product-marketplace-panel-head > p,
+  .product-marketplace-status,
+  .product-form-status,
+  .product-marketplace-help,
+  .product-payment-note {
+    color: var(--light-gold);
+    font-size: .82rem;
+  }
+
+  .product-listing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 1rem;
+  }
+
+  .product-listing-card,
+  .product-request-card {
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid rgba(212, 175, 55, .32);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, .48);
+  }
+
+  .product-listing-heading {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: .8rem;
+  }
+
+  .product-listing-heading h3,
+  .product-request-card h3,
+  .product-request-group > h3 {
+    color: var(--primary-gold);
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+  }
+
+  .product-listing-heading strong {
+    flex: 0 0 auto;
+    color: var(--white);
+  }
+
+  .product-listing-meta,
+  .product-listing-description,
+  .product-request-card p {
+    margin-top: .55rem;
+    color: var(--light-gold);
+    font-size: .82rem;
+    overflow-wrap: anywhere;
+  }
+
+  .product-listing-actions,
+  .product-dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: .9rem;
+  }
+
+  .product-marketplace-empty {
+    grid-column: 1 / -1;
+    padding: 1.25rem;
+    border: 1px dashed rgba(212, 175, 55, .4);
+    color: var(--light-gold);
+  }
+
+  .product-marketplace-help a {
+    color: var(--gold-soft);
+  }
+
+  .product-listing-form {
+    display: grid;
+    max-width: 760px;
+    gap: .9rem;
+    margin-top: 1rem;
+  }
+
+  .product-listing-form label,
+  .product-purchase-dialog label {
+    display: grid;
+    gap: .35rem;
+    color: var(--light-gold);
+    font-size: .82rem;
+  }
+
+  .product-listing-form input,
+  .product-listing-form select,
+  .product-listing-form textarea,
+  .product-purchase-dialog textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: .65rem .75rem;
+    border: 1px solid rgba(212, 175, 55, .45);
+    border-radius: 4px;
+    background: #080808;
+    color: var(--white);
+    font: inherit;
+  }
+
+  .product-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+  }
+
+  .product-marketplace-help {
+    margin-top: .5rem;
+  }
+
+  .product-payment-note {
+    margin-top: 1.5rem;
+  }
+
+  .product-request-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 1rem;
+  }
+
+  .product-request-group {
+    display: grid;
+    align-content: start;
+    gap: .75rem;
+  }
+
+  .product-request-status {
+    display: inline-flex;
+    margin-top: .75rem;
+    padding: .25rem .5rem;
+    border: 1px solid rgba(212, 175, 55, .35);
+    border-radius: 4px;
+    color: var(--gold-soft);
+    font-size: .75rem;
+    text-transform: capitalize;
+  }
+
+  .product-purchase-dialog {
+    width: min(480px, calc(100% - 2rem));
+    padding: 1.25rem;
+    border: 1px solid var(--primary-gold);
+    border-radius: 8px;
+    background: #111;
+    color: var(--white);
+  }
+
+  .product-purchase-dialog::backdrop {
+    background: rgba(0, 0, 0, .72);
+  }
+
+  .product-purchase-dialog form {
+    display: grid;
+    gap: .85rem;
+  }
+
+  .product-purchase-dialog h2 {
+    color: var(--primary-gold);
+    font-size: 1.25rem;
+  }
+
+  .product-purchase-dialog p {
+    color: var(--light-gold);
+    font-size: .85rem;
+  }
+
+  .product-dialog-actions {
+    justify-content: flex-end;
+  }
+
+  @media (max-width: 600px) {
+    .product-marketplace-panel-head {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .product-form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .product-category-nav a,
+    .product-marketplace-tabs button {
+      flex: 1 1 auto;
+    }
+  }
   text-align: center;
   cursor: pointer;
   transition: border-color .2s ease, background .2s ease, transform .2s ease;
@@ -4498,6 +4929,20 @@ canvas {
 
 .shop-category-button > span:last-child {
   font-size: .78rem;
+}
+
+.shop-category-item {
+  display: grid;
+  min-width: 0;
+  gap: .6rem;
+}
+
+.shop-category-visit {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .shop-category-details {
@@ -5086,6 +5531,29 @@ canvas {
 }
 
 /* Responsive */
+@media (max-width: 1100px) and (min-width: 769px) {
+  header.topbar {
+    flex-wrap: wrap;
+    gap: .65rem 1rem;
+    padding: .85rem 1.25rem;
+  }
+
+  header.topbar .main-nav {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    gap: .35rem;
+  }
+
+  header.topbar .main-nav a {
+    padding: .45rem .65rem;
+  }
+
+  .market-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
   .hero {
     grid-template-columns: 1fr;
@@ -5152,9 +5620,19 @@ canvas {
   }
 
   .main-nav {
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
+    width: 100%;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: .35rem;
+    overflow-x: auto;
+    padding-bottom: .2rem;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .main-nav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 
   header.topbar {
@@ -5200,7 +5678,7 @@ canvas {
 
   .main-nav {
     width: 100%;
-    gap: 0.25rem;
+    gap: .25rem;
   }
 
   .main-nav a {
@@ -5208,17 +5686,25 @@ canvas {
     font-size: 0.82rem;
   }
 
-  .nav-actions .btn {
-    flex: 1;
+  .nav-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .5rem;
+    margin-left: 0;
+  }
+
+  .nav-actions > .btn {
+    min-width: 0;
+    justify-content: center;
     text-align: center;
   }
 
   .market-overview {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .card-glass {
-    padding: 1.25rem;
+    padding: 1rem;
   }
 }
 

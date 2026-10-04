@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Gaming Marketplace</title>
+    <meta name="description" content="Buy and sell gaming consoles, gear, and accessories on the BillionairesXchange marketplace." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange" width="100" />
+        <div><p class="brand-name">BillionairesXchange</p><small>Crypto Trading &amp; Investment</small></div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a><a href="trade.html">Trade</a><a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Trading Bot</a><a href="treasury.html">Treasury/Wallet</a><a href="create-coin.html">Create Coin</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
+        <a class="btn btn-ghost" href="verification.html#login">Login</a>
+        <a class="btn btn-primary" href="verification.html#signup">Sign Up</a>
+      </div>
+    </header>
+    <main>
+      <section class="product-marketplace-section section-shell" id="productMarketplace" data-category="gaming">
+        <div class="section-head">
+          <div><span class="eyebrow">Community marketplace</span><h1 id="productMarketplaceTitle">Gaming Marketplace</h1><p id="productMarketplaceDescription">Buy and sell gaming gear.</p></div>
+          <a class="btn btn-ghost" href="shop.html">All shop categories</a>
+        </div>
+        <nav class="product-category-nav" aria-label="Marketplace categories">
+          <a href="gadgets.html">Gadgets</a><a class="is-active" href="gaming.html" aria-current="page">Gaming</a><a href="bitcoin-miners.html">Bitcoin Miners</a>
+        </nav>
+        <div class="product-marketplace-tabs" role="group" aria-label="Marketplace views">
+          <button class="is-active" type="button" data-marketplace-view="browse" aria-pressed="true">Browse</button>
+          <button type="button" data-marketplace-view="sell" aria-pressed="false">Sell an item</button>
+          <button type="button" data-marketplace-view="requests" aria-pressed="false">My requests</button>
+        </div>
+        <p class="product-marketplace-status" id="productMarketplaceStatus" role="status"></p>
+        <section class="product-marketplace-panel" data-marketplace-panel="browse" aria-labelledby="productListingsHeading">
+          <div class="product-marketplace-panel-head"><div><span class="eyebrow">For sale</span><h2 id="productListingsHeading">Gaming items for sale</h2></div><p id="productListingStatus" role="status">Loading listings...</p></div>
+          <div class="product-listing-grid" id="productListings"></div>
+        </section>
+        <section class="product-marketplace-panel card-glass" data-marketplace-panel="sell" hidden aria-labelledby="sellItemHeading">
+          <span class="eyebrow">Seller listing</span><h2 id="sellItemHeading">List a gaming item</h2>
+          <p class="product-marketplace-help" id="productSignInHint">Sign in and complete your account profile to sell. <a href="verification.html#login">Sign in</a></p>
+          <form class="product-listing-form" id="productListingForm">
+            <label>Item name<input name="title" type="text" maxlength="100" required placeholder="Console, controller, headset..." /></label>
+            <div class="product-form-row">
+              <label>Condition<select name="condition" required><option>New</option><option>Like new</option><option>Good</option><option>Fair</option><option>For parts</option></select></label>
+              <label>Price (USD)<input name="price" type="number" min="0.01" max="10000000" step="0.01" inputmode="decimal" required placeholder="0.00" /></label>
+            </div>
+            <label>Description<textarea name="description" rows="4" maxlength="1000" required placeholder="Describe the item, included accessories, and pickup or delivery details."></textarea></label>
+            <p class="product-form-status" id="productSellStatus" role="status"></p>
+            <button class="btn btn-primary" type="submit" disabled>Publish listing</button>
+          </form>
+        </section>
+        <section class="product-marketplace-panel" data-marketplace-panel="requests" hidden aria-labelledby="productRequestsHeading">
+          <div class="product-marketplace-panel-head"><div><span class="eyebrow">Buying and selling</span><h2 id="productRequestsHeading">My requests</h2></div><p id="productRequestStatus" role="status"></p></div>
+          <div class="product-request-groups" id="productRequests"></div>
+        </section>
+        <p class="product-payment-note">Purchase requests connect buyers and sellers. Payment and delivery are arranged directly; this site does not process payments or guarantee item condition.</p>
+      </section>
+    </main>
+    <footer class="site-footer"><p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p></footer>
+    <dialog class="product-purchase-dialog" id="purchaseRequestDialog" aria-labelledby="purchaseRequestHeading">
+      <form id="purchaseRequestForm">
+        <h2 id="purchaseRequestHeading">Request to buy</h2><p id="purchaseRequestSummary"></p>
+        <label>Message to seller<textarea id="purchaseRequestMessage" rows="3" maxlength="500" placeholder="Ask about availability, pickup, or delivery."></textarea></label>
+        <div class="product-dialog-actions"><button class="btn btn-ghost" id="closePurchaseRequest" type="button">Cancel</button><button class="btn btn-primary" type="submit">Send request</button></div>
+      </form>
+    </dialog>
+    <script type="module" src="product-marketplace.js"></script>
+  </body>
+</html>

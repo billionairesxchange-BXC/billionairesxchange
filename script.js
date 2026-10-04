@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const marketConfig = {
     currency: 'usd',
     refreshMs: 30000,
-    selectedSymbol: 'ETH',
+    selectedSymbol: 'BTC',
     selectedFilter: 'all',
     searchText: '',
     nextPage: 2
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
           && Number.isFinite(saved.ruler.end.x) && Number.isFinite(saved.ruler.end.price)
           ? saved.ruler
           : null,
-        market: typeof saved.market === 'string' ? saved.market.toUpperCase() : 'ETH',
+        market: typeof saved.market === 'string' ? saved.market.toUpperCase() : 'BTC',
         interval: validChartIntervals.includes(saved.interval) ? saved.interval : '1m'
       };
     } catch (error) {
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         takeProfit: '',
         riskSetupVisible: true,
         ruler: null,
-        market: 'ETH',
+        market: 'BTC',
         interval: '1m'
       };
     }
