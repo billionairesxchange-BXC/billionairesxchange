@@ -96,10 +96,9 @@
                   <label for="paymentType">
                     Payment type
                     <select id="paymentType" name="paymentType" required>
-                      <option value="bank-transfer">Bank transfer</option>
                       <option value="card-payment">Debit or credit card</option>
                       <option value="wallet-payment">Digital wallet</option>
-                      <option value="cash-payment">Cash payment</option>
+                      <option value="bank-payment">Bank pay</option>
                     </select>
                   </label>
                 </div>
@@ -135,9 +134,10 @@
                       id="billAmount"
                       name="billAmount"
                       type="number"
-                      min="0"
+                      min="0.01"
                       step="0.01"
                       placeholder="0.00"
+                      required
                     />
                   </label>
 
@@ -155,6 +155,24 @@
                   <strong>Available provider</strong>
                   <span>Select a country to see the utility company options for your region.</span>
                 </div>
+
+                <div class="bill-payment-crypto-step" id="cryptoPaymentStep" hidden>
+                  <h4>Choose a cryptocurrency</h4>
+                  <p>Submitting emails this bill payment request for review. It does not send cryptocurrency or pay the bill.</p>
+                  <p>The email includes your account name, utility account number, signed-in email, bill amount, provider, and selected cryptocurrency.</p>
+                  <label for="cryptoCurrency">
+                    Cryptocurrency
+                    <select id="cryptoCurrency" name="cryptoCurrency">
+                      <option value="">Choose a cryptocurrency</option>
+                      <option value="Bitcoin (BTC)">Bitcoin (BTC)</option>
+                      <option value="Ethereum (ETH)">Ethereum (ETH)</option>
+                      <option value="Tether (USDT - TRC20)">Tether (USDT - TRC20)</option>
+                      <option value="USD Coin (USDC - ERC20)">USD Coin (USDC - ERC20)</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="bill-payment-result" id="paymentResult" role="status" aria-live="polite" hidden></div>
 
                 <div class="bill-payment-actions">
                   <button class="btn btn-primary" type="submit">Continue payment</button>
@@ -178,7 +196,44 @@
       </section>
     </main>
 
-    <script>
+    <dialog class="bill-card-dialog" id="cardPaymentDialog" aria-labelledby="cardPaymentHeading">
+      <div class="bill-card-dialog-content">
+        <h3 id="cardPaymentHeading">Card payment window</h3>
+        <p id="cardPaymentSummary"></p>
+        <p class="bill-demo-notice">
+          This is a demo checkout. For your safety, this page does not collect card numbers, expiry dates,
+          or security codes. Live card payments must use a secure, hosted payment provider.
+        </p>
+        <div class="bill-payment-actions">
+          <button class="btn btn-primary" id="simulateCardPayment" type="button">Preview demo checkout</button>
+          <button class="btn btn-ghost" id="closeCardPayment" type="button">Cancel</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="api-config.js"></script>
+    <script type="module">
+      import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
+        authDomain: 'billionairesxchange-e8162.firebaseapp.com',
+        projectId: 'billionairesxchange-e8162',
+        storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
+        messagingSenderId: '872942229296',
+        appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
+        measurementId: 'G-JCZ6FCKF3M'
+      };
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const authReady = new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          unsubscribe();
+          resolve(user);
+        }, () => resolve(null));
+      });
+
       const utilityCompaniesByCountry = {
         'united-states': [
           { name: 'PG&E', service: 'Electricity & Gas', region: 'California' },
@@ -219,8 +274,25 @@
 
       const countrySelect = document.getElementById('countrySelect');
       const companySelect = document.getElementById('companySelect');
+      const currencySelect = document.getElementById('currencySelect');
       const companySummary = document.getElementById('companySummary');
       const billPaymentForm = document.getElementById('billPaymentForm');
+      const paymentTypeSelect = document.getElementById('paymentType');
+      const cryptoPaymentStep = document.getElementById('cryptoPaymentStep');
+      const cryptoCurrencySelect = document.getElementById('cryptoCurrency');
+      const paymentResult = document.getElementById('paymentResult');
+      const cardPaymentDialog = document.getElementById('cardPaymentDialog');
+      const cardPaymentSummary = document.getElementById('cardPaymentSummary');
+      const simulateCardPaymentButton = document.getElementById('simulateCardPayment');
+      const closeCardPaymentButton = document.getElementById('closeCardPayment');
+      const continuePaymentButton = billPaymentForm.querySelector('button[type="submit"]');
+      let cryptoSelectionRequired = false;
+      let paymentReference = '';
+
+      function setPaymentResult(message) {
+        paymentResult.textContent = message;
+        paymentResult.hidden = !message;
+      }
 
       function populateCompanies() {
         const selectedCountry = countrySelect.value;
@@ -274,19 +346,111 @@
       countrySelect.addEventListener('change', populateCompanies);
       companySelect.addEventListener('change', updateCompanySummary);
 
-      billPaymentForm.addEventListener('submit', (event) => {
+      paymentTypeSelect.addEventListener('change', () => {
+        cryptoSelectionRequired = false;
+        cryptoPaymentStep.hidden = true;
+        cryptoCurrencySelect.required = false;
+        cryptoCurrencySelect.value = '';
+        paymentReference = '';
+        continuePaymentButton.textContent = 'Continue payment';
+        setPaymentResult('');
+      });
+
+      billPaymentForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
         const formData = new FormData(billPaymentForm);
-        const country = countrySelect.selectedOptions[0]?.text || 'N/A';
-        const company = companySelect.value || 'N/A';
-        const currency = formData.get('currencyType');
-        const paymentType = formData.get('paymentType');
-        const accountName = formData.get('accountName');
+        const company = companySelect.value;
+        const amount = Number(formData.get('billAmount'));
+        const currency = currencySelect.options[currencySelect.selectedIndex].text;
 
-        alert(
-          `Bill payment request created for ${accountName} at ${company} in ${country}.\nCurrency: ${currency.toUpperCase()}\nPayment type: ${paymentType}`
+        if (paymentTypeSelect.value === 'card-payment') {
+          cardPaymentSummary.textContent = `${currency} ${amount.toFixed(2)} bill payment to ${company}.`;
+          cardPaymentDialog.showModal();
+          return;
+        }
+
+        if (paymentTypeSelect.value === 'bank-payment') {
+          setPaymentResult(
+            'Bank pay is not configured yet. No bank details were collected and no payment was processed.'
+          );
+          return;
+        }
+
+        if (!cryptoSelectionRequired) {
+          cryptoSelectionRequired = true;
+          paymentReference = `BILL-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+          cryptoPaymentStep.hidden = false;
+          cryptoCurrencySelect.required = true;
+          continuePaymentButton.textContent = 'Email payment request';
+          setPaymentResult('Choose a cryptocurrency, then email the request to BillionairesXchange.');
+          cryptoCurrencySelect.focus();
+          return;
+        }
+
+        continuePaymentButton.disabled = true;
+        setPaymentResult('Sending your bill payment request email...');
+
+        try {
+          const signedInUser = await authReady;
+          if (!signedInUser) {
+            throw new Error('Sign in before emailing a bill payment request. Open the Login page and sign in, then retry.');
+          }
+
+          const idToken = await signedInUser.getIdToken();
+          const response = await fetch(`${window.MAKINGS_API_BASE_URL}/api/bill-payment-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+              country: countrySelect.selectedOptions[0]?.text || '',
+              company,
+              currency: currencySelect.value.toUpperCase(),
+              accountName: formData.get('accountName'),
+              accountNumber: formData.get('accountNumber'),
+              amount,
+              billingPeriod: formData.get('billingPeriod'),
+              cryptoCurrency: formData.get('cryptoCurrency'),
+              paymentReference
+            })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Could not email your bill payment request.');
+
+          setPaymentResult(
+            `Your bill payment request was emailed to billionairesxchange@gmail.com.\n` +
+            `Reference: ${result.paymentReference}\n` +
+            `Amount: ${currency} ${amount.toFixed(2)}\n` +
+            `Cryptocurrency selected: ${formData.get('cryptoCurrency')}\n\n` +
+            `This is a request only. No payment was processed and no cryptocurrency was transferred.`
+          );
+        } catch (error) {
+          setPaymentResult(error.message || 'Could not email your bill payment request. Please try again.');
+        } finally {
+          continuePaymentButton.disabled = false;
+        }
+      });
+
+      simulateCardPaymentButton.addEventListener('click', () => {
+        cardPaymentDialog.close();
+        setPaymentResult(
+          'DEMO CARD CHECKOUT — no card details were collected and no payment was processed. ' +
+          'Connect a secure hosted payment provider to accept real card payments.'
         );
+      });
+
+      closeCardPaymentButton.addEventListener('click', () => cardPaymentDialog.close());
+
+      billPaymentForm.addEventListener('reset', () => {
+        cryptoSelectionRequired = false;
+        cryptoPaymentStep.hidden = true;
+        cryptoCurrencySelect.required = false;
+        cryptoCurrencySelect.value = '';
+        paymentReference = '';
+        continuePaymentButton.textContent = 'Continue payment';
+        setPaymentResult('');
       });
 
       populateCompanies();

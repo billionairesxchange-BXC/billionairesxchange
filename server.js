@@ -148,6 +148,151 @@ app.post('/api/card-request-email', async (req, res) => {
   }
 });
 
+app.post('/api/bill-payment-email', async (req, res) => {
+  if (!FIREBASE_WEB_API_KEY || !RESEND_API_KEY || !RESEND_FROM_EMAIL) {
+    return res.status(503).json({ error: 'Bill payment email is not configured on the server.' });
+  }
+
+  const authorization = req.get('authorization') || '';
+  const idToken = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!idToken) return res.status(401).json({ error: 'Sign in to email your bill payment request.' });
+
+  let firebaseAccount;
+  try {
+    const accountResponse = await axios.post(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(FIREBASE_WEB_API_KEY)}`,
+      { idToken },
+      { timeout: 10000 }
+    );
+    firebaseAccount = accountResponse.data.users?.[0];
+  } catch (error) {
+    if (error.response?.status === 400) {
+      return res.status(401).json({ error: 'Your sign-in session is invalid or expired. Sign in again.' });
+    }
+    console.error('Firebase token verification failed for bill payment email:', error.message);
+    return res.status(502).json({ error: 'Could not verify your account. Try again later.' });
+  }
+
+  if (!firebaseAccount?.localId) {
+    return res.status(401).json({ error: 'Your signed-in account could not be verified.' });
+  }
+
+  const {
+    country,
+    company,
+    currency,
+    accountName,
+    accountNumber,
+    amount,
+    billingPeriod,
+    cryptoCurrency,
+    paymentReference
+  } = req.body || {};
+  const companiesByCountry = {
+    'United States': ['PG&E', 'ComEd', 'Duke Energy', 'Verizon', 'Xfinity'],
+    'United Kingdom': ['British Gas', 'Vodafone', 'Thames Water', 'SSE', 'O2'],
+    Canada: ['Hydro One', 'Bell', 'Rogers', 'Enbridge', 'Toronto Water'],
+    Jamaica: ['JPS Co.', 'National Water Commission', 'FLOW', 'Digicel', 'Cable & Wireless'],
+    'Trinidad & Tobago': ['T&TEC', 'WASA', 'FLOW', 'Digicel', 'Bmobile']
+  };
+  const allowedCurrencies = new Set(['USD', 'GBP', 'CAD', 'JMD', 'TTD']);
+  const allowedCryptoCurrencies = new Set([
+    'Bitcoin (BTC)',
+    'Ethereum (ETH)',
+    'Tether (USDT - TRC20)',
+    'USD Coin (USDC - ERC20)'
+  ]);
+  const allowedBillingPeriods = new Set(['monthly', 'quarterly', 'annual']);
+
+  if (typeof country !== 'string' || !companiesByCountry[country]
+    || typeof company !== 'string' || !companiesByCountry[country].includes(company)) {
+    return res.status(400).json({ error: 'Choose a valid country and utility provider.' });
+  }
+  if (typeof currency !== 'string' || !allowedCurrencies.has(currency)) {
+    return res.status(400).json({ error: 'Choose a valid bill currency.' });
+  }
+  if (typeof accountName !== 'string' || !accountName.trim() || accountName.trim().length > 100
+    || /[\r\n<>]/.test(accountName)) {
+    return res.status(400).json({ error: 'Enter a valid utility account name.' });
+  }
+  if (typeof accountNumber !== 'string' || !/^[A-Za-z0-9 -]{1,64}$/.test(accountNumber.trim())) {
+    return res.status(400).json({ error: 'Enter a valid utility account number.' });
+  }
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0 || amount > 1000000) {
+    return res.status(400).json({ error: 'Enter a bill amount greater than zero and no more than 1,000,000.' });
+  }
+  if (typeof billingPeriod !== 'string' || !allowedBillingPeriods.has(billingPeriod)) {
+    return res.status(400).json({ error: 'Choose a valid billing period.' });
+  }
+  if (typeof cryptoCurrency !== 'string' || !allowedCryptoCurrencies.has(cryptoCurrency)) {
+    return res.status(400).json({ error: 'Choose a valid cryptocurrency.' });
+  }
+  if (typeof paymentReference !== 'string' || !/^BILL-[0-9A-F]{8}$/.test(paymentReference)) {
+    return res.status(400).json({ error: 'The payment request reference is invalid. Please retry.' });
+  }
+
+  const requestDetails = {
+    country,
+    company,
+    currency,
+    accountName: accountName.trim(),
+    accountNumber: accountNumber.trim(),
+    amount: amount.toFixed(2),
+    billingPeriod,
+    cryptoCurrency,
+    paymentReference,
+    customerEmail: firebaseAccount.email || 'Not provided',
+    firebaseUid: firebaseAccount.localId
+  };
+  const safeDetails = Object.fromEntries(
+    Object.entries(requestDetails).map(([key, value]) => [key, escapeHtml(value)])
+  );
+  const text = [
+    'A utility bill payment request was submitted. No payment has been received or processed.',
+    `Reference: ${requestDetails.paymentReference}`,
+    `Customer: ${requestDetails.accountName}`,
+    `Customer email: ${requestDetails.customerEmail}`,
+    `Firebase account ID: ${requestDetails.firebaseUid}`,
+    `Country: ${requestDetails.country}`,
+    `Utility provider: ${requestDetails.company}`,
+    `Utility account number: ${requestDetails.accountNumber}`,
+    `Bill amount: ${requestDetails.currency} ${requestDetails.amount}`,
+    `Billing period: ${requestDetails.billingPeriod}`,
+    `Cryptocurrency selected: ${requestDetails.cryptoCurrency}`,
+    `Payment message: Utility bill payment - ${requestDetails.company} - ${requestDetails.billingPeriod} - ${requestDetails.paymentReference}`,
+    'Status: Request only. No cryptocurrency has been transferred.'
+  ].join('\n');
+
+  try {
+    await axios.post('https://api.resend.com/emails', {
+      from: RESEND_FROM_EMAIL,
+      to: ['billionairesxchange@gmail.com'],
+      subject: `Utility bill payment request ${requestDetails.paymentReference} - unpaid`,
+      text,
+      html: `<h1>Utility bill payment request</h1><p><strong>Request only. No payment has been received or processed.</strong></p><dl>
+        <dt>Reference</dt><dd>${safeDetails.paymentReference}</dd>
+        <dt>Customer</dt><dd>${safeDetails.accountName}</dd>
+        <dt>Customer email</dt><dd>${safeDetails.customerEmail}</dd>
+        <dt>Firebase account ID</dt><dd>${safeDetails.firebaseUid}</dd>
+        <dt>Country</dt><dd>${safeDetails.country}</dd>
+        <dt>Utility provider</dt><dd>${safeDetails.company}</dd>
+        <dt>Utility account number</dt><dd>${safeDetails.accountNumber}</dd>
+        <dt>Bill amount</dt><dd>${safeDetails.currency} ${safeDetails.amount}</dd>
+        <dt>Billing period</dt><dd>${safeDetails.billingPeriod}</dd>
+        <dt>Cryptocurrency selected</dt><dd>${safeDetails.cryptoCurrency}</dd>
+        <dt>Payment message</dt><dd>Utility bill payment - ${safeDetails.company} - ${safeDetails.billingPeriod} - ${safeDetails.paymentReference}</dd>
+      </dl><p>No cryptocurrency has been transferred.</p>`
+    }, {
+      headers: { Authorization: `****** },
+      timeout: 15000
+    });
+    return res.status(200).json({ sent: true, paymentReference: requestDetails.paymentReference });
+  } catch (error) {
+    console.error('Resend failed to send bill payment request:', error.message);
+    return res.status(502).json({ error: 'Your bill payment request could not be emailed. Please try again.' });
+  }
+});
+
 // Example REST endpoint for current price
 app.get('/api/price/:symbol', async (req, res) => {
   const symbol = req.params.symbol.toUpperCase();
