@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Deposit</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <meta
+      name="description"
+      content="Deposit funds from your bank into your wallet or trade paper balance."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading &amp; Investment</small>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="bill-payment-page section-shell" aria-labelledby="depositHeading">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Deposit</span>
+            <h2 id="depositHeading">Deposit funds</h2>
+          </div>
+          <a class="btn btn-secondary" href="treasury.html">Back to Treasury</a>
+        </div>
+
+        <div class="card-glass bill-payment-card">
+          <div class="bill-payment-layout">
+            <div class="bill-payment-form-panel">
+              <h3>Transfer from your bank</h3>
+              <p>Select the country where your bank is registered, choose a banking partner, and decide where the money should be deposited.</p>
+
+              <form class="bill-payment-form" id="depositForm">
+                <div class="form-grid">
+                  <label for="countrySelect">
+                    Bank country
+                    <select id="countrySelect" name="country" required>
+                      <option value="">Select country</option>
+                      <option value="united-states">United States</option>
+                      <option value="united-kingdom">United Kingdom</option>
+                      <option value="canada">Canada</option>
+                      <option value="jamaica">Jamaica</option>
+                      <option value="trinidad-tobago">Trinidad &amp; Tobago</option>
+                    </select>
+                  </label>
+
+                  <label for="amount">
+                    Deposit amount
+                    <input id="amount" name="amount" type="number" min="1" step="0.01" placeholder="0.00" required />
+                  </label>
+                </div>
+
+                <div>
+                  <label for="bankSelect" style="display:block; margin-bottom:0.6rem; color: var(--light-gold); font-size:0.8rem;">
+                    Select your bank
+                  </label>
+                  <div class="company-option-grid" id="bankGrid" aria-live="polite">
+                    <button class="company-option" type="button" data-bank="Chase" data-country="united-states">
+                      <span class="company-option-logo">C</span>
+                      <span class="company-option-details">
+                        <strong>Chase</strong>
+                        <small>United States</small>
+                      </span>
+                    </button>
+                    <button class="company-option" type="button" data-bank="Bank of America" data-country="united-states">
+                      <span class="company-option-logo">B</span>
+                      <span class="company-option-details">
+                        <strong>Bank of America</strong>
+                        <small>United States</small>
+                      </span>
+                    </button>
+                    <button class="company-option" type="button" data-bank="HSBC" data-country="united-kingdom">
+                      <span class="company-option-logo">H</span>
+                      <span class="company-option-details">
+                        <strong>HSBC</strong>
+                        <small>United Kingdom</small>
+                      </span>
+                    </button>
+                    <button class="company-option" type="button" data-bank="Barclays" data-country="united-kingdom">
+                      <span class="company-option-logo">B</span>
+                      <span class="company-option-details">
+                        <strong>Barclays</strong>
+                        <small>United Kingdom</small>
+                      </span>
+                    </button>
+                    <button class="company-option" type="button" data-bank="TD Bank" data-country="canada">
+                      <span class="company-option-logo">T</span>
+                      <span class="company-option-details">
+                        <strong>TD Bank</strong>
+                        <small>Canada</small>
+                      </span>
+                    </button>
+                    <button class="company-option" type="button" data-bank="Royal Bank" data-country="canada">
+                      <span class="company-option-logo">R</span>
+                      <span class="company-option-details">
+                        <strong>Royal Bank</strong>
+                        <small>Canada</small>
+                      </span>
+                    </button>
+                    <button class="company-option" type="button" data-bank="NCB" data-country="jamaica">
+                      <span class="company-option-logo">N</span>
+                      <span class="company-option-details">
+                        <strong>NCB</strong>
+                        <small>Jamaica</small>
+                      </span>
+                    </button>
+                    <button class="company-option" type="button" data-bank="Scotia Jamaica" data-country="jamaica">
+                      <span class="company-option-logo">S</span>
+                      <span class="company-option-details">
+                        <strong>Scotia Jamaica</strong>
+                        <small>Jamaica</small>
+                      </span>
+                    </button>
+                    <button class="company-option" type="button" data-bank="Republic Bank" data-country="trinidad-tobago">
+                      <span class="company-option-logo">R</span>
+                      <span class="company-option-details">
+                        <strong>Republic Bank</strong>
+                        <small>Trinidad &amp; Tobago</small>
+                      </span>
+                    </button>
+                    <button class="company-option" type="button" data-bank="First Citizens" data-country="trinidad-tobago">
+                      <span class="company-option-logo">F</span>
+                      <span class="company-option-details">
+                        <strong>First Citizens</strong>
+                        <small>Trinidad &amp; Tobago</small>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="payment-type-grid">
+                  <label for="destinationAccount">
+                    Deposit to
+                    <select id="destinationAccount" name="destinationAccount" required>
+                      <option value="wallet">Wallet</option>
+                      <option value="trade-paper-balance">Trade Paper Balance</option>
+                    </select>
+                  </label>
+
+                  <label for="accountType">
+                    Account type
+                    <select id="accountType" name="accountType" required>
+                      <option value="checking">Checking</option>
+                      <option value="savings">Savings</option>
+                      <option value="credit-card">Credit Card</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="form-grid">
+                  <label for="accountName">
+                    Name on bank account
+                    <input id="accountName" name="accountName" type="text" placeholder="e.g. Daniel Clarke" required />
+                  </label>
+
+                  <label for="bankReference">
+                    Bank reference / routing code
+                    <input id="bankReference" name="bankReference" type="text" placeholder="e.g. 123456789" required />
+                  </label>
+                </div>
+
+                <div class="bill-payment-summary" id="bankSummary" aria-live="polite">
+                  <strong>Selected bank</strong>
+                  <span>Select a country and choose a bank to begin.</span>
+                </div>
+
+                <div class="bill-payment-actions">
+                  <button class="btn btn-primary" type="submit">Confirm deposit</button>
+                  <button class="btn btn-ghost" type="reset">Reset</button>
+                </div>
+              </form>
+            </div>
+
+            <aside class="bill-payment-side">
+              <h3>Deposit notes</h3>
+              <p>Use this form to move money from your linked bank account into your platform balance.</p>
+              <ul>
+                <li>Select the country of the bank account used for funding</li>
+                <li>Choose a bank from the displayed list of supported institutions</li>
+                <li>Select wallet or trade paper balance as the destination</li>
+                <li>Confirm the account name and routing details before submitting</li>
+              </ul>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const countrySelect = document.getElementById('countrySelect');
+      const bankGrid = document.getElementById('bankGrid');
+      const bankSummary = document.getElementById('bankSummary');
+      const depositForm = document.getElementById('depositForm');
+      const selectedBank = { name: '', country: '' };
+
+      function filterBanks() {
+        const selectedCountry = countrySelect.value;
+        const bankButtons = bankGrid.querySelectorAll('.company-option');
+
+        bankButtons.forEach((button) => {
+          const country = button.dataset.country;
+          const shouldShow = Boolean(selectedCountry) && country === selectedCountry;
+          button.hidden = !shouldShow;
+          if (!shouldShow) {
+            button.classList.remove('is-selected');
+          }
+        });
+
+        const visibleBank = [...bankButtons].find((button) => !button.hidden);
+        if (selectedCountry && visibleBank) {
+          const bankName = visibleBank.dataset.bank;
+          selectedBank.name = bankName;
+          selectedBank.country = selectedCountry;
+          visibleBank.classList.add('is-selected');
+          updateBankSummary(bankName, selectedCountry);
+        } else {
+          selectedBank.name = '';
+          selectedBank.country = '';
+          bankSummary.innerHTML = '<strong>Selected bank</strong><span>Select a country and choose a bank to begin.</span>';
+        }
+      }
+
+      function updateBankSummary(bankName, countryCode) {
+        const countryLabel = countrySelect.options[countrySelect.selectedIndex]?.text || 'Selected country';
+        bankSummary.innerHTML = `
+          <strong>${bankName}</strong>
+          <span>${countryLabel}</span>
+          <div class="summary-meta">
+            <span>Deposit destination: ${document.getElementById('destinationAccount').value === 'wallet' ? 'Wallet' : 'Trade Paper Balance'}</span>
+          </div>
+        `;
+      }
+
+      bankGrid.addEventListener('click', (event) => {
+        const button = event.target.closest('.company-option');
+        if (!button) return;
+
+        const bankButtons = bankGrid.querySelectorAll('.company-option');
+        bankButtons.forEach((item) => item.classList.toggle('is-selected', item === button));
+
+        selectedBank.name = button.dataset.bank;
+        selectedBank.country = button.dataset.country;
+        updateBankSummary(selectedBank.name, selectedBank.country);
+      });
+
+      countrySelect.addEventListener('change', filterBanks);
+      document.getElementById('destinationAccount').addEventListener('change', () => {
+        if (selectedBank.name) {
+          updateBankSummary(selectedBank.name, selectedBank.country);
+        }
+      });
+
+      depositForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const formData = new FormData(depositForm);
+        const amount = formData.get('amount');
+        const destination = formData.get('destinationAccount');
+        const bank = selectedBank.name || 'Selected bank';
+        const accountName = formData.get('accountName');
+
+        alert(
+          `Deposit request created.\nBank: ${bank}\nAmount: $${Number(amount).toFixed(2)}\nDestination: ${destination === 'wallet' ? 'Wallet' : 'Trade Paper Balance'}\nAccount holder: ${accountName}`
+        );
+      });
+
+      filterBanks();
+    </script>
+  </body>
+</html>

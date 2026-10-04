@@ -119,6 +119,8 @@
                     <option value="USDT">Tether (USDT)</option>
                   </select>
                 </label>
+                <button class="btn btn-ghost" id="loadMoreBotMarkets" type="button">Load more market coins</button>
+                <p id="botMarketListStatus" class="favorite-analysis-status" aria-live="polite">Choose from the leading markets or load more coins.</p>
 
                 <label>
                   Trading Duration
@@ -240,114 +242,115 @@
               <small id="aiUpdated">Analysis updates every bot cycle.</small>
             </section>
 
-            <section class="bot-performance card-glass" aria-labelledby="botPerformanceHeading">
-              <h4 id="botPerformanceHeading">Paper Bot Performance</h4>
-              <div class="bot-metrics">
-                <div>
-                  <span>Trade Paper Balance</span>
-                  <strong id="botBalance">$10,000.00</strong>
-                </div>
-                <div>
-                  <span>Account Balance</span>
-                  <strong id="botAccountBalance">$0.00</strong>
-                </div>
-                <div>
-                  <span>P/L</span>
-                  <strong id="botPnl">$0.00</strong>
-                </div>
-                <div>
-                  <span>Win rate</span>
-                  <strong id="botWinRate">0%</strong>
-                </div>
-                <div>
-                  <span>Trades</span>
-                  <strong id="botTrades">0</strong>
-                </div>
-              </div>
-            </section>
-
-            <section class="bot-chart-section card-glass" aria-labelledby="botChartHeading">
-              <h3 id="botChartHeading">Market Chart</h3>
-              <div class="bot-chart-toolbar">
-                <label class="positions-market-selector">
-                  <span>Choose market</span>
-                  <select id="botChartMarketSelect">
-                    <option value="">Choose a coin</option>
-                    <option value="BTC" selected>BTC / USD</option>
-                    <option value="ETH">ETH / USD</option>
-                    <option value="XRP">XRP / USD</option>
-                    <option value="SOL">SOL / USD</option>
-                    <option value="ADA">ADA / USD</option>
-                    <option value="DOT">DOT / USD</option>
-                    <option value="DOGE">DOGE / USD</option>
-                    <option value="USDT">USDT / USD</option>
-                  </select>
-                </label>
-                <div class="positions-time-menu">
-                  <button class="positions-tools-button" id="botChartTimeButton" type="button" aria-expanded="false" aria-controls="botChartTimeOptions">Time chart: 1m</button>
-                  <div class="positions-time-options" id="botChartTimeOptions" hidden>
-                    <strong>Seconds</strong>
-                    <button type="button" data-bot-chart-interval="1s">1 second</button>
-                    <strong>Minutes</strong>
-                    <button type="button" data-bot-chart-interval="1m">1 minute</button>
-                    <button type="button" data-bot-chart-interval="5m">5 minutes</button>
-                    <button type="button" data-bot-chart-interval="15m">15 minutes</button>
-                    <strong>Hours</strong>
-                    <button type="button" data-bot-chart-interval="1h">1 hour</button>
-                    <button type="button" data-bot-chart-interval="4h">4 hours</button>
-                  </div>
-                </div>
-              </div>
-              <div class="bot-chart-wrap">
-                <canvas id="botCanvas" width="600" height="320" aria-label="BillionairesXchange live trading bot candlestick chart"></canvas>
-                <button class="bot-chart-resizer" id="botChartResizer" type="button" aria-label="Resize bot chart" title="Drag to resize chart"></button>
-              </div>
-              <p id="botChartStatus" class="bot-chart-status" aria-live="polite">Choose a market to load chart candles.</p>
-              <div class="bot-actions">
-                <button class="btn btn-primary" type="button" id="startBotBtn">Start bot</button>
-                <button class="btn btn-ghost" type="button" id="pauseBotBtn">Pause bot</button>
-              </div>
-              <p id="botMarketStatus" class="bot-market-status">Select a coin to connect its market feed. Trades are simulated.</p>
-              <p id="botLearningStatus" class="bot-learning-status" aria-live="polite">Learning starts when market history is available.</p>
-            </section>
-
-            <section class="market-scan-panel card-glass" aria-labelledby="marketScanTitle">
-              <div>
-                <h3 id="marketScanTitle">Market Opportunity Scan</h3>
-                <p id="marketScanStatus" aria-live="polite">Checking liquid supported markets for positive 24-hour momentum.</p>
-                <p id="minimumTradeNotice">Minimum paper buy: $20.00 USD equivalent.</p>
-              </div>
-              <button class="btn btn-ghost" type="button" id="scanMarketsBtn">Scan markets now</button>
-              <button class="btn btn-primary" type="button" id="analyzeBestMarketBtn" hidden>Analyze top market</button>
-            </section>
-
-            <section class="bot-positions-panel card-glass" aria-labelledby="positionsHeading">
-              <div class="bot-positions-heading">
-                <div>
-                  <span class="eyebrow">Positions</span>
-                  <h3 id="positionsHeading">Open Positions</h3>
-                </div>
-                <span class="bot-positions-count" id="botPositionsCount">0 active</span>
-              </div>
-              <div class="bot-positions-list" id="botPositionsList" aria-live="polite"></div>
-            </section>
-
-            <section class="leaderboard-wrap card-glass" aria-labelledby="leaderboardHeading">
-              <h3 id="leaderboardHeading">Historical strategy replay (paper)</h3>
-              <ul id="leaderboardList" class="leaderboard-list"></ul>
-            </section>
-
-            <section class="recent-trades-panel card-glass" aria-labelledby="recentTradesHeading">
-              <h3 id="recentTradesHeading">Recent Trades</h3>
-              <ul class="trade-feed" id="tradeFeed">
-                <li>BTC buy order triggered at $66,940.</li>
-                <li>ETH breakout detected on 15m chart.</li>
-                <li>USDT hedge added for volatility protection.</li>
-                <li>SOL position closed with 8.5% profit.</li>
-              </ul>
-            </section>
           </div>
         </div>
+
+        <section class="market-scan-panel card-glass" aria-labelledby="marketScanTitle">
+          <div>
+            <h3 id="marketScanTitle">Market Opportunity Scan</h3>
+            <p id="marketScanStatus" aria-live="polite">Checking liquid supported markets for positive 24-hour momentum.</p>
+            <p id="minimumTradeNotice">Minimum paper buy: $20.00 USD equivalent.</p>
+          </div>
+          <button class="btn btn-ghost" type="button" id="scanMarketsBtn">Scan markets now</button>
+          <button class="btn btn-primary" type="button" id="analyzeBestMarketBtn" hidden>Analyze top market</button>
+        </section>
+
+        <section class="bot-performance card-glass" aria-labelledby="botPerformanceHeading">
+          <h4 id="botPerformanceHeading">Paper Bot Performance</h4>
+          <div class="bot-metrics">
+            <div>
+              <span>Trade Paper Balance</span>
+              <strong id="botBalance">$10,000.00</strong>
+            </div>
+            <div>
+              <span>Account Balance</span>
+              <strong id="botAccountBalance">$0.00</strong>
+            </div>
+            <div>
+              <span>P/L</span>
+              <strong id="botPnl">$0.00</strong>
+            </div>
+            <div>
+              <span>Win rate</span>
+              <strong id="botWinRate">0%</strong>
+            </div>
+            <div>
+              <span>Trades</span>
+              <strong id="botTrades">0</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="bot-chart-section card-glass" aria-labelledby="botChartHeading">
+          <h3 id="botChartHeading">Market Chart</h3>
+          <div class="bot-chart-toolbar">
+            <label class="positions-market-selector">
+              <span>Choose market</span>
+              <select id="botChartMarketSelect">
+                <option value="">Choose a coin</option>
+                <option value="BTC" selected>BTC / USD</option>
+                <option value="ETH">ETH / USD</option>
+                <option value="XRP">XRP / USD</option>
+                <option value="SOL">SOL / USD</option>
+                <option value="ADA">ADA / USD</option>
+                <option value="DOT">DOT / USD</option>
+                <option value="DOGE">DOGE / USD</option>
+                <option value="USDT">USDT / USD</option>
+              </select>
+            </label>
+            <div class="positions-time-menu">
+              <button class="positions-tools-button" id="botChartTimeButton" type="button" aria-expanded="false" aria-controls="botChartTimeOptions">Time chart: 1m</button>
+              <div class="positions-time-options" id="botChartTimeOptions" hidden>
+                <strong>Seconds</strong>
+                <button type="button" data-bot-chart-interval="1s">1 second</button>
+                <strong>Minutes</strong>
+                <button type="button" data-bot-chart-interval="1m">1 minute</button>
+                <button type="button" data-bot-chart-interval="5m">5 minutes</button>
+                <button type="button" data-bot-chart-interval="15m">15 minutes</button>
+                <strong>Hours</strong>
+                <button type="button" data-bot-chart-interval="1h">1 hour</button>
+                <button type="button" data-bot-chart-interval="4h">4 hours</button>
+              </div>
+            </div>
+          </div>
+          <div class="bot-chart-wrap">
+            <canvas id="botCanvas" width="600" height="320" aria-label="BillionairesXchange live trading bot candlestick chart"></canvas>
+            <button class="bot-chart-resizer" id="botChartResizer" type="button" aria-label="Resize bot chart" title="Drag to resize chart"></button>
+          </div>
+          <p id="botChartStatus" class="bot-chart-status" aria-live="polite">Choose a market to load chart candles.</p>
+          <div class="bot-actions">
+            <button class="btn btn-primary" type="button" id="startBotBtn">Start bot</button>
+            <button class="btn btn-ghost" type="button" id="pauseBotBtn">Pause bot</button>
+          </div>
+          <p id="botMarketStatus" class="bot-market-status">Select a coin to connect its market feed. Trades are simulated.</p>
+          <p id="botLearningStatus" class="bot-learning-status" aria-live="polite">Learning starts when market history is available.</p>
+        </section>
+
+        <section class="bot-positions-panel card-glass" aria-labelledby="positionsHeading">
+          <div class="bot-positions-heading">
+            <div>
+              <span class="eyebrow">Positions</span>
+              <h3 id="positionsHeading">Open Positions</h3>
+            </div>
+            <span class="bot-positions-count" id="botPositionsCount">0 active</span>
+          </div>
+          <div class="bot-positions-list" id="botPositionsList" aria-live="polite"></div>
+        </section>
+
+        <section class="recent-trades-panel card-glass" aria-labelledby="recentTradesHeading">
+          <h3 id="recentTradesHeading">Recent Trades</h3>
+          <ul class="trade-feed" id="tradeFeed">
+            <li>BTC buy order triggered at $66,940.</li>
+            <li>ETH breakout detected on 15m chart.</li>
+            <li>USDT hedge added for volatility protection.</li>
+            <li>SOL position closed with 8.5% profit.</li>
+          </ul>
+        </section>
+
+        <section class="leaderboard-wrap card-glass" aria-labelledby="leaderboardHeading">
+          <h3 id="leaderboardHeading">Historical strategy replay (paper)</h3>
+          <ul id="leaderboardList" class="leaderboard-list"></ul>
+        </section>
 
         <div class="bot-info card-glass">
           <h3>How Bot Trading Works</h3>
@@ -412,6 +415,8 @@
       const manualBuyBtn = document.getElementById('manualBuyBtn');
       const manualSellBtn = document.getElementById('manualSellBtn');
       const botMarketStatus = document.getElementById('botMarketStatus');
+      const loadMoreBotMarketsButton = document.getElementById('loadMoreBotMarkets');
+      const botMarketListStatus = document.getElementById('botMarketListStatus');
       const aiRecommendation = document.getElementById('aiRecommendation');
       const aiConfidence = document.getElementById('aiConfidence');
       const aiReason = document.getElementById('aiReason');
@@ -624,6 +629,10 @@
       const marketPairs = { BTC: 'BTCUSDT', ETH: 'ETHUSDT', XRP: 'XRPUSDT', SOL: 'SOLUSDT', ADA: 'ADAUSDT', DOT: 'DOTUSDT', DOGE: 'DOGEUSDT' };
       const botMarketApiBases = ['https://data-api.binance.vision', 'https://api.binance.com'];
       const botMarketSocketBases = ['wss://data-stream.binance.vision', 'wss://stream.binance.com:9443'];
+      let nextBotMarketPage = 1;
+      let botMarketListLoading = false;
+      let botCoinPriceRefreshTimer = null;
+      let botSpotPairsByBase = null;
 
       function formatAccountCurrency(value) {
         return new Intl.NumberFormat(undefined, {
@@ -677,7 +686,7 @@
         scanMarketsBtn.disabled = true;
         marketScanStatus.textContent = 'Scanning supported liquid USDT spot markets…';
         try {
-          const symbols = encodeURIComponent(JSON.stringify(Object.values(marketPairs)));
+          const symbols = encodeURIComponent(JSON.stringify(Object.values(marketPairs).slice(0, 40)));
           const markets = await fetchBotMarketData(`/api/v3/ticker/24hr?symbols=${symbols}`);
           if (!Array.isArray(markets)) throw new Error('Market scan returned an invalid result');
           const liquidMarkets = markets.map((market) => ({
@@ -766,6 +775,67 @@
         DOGE: 'dogecoin',
         USDT: 'tether'
       };
+
+      async function loadMoreBotMarkets() {
+        if (botMarketListLoading) return;
+        botMarketListLoading = true;
+        loadMoreBotMarketsButton.disabled = true;
+        loadMoreBotMarketsButton.textContent = 'Loading...';
+        const page = nextBotMarketPage;
+        try {
+          const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}&sparkline=false&price_change_percentage=24h`);
+          if (!response.ok) throw new Error(`Market request failed (${response.status})`);
+          const markets = await response.json();
+          if (!botSpotPairsByBase) {
+            try {
+              const exchangeInfo = await fetchBotMarketData('/api/v3/exchangeInfo');
+              botSpotPairsByBase = new Map();
+              exchangeInfo.symbols?.forEach((pair) => {
+                if (pair.quoteAsset === 'USDT' && pair.status === 'TRADING' && pair.isSpotTradingAllowed !== false && !botSpotPairsByBase.has(pair.baseAsset)) {
+                  botSpotPairsByBase.set(pair.baseAsset, pair.symbol);
+                }
+              });
+            } catch (error) {
+              botSpotPairsByBase = new Map();
+              console.warn('Binance market list unavailable; CoinGecko prices will be used for bot paper trading.', error);
+            }
+          }
+          let addedCount = 0;
+          markets.forEach((market) => {
+            const symbol = String(market.symbol || '').toUpperCase();
+            if (!/^[A-Z0-9]{2,12}$/.test(symbol)) return;
+            const existingId = coinMarketIds[symbol];
+            if (existingId && existingId !== market.id) return;
+            coinMarketIds[symbol] = market.id;
+            coinPrices[symbol] = Number(market.current_price) || coinPrices[symbol] || 0;
+            favoriteState.marketData[symbol] = {
+              marketCap: Number(market.market_cap) || 0,
+              change24h: Number(market.price_change_percentage_24h) || 0,
+              currentPrice: coinPrices[symbol]
+            };
+            if (botSpotPairsByBase.has(symbol) && !marketPairs[symbol]) marketPairs[symbol] = botSpotPairsByBase.get(symbol);
+            if (!coinSelect.querySelector(`option[value="${symbol}"]`)) {
+              const option = document.createElement('option');
+              option.value = symbol;
+              option.textContent = `${market.name} (${symbol})`;
+              coinSelect.appendChild(option);
+              favoriteCoinSelect.appendChild(option.cloneNode(true));
+              addedCount += 1;
+            }
+          });
+          nextBotMarketPage += 1;
+          loadMoreBotMarketsButton.hidden = markets.length < 250;
+          botMarketListStatus.textContent = markets.length
+            ? `${addedCount} more selectable markets loaded. Spot pairs use live Binance data when available; other coins use CoinGecko snapshots for paper trading.`
+            : 'No more market listings were returned.';
+        } catch (error) {
+          botMarketListStatus.textContent = `More market coins could not be loaded: ${error.message}`;
+        } finally {
+          botMarketListLoading = false;
+          loadMoreBotMarketsButton.disabled = false;
+          loadMoreBotMarketsButton.textContent = 'Load more market coins';
+        }
+      }
 
       const fallbackMarketData = {
         BTC: { marketCap: 1.3e12, change24h: 0 },
@@ -1449,6 +1519,14 @@
               return { time: Number(sample.time) || Date.now(), open, high: Math.max(open, close) + spread, low: Math.max(0.000001, Math.min(open, close) - spread), close };
             });
             botChartStatus.textContent = `${symbol} local simulated candles · ${botState.chartInterval}`;
+          } else if (savedSamples.length) {
+            botState.chartCandles = savedSamples.slice(-36).map((sample, index, samples) => {
+              const close = Number(sample.price);
+              const open = Number(samples[index - 1]?.price) || close;
+              const spread = Math.max(close * 0.001, 0.000001);
+              return { time: Number(sample.time) || Date.now(), open, high: Math.max(open, close) + spread, low: Math.max(0.000001, Math.min(open, close) - spread), close };
+            });
+            botChartStatus.textContent = `${symbol} CoinGecko price snapshots · historical exchange candles unavailable`;
           } else {
             botChartStatus.textContent = `Live chart data is unavailable for ${symbol}.`;
           }
@@ -1515,8 +1593,42 @@
         });
       }
 
+      async function refreshCoinGeckoBotPrice(symbol) {
+        const marketId = coinMarketIds[symbol];
+        if (!marketId || botState.marketSymbol !== `COINGECKO_${symbol}`) return;
+        try {
+          const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${encodeURIComponent(marketId)}&sparkline=false&price_change_percentage=24h`);
+          if (!response.ok) throw new Error(`CoinGecko request failed (${response.status})`);
+          const markets = await response.json();
+          const market = markets[0];
+          const price = Number(market?.current_price);
+          if (!Number.isFinite(price) || price <= 0 || botState.marketSymbol !== `COINGECKO_${symbol}`) return;
+          coinPrices[symbol] = price;
+          favoriteState.marketData[symbol] = {
+            marketCap: Number(market.market_cap) || 0,
+            change24h: Number(market.price_change_percentage_24h) || 0,
+            currentPrice: price
+          };
+          botState.history.push(price);
+          if (botState.history.length > 30) botState.history.shift();
+          persistMarketSamples(symbol, [{ time: Date.now(), price }]);
+          analyzeMarket(symbol, price);
+          renderBotChart();
+          botMarketStatus.textContent = `${symbol} CoinGecko market snapshot · paper trades only · refreshes every 30 seconds`;
+        } catch (error) {
+          if (botState.marketSymbol === `COINGECKO_${symbol}`) {
+            coinPrices[symbol] = 0;
+            botMarketStatus.textContent = `Live ${symbol} price refresh failed: ${error.message}. Paper trading is paused until a price is available.`;
+          }
+        }
+      }
+
       async function connectLiveMarket(symbol) {
         loadBotChartMarket(symbol);
+        if (botCoinPriceRefreshTimer) {
+          clearInterval(botCoinPriceRefreshTimer);
+          botCoinPriceRefreshTimer = null;
+        }
         if (botState.marketRetryTimer) window.clearTimeout(botState.marketRetryTimer);
         botState.marketRetryTimer = null;
         if (botState.marketSocket) {
@@ -1556,6 +1668,15 @@
             botMarketStatus.textContent = `${symbol} local simulated market feed · paper trades only`;
             analyzeMarket(symbol, coinPrices[symbol] || customMarket.currentPrice);
             renderBotChart();
+            return;
+          }
+          if (coinMarketIds[symbol]) {
+            botState.marketSymbol = `COINGECKO_${symbol}`;
+            botState.history = (botMemory.priceHistory[symbol] || []).slice(-30).map((sample) => Number(sample.price)).filter((price) => Number.isFinite(price) && price > 0);
+            if (!botState.history.length && coinPrices[symbol] > 0) botState.history = [coinPrices[symbol]];
+            botMarketStatus.textContent = `Loading ${symbol} CoinGecko market snapshot for paper trading...`;
+            await refreshCoinGeckoBotPrice(symbol);
+            botCoinPriceRefreshTimer = window.setInterval(() => refreshCoinGeckoBotPrice(symbol), 30000);
             return;
           }
           botState.marketSymbol = null;
@@ -1663,7 +1784,8 @@
         }
 
         const symbol = coinSelect.value;
-        let nextPrice = coinPrices[symbol] || 100;
+        let nextPrice = Number(coinPrices[symbol]);
+        if (!Number.isFinite(nextPrice) || nextPrice <= 0) return;
         if (!botState.marketSymbol && symbol !== 'USDT') return;
 
         if (botState.marketSymbol === `CUSTOM_${symbol}`) {
@@ -1691,7 +1813,11 @@
         const symbol = coinSelect.value;
         botState.balance = getTradePaperBalance();
         const quantity = Number(manualOrderSize.value) || 0.5;
-        const currentPrice = coinPrices[symbol] || 100;
+        const currentPrice = Number(coinPrices[symbol]);
+        if (!Number.isFinite(currentPrice) || currentPrice <= 0) {
+          showToast('A current market price is not available yet. Wait for the market feed to update.', 'warning');
+          return;
+        }
         const total = currentPrice * quantity;
         const configuredMaximum = Number(document.getElementById('maxTradeAmount').value);
 
@@ -1953,6 +2079,8 @@
       }
 
       favoriteState.favorites = favoriteState.favorites.filter((symbol) => coinMarketIds[symbol] || favoriteState.marketData[symbol]?.custom);
+      loadMoreBotMarketsButton.addEventListener('click', loadMoreBotMarkets);
+      loadMoreBotMarkets();
       renderFavoriteCards();
       updateMinimumTradeNotice();
       refreshAccountCurrencyRate();

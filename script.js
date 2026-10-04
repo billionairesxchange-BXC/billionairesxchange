@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const positionsChartWrap = document.querySelector('.positions-chart-wrap');
   const positionsChartResizer = document.getElementById('positionsChartResizer');
   const positionsMarketSelect = document.getElementById('positionsMarketSelect');
+  const loadMoreMarketCoinsButton = document.getElementById('loadMoreMarketCoins');
   const positionsTimeSelect = document.getElementById('positionsTimeSelect');
   const positionsToolsButton = document.getElementById('positionsToolsButton');
   const positionsToolsOptions = document.getElementById('positionsToolsOptions');
@@ -49,23 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const marketConfig = {
-    ids: [
-      'bitcoin',
-      'ethereum',
-      'ripple',
-      'solana',
-      'dogecoin',
-      'cardano',
-      'binancecoin',
-      'tron',
-      'tether',
-      'usd-coin'
-    ],
     currency: 'usd',
     refreshMs: 30000,
     selectedSymbol: 'ETH',
     selectedFilter: 'all',
-    searchText: ''
+    searchText: '',
+    nextPage: 2
   };
 
   let assets = [];
@@ -142,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let tickerSocket = null;
   let tickerSymbol = '';
   let tickerRetryTimer = null;
+  let tickerSnapshotTimer = null;
   const binanceApiBases = ['https://data-api.binance.vision', 'https://api.binance.com'];
   const binanceSocketBases = ['wss://data-stream.binance.vision', 'wss://stream.binance.com:9443'];
   let chartInterval = chartPreferences.interval;
@@ -212,9 +203,41 @@ document.addEventListener('DOMContentLoaded', () => {
       tickerSocket.close();
       tickerSocket = null;
     }
+    if (tickerSnapshotTimer) {
+      window.clearInterval(tickerSnapshotTimer);
+      tickerSnapshotTimer = null;
+    }
     tickerSymbol = symbol;
     if (!pair) {
-      if (positionsChartStatus) positionsChartStatus.textContent = `Live streaming is unavailable for ${symbol}; showing the latest market snapshot.`;
+      const asset = getSelectedAsset();
+      if (!asset || asset.isCustom) {
+        if (positionsChartStatus) positionsChartStatus.textContent = `Live streaming is unavailable for ${symbol}; showing the latest market snapshot.`;
+        return;
+      }
+      const refreshSnapshot = async () => {
+        if (marketConfig.selectedSymbol !== symbol) return;
+        try {
+          const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${encodeURIComponent(asset.id)}&sparkline=false`);
+          if (!response.ok) throw new Error(`Market request failed (${response.status})`);
+          const data = await response.json();
+          const price = Number(data[0]?.current_price);
+          if (!Number.isFinite(price) || price <= 0 || marketConfig.selectedSymbol !== symbol) return;
+          asset.current_price = price;
+          if (priceLabel) priceLabel.textContent = `${symbol}/USD ${formatCurrency(price)} · CoinGecko snapshot`;
+          if (positionsChartPrice) positionsChartPrice.textContent = formatCurrency(price);
+          if (positionsChartStatus) positionsChartStatus.textContent = `${symbol} has no supported Binance candle stream; price snapshots refresh every 30 seconds.`;
+          renderAssetGrid();
+          renderMarketTable();
+          renderPaperPositions();
+          renderMarketOrderControls();
+        } catch (error) {
+          if (marketConfig.selectedSymbol === symbol && positionsChartStatus) {
+            positionsChartStatus.textContent = `Unable to refresh ${symbol} market price: ${error.message}`;
+          }
+        }
+      };
+      refreshSnapshot();
+      tickerSnapshotTimer = window.setInterval(refreshSnapshot, 30000);
       return;
     }
 
@@ -630,6 +653,52 @@ document.addEventListener('DOMContentLoaded', () => {
       option.textContent = `${asset.symbol} / USD`;
       positionsMarketSelect.appendChild(option);
     });
+  }
+
+  function addMarketOptions(marketAssets) {
+    if (!positionsMarketSelect) return;
+    marketAssets.forEach((asset) => {
+      const symbol = asset.symbol.toUpperCase();
+      if (positionsMarketSelect.querySelector(`option[value="${symbol}"]`)) return;
+      const option = document.createElement('option');
+      option.value = symbol;
+      option.textContent = `${asset.name} (${symbol})`;
+      positionsMarketSelect.appendChild(option);
+    });
+  }
+
+  async function loadMoreMarketCoins() {
+    if (!loadMoreMarketCoinsButton || loadMoreMarketCoinsButton.disabled) return;
+    const page = marketConfig.nextPage;
+    loadMoreMarketCoinsButton.disabled = true;
+    loadMoreMarketCoinsButton.textContent = 'Loading...';
+    try {
+      const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=${marketConfig.currency}&order=market_cap_desc&per_page=250&page=${page}&sparkline=true&price_change_percentage=24h`);
+      if (!response.ok) throw new Error(`Market request failed (${response.status})`);
+      const data = await response.json();
+      const existingSymbols = new Set(assets.map((asset) => asset.symbol.toUpperCase()));
+      const newAssets = data.map((coin) => ({
+        ...coin,
+        symbol: coin.symbol.toUpperCase(),
+        sparkline_in_7d: coin.sparkline_in_7d || { price: [coin.current_price] }
+      })).filter((coin) => {
+        if (existingSymbols.has(coin.symbol)) return false;
+        existingSymbols.add(coin.symbol);
+        return true;
+      });
+      assets = [...assets, ...newAssets];
+      marketConfig.nextPage += 1;
+      addMarketOptions(newAssets);
+      renderAssetGrid();
+      renderMarketTable();
+      loadMoreMarketCoinsButton.hidden = data.length < 250;
+    } catch (error) {
+      console.error('Unable to load more market coins:', error);
+      if (positionsChartStatus) positionsChartStatus.textContent = `More markets could not be loaded: ${error.message}`;
+    } finally {
+      loadMoreMarketCoinsButton.disabled = false;
+      loadMoreMarketCoinsButton.textContent = 'Load more market coins';
+    }
   }
 
   function drawPositionsChart() {
@@ -1125,7 +1194,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function fetchLiveMarketData() {
     try {
       const response = await fetch(
-        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${marketConfig.currency}&ids=${marketConfig.ids.join(',')}&order=market_cap_desc&per_page=12&page=1&sparkline=true&price_change_percentage=24h`
+        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${marketConfig.currency}&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h`
       );
 
       if (!response.ok) {
@@ -1133,13 +1202,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await response.json();
-      assets = data.map((coin) => ({
+      const firstPageAssets = data.map((coin) => ({
         ...coin,
         symbol: coin.symbol.toUpperCase(),
         sparkline_in_7d: coin.sparkline_in_7d || { price: Array.from({ length: 30 }, (_, index) => Math.sin(index / 2) * 0.02 + coin.current_price) }
       }));
       const customAssets = getCustomAssets();
-      assets = [...customAssets, ...assets.filter((asset) => !customAssets.some((customAsset) => customAsset.symbol === asset.symbol))];
+      const previouslyLoaded = assets.filter((asset) => !firstPageAssets.some((coin) => coin.symbol === asset.symbol));
+      assets = [...customAssets, ...firstPageAssets.filter((asset) => !customAssets.some((customAsset) => customAsset.symbol === asset.symbol)), ...previouslyLoaded];
+      addMarketOptions(firstPageAssets);
+      if (loadMoreMarketCoinsButton) loadMoreMarketCoinsButton.hidden = data.length < 250;
       addCustomMarketOptions(customAssets);
 
       if (customAssets.length && marketConfig.selectedSymbol === 'XRP') {
@@ -1269,6 +1341,7 @@ document.addEventListener('DOMContentLoaded', () => {
       drawPositionsChart();
     });
   }
+  if (loadMoreMarketCoinsButton) loadMoreMarketCoinsButton.addEventListener('click', loadMoreMarketCoins);
   if (positionsTimeSelect) {
     positionsTimeSelect.addEventListener('change', (event) => {
       chartInterval = event.target.value;
@@ -1810,46 +1883,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const depositBtn = document.getElementById('depositBtn');
-    const withdrawBtn = document.getElementById('withdrawBtn');
-    const transferBtn = document.getElementById('transferBtn');
-    const sendBtn = document.getElementById('sendBtn');
     const billsBtn = document.getElementById('billsBtn');
     const insuranceBtn = document.getElementById('insuranceBtn');
-    const mortgageBtn = document.getElementById('mortgageBtn');
-    const vaultBtn = document.getElementById('vaultBtn');
 
     const transactionMessages = {
       deposit: 'Opening Deposit form...\n\nYou can add funds from:\n- Bank Transfer\n- Credit/Debit Card\n- Crypto Transfer',
-      withdraw: 'Opening Withdrawal form...\n\nSelect destination:\n- Bank Account\n- Credit/Debit Card\n- Crypto Wallet',
-      transfer: 'Opening Transfer form...\n\nTransfer between:\n- Your Wallets\n- Trading Accounts\n- Vault Storage',
-      send: 'Opening Send form...\n\nSend funds to:\n- Contacts\n- Beneficiaries\n- Email Address',
       bills: 'Opening Bill Payment form...\n\nPay:\n- Utility Bills\n- Electricity\n- Data Services\n- Other Services',
       insurance: 'Opening Insurance payments...\n\nManage car, home, and other protected payments.',
-      mortgage: 'Opening Mortgage payments...\n\nManage property payments and recurring amortization plans.',
-      vault: 'Opening Secure Vault...\n\nStore funds in your protected banking vault before execution.'
     };
 
     if (depositBtn) {
       depositBtn.addEventListener('click', () => {
         alert(transactionMessages.deposit);
-      });
-    }
-
-    if (withdrawBtn) {
-      withdrawBtn.addEventListener('click', () => {
-        alert(transactionMessages.withdraw);
-      });
-    }
-
-    if (transferBtn) {
-      transferBtn.addEventListener('click', () => {
-        alert(transactionMessages.transfer);
-      });
-    }
-
-    if (sendBtn) {
-      sendBtn.addEventListener('click', () => {
-        alert(transactionMessages.send);
       });
     }
 
@@ -1865,17 +1910,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    if (mortgageBtn) {
-      mortgageBtn.addEventListener('click', () => {
-        alert(transactionMessages.mortgage);
-      });
-    }
-
-    if (vaultBtn) {
-      vaultBtn.addEventListener('click', () => {
-        alert(transactionMessages.vault);
-      });
-    }
   });
 
   // Holdings Management and Currency Conversion

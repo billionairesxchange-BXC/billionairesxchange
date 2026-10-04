@@ -84,6 +84,38 @@
         <p id="homeCompanyStatus" class="home-company-status" aria-live="polite">Loading company profiles...</p>
         <div class="home-company-grid" id="homeCompanyGrid" aria-label="Companies available for investment"></div>
       </section>
+
+      <section class="section-shell home-coin-market" aria-labelledby="homeCoinMarketHeading">
+        <div class="section-heading">
+          <span class="eyebrow">Live crypto market</span>
+          <h2 id="homeCoinMarketHeading">All Coins</h2>
+          <p>Browse market-listed cryptocurrencies with current USD price, market capitalization, and share of total crypto market capitalization.</p>
+        </div>
+        <div class="home-coin-market-toolbar">
+          <p id="homeCoinMarketStatus" role="status" aria-live="polite">Loading coin market data…</p>
+          <button class="btn btn-secondary" id="refreshHomeCoinMarket" type="button">Refresh market</button>
+        </div>
+        <div class="home-coin-market-table-wrap">
+          <table class="home-coin-market-table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Coin</th>
+                <th scope="col">Price (USD)</th>
+                <th scope="col">Market cap</th>
+                <th scope="col">Market dominance</th>
+              </tr>
+            </thead>
+            <tbody id="homeCoinMarketBody">
+              <tr><td colspan="5" class="home-coin-market-message">Loading market data…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="home-coin-market-footer">
+          <button class="btn btn-primary" id="loadMoreHomeCoins" type="button" hidden>Load more coins</button>
+          <a class="btn btn-secondary" href="trade.html">Open Trading Markets</a>
+        </div>
+      </section>
     </main>
 
     <footer class="site-footer">
@@ -199,6 +231,146 @@
         });
 
         companyStatus.textContent = `${companies.length} company profile${companies.length === 1 ? '' : 's'} available.${registrationWarning}`;
+      })();
+    </script>
+    <script>
+      (() => {
+        const marketBody = document.getElementById('homeCoinMarketBody');
+        const marketStatus = document.getElementById('homeCoinMarketStatus');
+        const loadMoreButton = document.getElementById('loadMoreHomeCoins');
+        const refreshButton = document.getElementById('refreshHomeCoinMarket');
+        const pageSize = 250;
+        let page = 0;
+        let totalMarketCapUsd = 0;
+        let isLoading = false;
+
+        const formatPrice = (value) => {
+          if (!Number.isFinite(Number(value))) return '—';
+          return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: Number(value) < 1 ? 8 : 2
+          }).format(Number(value));
+        };
+        const formatMarketCap = (value) => Number.isFinite(Number(value))
+          ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 2 }).format(Number(value))
+          : '—';
+
+        function createCell(text, className) {
+          const cell = document.createElement('td');
+          cell.textContent = text;
+          if (className) cell.className = className;
+          return cell;
+        }
+
+        function renderCoins(coins, startRank) {
+          const rows = coins.map((coin, index) => {
+            const row = document.createElement('tr');
+            row.appendChild(createCell(String(startRank + index), 'home-coin-rank'));
+
+            const identityCell = document.createElement('td');
+            const identity = document.createElement('div');
+            identity.className = 'home-coin-identity';
+            if (typeof coin.image === 'string' && /^https:\/\//i.test(coin.image)) {
+              const image = document.createElement('img');
+              image.src = coin.image;
+              image.alt = '';
+              image.loading = 'lazy';
+              image.addEventListener('error', () => image.remove(), { once: true });
+              identity.appendChild(image);
+            } else {
+              const icon = document.createElement('span');
+              icon.className = 'home-coin-fallback-icon';
+              icon.textContent = String(coin.symbol || '?').slice(0, 4).toUpperCase();
+              identity.appendChild(icon);
+            }
+            const labels = document.createElement('span');
+            labels.className = 'home-coin-labels';
+            const name = document.createElement('strong');
+            name.textContent = coin.name || 'Unknown coin';
+            const symbol = document.createElement('small');
+            symbol.textContent = String(coin.symbol || '').toUpperCase();
+            labels.append(name, symbol);
+            identity.appendChild(labels);
+            identityCell.appendChild(identity);
+            row.appendChild(identityCell);
+
+            row.append(
+              createCell(formatPrice(coin.current_price), 'home-coin-numeric'),
+              createCell(formatMarketCap(coin.market_cap), 'home-coin-numeric'),
+              createCell(
+                Number.isFinite(Number(coin.market_cap)) && totalMarketCapUsd > 0
+                  ? `${(Number(coin.market_cap) / totalMarketCapUsd * 100).toFixed(4)}%`
+                  : '—',
+                'home-coin-numeric'
+              )
+            );
+            return row;
+          });
+          marketBody.append(...rows);
+        }
+
+        async function loadNextPage(reset) {
+          if (isLoading) return;
+          isLoading = true;
+          loadMoreButton.disabled = true;
+          refreshButton.disabled = true;
+          if (reset) {
+            page = 0;
+            totalMarketCapUsd = 0;
+            marketBody.replaceChildren();
+            marketStatus.textContent = 'Loading coin market data…';
+            loadMoreButton.hidden = true;
+          } else {
+            marketStatus.textContent = 'Loading more coins…';
+          }
+
+          try {
+            if (reset || !totalMarketCapUsd) {
+              const globalResponse = await fetch('https://api.coingecko.com/api/v3/global');
+              if (!globalResponse.ok) throw new Error(`Global market data request failed (${globalResponse.status}).`);
+              const globalData = await globalResponse.json();
+              totalMarketCapUsd = Number(globalData.data?.total_market_cap?.usd);
+              if (!Number.isFinite(totalMarketCapUsd) || totalMarketCapUsd <= 0) {
+                throw new Error('Global crypto market capitalization is unavailable.');
+              }
+            }
+
+            const nextPage = page + 1;
+            const response = await fetch(
+              `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${pageSize}&page=${nextPage}&sparkline=false`
+            );
+            if (!response.ok) throw new Error(`Coin market request failed (${response.status}).`);
+            const coins = await response.json();
+            if (!Array.isArray(coins)) throw new Error('Coin market response was invalid.');
+
+            renderCoins(coins, (nextPage - 1) * pageSize + 1);
+            page = nextPage;
+            marketStatus.textContent = coins.length
+              ? `Showing ${marketBody.rows.length.toLocaleString()} market-listed coins. Dominance is each coin’s share of total crypto market cap. Data provided by CoinGecko.`
+              : 'No more market-listed coins were returned.';
+            loadMoreButton.hidden = coins.length < pageSize;
+          } catch (error) {
+            console.error('Unable to load the home coin market:', error);
+            marketStatus.textContent = `${error.message} Please try again later.`;
+            if (reset && marketBody.rows.length === 0) {
+              marketBody.replaceChildren();
+              const row = document.createElement('tr');
+              const cell = createCell('Coin market data could not be loaded. Use Refresh market to try again.', 'home-coin-market-message');
+              cell.colSpan = 5;
+              row.appendChild(cell);
+              marketBody.appendChild(row);
+            }
+          } finally {
+            isLoading = false;
+            loadMoreButton.disabled = false;
+            refreshButton.disabled = false;
+          }
+        }
+
+        loadMoreButton.addEventListener('click', () => loadNextPage(false));
+        refreshButton.addEventListener('click', () => loadNextPage(true));
+        loadNextPage(true);
       })();
     </script>
     <script>

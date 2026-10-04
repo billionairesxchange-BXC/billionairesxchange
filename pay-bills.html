@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Pay Bills</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <meta
+      name="description"
+      content="Pay bills by selecting your country, utility company, and payment preferences."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading &amp; Investment</small>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="bill-payment-page section-shell" aria-labelledby="payBillsHeading">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Utilities</span>
+            <h2 id="payBillsHeading">Pay Bills</h2>
+          </div>
+          <a class="btn btn-secondary" href="treasury.html">Back to Treasury</a>
+        </div>
+
+        <div class="card-glass bill-payment-card">
+          <div class="bill-payment-layout">
+            <div class="bill-payment-form-panel">
+              <h3>Set up your utility payment</h3>
+              <p>Select the country, choose the utility company, and complete the account details for your bill payment.</p>
+
+              <form class="bill-payment-form" id="billPaymentForm">
+                <div class="form-grid">
+                  <label for="countrySelect">
+                    Country for bill payment
+                    <select id="countrySelect" name="country" required>
+                      <option value="">Select country</option>
+                      <option value="united-states">United States</option>
+                      <option value="united-kingdom">United Kingdom</option>
+                      <option value="canada">Canada</option>
+                      <option value="jamaica">Jamaica</option>
+                      <option value="trinidad-tobago">Trinidad &amp; Tobago</option>
+                    </select>
+                  </label>
+
+                  <label for="companySelect">
+                    Utility company
+                    <select id="companySelect" name="company" required>
+                      <option value="">Choose a country first</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="payment-type-grid">
+                  <label for="currencySelect">
+                    Currency type
+                    <select id="currencySelect" name="currencyType" required>
+                      <option value="usd">USD ($)</option>
+                      <option value="gbp">GBP (£)</option>
+                      <option value="cad">CAD (C$)</option>
+                      <option value="jmd">JMD (J$)</option>
+                      <option value="ttd">TTD (TT$)</option>
+                    </select>
+                  </label>
+
+                  <label for="paymentType">
+                    Payment type
+                    <select id="paymentType" name="paymentType" required>
+                      <option value="bank-transfer">Bank transfer</option>
+                      <option value="card-payment">Debit or credit card</option>
+                      <option value="wallet-payment">Digital wallet</option>
+                      <option value="cash-payment">Cash payment</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="form-grid">
+                  <label for="accountName">
+                    Name on utility account
+                    <input
+                      id="accountName"
+                      name="accountName"
+                      type="text"
+                      placeholder="e.g. Maria Thompson"
+                      required
+                    />
+                  </label>
+
+                  <label for="accountNumber">
+                    Utility account number
+                    <input
+                      id="accountNumber"
+                      name="accountNumber"
+                      type="text"
+                      placeholder="Account or customer reference"
+                      required
+                    />
+                  </label>
+                </div>
+
+                <div class="form-grid">
+                  <label for="billAmount">
+                    Bill amount
+                    <input
+                      id="billAmount"
+                      name="billAmount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                    />
+                  </label>
+
+                  <label for="billingPeriod">
+                    Billing period
+                    <select id="billingPeriod" name="billingPeriod">
+                      <option value="monthly">Monthly</option>
+                      <option value="quarterly">Quarterly</option>
+                      <option value="annual">Annual</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="bill-payment-summary" id="companySummary" aria-live="polite">
+                  <strong>Available provider</strong>
+                  <span>Select a country to see the utility company options for your region.</span>
+                </div>
+
+                <div class="bill-payment-actions">
+                  <button class="btn btn-primary" type="submit">Continue payment</button>
+                  <button class="btn btn-ghost" type="reset">Reset</button>
+                </div>
+              </form>
+            </div>
+
+            <aside class="bill-payment-side">
+              <h3>Fast payment checklist</h3>
+              <p>Have these ready before you submit the payment request:</p>
+              <ul>
+                <li>Valid country and active utility provider</li>
+                <li>Account name exactly as it appears on the bill</li>
+                <li>Utility account number or customer reference</li>
+                <li>Preferred currency and payment method for the service</li>
+              </ul>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const utilityCompaniesByCountry = {
+        'united-states': [
+          { name: 'PG&E', service: 'Electricity & Gas', region: 'California' },
+          { name: 'ComEd', service: 'Electricity', region: 'Illinois' },
+          { name: 'Duke Energy', service: 'Power Services', region: 'Carolinas' },
+          { name: 'Verizon', service: 'Internet & Phone', region: 'National' },
+          { name: 'Xfinity', service: 'Cable & Internet', region: 'National' }
+        ],
+        'united-kingdom': [
+          { name: 'British Gas', service: 'Gas & Electricity', region: 'England & Scotland' },
+          { name: 'Vodafone', service: 'Mobile & Broadband', region: 'National' },
+          { name: 'Thames Water', service: 'Water', region: 'London' },
+          { name: 'SSE', service: 'Electricity', region: 'Scotland' },
+          { name: 'O2', service: 'Mobile', region: 'National' }
+        ],
+        canada: [
+          { name: 'Hydro One', service: 'Electricity', region: 'Ontario' },
+          { name: 'Bell', service: 'Internet & Phone', region: 'National' },
+          { name: 'Rogers', service: 'Mobile & Internet', region: 'National' },
+          { name: 'Enbridge', service: 'Gas', region: 'Ontario & Quebec' },
+          { name: 'Toronto Water', service: 'Water', region: 'Toronto' }
+        ],
+        jamaica: [
+          { name: 'JPS Co.', service: 'Electricity', region: 'Kingston & St. Andrew' },
+          { name: 'National Water Commission', service: 'Water', region: 'National' },
+          { name: 'FLOW', service: 'Internet & Cable', region: 'National' },
+          { name: 'Digicel', service: 'Mobile & Internet', region: 'National' },
+          { name: 'Cable & Wireless', service: 'Telecom', region: 'National' }
+        ],
+        'trinidad-tobago': [
+          { name: 'T&TEC', service: 'Electricity', region: 'National' },
+          { name: 'WASA', service: 'Water', region: 'National' },
+          { name: 'FLOW', service: 'Internet & Cable', region: 'National' },
+          { name: 'Digicel', service: 'Mobile & Internet', region: 'National' },
+          { name: 'Bmobile', service: 'Telecom', region: 'National' }
+        ]
+      };
+
+      const countrySelect = document.getElementById('countrySelect');
+      const companySelect = document.getElementById('companySelect');
+      const companySummary = document.getElementById('companySummary');
+      const billPaymentForm = document.getElementById('billPaymentForm');
+
+      function populateCompanies() {
+        const selectedCountry = countrySelect.value;
+        companySelect.innerHTML = '<option value="">Select utility company</option>';
+
+        if (!selectedCountry || !utilityCompaniesByCountry[selectedCountry]) {
+          companySummary.innerHTML = '<strong>Available provider</strong><span>Select a country to see the utility company options for your region.</span>';
+          return;
+        }
+
+        utilityCompaniesByCountry[selectedCountry].forEach((company) => {
+          const option = document.createElement('option');
+          option.value = company.name;
+          option.textContent = `${company.name} — ${company.service}`;
+          companySelect.appendChild(option);
+        });
+
+        const firstCompany = utilityCompaniesByCountry[selectedCountry][0];
+        companySelect.value = firstCompany.name;
+        updateCompanySummary();
+      }
+
+      function updateCompanySummary() {
+        const selectedCountry = countrySelect.value;
+        const selectedCompany = companySelect.value;
+        const countryName = countrySelect.options[countrySelect.selectedIndex]?.text || 'Selected country';
+
+        if (!selectedCountry || !selectedCompany) {
+          companySummary.innerHTML = '<strong>Available provider</strong><span>Select a country to see the utility company options for your region.</span>';
+          return;
+        }
+
+        const companies = utilityCompaniesByCountry[selectedCountry] || [];
+        const companyDetails = companies.find((entry) => entry.name === selectedCompany);
+
+        if (!companyDetails) {
+          companySummary.innerHTML = '<strong>Available provider</strong><span>No provider information available for the selected option.</span>';
+          return;
+        }
+
+        companySummary.innerHTML = `
+          <strong>${companyDetails.name}</strong>
+          <span>${countryName}</span>
+          <div class="summary-meta">
+            <span>Service: ${companyDetails.service}</span>
+            <span>Region: ${companyDetails.region}</span>
+          </div>
+        `;
+      }
+
+      countrySelect.addEventListener('change', populateCompanies);
+      companySelect.addEventListener('change', updateCompanySummary);
+
+      billPaymentForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(billPaymentForm);
+        const country = countrySelect.selectedOptions[0]?.text || 'N/A';
+        const company = companySelect.value || 'N/A';
+        const currency = formData.get('currencyType');
+        const paymentType = formData.get('paymentType');
+        const accountName = formData.get('accountName');
+
+        alert(
+          `Bill payment request created for ${accountName} at ${company} in ${country}.\nCurrency: ${currency.toUpperCase()}\nPayment type: ${paymentType}`
+        );
+      });
+
+      populateCompanies();
+    </script>
+  </body>
+</html>

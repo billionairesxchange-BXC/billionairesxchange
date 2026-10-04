@@ -24,7 +24,7 @@ html {
 
 body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top, rgba(212, 175, 55, 0.12), transparent 25%),
+  background: radial-gradient(circle at top, rgba(38, 38, 38, 0.12), transparent 25%),
     linear-gradient(135deg, var(--black) 0%, var(--charcoal) 35%, var(--black) 100%);
   color: var(--white);
   line-height: 1.6;
@@ -56,8 +56,8 @@ header.topbar {
 .brand-mark {
   width: 40px;
   height: 40px;
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,7 +96,7 @@ header.topbar {
 
 .main-nav a:hover {
   color: var(--light-gold);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   border-bottom: 2px solid var(--primary-gold);
 }
 
@@ -116,7 +116,7 @@ header.topbar .nav-actions .btn {
 }
 
 header.topbar .nav-actions .btn:hover {
-  background: rgba(212, 175, 55, 0.12);
+  background: rgba(38, 38, 38, 0.12);
   color: var(--light-gold);
   border-color: var(--primary-gold);
   box-shadow: none;
@@ -145,7 +145,7 @@ header.topbar .nav-actions .btn:hover {
   overflow: hidden;
   border: 1px solid var(--primary-gold);
   border-radius: 50%;
-  background: rgba(212, 175, 55, .12);
+  background: rgba(38, 38, 38, .12);
   color: var(--black);
   cursor: pointer;
 }
@@ -193,7 +193,7 @@ header.topbar .nav-actions .btn:hover {
 .profile-menu-dropdown button:hover,
 .profile-menu-dropdown a:focus-visible,
 .profile-menu-dropdown button:focus-visible {
-  background: rgba(212, 175, 55, .15);
+  background: rgba(38, 38, 38, .15);
   color: var(--primary-gold);
 }
 
@@ -246,8 +246,8 @@ header.topbar .nav-actions .btn:hover {
   place-items: center;
   margin: 0 auto 1rem;
   border-radius: 50%;
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
   font-size: 2rem;
   font-weight: 800;
 }
@@ -340,7 +340,7 @@ header.topbar .nav-actions .btn:hover {
   margin-top: 1rem;
   padding: .75rem;
   border-left: 2px solid var(--primary-gold);
-  background: rgba(212, 175, 55, .04);
+  background: rgba(38, 38, 38, .04);
 }
 
 .profile-online-bank p {
@@ -354,7 +354,7 @@ header.topbar .nav-actions .btn:hover {
   padding: 1rem;
   border: 1px solid rgba(212, 175, 55, .3);
   border-radius: 6px;
-  background: rgba(212, 175, 55, .04);
+  background: rgba(38, 38, 38, .04);
 }
 
 .profile-payment-form h3 {
@@ -439,7 +439,7 @@ header.topbar .nav-actions .btn:hover {
   padding: 0.9rem;
   border: 1px solid rgba(212, 175, 55, 0.16);
   border-radius: 6px;
-  background: rgba(212, 175, 55, 0.04);
+  background: rgba(38, 38, 38, 0.04);
 }
 
 .details-list span,
@@ -486,7 +486,7 @@ header.topbar .nav-actions .btn:hover {
   padding: 1rem;
   border: 1px solid rgba(212, 175, 55, .2);
   border-radius: 6px;
-  background: rgba(212, 175, 55, .04);
+  background: rgba(38, 38, 38, .04);
 }
 
 .profile-media-form textarea {
@@ -519,7 +519,7 @@ header.topbar .nav-actions .btn:hover {
 
 .profile-media-label:hover,
 .profile-media-label:focus-within {
-  background: rgba(212, 175, 55, .12);
+  background: rgba(38, 38, 38, .12);
 }
 
 #profileMediaInput {
@@ -559,7 +559,7 @@ header.topbar .nav-actions .btn:hover {
   padding: .8rem;
   border: 1px solid rgba(212, 175, 55, .22);
   border-radius: 6px;
-  background: rgba(212, 175, 55, .04);
+  background: rgba(38, 38, 38, .04);
 }
 
 .profile-media-meta {
@@ -603,7 +603,7 @@ header.topbar .nav-actions .btn:hover {
 .profile-reaction:hover,
 .profile-reaction.is-active {
   border-color: var(--primary-gold);
-  background: rgba(212, 175, 55, .16);
+  background: rgba(38, 38, 38, .16);
   color: var(--primary-gold);
 }
 
@@ -618,23 +618,23 @@ header.topbar .nav-actions .btn:hover {
   font-size: 14px;
   text-decoration: none;
   display: inline-block;
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
   box-shadow: 0 0 18px rgba(212, 175, 55, 0.18);
 }
 
 .btn-primary,
 .btn-secondary,
 .btn-ghost {
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
   border-color: var(--primary-gold);
 }
 
 .btn-primary:hover,
 .btn-secondary:hover,
 .btn-ghost:hover {
-  background: var(--gold-soft);
+  background: #484848;
   border-color: var(--gold-soft);
   box-shadow: 0 0 22px rgba(212, 175, 55, 0.4);
   transform: scale(1.03);
@@ -650,6 +650,340 @@ header.topbar .nav-actions .btn:hover {
     min-width: 150px;
   }
 
+  .bill-payment-page {
+    margin: 2rem auto 4rem;
+    max-width: 1200px;
+    width: min(1200px, calc(100% - 2rem));
+  }
+
+  .bill-payment-card {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+  }
+
+  .bill-payment-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.7fr);
+    gap: 1.25rem;
+  }
+
+  .bill-payment-form-panel,
+  .bill-payment-side {
+    padding: 1rem;
+  }
+
+  .bill-payment-form-panel h3,
+  .bill-payment-side h3 {
+    color: var(--primary-gold);
+    margin-bottom: 0.4rem;
+  }
+
+  .bill-payment-form-panel p,
+  .bill-payment-side p,
+  .bill-payment-side li {
+    color: var(--light-gold);
+  }
+
+  .bill-payment-form {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+
+  .form-grid,
+  .payment-type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .bill-payment-form label {
+    display: grid;
+    gap: 0.45rem;
+    color: var(--light-gold);
+    font-size: 0.8rem;
+  }
+
+  .bill-payment-form input,
+  .bill-payment-form select {
+    width: 100%;
+    padding: 0.75rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    background: rgba(16, 16, 16, 0.85);
+    color: var(--white);
+    font: inherit;
+  }
+
+  .bill-payment-form input:focus,
+  .bill-payment-form select:focus {
+    outline: none;
+    border-color: var(--primary-gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+  }
+
+  .bill-payment-summary {
+    padding: 1rem;
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 6px;
+    background: rgba(38, 38, 38, 0.05);
+  }
+
+  .bill-payment-summary strong {
+    display: block;
+    color: var(--primary-gold);
+    margin-bottom: 0.3rem;
+  }
+
+  .bill-payment-summary span {
+    display: block;
+    color: var(--light-gold);
+    font-size: 0.8rem;
+  }
+
+  .bill-payment-summary .summary-meta {
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(212, 175, 55, 0.15);
+  }
+
+  .bill-payment-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+  }
+
+  .bill-payment-actions[hidden] {
+    display: none;
+  }
+
+  #saveContactFields[hidden] {
+    display: none;
+  }
+
+  .transfer-method-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 6px;
+  }
+
+  .transfer-method-options legend {
+    padding: 0 0.35rem;
+    color: var(--light-gold);
+    font-size: 0.8rem;
+  }
+
+  .transfer-method-options label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .transfer-method-options input {
+    width: auto;
+    accent-color: var(--primary-gold);
+  }
+
+  .bill-payment-side {
+    border-left: 1px solid rgba(212, 175, 55, 0.2);
+  }
+
+  .vault-demo-notice {
+    margin: 1rem 0;
+    padding: 0.9rem 1rem;
+    border-left: 3px solid var(--primary-gold);
+    background: rgba(212, 175, 55, 0.08);
+    color: var(--light-gold);
+    font-size: 0.82rem;
+  }
+
+  .vault-lock-panel [hidden],
+  #vaultUnlockForm[hidden],
+  #vaultRecoveryForm[hidden],
+  #vaultProtectedContent[hidden] {
+    display: none;
+  }
+
+  .vault-lock-panel {
+    margin: 1rem 0;
+    padding: 1.25rem;
+  }
+
+  .vault-lock-panel h3 {
+    color: var(--primary-gold);
+  }
+
+  .vault-lock-panel > p {
+    margin-top: 0.5rem;
+    color: var(--light-gold);
+  }
+
+  .vault-account-panel,
+  .vault-transfer-panel,
+  .vault-log-panel,
+  .vault-asset-balances {
+    margin-top: 1rem;
+    padding: 1.25rem;
+  }
+
+  .vault-account-panel h3,
+  .vault-transfer-panel h3,
+  .vault-log-panel h3,
+  .vault-asset-balances h3 {
+    color: var(--primary-gold);
+  }
+
+  .vault-account-panel > p,
+  .vault-transfer-panel > p,
+  .vault-log-heading p {
+    color: var(--light-gold);
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+  }
+
+  .vault-overview {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .vault-overview-card {
+    display: grid;
+    gap: 0.35rem;
+    padding: 1rem;
+  }
+
+  .vault-overview-card .summary-value {
+    color: var(--primary-gold);
+    font-size: 1.4rem;
+    overflow-wrap: anywhere;
+  }
+
+  .vault-overview-card small {
+    color: var(--light-gold);
+    font-size: 0.72rem;
+  }
+
+  .vault-log-heading,
+  .vault-transaction {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .vault-log-list {
+    display: grid;
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+
+  .vault-empty {
+    padding: 1rem;
+    border: 1px dashed rgba(212, 175, 55, 0.3);
+    color: var(--light-gold);
+    text-align: center;
+  }
+
+  .vault-transaction {
+    padding: 0.8rem;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 6px;
+  }
+
+  .vault-transaction > div {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .vault-transaction strong {
+    color: var(--white);
+    overflow-wrap: anywhere;
+  }
+
+  .vault-transaction small,
+  .vault-transaction time {
+    color: var(--light-gold);
+    font-size: 0.72rem;
+  }
+
+  .vault-transaction-status {
+    flex: 0 0 auto;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 999px;
+    color: var(--primary-gold);
+    font-size: 0.68rem;
+  }
+
+  #vaultAssetBalances {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.65rem;
+    margin-top: 0.8rem;
+  }
+
+  .vault-asset-balance {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 6px;
+  }
+
+  .vault-asset-balance strong {
+    color: var(--primary-gold);
+  }
+
+  .vault-asset-balance span {
+    color: var(--light-gold);
+    font-size: 0.8rem;
+    text-align: right;
+  }
+
+  @media (max-width: 700px) {
+    .vault-overview {
+      grid-template-columns: 1fr;
+    }
+
+    .vault-transaction {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+
+  .bill-payment-side ul {
+    margin-top: 1rem;
+    list-style: none;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .bill-payment-side li {
+    position: relative;
+    padding-left: 1.2rem;
+    line-height: 1.5;
+    font-size: 0.82rem;
+  }
+
+  .bill-payment-side li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--primary-gold);
+    font-size: 1.2rem;
+  }
+
   .btn-deposit,
   .btn-withdraw,
   .btn-transfer,
@@ -659,8 +993,8 @@ header.topbar .nav-actions .btn:hover {
   .btn-insurance,
   .btn-mortgage,
   .btn-vault {
-    background: linear-gradient(135deg, #d4af37 0%, #f2d77c 100%);
-    color: #0b0b0b;
+    background: linear-gradient(135deg, #262626 0%, #383838 100%);
+    color: var(--white);
     border: 2px solid #d4af37;
   }
 
@@ -673,7 +1007,7 @@ header.topbar .nav-actions .btn:hover {
   .btn-insurance:hover,
   .btn-mortgage:hover,
   .btn-vault:hover {
-    background: linear-gradient(135deg, #f2d77c 0%, #f7e8aa 100%);
+    background: linear-gradient(135deg, #383838 0%, #484848 100%);
     box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
     transform: translateY(-2px);
   }
@@ -718,7 +1052,7 @@ header.topbar .nav-actions .btn:hover {
   .shop-visit-wrap { display: flex; justify-content: center; margin-top: 1.5rem; }
   .shop-visit-button { min-width: 150px; padding: .65rem 1.25rem; text-align: center; }
   .market-header-actions { display: flex; align-items: center; gap: .7rem; }
-  .indicator-button { border: 1px solid rgba(212,175,55,.5); background: rgba(212,175,55,.12); color: var(--primary-gold); border-radius: 4px; padding: .45rem .7rem; cursor: pointer; font-weight: 700; }
+  .indicator-button { border: 1px solid rgba(212,175,55,.5); background: rgba(38, 38, 38, .12); color: var(--primary-gold); border-radius: 4px; padding: .45rem .7rem; cursor: pointer; font-weight: 700; }
   .indicator-panel { margin-top: 1rem; padding: 1rem; }
   .indicator-panel-head, .indicator-panel-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
   .indicator-panel-actions { margin-top: 1rem; flex-wrap: wrap; }
@@ -745,7 +1079,7 @@ header.topbar .nav-actions .btn:hover {
   .market-quote strong { font-size: 1.65rem; color: var(--white); }
   .timeframe-tabs, .trade-modes, .side-toggle { display: flex; gap: .25rem; }
   .timeframe-tabs button, .trade-modes button, .side-toggle button, .indicator-title button { background: transparent; border: 0; color: var(--light-gold); cursor: pointer; padding: .45rem .6rem; border-radius: 4px; }
-  .timeframe-tabs button.is-active, .trade-modes button.is-active { background: rgba(212,175,55,.16); color: var(--primary-gold); }
+  .timeframe-tabs button.is-active, .trade-modes button.is-active { background: rgba(38, 38, 38, .16); color: var(--primary-gold); }
   .terminal-chart-shell { height: 560px; position: relative; margin-top: 1rem; background: rgba(0,0,0,.28); border: 1px solid rgba(212,175,55,.15); }
   #terminalChart { height: 430px; width: 100%; }
   #terminalRsiChart { height: 130px; width: 100%; border-top: 1px solid rgba(212,175,55,.12); }
@@ -763,7 +1097,7 @@ header.topbar .nav-actions .btn:hover {
   .indicator-title { display: flex; justify-content: space-between; color: var(--light-gold); font-size: .8rem; }
   .indicator-title button, .text-button { color: var(--primary-gold); font-weight: 700; cursor: pointer; }
   .active-indicators { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
-  .indicator-chip, .mode-pill { border: 1px solid rgba(212,175,55,.45); background: rgba(212,175,55,.1); color: var(--primary-gold); border-radius: 999px; padding: .3rem .55rem; font-size: .72rem; }
+  .indicator-chip, .mode-pill { border: 1px solid rgba(212,175,55,.45); background: rgba(38, 38, 38, .1); color: var(--primary-gold); border-radius: 999px; padding: .3rem .55rem; font-size: .72rem; }
   .order-header h3, .panel-title h3 { margin-top: .2rem; }
   .mode-pill { color: #31d598; border-color: rgba(49,213,152,.4); background: rgba(49,213,152,.08); }
   .trade-modes { margin: 1rem 0; border-bottom: 1px solid rgba(212,175,55,.16); }
@@ -845,7 +1179,7 @@ header.topbar .nav-actions .btn:hover {
     text-align: left;
     border: 1px solid rgba(212, 175, 55, .25);
     border-radius: 6px;
-    background: rgba(212, 175, 55, .04);
+    background: rgba(38, 38, 38, .04);
     color: var(--white);
     cursor: pointer;
   }
@@ -853,7 +1187,7 @@ header.topbar .nav-actions .btn:hover {
   .investment-choice:hover,
   .investment-choice.is-selected {
     border-color: var(--primary-gold);
-    background: rgba(212, 175, 55, .12);
+    background: rgba(38, 38, 38, .12);
   }
 
   .investment-choice strong { color: var(--primary-gold); }
@@ -863,14 +1197,15 @@ header.topbar .nav-actions .btn:hover {
   .company-investment-setup { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(212, 175, 55, .2); }
   .company-path-tabs { display: flex; gap: .5rem; flex-wrap: wrap; }
   .company-path { border: 1px solid rgba(212, 175, 55, .3); background: transparent; color: var(--light-gold); border-radius: 4px; padding: .55rem .7rem; cursor: pointer; }
-  .company-path.is-active { background: rgba(212, 175, 55, .14); border-color: var(--primary-gold); color: var(--primary-gold); }
+  .company-path.is-active { background: rgba(38, 38, 38, .14); border-color: var(--primary-gold); color: var(--primary-gold); }
   .company-path-panel { margin-top: 1rem; }
   .company-choice-label { color: var(--light-gold); font-size: .82rem; margin-bottom: .65rem; }
   .company-option-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .65rem; }
-  .company-option { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: .75rem; min-height: 72px; padding: .7rem; border: 1px solid rgba(212, 175, 55, .25); border-radius: 4px; background: rgba(212, 175, 55, .04); color: var(--white); text-align: left; cursor: pointer; }
-  .company-option:hover, .company-option.is-selected { border-color: var(--primary-gold); background: rgba(212, 175, 55, .12); }
+  .company-option { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: .75rem; min-height: 72px; padding: .7rem; border: 1px solid rgba(212, 175, 55, .25); border-radius: 4px; background: rgba(38, 38, 38, .04); color: var(--white); text-align: left; cursor: pointer; }
+  .company-option[hidden] { display: none; }
+  .company-option:hover, .company-option.is-selected { border-color: var(--primary-gold); background: rgba(38, 38, 38, .12); }
   .company-option:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
-  .company-option-logo { display: grid; place-items: center; width: 48px; aspect-ratio: 1; border-radius: 50%; background: var(--primary-gold); color: var(--black); font-weight: 800; }
+  .company-option-logo { display: grid; place-items: center; width: 48px; aspect-ratio: 1; border-radius: 50%; background: #262626; color: var(--white); font-weight: 800; }
   .company-option-details { display: grid; min-width: 0; gap: .1rem; }
   .company-option-details strong { overflow-wrap: anywhere; color: var(--white); font-size: .85rem; }
   .company-option-details small { color: #9b927a; font-size: .7rem; }
@@ -940,8 +1275,8 @@ header.topbar .nav-actions .btn:hover {
   .community-inbox-status { color: var(--light-gold); font-size: .8rem; margin: .75rem 0; }
   .community-inbox-layout { display: grid; grid-template-columns: minmax(220px, .75fr) minmax(0, 1.5fr); gap: 1rem; align-items: start; }
   .community-inbox-list { display: grid; gap: .5rem; }
-  .community-inbox-item { display: grid; gap: .2rem; width: 100%; padding: .8rem; border: 1px solid rgba(212, 175, 55, .25); border-radius: 4px; background: rgba(212, 175, 55, .04); color: var(--white); text-align: left; cursor: pointer; }
-  .community-inbox-item:hover, .community-inbox-item:focus-visible { border-color: var(--primary-gold); background: rgba(212, 175, 55, .12); }
+  .community-inbox-item { display: grid; gap: .2rem; width: 100%; padding: .8rem; border: 1px solid rgba(212, 175, 55, .25); border-radius: 4px; background: rgba(38, 38, 38, .04); color: var(--white); text-align: left; cursor: pointer; }
+  .community-inbox-item:hover, .community-inbox-item:focus-visible { border-color: var(--primary-gold); background: rgba(38, 38, 38, .12); }
   .community-inbox-item strong { overflow-wrap: anywhere; color: var(--gold-soft); font-size: .82rem; }
   .community-inbox-item span, .community-inbox-item small { color: #aaa; font-size: .72rem; }
   .community-inbox-empty { padding: 1rem 0; color: var(--light-gold); font-size: .85rem; }
@@ -976,13 +1311,13 @@ header.topbar .nav-actions .btn:hover {
     margin-top: 0.4rem;
   }
 
-  .bank-connection-picker { margin-top: 1.5rem; padding: 1rem; border: 1px solid rgba(212, 175, 55, .2); border-radius: 6px; background: rgba(212, 175, 55, .03); }
+  .bank-connection-picker { margin-top: 1.5rem; padding: 1rem; border: 1px solid rgba(212, 175, 55, .2); border-radius: 6px; background: rgba(38, 38, 38, .03); }
   .bank-picker-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
   .bank-picker-grid label { display: grid; gap: .4rem; color: var(--light-gold); font-size: .85rem; font-weight: 600; }
   .bank-picker-grid select { background: rgba(10, 10, 10, .85); border: 1px solid var(--dark-gold); border-radius: 6px; color: white; font: inherit; min-height: 44px; padding: .65rem .75rem; }
   .bank-connect-tabs { display: flex; gap: .6rem; margin-top: 1rem; flex-wrap: wrap; }
   .bank-connect-tab { background: transparent; border: 1px solid rgba(212, 175, 55, .35); border-radius: 5px; color: var(--light-gold); cursor: pointer; padding: .65rem .8rem; }
-  .bank-connect-tab.is-active { background: rgba(212, 175, 55, .14); border-color: var(--primary-gold); color: var(--primary-gold); }
+  .bank-connect-tab.is-active { background: rgba(38, 38, 38, .14); border-color: var(--primary-gold); color: var(--primary-gold); }
   .online-bank-summary { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem; border: 1px solid rgba(49, 213, 152, .25); border-radius: 5px; color: var(--light-gold); }
   .online-bank-summary strong { color: var(--primary-gold); }
 
@@ -1169,7 +1504,7 @@ section {
   padding: .7rem 1rem;
   border: 1px solid var(--primary-gold);
   border-radius: 4px;
-  background: rgba(212, 175, 55, .12);
+  background: rgba(38, 38, 38, .12);
   color: var(--primary-gold);
   cursor: pointer;
   font: inherit;
@@ -1178,8 +1513,8 @@ section {
 
 .treasury-quick-menu-trigger:hover,
 .treasury-quick-menu-trigger:focus-visible {
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
 }
 
 .treasury-quick-menu-items {
@@ -1299,7 +1634,7 @@ section {
 }
 
 .market-label-row select {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
   padding: 0.5rem;
@@ -1312,7 +1647,7 @@ section {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border-radius: 8px;
 }
 
@@ -1339,15 +1674,21 @@ canvas {
 /* Market Section */
 .asset-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 7.4rem;
+  gap: 0.75rem;
+  max-height: 40.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  margin-bottom: 1rem;
+  scrollbar-gutter: stable;
 }
 
 .asset-card {
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border: 1px solid var(--primary-gold);
-  padding: 1.5rem;
+  padding: 0.5rem;
   border-radius: 8px;
   text-align: center;
   cursor: pointer;
@@ -1361,28 +1702,29 @@ canvas {
   border-color: var(--light-gold);
   box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
   transform: translateY(-5px);
-  background: rgba(212, 175, 55, 0.12);
+  background: rgba(38, 38, 38, 0.12);
 }
 
 .asset-card h4 {
   color: var(--primary-gold);
-  margin-bottom: 0.5rem;
+  margin: 0.1rem 0;
 }
 
 .asset-card p {
   color: var(--light-gold);
   font-size: 12px;
+  margin: 0.1rem 0;
 }
 
 .asset-card strong {
   display: block;
-  margin: 0.75rem 0 0.2rem;
-  font-size: 1.1rem;
+  margin: 0.25rem 0 0.1rem;
+  font-size: 0.95rem;
 }
 
 .asset-card small {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
@@ -1470,7 +1812,7 @@ canvas {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(38, 38, 38, 0.15);
   border: 1px solid var(--primary-gold);
   display: inline-flex;
   align-items: center;
@@ -1544,7 +1886,7 @@ canvas {
 }
 
 .filter-chip {
-  background: rgba(212, 175, 55, 0.08);
+  background: rgba(38, 38, 38, 0.08);
   border: 1px solid var(--primary-gold);
   border-radius: 999px;
   color: var(--primary-gold);
@@ -1555,8 +1897,8 @@ canvas {
 
 .filter-chip.is-active,
 .filter-chip:hover {
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
 }
 
 .search-field {
@@ -1568,7 +1910,7 @@ canvas {
 }
 
 .search-field input {
-  background: rgba(212, 175, 55, 0.08);
+  background: rgba(38, 38, 38, 0.08);
   border: 1px solid var(--primary-gold);
   border-radius: 8px;
   color: var(--primary-gold);
@@ -1599,7 +1941,7 @@ canvas {
   padding: 0.8rem 0.9rem;
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 8px;
-  background: rgba(212, 175, 55, 0.04);
+  background: rgba(38, 38, 38, 0.04);
 }
 
 .watchlist strong {
@@ -1732,7 +2074,7 @@ canvas {
 .positions-time-options button:hover,
 .positions-time-options button:focus-visible,
 .positions-time-options button.is-active {
-  background: rgba(212, 175, 55, .18);
+  background: rgba(38, 38, 38, .18);
   color: var(--primary-gold);
 }
 
@@ -1767,7 +2109,7 @@ canvas {
 
 .positions-tools-options button:hover,
 .positions-tools-options button:focus-visible {
-  background: rgba(212, 175, 55, .18);
+  background: rgba(38, 38, 38, .18);
   color: var(--primary-gold);
 }
 
@@ -2058,7 +2400,7 @@ canvas {
 }
 
 .chart-toggle button {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
   padding: 0.5rem 1rem;
@@ -2068,13 +2410,13 @@ canvas {
 }
 
 .chart-toggle button.is-active {
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
 }
 
 .chart-toggle button:hover {
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
 }
 
 /* Trade Section */
@@ -2116,7 +2458,7 @@ canvas {
 
 .mini-form input,
 .mini-form select {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
   padding: 0.75rem;
@@ -2140,7 +2482,7 @@ canvas {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border-radius: 8px;
   margin-top: 1rem;
 }
@@ -2169,7 +2511,7 @@ canvas {
 }
 
 .option-grid span {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   color: var(--primary-gold);
   padding: 1rem;
   border-radius: 6px;
@@ -2180,8 +2522,8 @@ canvas {
 }
 
 .option-grid span:hover {
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
 }
 
 /* Bot Section */
@@ -2258,7 +2600,7 @@ canvas {
 .favorite-add-row select {
   min-width: 0;
   flex: 1;
-  background: rgba(212, 175, 55, 0.1);
+  background: #000;
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
   border-radius: 4px;
@@ -2295,7 +2637,7 @@ canvas {
   padding: .9rem;
   border: 1px solid rgba(212, 175, 55, .35);
   border-radius: 6px;
-  background: rgba(212, 175, 55, .06);
+  background: rgba(38, 38, 38, .06);
   cursor: pointer;
   transition: border-color .2s ease, background .2s ease, transform .2s ease;
 }
@@ -2304,7 +2646,7 @@ canvas {
 .favorite-card:focus-visible,
 .favorite-card.is-active {
   border-color: var(--primary-gold);
-  background: rgba(212, 175, 55, .14);
+  background: rgba(38, 38, 38, .14);
   transform: translateY(-2px);
 }
 
@@ -2382,7 +2724,7 @@ canvas {
   flex: 0 0 34px;
   border: 1px solid var(--primary-gold);
   border-radius: 50%;
-  background: rgba(212, 175, 55, .08);
+  background: rgba(38, 38, 38, .08);
   color: var(--primary-gold);
   cursor: pointer;
   font-size: 1rem;
@@ -2390,8 +2732,8 @@ canvas {
 
 .favorite-slide-btn:hover,
 .favorite-slide-btn:focus-visible {
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
 }
 
 .bot-layout {
@@ -2435,7 +2777,7 @@ canvas {
 }
 
 .bot-controls select {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
   padding: 0.75rem;
@@ -2474,7 +2816,7 @@ canvas {
   flex: 1;
   padding: .65rem .7rem;
   color: var(--primary-gold);
-  background: rgba(212, 175, 55, .1);
+  background: rgba(38, 38, 38, .1);
   border: 1px solid var(--primary-gold);
   border-radius: 4px;
 }
@@ -2512,7 +2854,7 @@ canvas {
 
 .risk-management input,
 .risk-management select {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
   padding: 0.75rem;
@@ -2527,7 +2869,7 @@ canvas {
 }
 
 .config-summary {
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 8px;
   padding: 1.5rem;
@@ -2559,7 +2901,7 @@ canvas {
 .ai-analyst {
   border: 1px solid rgba(212, 175, 55, 0.45);
   border-radius: 8px;
-  background: rgba(212, 175, 55, 0.08);
+  background: rgba(38, 38, 38, 0.08);
 }
 
 .ai-analyst-heading {
@@ -2597,7 +2939,7 @@ canvas {
 }
 
 .bot-metrics div {
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border: 1px solid rgba(212, 175, 55, 0.25);
   border-radius: 10px;
   padding: 0.8rem;
@@ -2639,7 +2981,7 @@ canvas {
   gap: 1rem;
   border: 1px solid rgba(212, 175, 55, .25);
   border-radius: 10px;
-  background: rgba(212, 175, 55, .05);
+  background: rgba(38, 38, 38, .05);
 }
 
 .market-scan-panel h4,
@@ -2749,7 +3091,7 @@ canvas {
   padding: .8rem;
   border: 1px solid rgba(212, 175, 55, .22);
   border-radius: 6px;
-  background: rgba(212, 175, 55, .04);
+  background: rgba(38, 38, 38, .04);
 }
 
 .bot-position-title strong {
@@ -2809,7 +3151,7 @@ canvas {
 }
 
 .info-card {
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border: 1px solid var(--primary-gold);
   padding: 1.5rem;
   border-radius: 8px;
@@ -2854,6 +3196,28 @@ canvas {
 .recent-trades-panel {
   margin: 0;
   padding: 1.25rem;
+}
+
+.bot-performance,
+.bot-chart-section,
+.market-scan-panel,
+.bot-positions-panel,
+.recent-trades-panel,
+.leaderboard-wrap {
+  width: min(100%, 1100px);
+  align-self: center;
+}
+
+.bot-performance {
+  margin-top: 2rem;
+}
+
+.bot-chart-section,
+.market-scan-panel,
+.bot-positions-panel,
+.recent-trades-panel,
+.leaderboard-wrap {
+  margin-top: 1rem;
 }
 
 .bot-summary-section > h3,
@@ -2922,7 +3286,7 @@ canvas {
 .bank-list span {
   color: var(--light-gold);
   padding: 1rem;
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border-radius: 6px;
   border: 1px solid var(--primary-gold);
   text-align: center;
@@ -2962,7 +3326,7 @@ canvas {
 .custom-field input,
 .custom-field textarea {
   width: 100%;
-  background: rgba(212, 175, 55, 0.08);
+  background: rgba(38, 38, 38, 0.08);
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
   border-radius: 8px;
@@ -3080,7 +3444,7 @@ canvas {
   padding: 1rem;
   border: 1px solid rgba(212, 175, 55, .28);
   border-radius: 8px;
-  background: rgba(212, 175, 55, .04);
+  background: rgba(38, 38, 38, .04);
   color: var(--light-gold);
   text-align: left;
   cursor: pointer;
@@ -3089,7 +3453,7 @@ canvas {
 .metal-card-choice:hover,
 .metal-card-choice.is-selected {
   border-color: var(--primary-gold);
-  background: rgba(212, 175, 55, .12);
+  background: rgba(38, 38, 38, .12);
 }
 
 .metal-card-choice:focus-visible {
@@ -3254,6 +3618,36 @@ canvas {
   object-fit: cover;
 }
 
+.request-card-image-preview {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+
+.request-card-image-preview[hidden] {
+  display: none;
+}
+
+.request-card-remove-image {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .55rem .75rem;
+  border: 1px solid rgba(255, 107, 122, .7);
+  border-radius: 6px;
+  background: rgba(255, 107, 122, .12);
+  color: #ff9aa5;
+  font: inherit;
+  cursor: pointer;
+}
+
+.request-card-remove-image:hover,
+.request-card-remove-image:focus-visible {
+  background: rgba(255, 107, 122, .22);
+  border-color: #ff6b7a;
+}
+
 .request-card-status a {
   color: var(--primary-gold);
 }
@@ -3268,7 +3662,7 @@ canvas {
   padding: .85rem;
   border: 1px solid rgba(212, 175, 55, .2);
   border-radius: 6px;
-  background: rgba(212, 175, 55, .04);
+  background: rgba(38, 38, 38, .04);
 }
 
 .my-card-request h3 {
@@ -3316,7 +3710,7 @@ canvas {
 
 .coin-form input,
 .coin-form select {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
   padding: 0.75rem;
@@ -3454,7 +3848,7 @@ canvas {
   padding: .65rem;
   border: 1px solid var(--primary-gold);
   border-radius: 4px;
-  background: rgba(212, 175, 55, .1);
+  background: rgba(38, 38, 38, .1);
   color: var(--white);
   font: inherit;
 }
@@ -3550,7 +3944,7 @@ canvas {
 }
 
 .info-card {
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border: 1px solid var(--primary-gold);
   padding: 1.5rem;
   border-radius: 8px;
@@ -3588,7 +3982,7 @@ canvas {
   align-items: center;
   text-align: center;
   padding: 1.5rem;
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 8px;
 }
@@ -3630,7 +4024,7 @@ canvas {
   align-items: center;
   text-align: center;
   padding: 1.5rem;
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 8px;
 }
@@ -3677,7 +4071,7 @@ canvas {
 }
 
 .atm-search-row input {
-  background: rgba(212, 175, 55, 0.08);
+  background: rgba(38, 38, 38, 0.08);
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
   border-radius: 8px;
@@ -3718,7 +4112,7 @@ canvas {
   padding: 1rem;
   border-radius: 8px;
   border: 1px solid rgba(212, 175, 55, 0.25);
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
 }
 
 .atm-item strong {
@@ -3751,7 +4145,7 @@ canvas {
   align-items: center;
   text-align: center;
   padding: 1.5rem;
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border: 1px solid var(--primary-gold);
   border-radius: 8px;
 }
@@ -3759,8 +4153,8 @@ canvas {
 .step-number {
   width: 40px;
   height: 40px;
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -3812,6 +4206,129 @@ canvas {
   margin: 0 0 1rem;
 }
 
+.home-coin-market {
+  margin-top: 2rem;
+}
+
+.home-coin-market-toolbar,
+.home-coin-market-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.home-coin-market-toolbar p {
+  color: var(--light-gold);
+  font-size: 0.82rem;
+}
+
+.home-coin-market-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 8px;
+  background: rgba(12, 12, 12, 0.7);
+}
+
+.home-coin-market-table {
+  width: 100%;
+  min-width: 660px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.home-coin-market-table th,
+.home-coin-market-table td {
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.13);
+}
+
+.home-coin-market-table th {
+  position: sticky;
+  top: 0;
+  background: #111;
+  color: var(--primary-gold);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.home-coin-market-table td {
+  color: var(--light-gold);
+  font-size: 0.82rem;
+}
+
+.home-coin-market-table tbody tr:hover {
+  background: rgba(212, 175, 55, 0.06);
+}
+
+.home-coin-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 180px;
+}
+
+.home-coin-identity img,
+.home-coin-fallback-icon {
+  display: grid;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: #262626;
+  object-fit: cover;
+  color: var(--white);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.home-coin-labels {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.home-coin-labels strong {
+  color: var(--white);
+  overflow-wrap: anywhere;
+}
+
+.home-coin-labels small {
+  color: #9b927a;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.home-coin-rank {
+  width: 48px;
+  color: #9b927a !important;
+}
+
+.home-coin-numeric {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.home-coin-market-message {
+  padding: 1.5rem !important;
+  color: var(--light-gold) !important;
+  text-align: center;
+}
+
+.home-coin-market-footer {
+  justify-content: center;
+}
+
+.home-coin-market-footer [hidden] {
+  display: none;
+}
+
 .home-company-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -3827,14 +4344,14 @@ canvas {
   padding: .85rem 1rem;
   border: 1px solid rgba(212, 175, 55, .28);
   border-radius: 10px;
-  background: rgba(212, 175, 55, .04);
+  background: rgba(38, 38, 38, .04);
   transition: border-color .2s ease, transform .2s ease, background .2s ease;
 }
 
 .home-company-card:hover,
 .home-company-card:focus-within {
   border-color: var(--primary-gold);
-  background: rgba(212, 175, 55, .09);
+  background: rgba(38, 38, 38, .09);
   transform: translateY(-2px);
 }
 
@@ -3873,7 +4390,7 @@ canvas {
   overflow: hidden;
   border: 1px solid rgba(212, 175, 55, .45);
   border-radius: 50%;
-  background: rgba(212, 175, 55, .12);
+  background: rgba(38, 38, 38, .12);
   color: var(--primary-gold);
   font-weight: 800;
 }
@@ -3949,7 +4466,7 @@ canvas {
   padding: 1.25rem;
   border: 1px solid rgba(212, 175, 55, .28);
   border-radius: 8px;
-  background: rgba(212, 175, 55, .045);
+  background: rgba(38, 38, 38, .045);
   color: var(--light-gold);
   font: inherit;
   text-align: center;
@@ -3960,7 +4477,7 @@ canvas {
 .shop-category-button:hover,
 .shop-category-button.is-active {
   border-color: var(--primary-gold);
-  background: rgba(212, 175, 55, .13);
+  background: rgba(38, 38, 38, .13);
   transform: translateY(-2px);
 }
 
@@ -4011,7 +4528,7 @@ canvas {
   border: 1px solid rgba(212, 175, 55, .25);
   border-radius: 999px;
   color: var(--light-gold);
-  background: rgba(212, 175, 55, .06);
+  background: rgba(38, 38, 38, .06);
   font-size: .8rem;
 }
 
@@ -4076,7 +4593,7 @@ canvas {
   overflow: hidden;
   border: 1px solid rgba(212, 175, 55, .35);
   border-radius: 10px;
-  background: rgba(212, 175, 55, .12);
+  background: rgba(38, 38, 38, .12);
   color: var(--primary-gold);
   font-size: 1.2rem;
   font-weight: 800;
@@ -4294,7 +4811,7 @@ canvas {
 
 .sell-request input,
 .sell-request select {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
   padding: 0.75rem;
@@ -4321,7 +4838,7 @@ canvas {
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(212, 175, 55, 0.96);
+  background: rgba(38, 38, 38, 0.96);
   color: var(--black);
   padding: 1rem 2rem;
   border-radius: 6px;
@@ -4424,7 +4941,7 @@ canvas {
 }
 
 .currency-selector select {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
   padding: 0.75rem 1rem;
@@ -4435,7 +4952,7 @@ canvas {
 }
 
 .currency-selector select:hover {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(38, 38, 38, 0.2);
 }
 
 .currency-selector select:focus {
@@ -4452,7 +4969,7 @@ canvas {
 }
 
 .summary-card {
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border: 1px solid rgba(212, 175, 55, 0.3);
   padding: 1.5rem;
   border-radius: 8px;
@@ -4499,7 +5016,7 @@ canvas {
 }
 
 .holdings-table thead {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   border-bottom: 2px solid var(--primary-gold);
 }
 
@@ -4519,7 +5036,7 @@ canvas {
 }
 
 .holdings-table tr:hover {
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
 }
 
 .holdings-table strong {
@@ -4538,8 +5055,8 @@ canvas {
   display: inline-flex;
   width: 32px;
   height: 32px;
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
   border-radius: 50%;
   align-items: center;
   justify-content: center;
@@ -4563,7 +5080,7 @@ canvas {
   text-align: center;
   color: var(--light-gold);
   padding: 2rem;
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(38, 38, 38, 0.05);
   border-radius: 8px;
   border: 1px dashed var(--primary-gold);
 }
@@ -4795,12 +5312,12 @@ canvas {
   padding: .55rem;
   border: 1px solid rgba(212, 175, 55, .18);
   border-radius: 4px;
-  background: rgba(212, 175, 55, .04);
+  background: rgba(38, 38, 38, .04);
 }
 
 .world-person.is-selected {
   border-color: var(--primary-gold);
-  background: rgba(212, 175, 55, .12);
+  background: rgba(38, 38, 38, .12);
 }
 
 .world-person-identity {
@@ -4822,8 +5339,8 @@ canvas {
   height: 32px;
   flex: 0 0 32px;
   border-radius: 50%;
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
   font-size: .7rem;
   font-weight: 800;
 }
@@ -4860,8 +5377,8 @@ canvas {
 .world-person > button:hover,
 .world-groups-list button:hover,
 .world-icon-button:hover {
-  background: var(--primary-gold);
-  color: var(--black);
+  background: #262626;
+  color: var(--white);
 }
 
 .world-icon-button {
@@ -4939,8 +5456,8 @@ canvas {
   margin: 1rem 0 0 auto;
   border: 1px solid var(--primary-gold);
   border-radius: 50%;
-  background: var(--primary-gold);
-  color: #111;
+  background: #262626;
+  color: var(--white);
   font-size: 1.8rem;
   line-height: 1;
   cursor: pointer;
@@ -4948,7 +5465,7 @@ canvas {
 
 .live-create-button:hover,
 .live-create-button:focus-visible {
-  background: var(--light-gold);
+  background: #383838;
 }
 
 .live-feed-composer {
@@ -5102,7 +5619,7 @@ canvas {
   gap: .75rem;
   padding: .6rem .7rem;
   border-left: 2px solid rgba(212, 175, 55, .42);
-  background: rgba(212, 175, 55, .035);
+  background: rgba(38, 38, 38, .035);
 }
 
 .live-comment > p {
@@ -5163,7 +5680,7 @@ canvas {
   padding: .85rem;
   border: 1px solid rgba(212, 175, 55, .22);
   border-radius: 6px;
-  background: rgba(212, 175, 55, .05);
+  background: rgba(38, 38, 38, .05);
 }
 
 .world-feed-post-heading {
@@ -5232,7 +5749,7 @@ canvas {
   padding: .7rem .85rem;
   border: 1px solid rgba(212, 175, 55, .2);
   border-radius: 8px 8px 8px 2px;
-  background: rgba(212, 175, 55, .08);
+  background: rgba(38, 38, 38, .08);
 }
 
 .world-message.is-mine {

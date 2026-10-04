@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Mortgage Payment</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <meta
+      name="description"
+      content="Make a mortgage payment by selecting your country, mortgage company, and payment details."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading &amp; Investment</small>
+        </div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="bill-payment-page section-shell" aria-labelledby="mortgageHeading">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Mortgage</span>
+            <h2 id="mortgageHeading">Mortgage payment</h2>
+          </div>
+          <a class="btn btn-secondary" href="treasury.html">Back to Treasury</a>
+        </div>
+
+        <div class="card-glass bill-payment-card">
+          <div class="bill-payment-layout">
+            <div class="bill-payment-form-panel">
+              <h3>Pay your mortgage</h3>
+              <p>Select the country where your mortgage is held, then choose the lender and enter your loan payment details.</p>
+
+              <form class="bill-payment-form" id="mortgageForm">
+                <div class="form-grid">
+                  <label for="mortgageCountry">
+                    Country for mortgage
+                    <select id="mortgageCountry" name="country" required>
+                      <option value="">Select country</option>
+                      <option value="united-states">United States</option>
+                      <option value="united-kingdom">United Kingdom</option>
+                      <option value="canada">Canada</option>
+                      <option value="jamaica">Jamaica</option>
+                      <option value="trinidad-tobago">Trinidad &amp; Tobago</option>
+                    </select>
+                  </label>
+                  <label for="mortgageCompany">
+                    Mortgage company
+                    <select id="mortgageCompany" name="company" required disabled>
+                      <option value="">Select country first</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="payment-type-grid">
+                  <label for="mortgageCurrency">
+                    Currency type
+                    <select id="mortgageCurrency" name="currency" required>
+                      <option value="USD">USD ($)</option>
+                      <option value="GBP">GBP (£)</option>
+                      <option value="CAD">CAD (C$)</option>
+                      <option value="JMD">JMD (J$)</option>
+                      <option value="TTD">TTD (TT$)</option>
+                    </select>
+                  </label>
+                  <label for="mortgagePaymentType">
+                    Payment type
+                    <select id="mortgagePaymentType" name="paymentType" required>
+                      <option value="bank-transfer">Bank transfer</option>
+                      <option value="debit-card">Debit card</option>
+                      <option value="credit-card">Credit card</option>
+                      <option value="wallet">Wallet</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="form-grid">
+                  <label for="loanAccountNumber">
+                    Loan account number
+                    <input
+                      id="loanAccountNumber"
+                      name="loanAccountNumber"
+                      type="text"
+                      maxlength="40"
+                      autocomplete="off"
+                      placeholder="Enter your mortgage loan account number"
+                      required
+                    />
+                  </label>
+                  <label for="paymentAmount">
+                    Payment amount
+                    <input
+                      id="paymentAmount"
+                      name="paymentAmount"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      placeholder="0.00"
+                      required
+                    />
+                  </label>
+                </div>
+
+                <div class="bill-payment-summary" id="mortgageSummary" aria-live="polite">
+                  <strong>Mortgage payment summary</strong>
+                  <span>Select your country and mortgage company.</span>
+                </div>
+                <div class="bill-payment-actions">
+                  <button class="btn btn-primary" type="submit">Review payment</button>
+                  <button class="btn btn-ghost" type="reset">Reset</button>
+                </div>
+                <p id="mortgageStatus" role="status" aria-live="polite"></p>
+              </form>
+            </div>
+
+            <aside class="bill-payment-side">
+              <h3>Payment checklist</h3>
+              <p>Check your lender and loan account details before submitting.</p>
+              <ul>
+                <li>Select the country where the mortgage is registered</li>
+                <li>Choose a lender listed for that country</li>
+                <li>Enter the loan account number exactly as shown by your lender</li>
+                <li>Choose the currency and payment method for the payment</li>
+              </ul>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const mortgageCompaniesByCountry = {
+        'united-states': [
+          'Rocket Mortgage',
+          'Wells Fargo Home Mortgage',
+          'Chase Home Lending',
+          'Bank of America Home Loans',
+          'U.S. Bank Home Mortgage'
+        ],
+        'united-kingdom': [
+          'Nationwide Building Society',
+          'Halifax Mortgages',
+          'Barclays Mortgages',
+          'Lloyds Bank Mortgages',
+          'NatWest Mortgages'
+        ],
+        canada: [
+          'RBC Royal Bank Mortgages',
+          'TD Canada Trust Mortgages',
+          'Scotiabank Mortgages',
+          'BMO Mortgages',
+          'CIBC Mortgages'
+        ],
+        jamaica: [
+          'National Housing Trust (NHT)',
+          'National Commercial Bank Jamaica',
+          'Scotiabank Jamaica',
+          'JMMB Bank',
+          'First Global Bank'
+        ],
+        'trinidad-tobago': [
+          'First Citizens Bank',
+          'Republic Bank',
+          'RBC Royal Bank Trinidad and Tobago',
+          'Scotiabank Trinidad and Tobago',
+          'Home Mortgage Bank'
+        ]
+      };
+
+      const form = document.getElementById('mortgageForm');
+      const countrySelect = document.getElementById('mortgageCountry');
+      const companySelect = document.getElementById('mortgageCompany');
+      const currencySelect = document.getElementById('mortgageCurrency');
+      const amountInput = document.getElementById('paymentAmount');
+      const summary = document.getElementById('mortgageSummary');
+      const status = document.getElementById('mortgageStatus');
+
+      const currencyByCountry = {
+        'united-states': 'USD',
+        'united-kingdom': 'GBP',
+        canada: 'CAD',
+        jamaica: 'JMD',
+        'trinidad-tobago': 'TTD'
+      };
+
+      function updateCompanies() {
+        const country = countrySelect.value;
+        const companies = mortgageCompaniesByCountry[country] || [];
+        companySelect.replaceChildren(new Option(companies.length ? 'Choose mortgage company' : 'Select country first', ''));
+        companies.forEach((company) => companySelect.add(new Option(company, company)));
+        companySelect.disabled = companies.length === 0;
+
+        if (currencyByCountry[country]) {
+          currencySelect.value = currencyByCountry[country];
+        }
+        updateSummary();
+      }
+
+      function updateSummary() {
+        const company = companySelect.value;
+        const country = countrySelect.options[countrySelect.selectedIndex]?.text || '';
+        const accountNumber = document.getElementById('loanAccountNumber').value.trim();
+        const amount = Number(amountInput.value);
+        const currency = currencySelect.value;
+
+        summary.replaceChildren();
+        const title = document.createElement('strong');
+        title.textContent = 'Mortgage payment summary';
+        const provider = document.createElement('span');
+        provider.textContent = company ? `${company} · ${country}` : 'Select your country and mortgage company.';
+        const details = document.createElement('div');
+        details.className = 'summary-meta';
+        const loan = document.createElement('span');
+        loan.textContent = `Loan account: ${accountNumber || 'Enter account number'}`;
+        const payment = document.createElement('span');
+        payment.textContent = `Amount: ${Number.isFinite(amount) && amount > 0 ? `${currency} ${amount.toFixed(2)}` : 'Enter payment amount'}`;
+        details.append(loan, payment);
+        summary.append(title, provider, details);
+      }
+
+      countrySelect.addEventListener('change', updateCompanies);
+      [companySelect, currencySelect, amountInput, document.getElementById('loanAccountNumber')].forEach((field) => {
+        field.addEventListener('change', updateSummary);
+        field.addEventListener('input', updateSummary);
+      });
+
+      form.addEventListener('reset', () => {
+        window.setTimeout(() => {
+          companySelect.replaceChildren(new Option('Select country first', ''));
+          companySelect.disabled = true;
+          status.textContent = '';
+          updateSummary();
+        }, 0);
+      });
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
+        status.textContent = `Payment request prepared for ${companySelect.value}. This demo page does not submit a payment to your lender.`;
+      });
+
+      updateSummary();
+    </script>
+  </body>
+</html>

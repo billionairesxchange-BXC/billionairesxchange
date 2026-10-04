@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Insurance</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <meta
+      name="description"
+      content="Insurance plan setup by country, insurer, payment method, and policy details."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading &amp; Investment</small>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="bill-payment-page section-shell" aria-labelledby="insuranceHeading">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Insurance</span>
+            <h2 id="insuranceHeading">Insurance</h2>
+          </div>
+          <a class="btn btn-secondary" href="treasury.html">Back to Treasury</a>
+        </div>
+
+        <div class="card-glass bill-payment-card">
+          <div class="bill-payment-layout">
+            <div class="bill-payment-form-panel">
+              <h3>Set up your insurance policy</h3>
+              <p>Select the country, choose the insurance company, and complete the account and policy details for your coverage.</p>
+
+              <form class="bill-payment-form" id="insuranceForm">
+                <div class="form-grid">
+                  <label for="countrySelect">
+                    Country for insurance
+                    <select id="countrySelect" name="country" required>
+                      <option value="">Select country</option>
+                      <option value="united-states">United States</option>
+                      <option value="united-kingdom">United Kingdom</option>
+                      <option value="canada">Canada</option>
+                      <option value="jamaica">Jamaica</option>
+                      <option value="trinidad-tobago">Trinidad &amp; Tobago</option>
+                    </select>
+                  </label>
+
+                  <label for="companySelect">
+                    Insurance company
+                    <select id="companySelect" name="company" required>
+                      <option value="">Choose a country first</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="payment-type-grid">
+                  <label for="currencySelect">
+                    Currency type
+                    <select id="currencySelect" name="currencyType" required>
+                      <option value="usd">USD ($)</option>
+                      <option value="gbp">GBP (£)</option>
+                      <option value="cad">CAD (C$)</option>
+                      <option value="jmd">JMD (J$)</option>
+                      <option value="ttd">TTD (TT$)</option>
+                    </select>
+                  </label>
+
+                  <label for="paymentType">
+                    Payment type
+                    <select id="paymentType" name="paymentType" required>
+                      <option value="bank-transfer">Bank transfer</option>
+                      <option value="card-payment">Debit or credit card</option>
+                      <option value="wallet-payment">Digital wallet</option>
+                      <option value="annual-premium">Annual premium</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="form-grid">
+                  <label for="accountName">
+                    Name on the account
+                    <input
+                      id="accountName"
+                      name="accountName"
+                      type="text"
+                      placeholder="e.g. Sarah Williams"
+                      required
+                    />
+                  </label>
+
+                  <label for="policyNumber">
+                    Policy Number
+                    <input
+                      id="policyNumber"
+                      name="policyNumber"
+                      type="text"
+                      placeholder="e.g. INS-2456789"
+                      required
+                    />
+                  </label>
+                </div>
+
+                <div class="form-grid">
+                  <label for="coverageType">
+                    Coverage type
+                    <select id="coverageType" name="coverageType">
+                      <option value="home">Home</option>
+                      <option value="auto">Auto</option>
+                      <option value="health">Health</option>
+                      <option value="life">Life</option>
+                      <option value="business">Business</option>
+                    </select>
+                  </label>
+
+                  <label for="premiumAmount">
+                    Premium amount
+                    <input
+                      id="premiumAmount"
+                      name="premiumAmount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                    />
+                  </label>
+                </div>
+
+                <div class="bill-payment-summary" id="companySummary" aria-live="polite">
+                  <strong>Insurance provider</strong>
+                  <span>Select a country to see the insurance company options for your region.</span>
+                </div>
+
+                <div class="bill-payment-actions">
+                  <button class="btn btn-primary" type="submit">Continue insurance</button>
+                  <button class="btn btn-ghost" type="reset">Reset</button>
+                </div>
+              </form>
+            </div>
+
+            <aside class="bill-payment-side">
+              <h3>Insurance guidance</h3>
+              <p>Keep the following details close to hand before submitting your policy setup:</p>
+              <ul>
+                <li>Valid country and selected insurance provider</li>
+                <li>Account name exactly as it appears on the policy</li>
+                <li>Policy number or reference ID for verification</li>
+                <li>Preferred currency and payment method for the premium</li>
+              </ul>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const insuranceCompaniesByCountry = {
+        'united-states': [
+          { name: 'State Farm', coverage: 'Auto & Home', region: 'National' },
+          { name: 'Allianz', coverage: 'Life & Health', region: 'National' },
+          { name: 'Liberty Mutual', coverage: 'Home & Auto', region: 'National' },
+          { name: 'Progressive', coverage: 'Auto', region: 'National' },
+          { name: 'AIG', coverage: 'Business & Life', region: 'National' }
+        ],
+        'united-kingdom': [
+          { name: 'Aviva', coverage: 'Home & Car', region: 'National' },
+          { name: 'Legal & General', coverage: 'Life & Health', region: 'National' },
+          { name: 'AXA', coverage: 'Travel & Home', region: 'National' },
+          { name: 'Direct Line', coverage: 'Car Insurance', region: 'National' },
+          { name: 'RSA Insurance', coverage: 'Business & Home', region: 'National' }
+        ],
+        canada: [
+          { name: 'Manulife', coverage: 'Life & Health', region: 'National' },
+          { name: 'Desjardins', coverage: 'Home & Auto', region: 'Quebec & Ontario' },
+          { name: 'TD Insurance', coverage: 'Auto & Home', region: 'National' },
+          { name: 'BCAA', coverage: 'Auto & Travel', region: 'British Columbia' },
+          { name: 'Intact', coverage: 'Home & Business', region: 'National' }
+        ],
+        jamaica: [
+          { name: 'Sagicor', coverage: 'Life & Health', region: 'National' },
+          { name: 'JMMB Insurance', coverage: 'General Insurance', region: 'National' },
+          { name: 'NEM Insurance', coverage: 'Auto & Property', region: 'National' },
+          { name: 'Guardian Life', coverage: 'Life Insurance', region: 'National' },
+          { name: 'Mighty', coverage: 'Vehicle & Property', region: 'National' }
+        ],
+        'trinidad-tobago': [
+          { name: 'Trinbago Insurance', coverage: 'General Coverage', region: 'National' },
+          { name: 'Guardian General', coverage: 'Life & Health', region: 'National' },
+          { name: 'Bristol', coverage: 'Auto & Property', region: 'National' },
+          { name: 'Sagicor TT', coverage: 'Life & Business', region: 'National' },
+          { name: 'Blue Waters Insurance', coverage: 'Travel & Assets', region: 'National' }
+        ]
+      };
+
+      const countrySelect = document.getElementById('countrySelect');
+      const companySelect = document.getElementById('companySelect');
+      const companySummary = document.getElementById('companySummary');
+      const insuranceForm = document.getElementById('insuranceForm');
+
+      function populateCompanies() {
+        const selectedCountry = countrySelect.value;
+        companySelect.innerHTML = '<option value="">Select insurance company</option>';
+
+        if (!selectedCountry || !insuranceCompaniesByCountry[selectedCountry]) {
+          companySummary.innerHTML = '<strong>Insurance provider</strong><span>Select a country to see the insurance company options for your region.</span>';
+          return;
+        }
+
+        insuranceCompaniesByCountry[selectedCountry].forEach((company) => {
+          const option = document.createElement('option');
+          option.value = company.name;
+          option.textContent = `${company.name} — ${company.coverage}`;
+          companySelect.appendChild(option);
+        });
+
+        const firstCompany = insuranceCompaniesByCountry[selectedCountry][0];
+        companySelect.value = firstCompany.name;
+        updateCompanySummary();
+      }
+
+      function updateCompanySummary() {
+        const selectedCountry = countrySelect.value;
+        const selectedCompany = companySelect.value;
+        const countryName = countrySelect.options[countrySelect.selectedIndex]?.text || 'Selected country';
+
+        if (!selectedCountry || !selectedCompany) {
+          companySummary.innerHTML = '<strong>Insurance provider</strong><span>Select a country to see the insurance company options for your region.</span>';
+          return;
+        }
+
+        const companies = insuranceCompaniesByCountry[selectedCountry] || [];
+        const companyDetails = companies.find((entry) => entry.name === selectedCompany);
+
+        if (!companyDetails) {
+          companySummary.innerHTML = '<strong>Insurance provider</strong><span>No provider information available for the selected option.</span>';
+          return;
+        }
+
+        companySummary.innerHTML = `
+          <strong>${companyDetails.name}</strong>
+          <span>${countryName}</span>
+          <div class="summary-meta">
+            <span>Coverage: ${companyDetails.coverage}</span>
+            <span>Region: ${companyDetails.region}</span>
+          </div>
+        `;
+      }
+
+      countrySelect.addEventListener('change', populateCompanies);
+      companySelect.addEventListener('change', updateCompanySummary);
+
+      insuranceForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(insuranceForm);
+        const country = countrySelect.selectedOptions[0]?.text || 'N/A';
+        const company = companySelect.value || 'N/A';
+        const currency = formData.get('currencyType');
+        const paymentType = formData.get('paymentType');
+        const accountName = formData.get('accountName');
+        const policyNumber = formData.get('policyNumber');
+
+        alert(
+          `Insurance request created for ${accountName} at ${company} in ${country}.\nPolicy Number: ${policyNumber}\nCurrency: ${currency.toUpperCase()}\nPayment type: ${paymentType}`
+        );
+      });
+
+      populateCompanies();
+    </script>
+  </body>
+</html>

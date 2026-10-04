@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Send to a User</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <meta
+      name="description"
+      content="Send a wallet payment to another user using a saved contact or their account key."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading &amp; Investment</small>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="bill-payment-page section-shell" aria-labelledby="sendHeading">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Wallet</span>
+            <h2 id="sendHeading">Send to a user</h2>
+          </div>
+          <a class="btn btn-secondary" href="treasury.html">Back to Treasury</a>
+        </div>
+
+        <div class="card-glass bill-payment-card">
+          <div class="bill-payment-layout">
+            <div class="bill-payment-form-panel">
+              <h3>Choose a recipient</h3>
+              <p>Send to a saved friend, family member, or payee, or find an account with its unique username key.</p>
+
+              <form class="bill-payment-form" id="sendForm">
+                <fieldset class="transfer-method-options">
+                  <legend>Recipient</legend>
+                  <label>
+                    <input type="radio" name="recipientMode" value="saved" checked />
+                    Saved contacts
+                  </label>
+                  <label>
+                    <input type="radio" name="recipientMode" value="key" />
+                    Use account key
+                  </label>
+                </fieldset>
+
+                <section id="savedContactsPanel">
+                  <label for="savedContact">
+                    Saved friend, family member, or payee
+                    <select id="savedContact" name="savedContact">
+                      <option value="">Loading saved contacts…</option>
+                    </select>
+                  </label>
+                  <p id="contactsStatus" role="status" aria-live="polite"></p>
+                </section>
+
+                <section id="accountKeyPanel" hidden>
+                  <label for="accountKey">
+                    Recipient account key (username ID)
+                    <input
+                      id="accountKey"
+                      name="accountKey"
+                      type="text"
+                      autocomplete="off"
+                      placeholder="e.g. alex.trader"
+                      aria-describedby="accountKeyHelp"
+                    />
+                  </label>
+                  <small id="accountKeyHelp">The username key identifies one account. Do not share your password or verification codes.</small>
+                  <div class="bill-payment-actions">
+                    <button class="btn btn-secondary" id="lookupRecipient" type="button">Find account</button>
+                  </div>
+                  <div class="bill-payment-summary" id="recipientResult" aria-live="polite">
+                    <strong>Recipient account</strong>
+                    <span>Enter an account key and select Find account.</span>
+                  </div>
+                  <div class="form-grid" id="saveContactFields" hidden>
+                    <label for="contactType">
+                      Save as
+                      <select id="contactType" name="contactType">
+                        <option value="friend">Friend</option>
+                        <option value="family">Family</option>
+                        <option value="payee">Payee</option>
+                      </select>
+                    </label>
+                    <div class="bill-payment-actions">
+                      <button class="btn btn-secondary" id="saveContact" type="button">Add to contacts</button>
+                    </div>
+                  </div>
+                </section>
+
+                <label for="sendAmount">
+                  Amount to send
+                  <input
+                    id="sendAmount"
+                    name="amount"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="0.00"
+                    required
+                  />
+                </label>
+
+                <div class="bill-payment-summary" id="sendSummary" aria-live="polite">
+                  <strong>Payment summary</strong>
+                  <span>From: Wallet</span>
+                  <div class="summary-meta">
+                    <span>To: Choose a saved contact or look up an account key.</span>
+                    <span>Amount: Enter an amount</span>
+                  </div>
+                </div>
+
+                <div class="bill-payment-actions" id="sendReviewActions">
+                  <button class="btn btn-primary" type="submit">Review payment</button>
+                  <button class="btn btn-ghost" type="reset">Reset</button>
+                </div>
+                <div class="bill-payment-actions" id="sendConfirmActions" hidden>
+                  <button class="btn btn-primary" id="confirmSend" type="button">Confirm send</button>
+                  <button class="btn btn-ghost" id="editSend" type="button">Edit details</button>
+                </div>
+                <p id="sendStatus" role="status" aria-live="polite"></p>
+              </form>
+            </div>
+
+            <aside class="bill-payment-side">
+              <h3>Send securely</h3>
+              <p>Confirm the recipient’s account key and amount before continuing.</p>
+              <ul>
+                <li>Recipients are identified by their unique username key</li>
+                <li>Save trusted recipients as friends, family, or payees</li>
+                <li>Payments are sent from your Wallet to their Wallet</li>
+                <li>A confirmed request is recorded as pending; wallet balances are not moved by this page</li>
+              </ul>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { addDoc, collection, doc, getDoc, getDocs, getFirestore, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
+        authDomain: 'billionairesxchange-e8162.firebaseapp.com',
+        projectId: 'billionairesxchange-e8162',
+        storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
+        messagingSenderId: '872942229296',
+        appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
+        measurementId: 'G-JCZ6FCKF3M'
+      };
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const sendForm = document.getElementById('sendForm');
+      const savedContact = document.getElementById('savedContact');
+      const contactsStatus = document.getElementById('contactsStatus');
+      const savedContactsPanel = document.getElementById('savedContactsPanel');
+      const accountKeyPanel = document.getElementById('accountKeyPanel');
+      const accountKey = document.getElementById('accountKey');
+      const recipientResult = document.getElementById('recipientResult');
+      const saveContactFields = document.getElementById('saveContactFields');
+      const sendAmount = document.getElementById('sendAmount');
+      const sendSummary = document.getElementById('sendSummary');
+      const sendStatus = document.getElementById('sendStatus');
+      const reviewActions = document.getElementById('sendReviewActions');
+      const confirmActions = document.getElementById('sendConfirmActions');
+      const recipientCache = new Map();
+      let currentUser = null;
+      let currentUsername = '';
+      let selectedRecipient = null;
+      let reviewed = false;
+
+      function activeRecipientMode() {
+        return sendForm.elements.recipientMode.value;
+      }
+
+      function resetReview() {
+        if (!reviewed) return;
+        reviewed = false;
+        reviewActions.hidden = false;
+        confirmActions.hidden = true;
+        sendStatus.textContent = '';
+        updateSummary();
+      }
+
+      function updateSummary() {
+        sendSummary.replaceChildren();
+        const title = document.createElement('strong');
+        title.textContent = reviewed ? 'Confirm these payment details' : 'Payment summary';
+        const source = document.createElement('span');
+        source.textContent = 'From: Wallet';
+        const meta = document.createElement('div');
+        meta.className = 'summary-meta';
+        const recipient = document.createElement('span');
+        recipient.textContent = `To: ${selectedRecipient ? `@${selectedRecipient.username}` : 'Choose a recipient'}`;
+        const amount = Number(sendAmount.value);
+        const amountLabel = document.createElement('span');
+        amountLabel.textContent = `Amount: ${Number.isFinite(amount) && amount > 0 ? `$${amount.toFixed(2)}` : 'Enter an amount'}`;
+        meta.append(recipient, amountLabel);
+        sendSummary.append(title, source, meta);
+      }
+
+      async function loadContacts() {
+        savedContact.replaceChildren(new Option('Choose a saved contact', ''));
+        if (!currentUser) {
+          contactsStatus.textContent = 'Sign in to use saved contacts.';
+          return;
+        }
+
+        try {
+          const contactsSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'walletContacts'));
+          contactsSnapshot.forEach((contactSnapshot) => {
+            const contact = contactSnapshot.data();
+            if (!contact.uid || !contact.username || contact.uid === currentUser.uid) return;
+            recipientCache.set(contact.uid, {
+              uid: contact.uid,
+              username: contact.username,
+              relationship: contact.relationship || 'payee'
+            });
+            const option = new Option(`@${contact.username} · ${contact.relationship || 'payee'}`, contact.uid);
+            savedContact.add(option);
+          });
+          contactsStatus.textContent = savedContact.options.length > 1
+            ? 'Choose a saved recipient.'
+            : 'No saved contacts yet. Use an account key to find and add someone.';
+        } catch (error) {
+          console.error('Unable to load wallet contacts:', error);
+          contactsStatus.textContent = 'Could not load saved contacts. Try using an account key instead.';
+        }
+      }
+
+      document.querySelectorAll('input[name="recipientMode"]').forEach((radio) => {
+        radio.addEventListener('change', () => {
+          const useSavedContacts = activeRecipientMode() === 'saved';
+          savedContactsPanel.hidden = !useSavedContacts;
+          accountKeyPanel.hidden = useSavedContacts;
+          selectedRecipient = null;
+          if (useSavedContacts) {
+            selectedRecipient = recipientCache.get(savedContact.value) || null;
+          } else {
+            saveContactFields.hidden = true;
+          }
+          resetReview();
+          updateSummary();
+        });
+      });
+
+      savedContact.addEventListener('change', () => {
+        selectedRecipient = recipientCache.get(savedContact.value) || null;
+        resetReview();
+        updateSummary();
+      });
+
+      document.getElementById('lookupRecipient').addEventListener('click', async () => {
+        if (!currentUser) {
+          sendStatus.textContent = 'Sign in to look up a recipient account.';
+          return;
+        }
+        const usernameKey = accountKey.value.trim().replace(/^@/, '').toLowerCase();
+        if (!/^[a-z0-9_.-]{3,32}$/.test(usernameKey)) {
+          sendStatus.textContent = 'Enter a valid account key (username ID).';
+          selectedRecipient = null;
+          saveContactFields.hidden = true;
+          updateSummary();
+          return;
+        }
+
+        const lookupButton = document.getElementById('lookupRecipient');
+        lookupButton.disabled = true;
+        sendStatus.textContent = 'Looking up account…';
+        try {
+          const usernameSnapshot = await getDoc(doc(db, 'usernames', usernameKey));
+          if (!usernameSnapshot.exists()) {
+            selectedRecipient = null;
+            saveContactFields.hidden = true;
+            recipientResult.replaceChildren();
+            const heading = document.createElement('strong');
+            heading.textContent = 'No account found';
+            const message = document.createElement('span');
+            message.textContent = 'Check the account key and try again.';
+            recipientResult.append(heading, message);
+            sendStatus.textContent = '';
+            updateSummary();
+            return;
+          }
+
+          const recipientUid = usernameSnapshot.data().uid;
+          if (!recipientUid || recipientUid === currentUser.uid) {
+            selectedRecipient = null;
+            saveContactFields.hidden = true;
+            sendStatus.textContent = recipientUid === currentUser.uid
+              ? 'You cannot send a payment to your own account.'
+              : 'This account key is not linked to a valid account.';
+            updateSummary();
+            return;
+          }
+
+          selectedRecipient = { uid: recipientUid, username: usernameKey };
+          recipientCache.set(recipientUid, selectedRecipient);
+          recipientResult.replaceChildren();
+          const heading = document.createElement('strong');
+          heading.textContent = `@${usernameKey}`;
+          const message = document.createElement('span');
+          message.textContent = 'Account key verified. This is the recipient account.';
+          recipientResult.append(heading, message);
+          saveContactFields.hidden = false;
+          sendStatus.textContent = '';
+          resetReview();
+          updateSummary();
+        } catch (error) {
+          console.error('Unable to look up recipient account:', error);
+          sendStatus.textContent = 'Could not look up this account. Please try again.';
+        } finally {
+          lookupButton.disabled = false;
+        }
+      });
+
+      document.getElementById('saveContact').addEventListener('click', async () => {
+        if (!currentUser || !selectedRecipient) return;
+        const relationship = document.getElementById('contactType').value;
+        const saveButton = document.getElementById('saveContact');
+        saveButton.disabled = true;
+        try {
+          const contactsRef = collection(db, 'users', currentUser.uid, 'walletContacts');
+          const existingContacts = await getDocs(contactsRef);
+          const alreadySaved = existingContacts.docs.some((item) => item.data().uid === selectedRecipient.uid);
+          if (!alreadySaved) {
+            await addDoc(contactsRef, {
+              uid: selectedRecipient.uid,
+              username: selectedRecipient.username,
+              relationship,
+              createdAt: serverTimestamp()
+            });
+          }
+          contactsStatus.textContent = alreadySaved
+            ? `@${selectedRecipient.username} is already in your contacts.`
+            : `@${selectedRecipient.username} added as ${relationship}.`;
+          await loadContacts();
+        } catch (error) {
+          console.error('Unable to save wallet contact:', error);
+          sendStatus.textContent = 'Could not add this recipient to your contacts. Try again.';
+        } finally {
+          saveButton.disabled = false;
+        }
+      });
+
+      sendForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!sendForm.reportValidity()) return;
+        if (!currentUser) {
+          sendStatus.textContent = 'Sign in to send a wallet payment.';
+          return;
+        }
+        if (!selectedRecipient && activeRecipientMode() === 'saved') {
+          sendStatus.textContent = 'Choose a saved contact before reviewing payment.';
+          return;
+        }
+        if (!selectedRecipient) {
+          sendStatus.textContent = 'Find and verify the recipient account key first.';
+          return;
+        }
+        reviewed = true;
+        reviewActions.hidden = true;
+        confirmActions.hidden = false;
+        sendStatus.textContent = 'Review the recipient and amount, then confirm to prepare the payment request.';
+        updateSummary();
+      });
+
+      document.getElementById('editSend').addEventListener('click', resetReview);
+      document.getElementById('confirmSend').addEventListener('click', async () => {
+        if (!currentUser || !selectedRecipient || !reviewed) return;
+        const amount = Number(sendAmount.value);
+        const confirmButton = document.getElementById('confirmSend');
+        confirmButton.disabled = true;
+        try {
+          const senderProfile = await getDoc(doc(db, 'userDirectory', currentUser.uid));
+          currentUsername = senderProfile.exists() ? senderProfile.data().username || '' : '';
+          const outgoingPaymentRef = doc(collection(db, 'users', currentUser.uid, 'walletSendRequests'));
+          const paymentId = outgoingPaymentRef.id;
+          const payment = {
+            id: paymentId,
+            senderUid: currentUser.uid,
+            senderUsername: currentUsername,
+            recipientUid: selectedRecipient.uid,
+            recipientUsername: selectedRecipient.username,
+            amount,
+            currency: 'USD',
+            source: 'wallet',
+            destination: 'wallet',
+            status: 'pending',
+            createdAt: serverTimestamp()
+          };
+          const batch = writeBatch(db);
+          batch.set(outgoingPaymentRef, payment);
+          batch.set(doc(db, 'users', selectedRecipient.uid, 'incomingWalletPayments', paymentId), payment);
+          await batch.commit();
+          sendStatus.textContent = `Payment request of $${amount.toFixed(2)} for @${selectedRecipient.username} was recorded as pending. No wallet balance was moved.`;
+          reviewed = false;
+          reviewActions.hidden = false;
+          confirmActions.hidden = true;
+        } catch (error) {
+          console.error('Unable to create wallet payment request:', error);
+          sendStatus.textContent = 'Could not record the payment request. No funds were moved; please try again.';
+        } finally {
+          confirmButton.disabled = false;
+          updateSummary();
+        }
+      });
+
+      [sendAmount, accountKey].forEach((field) => {
+        field.addEventListener('input', () => {
+          resetReview();
+          updateSummary();
+        });
+      });
+
+      sendForm.addEventListener('reset', () => {
+        window.setTimeout(() => {
+          selectedRecipient = null;
+          reviewed = false;
+          saveContactFields.hidden = true;
+          reviewActions.hidden = false;
+          confirmActions.hidden = true;
+          recipientResult.innerHTML = '<strong>Recipient account</strong><span>Enter an account key and select Find account.</span>';
+          sendStatus.textContent = '';
+          updateSummary();
+        }, 0);
+      });
+
+      onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+        if (!user) {
+          contactsStatus.textContent = 'Sign in to send payments or use saved contacts.';
+          updateSummary();
+          return;
+        }
+        await loadContacts();
+        if (savedContact.value) {
+          selectedRecipient = recipientCache.get(savedContact.value) || null;
+          updateSummary();
+        }
+      });
+    </script>
+  </body>
+</html>

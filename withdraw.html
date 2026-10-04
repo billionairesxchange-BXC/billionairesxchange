@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Withdraw</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <meta
+      name="description"
+      content="Choose a balance to withdraw from and send funds to your wallet."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading &amp; Investment</small>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="bill-payment-page section-shell" aria-labelledby="withdrawHeading">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Withdraw</span>
+            <h2 id="withdrawHeading">Withdraw to wallet</h2>
+          </div>
+          <a class="btn btn-secondary" href="treasury.html">Back to Treasury</a>
+        </div>
+
+        <div class="card-glass bill-payment-card">
+          <div class="bill-payment-layout">
+            <div class="bill-payment-form-panel">
+              <h3>Choose a balance to withdraw from</h3>
+              <p>Select the source balance and amount. Funds will be sent to your wallet.</p>
+
+              <form class="bill-payment-form" id="withdrawForm">
+                <div class="form-grid">
+                  <label for="withdrawSource">
+                    Withdraw from
+                    <select id="withdrawSource" name="source" required>
+                      <option value="">Select a source balance</option>
+                      <option value="trade-paper-balance">Trade Paper Balance</option>
+                      <option value="bot-trading-balance">Bot Trading Balance</option>
+                      <option value="investment-balance">Investment Balance</option>
+                    </select>
+                  </label>
+
+                  <label for="withdrawAmount">
+                    Amount
+                    <input
+                      id="withdrawAmount"
+                      name="amount"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      placeholder="0.00"
+                      required
+                    />
+                  </label>
+                </div>
+
+                <div class="bill-payment-summary" id="withdrawSummary" aria-live="polite">
+                  <strong>Withdrawal destination</strong>
+                  <span>Wallet</span>
+                  <div class="summary-meta">
+                    <span>Select a source balance and enter an amount to review your withdrawal.</span>
+                  </div>
+                </div>
+
+                <div class="bill-payment-actions">
+                  <button class="btn btn-primary" type="submit">Continue withdrawal</button>
+                  <button class="btn btn-ghost" type="reset">Reset</button>
+                </div>
+                <p id="withdrawStatus" role="status" aria-live="polite"></p>
+              </form>
+            </div>
+
+            <aside class="bill-payment-side">
+              <h3>Withdrawal details</h3>
+              <p>Choose which available balance to use. Your selected destination is your wallet.</p>
+              <ul>
+                <li>Trade Paper Balance</li>
+                <li>Bot Trading Balance</li>
+                <li>Investment Balance</li>
+                <li>Destination: Wallet</li>
+              </ul>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const withdrawForm = document.getElementById('withdrawForm');
+      const withdrawSource = document.getElementById('withdrawSource');
+      const withdrawAmount = document.getElementById('withdrawAmount');
+      const withdrawSummary = document.getElementById('withdrawSummary');
+      const withdrawStatus = document.getElementById('withdrawStatus');
+
+      function updateWithdrawSummary() {
+        const sourceName = withdrawSource.selectedOptions[0]?.text || 'Selected source';
+        const amount = Number(withdrawAmount.value);
+        const amountText = Number.isFinite(amount) && amount > 0
+          ? `$${amount.toFixed(2)}`
+          : 'Enter a withdrawal amount';
+
+        withdrawSummary.innerHTML = `
+          <strong>Withdrawal destination</strong>
+          <span>Wallet</span>
+          <div class="summary-meta">
+            <span>Source: ${withdrawSource.value ? sourceName : 'Select a source balance'}</span>
+            <span>Amount: ${amountText}</span>
+          </div>
+        `;
+      }
+
+      withdrawSource.addEventListener('change', updateWithdrawSummary);
+      withdrawAmount.addEventListener('input', updateWithdrawSummary);
+
+      withdrawForm.addEventListener('reset', () => {
+        window.setTimeout(() => {
+          withdrawStatus.textContent = '';
+          updateWithdrawSummary();
+        }, 0);
+      });
+
+      withdrawForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const sourceName = withdrawSource.selectedOptions[0].text;
+        const amount = Number(withdrawAmount.value);
+        withdrawStatus.textContent = `Withdrawal request prepared: $${amount.toFixed(2)} from ${sourceName} to your wallet.`;
+      });
+    </script>
+  </body>
+</html>

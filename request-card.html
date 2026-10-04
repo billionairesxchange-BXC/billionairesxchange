@@ -106,6 +106,10 @@
             </label>
             <div id="cardDesignImagePreview" class="request-card-image-preview" hidden>
               <img id="cardDesignImagePreviewImg" alt="Card design reference preview" />
+              <button class="request-card-remove-image" id="removeCardDesignImage" type="button" aria-label="Remove selected card design photo" title="Remove selected photo">
+                <span aria-hidden="true">&#128465;</span>
+                <span>Remove photo</span>
+              </button>
             </div>
             <p class="request-card-status" id="cardRequestStatus" role="status" aria-live="polite"></p>
             <button class="btn btn-primary" id="submitCardRequest" type="submit">Submit card request</button>
@@ -154,6 +158,7 @@
       const designImageInput = document.getElementById('cardDesignImage');
       const designImagePreview = document.getElementById('cardDesignImagePreview');
       const designImagePreviewImg = document.getElementById('cardDesignImagePreviewImg');
+      const removeDesignImageButton = document.getElementById('removeCardDesignImage');
       const plasticCardArtwork = document.getElementById('plasticCardArtwork');
       const plasticCardArtworkPlaceholder = document.getElementById('plasticCardArtworkPlaceholder');
       const plasticCardPreviewName = document.getElementById('plasticCardPreviewName');
@@ -203,6 +208,17 @@
       function formatRequestDate(value) {
         const date = value?.toDate ? value.toDate() : new Date(value);
         return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleString();
+      }
+
+      function clearDesignImage() {
+        designImageInput.value = '';
+        designImageData = '';
+        designImagePreview.hidden = true;
+        designImagePreviewImg.removeAttribute('src');
+        plasticCardArtwork.removeAttribute('src');
+        plasticCardArtwork.hidden = true;
+        plasticCardArtworkPlaceholder.hidden = false;
+        cardRequestStatus.textContent = 'Selected design photo removed. Choose another photo or continue without one.';
       }
 
       async function loadMyRequests(user) {
@@ -276,6 +292,10 @@
         const file = designImageInput.files[0];
         designImageData = '';
         designImagePreview.hidden = true;
+        designImagePreviewImg.removeAttribute('src');
+        plasticCardArtwork.removeAttribute('src');
+        plasticCardArtwork.hidden = true;
+        plasticCardArtworkPlaceholder.hidden = false;
         if (!file) return;
         if (!file.type.match(/^image\/(png|jpeg|webp)$/) || file.size > 5 * 1024 * 1024) {
           cardRequestStatus.textContent = 'Choose a PNG, JPEG, or WebP image smaller than 5 MB.';
@@ -286,7 +306,7 @@
           designImageData = await resizeDesignImage(file);
           if (designImageData.length > 240000) throw new Error('Choose a smaller or simpler reference image.');
           designImagePreviewImg.src = designImageData;
-          designImagePreview.hidden = selectedMaterial === 'Plastic';
+          designImagePreview.hidden = false;
           if (selectedMaterial === 'Plastic') {
             plasticCardArtwork.src = designImageData;
             plasticCardArtwork.hidden = false;
@@ -296,8 +316,14 @@
         } catch (error) {
           cardRequestStatus.textContent = error.message || 'The image could not be processed. Choose another file.';
           designImageInput.value = '';
+          designImageData = '';
+          designImagePreviewImg.removeAttribute('src');
+          plasticCardArtwork.removeAttribute('src');
+          plasticCardArtwork.hidden = true;
+          plasticCardArtworkPlaceholder.hidden = false;
         }
       });
+      removeDesignImageButton.addEventListener('click', clearDesignImage);
 
       engravingInput.addEventListener('input', () => {
         plasticCardPreviewName.textContent = engravingInput.value.trim().toUpperCase() || 'YOUR NAME';

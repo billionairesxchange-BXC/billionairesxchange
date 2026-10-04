@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Transfer to Bank</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <meta
+      name="description"
+      content="Transfer funds from your wallet to a saved or selected bank account."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading &amp; Investment</small>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="bill-payment-page section-shell" aria-labelledby="transferHeading">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Transfer</span>
+            <h2 id="transferHeading">Transfer wallet funds to your bank</h2>
+          </div>
+          <a class="btn btn-secondary" href="treasury.html">Back to Treasury</a>
+        </div>
+
+        <div class="card-glass bill-payment-card">
+          <div class="bill-payment-layout">
+            <div class="bill-payment-form-panel">
+              <h3>Choose a bank account</h3>
+              <p>Transfer funds from your wallet to an account you have saved, or choose your bank to prepare a transfer.</p>
+
+              <form class="bill-payment-form" id="transferForm">
+                <fieldset class="transfer-method-options">
+                  <legend>Bank account option</legend>
+                  <label>
+                    <input type="radio" name="accountOption" value="saved" checked />
+                    Use a saved bank account
+                  </label>
+                  <label>
+                    <input type="radio" name="accountOption" value="select" />
+                    Select my bank
+                  </label>
+                </fieldset>
+
+                <section id="savedAccountPanel">
+                  <label for="savedAccountSelect">
+                    Saved bank account
+                    <select id="savedAccountSelect" name="savedAccount">
+                      <option value="">Loading saved accounts…</option>
+                    </select>
+                  </label>
+                  <p id="savedAccountStatus" role="status" aria-live="polite"></p>
+                </section>
+
+                <section id="selectBankPanel" hidden>
+                  <div class="form-grid">
+                    <label for="bankCountry">
+                      Bank country
+                      <select id="bankCountry" name="bankCountry">
+                        <option value="">Select country</option>
+                        <option value="united-states">United States</option>
+                        <option value="united-kingdom">United Kingdom</option>
+                        <option value="canada">Canada</option>
+                        <option value="jamaica">Jamaica</option>
+                        <option value="trinidad-tobago">Trinidad &amp; Tobago</option>
+                      </select>
+                    </label>
+                    <label for="bankSelect">
+                      Bank
+                      <select id="bankSelect" name="bank">
+                        <option value="">Select country first</option>
+                      </select>
+                    </label>
+                  </div>
+                </section>
+
+                <label for="transferAmount">
+                  Transfer amount
+                  <input
+                    id="transferAmount"
+                    name="amount"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="0.00"
+                    required
+                  />
+                </label>
+
+                <div class="bill-payment-summary" id="transferSummary" aria-live="polite">
+                  <strong>Transfer summary</strong>
+                  <span>From: Wallet</span>
+                  <div class="summary-meta">
+                    <span>Choose a bank account and enter an amount to review your transfer.</span>
+                  </div>
+                </div>
+
+                <div class="bill-payment-actions" id="transferReviewActions">
+                  <button class="btn btn-primary" type="submit">Review transfer</button>
+                  <button class="btn btn-ghost" type="reset">Reset</button>
+                </div>
+                <div class="bill-payment-actions" id="transferConfirmActions" hidden>
+                  <button class="btn btn-primary" id="confirmTransfer" type="button">Confirm transfer</button>
+                  <button class="btn btn-ghost" id="editTransfer" type="button">Edit details</button>
+                </div>
+                <p id="transferStatus" role="status" aria-live="polite"></p>
+              </form>
+            </div>
+
+            <aside class="bill-payment-side">
+              <h3>Before you confirm</h3>
+              <p>Review the destination account and amount carefully.</p>
+              <ul>
+                <li>Funds are transferred from your Wallet</li>
+                <li>Choose a saved account or select your bank</li>
+                <li>Check the transfer amount before confirmation</li>
+                <li>This page prepares a request; it does not initiate a bank transfer</li>
+              </ul>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { collection, getDocs, getFirestore } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
+        authDomain: 'billionairesxchange-e8162.firebaseapp.com',
+        projectId: 'billionairesxchange-e8162',
+        storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
+        messagingSenderId: '872942229296',
+        appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
+        measurementId: 'G-JCZ6FCKF3M'
+      };
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const banksByCountry = {
+        'united-states': ['JPMorgan Chase', 'Bank of America', 'Wells Fargo', 'Citibank', 'U.S. Bank', 'TD Bank USA'],
+        'united-kingdom': ['Barclays', 'HSBC UK', 'Lloyds Bank', 'NatWest', 'Royal Bank of Scotland', 'Monzo'],
+        canada: ['TD Bank', 'Royal Bank of Canada', 'Scotiabank', 'BMO', 'CIBC'],
+        jamaica: ['National Commercial Bank Jamaica', 'NCB', 'Scotiabank Jamaica', 'JMMB Bank', 'CIBC Caribbean'],
+        'trinidad-tobago': ['Republic Bank', 'First Citizens', 'JMMB Bank', 'CIBC Caribbean']
+      };
+
+      const transferForm = document.getElementById('transferForm');
+      const savedAccountSelect = document.getElementById('savedAccountSelect');
+      const savedAccountStatus = document.getElementById('savedAccountStatus');
+      const savedAccountPanel = document.getElementById('savedAccountPanel');
+      const selectBankPanel = document.getElementById('selectBankPanel');
+      const bankCountry = document.getElementById('bankCountry');
+      const bankSelect = document.getElementById('bankSelect');
+      const transferAmount = document.getElementById('transferAmount');
+      const transferSummary = document.getElementById('transferSummary');
+      const transferStatus = document.getElementById('transferStatus');
+      const reviewActions = document.getElementById('transferReviewActions');
+      const confirmActions = document.getElementById('transferConfirmActions');
+      let savedAccounts = [];
+      let transferIsReviewed = false;
+
+      function selectedAccountOption() {
+        return transferForm.elements.accountOption.value;
+      }
+
+      function chosenDestination() {
+        if (selectedAccountOption() === 'saved') {
+          const account = savedAccounts.find((item) => item.id === savedAccountSelect.value);
+          return account
+            ? `${account.bankName} (${account.bankCountry}) · ${account.accountType} · •••• ${account.accountLast4}`
+            : '';
+        }
+
+        const country = bankCountry.options[bankCountry.selectedIndex]?.text || '';
+        const bank = bankSelect.value;
+        return country && bank ? `${bank} · ${country}` : '';
+      }
+
+      function updateSummary() {
+        const amount = Number(transferAmount.value);
+        const destination = chosenDestination();
+        transferSummary.replaceChildren();
+
+        const heading = document.createElement('strong');
+        heading.textContent = transferIsReviewed ? 'Confirm these transfer details' : 'Transfer summary';
+        const source = document.createElement('span');
+        source.textContent = 'From: Wallet';
+        const details = document.createElement('div');
+        details.className = 'summary-meta';
+        const destinationText = document.createElement('span');
+        destinationText.textContent = `To: ${destination || 'Choose a bank account'}`;
+        const amountText = document.createElement('span');
+        amountText.textContent = `Amount: ${Number.isFinite(amount) && amount > 0 ? `$${amount.toFixed(2)}` : 'Enter an amount'}`;
+        details.append(destinationText, amountText);
+        transferSummary.append(heading, source, details);
+      }
+
+      function resetReview() {
+        if (!transferIsReviewed) return;
+        transferIsReviewed = false;
+        reviewActions.hidden = false;
+        confirmActions.hidden = true;
+        transferStatus.textContent = '';
+        updateSummary();
+      }
+
+      document.querySelectorAll('input[name="accountOption"]').forEach((radio) => {
+        radio.addEventListener('change', () => {
+          const useSaved = selectedAccountOption() === 'saved';
+          savedAccountPanel.hidden = !useSaved;
+          selectBankPanel.hidden = useSaved;
+          resetReview();
+          updateSummary();
+        });
+      });
+
+      bankCountry.addEventListener('change', () => {
+        bankSelect.replaceChildren(new Option('Choose a bank', ''));
+        (banksByCountry[bankCountry.value] || []).forEach((name) => {
+          bankSelect.add(new Option(name, name));
+        });
+        resetReview();
+        updateSummary();
+      });
+      [savedAccountSelect, bankSelect, transferAmount].forEach((field) => {
+        field.addEventListener('input', () => {
+          resetReview();
+          updateSummary();
+        });
+        field.addEventListener('change', () => {
+          resetReview();
+          updateSummary();
+        });
+      });
+
+      transferForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!transferForm.reportValidity()) return;
+        if (!chosenDestination()) {
+          transferStatus.textContent = selectedAccountOption() === 'saved'
+            ? 'Select a saved bank account or choose “Select my bank”.'
+            : 'Choose a country and bank for the transfer.';
+          return;
+        }
+        transferIsReviewed = true;
+        reviewActions.hidden = true;
+        confirmActions.hidden = false;
+        transferStatus.textContent = 'Review the destination and amount, then confirm to prepare the transfer request.';
+        updateSummary();
+      });
+
+      document.getElementById('editTransfer').addEventListener('click', resetReview);
+      document.getElementById('confirmTransfer').addEventListener('click', () => {
+        transferStatus.textContent = `Transfer request prepared for ${transferAmount.value} from your Wallet to ${chosenDestination()}. No bank transfer has been initiated.`;
+        transferIsReviewed = false;
+        reviewActions.hidden = false;
+        confirmActions.hidden = true;
+        updateSummary();
+      });
+
+      transferForm.addEventListener('reset', () => {
+        window.setTimeout(() => {
+          transferIsReviewed = false;
+          reviewActions.hidden = false;
+          confirmActions.hidden = true;
+          transferStatus.textContent = '';
+          savedAccountPanel.hidden = false;
+          selectBankPanel.hidden = true;
+          updateSummary();
+        }, 0);
+      });
+
+      onAuthStateChanged(auth, async (firebaseUser) => {
+        savedAccountSelect.replaceChildren(new Option('Select a saved bank account', ''));
+        savedAccounts = [];
+        if (!firebaseUser) {
+          savedAccountStatus.textContent = 'Sign in to load your saved bank accounts, or select your bank instead.';
+          updateSummary();
+          return;
+        }
+
+        try {
+          const methodsSnapshot = await getDocs(collection(db, 'users', firebaseUser.uid, 'paymentMethods'));
+          savedAccounts = methodsSnapshot.docs
+            .map((item) => ({ id: item.id, ...item.data() }))
+            .filter((item) => item.type === 'bank' && item.accountLast4 && item.bankName && item.bankCountry);
+
+          if (savedAccounts.length) {
+            savedAccounts.forEach((account) => {
+              const label = `${account.bankName} (${account.bankCountry}) · ${account.accountType} · •••• ${account.accountLast4}`;
+              savedAccountSelect.add(new Option(label, account.id));
+            });
+            savedAccountStatus.textContent = 'Choose one of your saved bank accounts.';
+          } else {
+            savedAccountStatus.textContent = 'No saved bank accounts found. Choose “Select my bank” or add a bank account in your profile.';
+          }
+          updateSummary();
+        } catch (error) {
+          console.error('Unable to load saved bank accounts:', error);
+          savedAccountStatus.textContent = 'Could not load saved bank accounts. You can select your bank instead.';
+          updateSummary();
+        }
+      });
+    </script>
+  </body>
+</html>

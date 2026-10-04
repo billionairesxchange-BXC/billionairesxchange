@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Savings Vault</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <meta
+      name="description"
+      content="Create a savings vault, select eligible assets, and review your vault activity."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange-Logo.png" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading &amp; Investment</small>
+        </div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Bot Trading</a>
+        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="bill-payment-page section-shell" aria-labelledby="vaultHeading">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Treasury savings</span>
+            <h2 id="vaultHeading">Savings Vault</h2>
+          </div>
+          <a class="btn btn-secondary" href="treasury.html">Back to Treasury</a>
+        </div>
+
+        <p class="vault-demo-notice">
+          Vault transfers are recorded in your savings ledger for this demo. They do not move or lock funds in your wallet, investments, or coin holdings. The 4–8 digit PIN is a demo confirmation check, not a security boundary for real funds.
+        </p>
+
+        <section class="card-glass vault-lock-panel" id="vaultLockPanel" aria-labelledby="vaultLockHeading">
+          <h3 id="vaultLockHeading">Vault locked</h3>
+          <p id="vaultLockMessage">Checking your account…</p>
+          <p id="vaultLoginRequired" hidden><a class="btn btn-primary" href="verification.html#login">Sign in to continue</a></p>
+          <form class="bill-payment-form" id="vaultUnlockForm" hidden>
+            <label for="vaultUnlockPin">
+              Vault PIN
+              <input id="vaultUnlockPin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="current-password" required />
+            </label>
+            <div class="bill-payment-actions">
+              <button class="btn btn-primary" type="submit">Unlock Vault</button>
+              <button class="btn btn-ghost" id="forgotVaultPin" type="button">Forgot PIN?</button>
+            </div>
+            <p id="vaultUnlockStatus" role="status" aria-live="polite"></p>
+          </form>
+          <form class="bill-payment-form vault-recovery-form" id="vaultRecoveryForm" hidden>
+            <h4>Reset Vault PIN</h4>
+            <p>Verify your signed-in account password, then choose a new 4–8 digit Vault PIN.</p>
+            <label for="vaultRecoveryPassword">
+              Account password
+              <input id="vaultRecoveryPassword" name="password" type="password" autocomplete="current-password" required />
+            </label>
+            <div class="form-grid">
+              <label for="vaultNewPin">
+                New Vault PIN
+                <input id="vaultNewPin" name="newPin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" required />
+              </label>
+              <label for="vaultNewPinConfirm">
+                Confirm new Vault PIN
+                <input id="vaultNewPinConfirm" name="newPinConfirm" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" required />
+              </label>
+            </div>
+            <div class="bill-payment-actions">
+              <button class="btn btn-primary" type="submit">Verify &amp; reset PIN</button>
+              <button class="btn btn-ghost" id="cancelVaultRecovery" type="button">Cancel</button>
+            </div>
+            <p id="vaultRecoveryStatus" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <div id="vaultProtectedContent" hidden>
+        <section class="card-glass vault-account-panel" aria-labelledby="vaultAccountHeading">
+          <h3 id="vaultAccountHeading">Savings account &amp; Vault PIN</h3>
+          <p>Create a savings account and set a 4–8 digit PIN to confirm vault ledger entries.</p>
+          <form class="bill-payment-form" id="vaultAccountForm">
+            <div class="form-grid">
+              <label for="vaultAccountName">
+                Savings account name
+                <input id="vaultAccountName" name="accountName" type="text" maxlength="60" placeholder="e.g. Long-term savings" required />
+              </label>
+              <label for="vaultPin">
+                Vault PIN (4–8 digits)
+                <input id="vaultPin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" placeholder="Enter a 4–8 digit PIN" required />
+              </label>
+            </div>
+            <label for="vaultPinConfirm">
+              Confirm Vault PIN
+              <input id="vaultPinConfirm" name="pinConfirm" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" placeholder="Re-enter your PIN" required />
+            </label>
+            <div class="bill-payment-actions">
+              <button class="btn btn-primary" id="saveVaultAccount" type="submit">Create savings account</button>
+            </div>
+            <p id="vaultAccountStatus" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="vault-overview" aria-label="Savings vault overview">
+          <article class="card-glass vault-overview-card">
+            <span class="summary-label">Vault ledger total</span>
+            <strong class="summary-value" id="vaultLedgerTotal">$0.00</strong>
+            <small>USD-equivalent ledger entries only</small>
+          </article>
+          <article class="card-glass vault-overview-card">
+            <span class="summary-label">Crypto assets recorded</span>
+            <strong class="summary-value" id="vaultCoinTotal">0</strong>
+            <small>Distinct symbols in your vault ledger</small>
+          </article>
+          <article class="card-glass vault-overview-card">
+            <span class="summary-label">Transfers recorded</span>
+            <strong class="summary-value" id="vaultTransferCount">0</strong>
+            <small>Vault ledger entries</small>
+          </article>
+        </section>
+        <section class="card-glass vault-asset-balances" aria-labelledby="vaultAssetBalancesHeading">
+          <h3 id="vaultAssetBalancesHeading">Recorded savings by asset</h3>
+          <div id="vaultAssetBalances" aria-live="polite">
+            <p class="vault-empty">No savings transfers have been recorded yet.</p>
+          </div>
+        </section>
+
+        <section class="card-glass vault-transfer-panel" aria-labelledby="vaultTransferHeading">
+          <h3 id="vaultTransferHeading">Add to savings</h3>
+          <p>Choose an existing positive paper-trading coin position or a company investment with a signed contract.</p>
+          <form class="bill-payment-form" id="vaultTransferForm">
+            <label for="vaultSourceType">
+              Transfer from
+              <select id="vaultSourceType" name="sourceType" required>
+                <option value="">Select a source</option>
+                <option value="coin">Coin holdings</option>
+                <option value="company">Company investment contract</option>
+              </select>
+            </label>
+            <label for="vaultSource">
+              Select holding or contract
+              <select id="vaultSource" name="source" required disabled>
+                <option value="">Select a source type first</option>
+              </select>
+            </label>
+            <div class="form-grid">
+              <label for="vaultAmount">
+                Amount to transfer
+                <input id="vaultAmount" name="amount" type="number" min="0.00000001" step="any" placeholder="0.00" required />
+              </label>
+              <label for="vaultTransferPin">
+                Confirm with Vault PIN
+                <input id="vaultTransferPin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="current-password" placeholder="Enter Vault PIN" required />
+              </label>
+            </div>
+            <div class="bill-payment-summary" id="vaultTransferSummary" aria-live="polite">
+              <strong>Vault transfer</strong>
+              <span>Select a source and amount.</span>
+            </div>
+            <div class="bill-payment-actions">
+              <button class="btn btn-primary" id="recordVaultTransfer" type="submit" disabled>Transfer to savings</button>
+            </div>
+            <p id="vaultTransferStatus" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="card-glass vault-log-panel" aria-labelledby="vaultLogHeading">
+          <div class="vault-log-heading">
+            <div>
+              <h3 id="vaultLogHeading">Vault transaction log</h3>
+              <p>History of savings transfers recorded for this account.</p>
+            </div>
+            <button class="btn btn-ghost" id="refreshVaultLog" type="button">Refresh</button>
+          </div>
+          <div class="vault-log-list" id="vaultTransactionLog" aria-live="polite">
+            <p class="vault-empty">Sign in to view your vault activity.</p>
+          </div>
+        </section>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+      import {
+        EmailAuthProvider,
+        getAuth,
+        onAuthStateChanged,
+        reauthenticateWithCredential
+      } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import {
+        addDoc,
+        collection,
+        doc,
+        getDoc,
+        getDocs,
+        getFirestore,
+        orderBy,
+        query,
+        serverTimestamp,
+        setDoc
+      } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
+        authDomain: 'billionairesxchange-e8162.firebaseapp.com',
+        projectId: 'billionairesxchange-e8162',
+        storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
+        messagingSenderId: '872942229296',
+        appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
+        measurementId: 'G-JCZ6FCKF3M'
+      };
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const accountForm = document.getElementById('vaultAccountForm');
+      const transferForm = document.getElementById('vaultTransferForm');
+      const sourceTypeSelect = document.getElementById('vaultSourceType');
+      const sourceSelect = document.getElementById('vaultSource');
+      const amountInput = document.getElementById('vaultAmount');
+      const transferSummary = document.getElementById('vaultTransferSummary');
+      const accountStatus = document.getElementById('vaultAccountStatus');
+      const transferStatus = document.getElementById('vaultTransferStatus');
+      const transactionLog = document.getElementById('vaultTransactionLog');
+      const recordTransferButton = document.getElementById('recordVaultTransfer');
+      const lockPanel = document.getElementById('vaultLockPanel');
+      const protectedContent = document.getElementById('vaultProtectedContent');
+      const unlockForm = document.getElementById('vaultUnlockForm');
+      const unlockStatus = document.getElementById('vaultUnlockStatus');
+      const lockMessage = document.getElementById('vaultLockMessage');
+      const loginRequired = document.getElementById('vaultLoginRequired');
+      const recoveryForm = document.getElementById('vaultRecoveryForm');
+      const recoveryStatus = document.getElementById('vaultRecoveryStatus');
+      let currentUser = null;
+      let vaultAccount = null;
+      let vaultUnlocked = false;
+      let sourceOptions = [];
+      let transactions = [];
+      let coinPricesUsd = {};
+
+      const bytesToHex = (bytes) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+      const hexToBytes = (hex) => new Uint8Array(hex.match(/.{2}/g).map((part) => Number.parseInt(part, 16)));
+
+      async function hashVaultPin(pin, saltHex) {
+        const salt = saltHex ? hexToBytes(saltHex) : crypto.getRandomValues(new Uint8Array(16));
+        const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveBits']);
+        const derivedBits = await crypto.subtle.deriveBits(
+          { name: 'PBKDF2', salt, iterations: 310000, hash: 'SHA-256' },
+          keyMaterial,
+          256
+        );
+        return { salt: bytesToHex(salt), hash: bytesToHex(new Uint8Array(derivedBits)) };
+      }
+
+      function applyVaultLock() {
+        vaultUnlocked = false;
+        protectedContent.hidden = true;
+        lockPanel.hidden = !currentUser || !vaultAccount;
+        lockMessage.textContent = 'Enter your Vault PIN to view your savings account, balances, and transaction history.';
+        loginRequired.hidden = true;
+        unlockForm.hidden = !currentUser || !vaultAccount;
+        document.getElementById('vaultUnlockPin').value = '';
+        unlockStatus.textContent = '';
+        recoveryForm.hidden = true;
+        recoveryForm.reset();
+        recoveryStatus.textContent = '';
+      }
+
+      async function unlockVault(pin) {
+        if (!vaultAccount?.pinHash || !vaultAccount?.pinSalt) {
+          unlockStatus.textContent = 'Vault PIN is unavailable. Use Forgot PIN to verify your account and set a new one.';
+          return false;
+        }
+        if (!crypto.subtle) {
+          unlockStatus.textContent = 'Vault PIN verification requires HTTPS or a localhost development server.';
+          return false;
+        }
+        const verifier = await hashVaultPin(pin, vaultAccount.pinSalt);
+        if (verifier.hash !== vaultAccount.pinHash) {
+          unlockStatus.textContent = 'Incorrect Vault PIN.';
+          return false;
+        }
+
+        vaultUnlocked = true;
+        lockPanel.hidden = true;
+        unlockForm.hidden = true;
+        protectedContent.hidden = false;
+        unlockStatus.textContent = '';
+        accountStatus.textContent = 'Vault unlocked.';
+        await loadTransactions();
+        if (sourceTypeSelect.value) await populateSources();
+        updateTransferSummary();
+        return true;
+      }
+
+      unlockForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!currentUser || !unlockForm.reportValidity()) return;
+        const submitButton = unlockForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        try {
+          await unlockVault(document.getElementById('vaultUnlockPin').value);
+        } catch (error) {
+          console.error('Unable to verify Vault PIN:', error);
+          unlockStatus.textContent = 'Could not verify the Vault PIN. Please try again.';
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+
+      document.getElementById('forgotVaultPin').addEventListener('click', () => {
+        recoveryForm.hidden = false;
+        recoveryStatus.textContent = '';
+        document.getElementById('vaultRecoveryPassword').focus();
+      });
+
+      document.getElementById('cancelVaultRecovery').addEventListener('click', () => {
+        recoveryForm.reset();
+        recoveryForm.hidden = true;
+        recoveryStatus.textContent = '';
+      });
+
+      recoveryForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!currentUser || !recoveryForm.reportValidity()) return;
+        const password = document.getElementById('vaultRecoveryPassword').value;
+        const newPin = document.getElementById('vaultNewPin').value;
+        const confirmPin = document.getElementById('vaultNewPinConfirm').value;
+        if (newPin !== confirmPin) {
+          recoveryStatus.textContent = 'The new PIN entries do not match.';
+          return;
+        }
+        if (!/^\d{4,8}$/.test(newPin)) {
+          recoveryStatus.textContent = 'Vault PIN must be 4 to 8 digits.';
+          return;
+        }
+        if (!currentUser.email) {
+          recoveryStatus.textContent = 'This account has no password-based sign-in. Sign out and use the account’s normal sign-in method to recover access.';
+          return;
+        }
+
+        const submitButton = recoveryForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        try {
+          const credential = EmailAuthProvider.credential(currentUser.email, password);
+          await reauthenticateWithCredential(currentUser, credential);
+          const pinVerifier = await hashVaultPin(newPin);
+          const accountRef = doc(db, 'users', currentUser.uid, 'vaultAccounts', 'savings');
+          await setDoc(accountRef, {
+            pinSalt: pinVerifier.salt,
+            pinHash: pinVerifier.hash,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+          vaultAccount = { ...vaultAccount, ...pinVerifier };
+          recoveryForm.reset();
+          recoveryForm.hidden = true;
+          unlockStatus.textContent = 'Vault PIN reset. Enter your new PIN to unlock the Vault.';
+          document.getElementById('vaultUnlockPin').focus();
+        } catch (error) {
+          console.error('Unable to verify account password or reset Vault PIN:', error);
+          recoveryStatus.textContent = error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password'
+            ? 'Account password was not accepted. Check it and try again.'
+            : 'Could not verify your account or reset the PIN. Please try again.';
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+
+      window.addEventListener('pagehide', () => {
+        if (vaultAccount) applyVaultLock();
+      });
+      window.addEventListener('pageshow', (event) => {
+        if (event.persisted && vaultAccount) applyVaultLock();
+      });
+
+      function setSourcePlaceholder(text) {
+        sourceSelect.replaceChildren(new Option(text, ''));
+        sourceSelect.disabled = true;
+        recordTransferButton.disabled = true;
+      }
+
+      function updateTransferSummary() {
+        const source = sourceOptions.find((option) => option.id === sourceSelect.value);
+        const amount = Number(amountInput.value);
+        transferSummary.replaceChildren();
+        const heading = document.createElement('strong');
+        heading.textContent = 'Vault transfer';
+        const sourceLine = document.createElement('span');
+        sourceLine.textContent = `Savings account: ${vaultAccount?.name || 'Create an account first'}`;
+        const meta = document.createElement('div');
+        meta.className = 'summary-meta';
+        const assetLine = document.createElement('span');
+        assetLine.textContent = `Source: ${source?.label || 'Select a holding or contract'}`;
+        const amountLine = document.createElement('span');
+        const amountDisplay = Number.isFinite(amount) && amount > 0
+          ? `${amount} ${source?.unit || ''}`.trim()
+          : 'Enter an amount';
+        amountLine.textContent = `Amount: ${amountDisplay}`;
+        meta.append(assetLine, amountLine);
+        transferSummary.append(heading, sourceLine, meta);
+      }
+
+      function renderOverview() {
+        let usdTotal = 0;
+        const assetTotals = new Map();
+        transactions.forEach((transaction) => {
+          const amount = Number(transaction.amount) || 0;
+          const unit = String(transaction.unit || transaction.currency || 'USD').toUpperCase();
+          assetTotals.set(unit, (assetTotals.get(unit) || 0) + amount);
+          if (transaction.sourceType === 'coin') {
+            usdTotal += amount * (Number(transaction.unitPriceUsd) || 0);
+          } else {
+            const currency = String(transaction.currency || 'USD').toUpperCase();
+            usdTotal += currency === 'USD' ? amount : 0;
+          }
+        });
+        document.getElementById('vaultLedgerTotal').textContent = `$${usdTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('vaultCoinTotal').textContent = String(transactions.filter((item) => item.sourceType === 'coin').reduce((symbols, item) => symbols.add(String(item.unit || '').toUpperCase()), new Set()).size);
+        document.getElementById('vaultTransferCount').textContent = String(transactions.length);
+        const balances = document.getElementById('vaultAssetBalances');
+        balances.replaceChildren();
+        if (!assetTotals.size) {
+          const empty = document.createElement('p');
+          empty.className = 'vault-empty';
+          empty.textContent = 'No savings transfers have been recorded yet.';
+          balances.appendChild(empty);
+          return;
+        }
+        assetTotals.forEach((amount, unit) => {
+          const item = document.createElement('div');
+          item.className = 'vault-asset-balance';
+          const label = document.createElement('strong');
+          label.textContent = unit;
+          const value = document.createElement('span');
+          value.textContent = `${amount.toLocaleString(undefined, { maximumFractionDigits: 8 })} ${unit}`;
+          item.append(label, value);
+          balances.appendChild(item);
+        });
+      }
+
+      function renderTransactions() {
+        transactionLog.replaceChildren();
+        if (!transactions.length) {
+          const empty = document.createElement('p');
+          empty.className = 'vault-empty';
+          empty.textContent = 'No savings transfers have been recorded yet.';
+          transactionLog.appendChild(empty);
+          renderOverview();
+          return;
+        }
+
+        transactions.forEach((transaction) => {
+          const row = document.createElement('article');
+          row.className = 'vault-transaction';
+          const detail = document.createElement('div');
+          const title = document.createElement('strong');
+          title.textContent = transaction.sourceLabel || 'Savings transfer';
+          const description = document.createElement('small');
+          const unit = transaction.unit || transaction.currency || '';
+          description.textContent = `${transaction.sourceType === 'coin' ? 'Coin holding' : 'Company contract'} · ${Number(transaction.amount).toLocaleString(undefined, { maximumFractionDigits: 8 })} ${unit}`;
+          const createdAt = document.createElement('time');
+          const date = transaction.createdAt?.toDate?.() || new Date(transaction.createdAt || Date.now());
+          createdAt.dateTime = date.toISOString();
+          createdAt.textContent = date.toLocaleString();
+          const badge = document.createElement('span');
+          badge.className = 'vault-transaction-status';
+          badge.textContent = transaction.status || 'Recorded';
+          detail.append(title, description, createdAt);
+          row.append(detail, badge);
+          transactionLog.appendChild(row);
+        });
+        renderOverview();
+      }
+
+      async function loadTransactions() {
+        const snapshot = await getDocs(query(
+          collection(db, 'users', currentUser.uid, 'vaultAccounts', 'savings', 'transactions'),
+          orderBy('createdAt', 'desc')
+        ));
+        transactions = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+        renderTransactions();
+      }
+
+      async function loadCoinSources() {
+        const positions = JSON.parse(localStorage.getItem('makingsPositionMarketPositions') || '[]');
+        const eligible = new Map();
+        positions.forEach((position) => {
+          const symbol = String(position.symbol || '').toUpperCase();
+          const quantity = Number(position.quantity);
+          if (!symbol || !Number.isFinite(quantity) || quantity <= 0 || position.side === 'SELL') return;
+          const current = eligible.get(symbol);
+          if (current) current.quantity += quantity;
+          else eligible.set(symbol, {
+            id: `coin:${symbol}`,
+            label: `${symbol} · ${quantity.toLocaleString(undefined, { maximumFractionDigits: 8 })} held`,
+            unit: symbol,
+            quantity
+          });
+        });
+
+        const customCoins = JSON.parse(localStorage.getItem('customCoins') || '[]');
+        const legacyCoin = JSON.parse(localStorage.getItem('createdCoin') || 'null');
+        const availableSymbols = new Set([
+          ...customCoins.map((coin) => String(coin.symbol || '').toUpperCase()),
+          ...(legacyCoin ? [String(legacyCoin.symbol || '').toUpperCase()] : [])
+        ]);
+        const savedMarketOrders = JSON.parse(localStorage.getItem('makingsPaperOrders') || '[]');
+        savedMarketOrders.forEach((order) => {
+          const symbol = String(order.symbol || '').toUpperCase();
+          if (order.side === 'BUY' && availableSymbols.has(symbol) && !eligible.has(symbol)) {
+            const quantity = Number(order.quantity);
+            if (Number.isFinite(quantity) && quantity > 0) {
+              eligible.set(symbol, { id: `coin:${symbol}`, label: `${symbol} · ${quantity} purchased`, unit: symbol, quantity });
+            }
+          }
+        });
+
+        try {
+          const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,ripple,solana,dogecoin,cardano,binancecoin,tron,tether,usd-coin&vs_currencies=usd');
+          if (!response.ok) throw new Error(`Coin price request failed (${response.status}).`);
+          const prices = await response.json();
+          coinPricesUsd = {
+            BTC: prices.bitcoin?.usd,
+            ETH: prices.ethereum?.usd,
+            XRP: prices.ripple?.usd,
+            SOL: prices.solana?.usd,
+            DOGE: prices.dogecoin?.usd,
+            ADA: prices.cardano?.usd,
+            BNB: prices.binancecoin?.usd,
+            TRX: prices.tron?.usd,
+            USDT: prices.tether?.usd,
+            USDC: prices['usd-coin']?.usd
+          };
+        } catch (error) {
+          console.error('Could not load current coin prices for the vault overview:', error);
+        }
+        return [...eligible.values()];
+      }
+
+      async function loadCompanySources() {
+        const contracts = await getDocs(collection(db, 'users', currentUser.uid, 'communityInbox'));
+        return contracts.docs
+          .map((snapshot) => ({ id: snapshot.id, ...snapshot.data() }))
+          .filter((contract) => contract.type === 'signed-investment-contract' && contract.companyName && Number(contract.amount) > 0)
+          .map((contract) => ({
+            id: `company:${contract.id}`,
+            contractId: contract.id,
+            label: `${contract.companyName} · ${Number(contract.amount).toLocaleString()} ${String(contract.currency || 'USD').toUpperCase()} contract`,
+            unit: String(contract.currency || 'USD').toUpperCase(),
+            amount: Number(contract.amount),
+            companyName: contract.companyName
+          }));
+      }
+
+      async function populateSources() {
+        sourceOptions = [];
+        const type = sourceTypeSelect.value;
+        if (!type) {
+          setSourcePlaceholder('Select a source type first');
+          updateTransferSummary();
+          return;
+        }
+        if (!currentUser) {
+          setSourcePlaceholder('Sign in to load sources');
+          transferStatus.textContent = 'Sign in to view eligible coin holdings and investment contracts.';
+          updateTransferSummary();
+          return;
+        }
+        setSourcePlaceholder('Loading available sources…');
+        try {
+          const availableSources = type === 'coin' ? await loadCoinSources() : await loadCompanySources();
+          const savedBySource = new Map();
+          transactions.forEach((transaction) => {
+            const sourceId = transaction.sourceId;
+            savedBySource.set(sourceId, (savedBySource.get(sourceId) || 0) + (Number(transaction.amount) || 0));
+          });
+          sourceOptions = availableSources.map((source) => {
+            const amount = type === 'coin' ? source.quantity : source.amount;
+            const remaining = Math.max(0, amount - (savedBySource.get(source.id) || 0));
+            return {
+              ...source,
+              ...(type === 'coin' ? { quantity: remaining } : { amount: remaining }),
+              label: type === 'coin'
+                ? `${source.unit} · ${remaining.toLocaleString(undefined, { maximumFractionDigits: 8 })} available`
+                : `${source.companyName} · ${remaining.toLocaleString()} ${source.unit} available`
+            };
+          }).filter((source) => (type === 'coin' ? source.quantity : source.amount) > 0);
+          sourceSelect.replaceChildren(new Option(
+            sourceOptions.length ? 'Choose a source' : (type === 'coin' ? 'No eligible coin holdings found' : 'No signed company contracts found'),
+            ''
+          ));
+          sourceOptions.forEach((source) => sourceSelect.add(new Option(source.label, source.id)));
+          sourceSelect.disabled = sourceOptions.length === 0 || !vaultAccount;
+          recordTransferButton.disabled = !vaultAccount || sourceOptions.length === 0;
+          if (!sourceOptions.length) {
+            transferStatus.textContent = type === 'coin'
+              ? 'Only coins with a positive long paper-trading position appear here.'
+              : 'Only signed investment contracts with an amount appear here.';
+          } else {
+            transferStatus.textContent = '';
+          }
+        } catch (error) {
+          console.error('Unable to load vault transfer sources:', error);
+          setSourcePlaceholder('Could not load sources');
+          transferStatus.textContent = 'Could not load eligible sources. Please try again.';
+        }
+        updateTransferSummary();
+      }
+
+      accountForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!currentUser) {
+          accountStatus.textContent = 'Sign in to create a savings account.';
+          return;
+        }
+        if (!crypto.subtle) {
+          accountStatus.textContent = 'Vault PIN setup requires a secure browser context. Open this page through HTTPS or a localhost development server.';
+          return;
+        }
+        if (!accountForm.reportValidity()) return;
+        const pin = document.getElementById('vaultPin').value;
+        const pinConfirm = document.getElementById('vaultPinConfirm').value;
+        if (pin !== pinConfirm) {
+          accountStatus.textContent = 'The Vault PIN entries do not match.';
+          return;
+        }
+        if (!/^\d{4,8}$/.test(pin)) {
+          accountStatus.textContent = 'Vault PIN must be 4 to 8 digits.';
+          return;
+        }
+
+        const saveButton = document.getElementById('saveVaultAccount');
+        saveButton.disabled = true;
+        try {
+          const pinVerifier = await hashVaultPin(pin);
+          const accountRef = doc(db, 'users', currentUser.uid, 'vaultAccounts', 'savings');
+          const accountName = document.getElementById('vaultAccountName').value.trim();
+          await setDoc(accountRef, {
+            name: accountName,
+            pinSalt: pinVerifier.salt,
+            pinHash: pinVerifier.hash,
+            updatedAt: serverTimestamp(),
+            ...(vaultAccount ? {} : { createdAt: serverTimestamp() })
+          }, { merge: true });
+          vaultAccount = {
+            ...(vaultAccount || {}),
+            name: accountName,
+            pinSalt: pinVerifier.salt,
+            pinHash: pinVerifier.hash
+          };
+          vaultUnlocked = true;
+          lockPanel.hidden = true;
+          protectedContent.hidden = false;
+          accountStatus.textContent = 'Savings account saved. Keep your Vault PIN private.';
+          saveButton.textContent = 'Update account & PIN';
+          document.getElementById('vaultPin').value = '';
+          document.getElementById('vaultPinConfirm').value = '';
+          recordTransferButton.disabled = !sourceOptions.length;
+          sourceSelect.disabled = !sourceOptions.length;
+          updateTransferSummary();
+        } catch (error) {
+          console.error('Unable to save vault account:', error);
+          accountStatus.textContent = 'Could not save the savings account. Please try again.';
+        } finally {
+          saveButton.disabled = false;
+        }
+      });
+
+      sourceTypeSelect.addEventListener('change', populateSources);
+      sourceSelect.addEventListener('change', updateTransferSummary);
+      amountInput.addEventListener('input', updateTransferSummary);
+
+      transferForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!currentUser || !vaultAccount || !vaultUnlocked) {
+          transferStatus.textContent = 'Unlock the Vault before recording a transfer.';
+          return;
+        }
+        if (!crypto.subtle) {
+          transferStatus.textContent = 'Vault PIN verification requires a secure browser context. Open this page through HTTPS or a localhost development server.';
+          return;
+        }
+        if (!transferForm.reportValidity()) return;
+        const source = sourceOptions.find((item) => item.id === sourceSelect.value);
+        if (!source) {
+          transferStatus.textContent = 'Choose an eligible holding or investment contract.';
+          return;
+        }
+        const amount = Number(amountInput.value);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          transferStatus.textContent = 'Enter an amount greater than zero.';
+          return;
+        }
+        if (source.quantity && amount > source.quantity) {
+          transferStatus.textContent = `Amount exceeds the recorded ${source.unit} holding (${source.quantity}).`;
+          return;
+        }
+        if (source.amount && amount > source.amount) {
+          transferStatus.textContent = `Amount exceeds the signed contract amount (${source.amount} ${source.unit}).`;
+          return;
+        }
+
+        const submitButton = recordTransferButton;
+        submitButton.disabled = true;
+        try {
+          const pinVerifier = await hashVaultPin(document.getElementById('vaultTransferPin').value, vaultAccount.pinSalt);
+          if (pinVerifier.hash !== vaultAccount.pinHash) {
+            transferStatus.textContent = 'Incorrect Vault PIN. No transfer was recorded.';
+            return;
+          }
+
+          const sourceType = sourceTypeSelect.value;
+          const transaction = {
+            sourceType,
+            sourceId: source.id,
+            sourceLabel: source.label,
+            contractId: source.contractId || null,
+            amount,
+            unit: source.unit,
+            currency: sourceType === 'company' ? source.unit : null,
+            unitPriceUsd: sourceType === 'coin' ? Number(coinPricesUsd[source.unit]) || 0 : 0,
+            status: 'Saved automatically (demo ledger)',
+            createdAt: serverTimestamp()
+          };
+          await addDoc(collection(db, 'users', currentUser.uid, 'vaultAccounts', 'savings', 'transactions'), transaction);
+          transferStatus.textContent = 'Transfer automatically saved to your Vault overview and transaction log. This demo does not deduct or lock source funds.';
+          document.getElementById('vaultTransferPin').value = '';
+          amountInput.value = '';
+          await loadTransactions();
+          await populateSources();
+          updateTransferSummary();
+        } catch (error) {
+          console.error('Unable to record vault savings transfer:', error);
+          transferStatus.textContent = 'Could not record this transfer. Please try again.';
+        } finally {
+          submitButton.disabled = !sourceOptions.length || !vaultAccount;
+        }
+      });
+
+      document.getElementById('refreshVaultLog').addEventListener('click', async () => {
+        if (!currentUser || !vaultUnlocked) {
+          transactionLog.innerHTML = '<p class="vault-empty">Sign in to view your vault activity.</p>';
+          return;
+        }
+        try {
+          await loadTransactions();
+        } catch (error) {
+          console.error('Unable to refresh the vault transaction log:', error);
+          transactionLog.innerHTML = '<p class="vault-empty">Could not load the vault transaction log. Please try again.</p>';
+        }
+      });
+
+      onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+        if (!user) {
+          vaultAccount = null;
+          vaultUnlocked = false;
+          protectedContent.hidden = true;
+          lockPanel.hidden = false;
+          lockMessage.textContent = 'Sign in to open your Savings Vault.';
+          loginRequired.hidden = false;
+          unlockForm.hidden = true;
+          recoveryForm.hidden = true;
+          accountStatus.textContent = 'Sign in to create or manage a savings account.';
+          transactionLog.innerHTML = '<p class="vault-empty">Sign in to view your vault activity.</p>';
+          setSourcePlaceholder('Sign in to load sources');
+          updateTransferSummary();
+          return;
+        }
+        try {
+          const accountSnapshot = await getDoc(doc(db, 'users', user.uid, 'vaultAccounts', 'savings'));
+          if (accountSnapshot.exists()) {
+            vaultAccount = accountSnapshot.data();
+            document.getElementById('vaultAccountName').value = vaultAccount.name || '';
+            document.getElementById('saveVaultAccount').textContent = 'Update account & PIN';
+            accountStatus.textContent = 'Enter your Vault PIN to continue.';
+            applyVaultLock();
+            unlockForm.hidden = false;
+          } else {
+            vaultAccount = null;
+            protectedContent.hidden = false;
+            lockPanel.hidden = true;
+            vaultUnlocked = true;
+            accountStatus.textContent = 'Create a savings account and PIN to begin.';
+          }
+          if (vaultUnlocked) {
+            await loadTransactions();
+            if (sourceTypeSelect.value) await populateSources();
+          } else {
+            setSourcePlaceholder('Unlock the Vault to load sources');
+          }
+          updateTransferSummary();
+        } catch (error) {
+          console.error('Unable to load vault account:', error);
+          accountStatus.textContent = 'Could not load your vault account. Please refresh and try again.';
+        }
+      });
+    </script>
+  </body>
+</html>
