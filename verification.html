@@ -466,8 +466,9 @@
               </label>
               <label>
                 Password
-                <input type="password" name="loginPassword" placeholder="Enter password" required />
+                <input type="password" name="loginPassword" autocomplete="current-password" placeholder="Enter password" required />
               </label>
+              <button class="secondary-btn" id="resetPasswordBtn" type="button">Forgot password?</button>
               <button class="primary-btn" type="submit">Login</button>
             </form>
           </div>
@@ -827,7 +828,7 @@
     <div id="toast" class="toast" aria-live="polite">Saved successfully.</div>
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
-      import { createUserWithEmailAndPassword, deleteUser, getAuth, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { createUserWithEmailAndPassword, deleteUser, getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
       import { doc, getDoc, getFirestore, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 
       const firebaseConfig = {
@@ -978,6 +979,19 @@
         document.querySelector('input[name="firstName"]').focus();
       });
 
+      function openAuthRoute() {
+        if (window.location.hash === '#login') {
+          showAuthForm();
+          loginTab.click();
+        } else if (window.location.hash === '#signup') {
+          showAuthForm();
+          signupTab.click();
+          document.querySelector('input[name="firstName"]').focus();
+        }
+      }
+
+      window.addEventListener('hashchange', openAuthRoute);
+
       document.querySelectorAll('.next-step').forEach((button) => {
         button.addEventListener('click', () => {
           const currentFormStep = signupSteps[currentStep];
@@ -1121,15 +1135,39 @@
         const email = String(formData.get('loginName') || '').trim().toLowerCase();
         const password = String(formData.get('loginPassword') || '');
 
+        let credential;
         try {
-          const credential = await signInWithEmailAndPassword(auth, email, password);
+          credential = await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+          if (isSuspendedApiKeyError(error)) {
+            showToast('Firebase rejected the app API key because its Google Cloud consumer is suspended. Check the project status and API key in Google Cloud Console.');
+          } else if (error.code === 'auth/network-request-failed') {
+            showToast('Could not reach Firebase. Check your connection and try again.');
+          } else if (error.code === 'auth/invalid-api-key') {
+            showToast('Firebase rejected this app API key. Check the Firebase project configuration.');
+          } else if (error.code === 'auth/too-many-requests') {
+            showToast('Too many login attempts. Wait a little and try again.');
+          } else if (error.code === 'auth/user-disabled') {
+            showToast('This account is disabled. Contact support for help.');
+          } else {
+            showToast('Email address or password is incorrect.');
+          }
+          return;
+        }
+
+        try {
           const userSnapshot = await getDoc(doc(db, 'users', credential.user.uid));
           if (!userSnapshot.exists()) {
             await signOut(auth);
-            showToast('Private account profile was not found. Contact support.');
+            showToast('Your sign-in worked, but your account profile is missing. Contact support for help restoring access.');
             return;
           }
           const user = userSnapshot.data();
+          if (typeof user.username !== 'string' || !user.username) {
+            await signOut(auth);
+            showToast('Your sign-in worked, but your account profile is incomplete. Contact support for help restoring access.');
+            return;
+          }
           localStorage.setItem('makingsCurrentUser', user.username);
           localStorage.setItem('makingsAuthUid', credential.user.uid);
           showToast('Login successful. Welcome back.');
@@ -1137,18 +1175,46 @@
         } catch (error) {
           if (isSuspendedApiKeyError(error)) {
             showToast('Firebase rejected the app API key because its Google Cloud consumer is suspended. Check the project status and API key in Google Cloud Console.');
+          } else if (error.code === 'permission-denied' || error.code === 'firestore/permission-denied') {
+            showToast('You signed in, but Firestore blocked your account profile. Check the deployed Firestore rules and try again.');
+          } else if (error.code === 'auth/network-request-failed') {
+            showToast('You signed in, but your account profile could not be reached. Check your connection and try again.');
           } else {
-            showToast('Email address or password is incorrect.');
+            console.error('Unable to load the signed-in account profile:', error);
+            showToast('You signed in, but your account profile could not be loaded. Try again or contact support.');
+          }
+          await signOut(auth);
+        }
+      });
+
+      document.getElementById('resetPasswordBtn').addEventListener('click', async () => {
+        const emailInput = document.querySelector('#loginForm [name="loginName"]');
+        const email = emailInput.value.trim().toLowerCase();
+        if (!emailInput.checkValidity()) {
+          emailInput.reportValidity();
+          emailInput.focus();
+          return;
+        }
+
+        try {
+          await sendPasswordResetEmail(auth, email);
+          showToast('If an account exists for that email, Firebase will send a password reset link.');
+        } catch (error) {
+          if (error.code === 'auth/network-request-failed') {
+            showToast('Could not reach Firebase. Check your connection and try again.');
+          } else if (error.code === 'auth/too-many-requests') {
+            showToast('Too many reset requests. Wait a little and try again.');
+          } else if (isSuspendedApiKeyError(error) || error.code === 'auth/invalid-api-key') {
+            showToast('Firebase rejected this app API key. Check the Firebase project configuration.');
+          } else {
+            console.error('Password reset request failed:', error);
+            showToast('A password reset email could not be requested. Check the address and try again.');
           }
         }
       });
 
-      if (window.location.hash === '#login') {
-        showAuthForm();
-        loginTab.click();
-      }
-
       renderSignupStep(0);
+      openAuthRoute();
     </script>
   </body>
 </html>
