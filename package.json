@@ -3,16 +3,31 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "start": "node server.js"
+    "prestart": "npm run build:wallet",
+    "start": "node server.js",
+    "build:wallet": "node scripts/build-wallet.js",
+    "build:contracts": "node scripts/compile-contract.js"
   },
   "dependencies": {
+    "@solana/web3.js": "^1.98.4",
+    "@ledgerhq/hw-app-eth": "^7.10.0",
+    "@ledgerhq/hw-transport-webhid": "^6.36.0",
     "axios": "^1.20.0",
+    "bitcoinjs-lib": "^6.1.7",
+    "buffer": "^6.0.3",
     "chart.js": "^4.5.1",
     "chartjs-chart-financial": "^0.2.1",
     "dotenv": "^18.0.3",
+    "ethers": "^6.15.0",
     "express": "^5.2.1",
     "jspdf": "^4.2.1",
     "pdfjs-dist": "^4.10.38",
+    "qrcode": "^1.5.4",
     "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "^5.6.1",
+    "esbuild": "^0.25.5",
+    "solc": "^0.8.37"
   }
 }

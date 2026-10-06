@@ -32,7 +32,7 @@
         <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Trading Bot</a>
-        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="treasury.html#wallet">Treasury/Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
 
@@ -91,18 +91,222 @@
 
           <div class="holdings-summary">
             <div class="summary-card">
-              <span class="summary-label">Total Holdings Value</span>
-              <strong class="summary-value" id="totalHoldingsValue">$0.00</strong>
+              <span class="summary-label">Estimated wallet value</span>
+              <strong class="summary-value" id="totalHoldingsValue">--</strong>
             </div>
             <div class="summary-card">
-              <span class="summary-label">24h Change</span>
-              <strong class="summary-value" id="holdingsChange">+$0.00</strong>
+              <span class="summary-label">Wallet balance update</span>
+              <strong class="summary-value" id="holdingsChange">Not connected</strong>
             </div>
             <div class="summary-card">
-              <span class="summary-label">Number of Assets</span>
-              <strong class="summary-value" id="assetCount">0</strong>
+              <span class="summary-label">Networks</span>
+              <strong class="summary-value" id="assetCount">5</strong>
             </div>
           </div>
+
+          <section class="crypto-wallet card-glass" id="cryptoWallet" aria-labelledby="cryptoWalletTitle">
+            <div class="wallet-onboarding" id="walletOnboarding" hidden>
+              <div class="wallet-onboarding-screen" id="walletOnboardingWelcome">
+                <div class="wallet-onboarding-copy">
+                  <span class="eyebrow">Your self-custody wallet</span>
+                  <h3>Welcome to your digital vault</h3>
+                  <p>Review what your wallet can do before you create a new wallet or restore one.</p>
+                </div>
+                <section class="wallet-onboarding-details" aria-labelledby="walletOnboardingDetailsTitle">
+                  <h4 id="walletOnboardingDetailsTitle">Your wallet at a glance</h4>
+                  <ul>
+                    <li><strong>Five networks</strong><span>Bitcoin, Ethereum, BNB Smart Chain, Polygon, and Solana.</span></li>
+                    <li><strong>Your keys, your control</strong><span>Your recovery phrase is encrypted in this browser; Makings does not receive your phrase or private keys.</span></li>
+                    <li><strong>Send and receive</strong><span>View addresses and QR codes, check balances, and sign transactions in your wallet.</span></li>
+                    <li><strong>Optional hardware signing</strong><span>Connect Ledger directly for Ethereum, BNB Smart Chain, and Polygon transactions.</span></li>
+                  </ul>
+                </section>
+                <div class="wallet-onboarding-footer">
+                  <span>Next, choose to create a wallet or restore one.</span>
+                  <button class="btn btn-primary" id="walletOnboardingNext" type="button">Next</button>
+                </div>
+              </div>
+              <div class="wallet-onboarding-screen" id="walletOnboardingOptions" hidden>
+                <div class="wallet-onboarding-copy">
+                  <span class="eyebrow">Choose your wallet</span>
+                  <h3>Open your vault</h3>
+                  <p>Create a new self-custody wallet or restore one with your recovery phrase. MetaMask connection is requested securely by your browser.</p>
+                </div>
+                <div class="wallet-onboarding-actions">
+                  <button class="btn btn-primary" id="walletOnboardingCreate" type="button">Create a wallet</button>
+                  <button class="btn btn-secondary" id="walletOnboardingRestore" type="button">Restore a wallet</button>
+                </div>
+                <p class="wallet-onboarding-meta-status" id="walletOnboardingMetaStatus" role="status" aria-live="polite">Checking MetaMask connection…</p>
+                <div class="wallet-onboarding-footer">
+                  <span>You can connect MetaMask now or later.</span>
+                  <button class="btn btn-ghost" id="walletOnboardingBack" type="button">Back</button>
+                </div>
+              </div>
+            </div>
+            <div id="walletAppContent">
+            <div class="crypto-wallet-heading">
+              <div>
+                <span class="eyebrow">Self-custody</span>
+                <h3 id="cryptoWalletTitle">Your blockchain wallet</h3>
+                <p>Your recovery phrase is encrypted with your wallet password and stored only in this browser. Makings never receives your phrase or private keys.</p>
+              </div>
+              <span class="crypto-wallet-state" id="cryptoWalletState" role="status">No wallet set up</span>
+            </div>
+
+            <div class="crypto-wallet-actions">
+              <button class="btn btn-secondary" type="button" id="walletRefreshButton" hidden>Refresh balances</button>
+              <button class="btn btn-secondary" type="button" id="walletConnectLedgerButton">Connect MetaMask</button>
+              <button class="btn btn-secondary" type="button" id="walletConnectHardwareButton">Connect Ledger (USB)</button>
+              <button class="btn btn-primary" type="button" id="walletCreateButton">Create wallet</button>
+              <button class="btn btn-secondary" type="button" id="walletRestoreButton">Restore wallet</button>
+              <button class="btn btn-secondary" type="button" id="walletUnlockButton" hidden>Unlock wallet</button>
+              <button class="btn btn-secondary" type="button" id="walletBackupButton" hidden>View recovery phrase</button>
+              <button class="btn btn-ghost" type="button" id="walletLockButton" hidden>Lock wallet</button>
+            </div>
+            <p class="crypto-wallet-status" id="walletLedgerStatus" role="status">Connect MetaMask for an external EVM account. If you use Ledger through MetaMask, approve transactions on your Ledger device; this site cannot verify hardware.</p>
+            <p class="crypto-wallet-status" id="walletHardwareStatus" role="status">Direct Ledger USB support is available for Ethereum, BNB Smart Chain, and Polygon EVM transactions. Bitcoin and Solana continue to use the recovery-phrase wallet.</p>
+
+            <form class="crypto-wallet-form" id="walletCreateForm" hidden>
+              <h4>Create encrypted wallet</h4>
+              <label>Wallet password
+                <input type="password" id="walletCreatePassword" minlength="12" autocomplete="new-password" required />
+              </label>
+              <label>Confirm password
+                <input type="password" id="walletCreatePasswordConfirm" minlength="12" autocomplete="new-password" required />
+              </label>
+              <p>Use at least 12 characters. This password encrypts the recovery phrase in this browser; it cannot be reset by Makings.</p>
+              <button class="btn btn-primary" type="submit">Generate recovery phrase</button>
+              <button class="btn btn-ghost" type="button" data-wallet-cancel>Cancel</button>
+            </form>
+
+            <form class="crypto-wallet-form" id="walletUnlockForm" hidden>
+              <h4>Unlock this browser wallet</h4>
+              <label>Wallet password
+                <input type="password" id="walletUnlockPassword" autocomplete="current-password" required />
+              </label>
+              <button class="btn btn-primary" type="submit">Unlock wallet</button>
+              <button class="btn btn-ghost" type="button" data-wallet-cancel>Cancel</button>
+            </form>
+
+            <form class="crypto-wallet-form" id="walletRestoreForm" hidden>
+              <h4>Restore from recovery phrase</h4>
+              <label>12- or 24-word recovery phrase
+                <textarea id="walletRestorePhrase" rows="3" autocomplete="off" autocapitalize="none" spellcheck="false" required></textarea>
+              </label>
+              <label>New wallet password
+                <input type="password" id="walletRestorePassword" minlength="12" autocomplete="new-password" required />
+              </label>
+              <label>Confirm password
+                <input type="password" id="walletRestorePasswordConfirm" minlength="12" autocomplete="new-password" required />
+              </label>
+              <button class="btn btn-primary" type="submit">Encrypt and restore wallet</button>
+              <button class="btn btn-ghost" type="button" data-wallet-cancel>Cancel</button>
+            </form>
+
+            <div class="crypto-wallet-form" id="walletPhrasePanel" hidden>
+              <h4>Back up your recovery phrase</h4>
+              <p class="wallet-warning">Anyone with this phrase can control your funds. You can write it down or download a copy. Downloaded files are unencrypted; store them offline, never share them, and securely delete any copies you no longer need.</p>
+              <ol class="wallet-recovery-words" id="walletRecoveryWords"></ol>
+              <button class="btn btn-secondary" type="button" id="walletDownloadRecoveryPhrase">Download recovery phrase (.txt)</button>
+              <label class="wallet-backup-confirm"><input id="walletBackupConfirmed" type="checkbox" /> I have safely backed up this phrase and understand it is the only way to recover this wallet.</label>
+              <button class="btn btn-primary" type="button" id="walletConfirmBackup" disabled>I've backed it up — encrypt wallet</button>
+              <button class="btn btn-ghost" type="button" data-wallet-cancel>Cancel</button>
+            </div>
+
+            <form class="crypto-wallet-form" id="walletBackupForm" hidden>
+              <h4>Verify password to view backup</h4>
+              <label>Wallet password
+                <input type="password" id="walletBackupPassword" autocomplete="current-password" required />
+              </label>
+              <button class="btn btn-primary" type="submit">Reveal recovery phrase</button>
+              <button class="btn btn-ghost" type="button" data-wallet-cancel>Cancel</button>
+            </form>
+
+            <div class="crypto-wallet-dashboard" id="walletDashboard" hidden>
+              <div class="wallet-addresses">
+                <h4>Derived addresses</h4>
+                <div id="walletAddressList"></div>
+              </div>
+              <div class="wallet-send-receive">
+                <form class="crypto-wallet-form" id="walletSendForm">
+                  <h4>Send native cryptocurrency</h4>
+                  <label class="wallet-ledger-choice"><input id="walletUseLedger" type="checkbox" /> Use connected MetaMask account for EVM sends</label>
+                  <label class="wallet-ledger-choice"><input id="walletUseHardwareLedger" type="checkbox" /> Sign EVM sends directly on connected Ledger device</label>
+                  <label>Network
+                    <select id="walletSendNetwork">
+                      <option value="bitcoin">Bitcoin (BTC)</option>
+                      <option value="ethereum">Ethereum (ETH)</option>
+                      <option value="bsc">BNB Smart Chain (BNB)</option>
+                      <option value="polygon">Polygon PoS (POL)</option>
+                      <option value="solana">Solana (SOL)</option>
+                    </select>
+                  </label>
+                  <label>Recipient address
+                    <input id="walletSendRecipient" type="text" autocomplete="off" spellcheck="false" required />
+                  </label>
+                  <button class="btn btn-secondary" type="button" id="walletScanQrButton">Scan recipient QR</button>
+                  <video class="wallet-qr-video" id="walletScanVideo" playsinline hidden></video>
+                  <label>Amount
+                    <input id="walletSendAmount" type="number" min="0.000000001" step="any" required />
+                  </label>
+                  <p class="wallet-warning">Transactions are irreversible. Check the selected network, address, amount, and network fee before approving.</p>
+                  <button class="btn btn-primary" id="walletSendButton" type="submit">Review and send</button>
+                </form>
+                <div class="crypto-wallet-form wallet-receive">
+                  <h4>Receive crypto</h4>
+                  <label>Network
+                    <select id="walletReceiveNetwork">
+                      <option value="bitcoin">Bitcoin (BTC)</option>
+                      <option value="ethereum">Ethereum (ETH)</option>
+                      <option value="bsc">BNB Smart Chain (BNB)</option>
+                      <option value="polygon">Polygon PoS (POL)</option>
+                      <option value="solana">Solana (SOL)</option>
+                    </select>
+                  </label>
+                  <p id="walletReceiveAddress" class="wallet-address-value"></p>
+                  <canvas id="walletReceiveQr" aria-label="QR code for selected receive address"></canvas>
+                  <button class="btn btn-secondary" type="button" id="walletCopyAddress">Copy address</button>
+                </div>
+              </div>
+              <section class="crypto-wallet-form wallet-nft-panel" aria-labelledby="walletNftHeading">
+                <h4 id="walletNftHeading">Your NFTs</h4>
+                <p>Discover ERC-721/ERC-1155 NFTs on Ethereum, BNB Smart Chain, and Polygon, plus Solana NFTs. Discovery uses Moralis and sends the selected wallet address to that provider. A Moralis API key is required and is kept in this page's memory only.</p>
+                <form id="walletNftDiscoveryForm" class="wallet-nft-discovery-form">
+                  <label>Moralis API key
+                    <input type="password" id="walletNftApiKey" autocomplete="off" spellcheck="false" required />
+                  </label>
+                  <button class="btn btn-primary" id="walletNftDiscoverButton" type="submit">Discover my NFTs</button>
+                </form>
+                <p class="wallet-nft-api-help">Get a key from <a href="https://admin.moralis.com/" target="_blank" rel="noopener noreferrer">Moralis</a>. The key is not saved; it is sent only to Moralis with NFT lookup requests.</p>
+                <p id="walletNftDiscoveryStatus" class="wallet-nft-discovery-status" role="status" aria-live="polite">Unlock your wallet or connect MetaMask, then enter a Moralis API key to discover your NFTs.</p>
+                <div class="wallet-nft-list" id="walletNftDiscoveryList" aria-live="polite"></div>
+                <h5 class="wallet-nft-manual-heading">Track a specific EVM ERC-721 NFT</h5>
+                <p>Add a contract and token ID to verify and track an ERC-721 NFT manually on Ethereum, BNB Smart Chain, or Polygon.</p>
+                <form id="walletNftForm">
+                  <label>Network
+                    <select id="walletNftNetwork">
+                      <option value="ethereum">Ethereum</option>
+                      <option value="bsc">BNB Smart Chain</option>
+                      <option value="polygon">Polygon PoS</option>
+                    </select>
+                  </label>
+                  <label>ERC-721 contract address
+                    <input id="walletNftContract" type="text" autocomplete="off" spellcheck="false" required />
+                  </label>
+                  <label>Token ID
+                    <input id="walletNftTokenId" type="text" inputmode="numeric" autocomplete="off" required />
+                  </label>
+                  <button class="btn btn-secondary" id="walletNftAddButton" type="submit">Track NFT</button>
+                </form>
+                <div class="wallet-nft-list" id="walletNftList"></div>
+              </section>
+              <div class="wallet-privacy-notice">
+                Balance, NFT, and transaction lookups use public blockchain/RPC services, which can see your IP address and queried wallet addresses.                 MetaMask connection uses your browser wallet and can view your public account address. Transaction approval happens in MetaMask; if the selected account is Ledger-backed, approve on your Ledger device.
+              </div>
+            </div>
+            <p class="crypto-wallet-status" id="cryptoWalletMessage" role="status" aria-live="polite"></p>
+            </div>
+          </section>
 
           <div class="holdings-list">
             <h4>Your Assets</h4>
@@ -389,23 +593,23 @@
           <div class="features-grid">
             <div class="feature-item">
               <span class="feature-icon">🔐</span>
-              <h4>Bank-Level Encryption</h4>
-              <p>Your funds are protected with military-grade encryption and multi-layer security protocols.</p>
+              <h4>Encrypted Local Recovery</h4>
+              <p>The BIP-39 phrase is encrypted in this browser with AES-GCM and a password-derived key. Back it up offline.</p>
             </div>
             <div class="feature-item">
               <span class="feature-icon">🛡️</span>
-              <h4>Fraud Protection</h4>
-              <p>Advanced fraud detection systems monitor all transactions 24/7 to prevent unauthorized activity.</p>
+              <h4>You Control Your Keys</h4>
+              <p>Private keys are derived in your browser and are not sent to Makings. Anyone with your recovery phrase can control your assets.</p>
             </div>
             <div class="feature-item">
               <span class="feature-icon">⏱️</span>
-              <h4>Instant Transfers</h4>
-              <p>Move funds between your wallets and accounts instantly without delays or hidden fees.</p>
+              <h4>Local Transaction Signing</h4>
+              <p>Transactions are signed in your browser and broadcast through public blockchain services after your confirmation.</p>
             </div>
             <div class="feature-item">
               <span class="feature-icon">📊</span>
-              <h4>Real-Time Tracking</h4>
-              <p>Track every transaction in real-time with detailed receipts and transaction history.</p>
+              <h4>On-Chain Balances</h4>
+              <p>Native BTC, ETH, BNB, POL, and SOL balances are refreshed from public blockchain services.</p>
             </div>
             <div class="feature-item">
               <span class="feature-icon">🌍</span>
@@ -543,5 +747,6 @@
       });
 
     </script>
+    <script type="module" src="wallet.bundle.js"></script>
   </body>
 </html>

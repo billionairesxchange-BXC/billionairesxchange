@@ -32,7 +32,7 @@
         <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Trading Bot</a>
-        <a href="treasury.html">Treasury/Wallet</a>
+        <a href="treasury.html#wallet">Treasury/Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
 
@@ -55,6 +55,12 @@
 
         <div class="coin-layout">
           <form class="card-glass coin-form" id="coinForm">
+            <div class="coin-chain-notice">
+              <strong>Polygon PoS mainnet</strong>
+              <span>ERC-20 deployment requires a wallet on Polygon and POL for gas. Review and confirm the transaction in your wallet.</span>
+            </div>
+            <button class="btn btn-secondary coin-wallet-button" id="coinWalletButton" type="button">Connect Polygon wallet</button>
+            <p class="coin-wallet-status" id="coinWalletStatus" role="status">Wallet not connected</p>
             <label>
               Coin name
               <input type="text" name="coinName" placeholder="e.g. Kings Gold" required />
@@ -72,19 +78,16 @@
               <input type="file" name="coinImage" accept="image/*" />
             </label>
             <label>
-              Publish fee
-              <input type="number" name="publishFee" min="50" value="150" />
+              Initial supply (18 decimals)
+              <input type="number" name="initialSupply" min="0.000000000000000001" step="any" value="1000000" required />
             </label>
-            <button class="btn coin-publish-button" type="submit">Publish to market</button>
+            <button class="btn coin-publish-button" id="coinPublishButton" type="submit">Deploy ERC-20 on Polygon</button>
+            <p class="coin-deployment-status" id="coinDeploymentStatus" role="status" aria-live="polite"></p>
           </form>
 
           <div class="card-glass custom-coin-list">
-            <h3>Recently created coins</h3>
-            <ul id="customCoinList">
-              <li><span>King's Gold</span><em>+8.4%</em></li>
-              <li><span>Carib Mint</span><em>+4.6%</em></li>
-              <li><span>Blue Horizon</span><em>+2.1%</em></li>
-            </ul>
+            <h3>Your deployed ERC-20 tokens</h3>
+            <ul id="customCoinList"></ul>
           </div>
         </div>
 
@@ -92,7 +95,7 @@
           <div class="coin-market-head">
             <div>
               <span class="eyebrow">Your market</span>
-              <h3 id="coinMarketTitle">Publish a coin to view its chart</h3>
+              <h3 id="coinMarketTitle">Deploy an ERC-20 to view its local demo chart</h3>
               <div class="positions-market-row coin-market-controls">
                 <label class="positions-market-selector">
                   <span>Time chart</span>
@@ -153,7 +156,7 @@
               <button class="btn btn-danger" id="stopMarketSubmit" type="submit">Place Sell Market</button>
             </form>
           </div>
-          <p class="coin-order-status" id="stopMarketStatus" role="status"></p>
+          <p class="coin-order-status" id="stopMarketStatus" role="status">The chart and order panel are a local demo; orders do not execute on-chain.</p>
         </section>
 
         <div class="coin-info card-glass">
@@ -168,12 +171,12 @@
               <p>Add a professional logo or icon for your coin. This helps users identify and remember your coin in the marketplace.</p>
             </div>
             <div class="info-card">
-              <h4>3. Set Publishing Fee</h4>
-              <p>Decide your coin's publishing fee. This is the cost for listing your coin on the Makings marketplace.</p>
+              <h4>3. Set Initial Supply</h4>
+              <p>Choose the number of tokens minted once to your wallet. The fixed supply cannot be increased or minted again.</p>
             </div>
             <div class="info-card">
-              <h4>4. Publish to Market</h4>
-              <p>Submit your coin to the marketplace. Once published, traders can buy, sell, and trade your coin on Makings.</p>
+              <h4>4. Deploy the ERC-20</h4>
+              <p>Approve the Polygon transaction in your wallet and pay its network gas fee. Your token contract address is saved after confirmation.</p>
             </div>
           </div>
         </div>
@@ -184,22 +187,22 @@
             <div class="benefit-item">
               <span class="benefit-icon">🚀</span>
               <h4>Global Reach</h4>
-              <p>Access to millions of traders on the Makings platform worldwide.</p>
+              <p>Your token can be transferred by compatible wallets on Polygon PoS.</p>
             </div>
             <div class="benefit-item">
               <span class="benefit-icon">💰</span>
               <h4>Monetization</h4>
-              <p>Earn from your coin's trading volume and market performance.</p>
+              <p>The token has a fixed initial supply minted to your connected wallet.</p>
             </div>
             <div class="benefit-item">
               <span class="benefit-icon">📊</span>
               <h4>Live Analytics</h4>
-              <p>Track your coin's performance with real-time charts and statistics.</p>
+              <p>Find your deployed token contract on PolygonScan.</p>
             </div>
             <div class="benefit-item">
               <span class="benefit-icon">🔒</span>
               <h4>Secure Platform</h4>
-              <p>Your coin is protected by Makings' enterprise-grade security infrastructure.</p>
+              <p>The token follows OpenZeppelin's ERC-20 implementation. Keep your wallet secure.</p>
             </div>
           </div>
         </div>
@@ -212,8 +215,13 @@
 
     <div id="toast" class="toast" aria-live="polite">Coin published successfully!</div>
 
-    <script>
+    <script type="module">
       const coinForm = document.getElementById('coinForm');
+      const coinWalletButton = document.getElementById('coinWalletButton');
+      const coinWalletStatus = document.getElementById('coinWalletStatus');
+      const coinPublishButton = document.getElementById('coinPublishButton');
+      const coinDeploymentStatus = document.getElementById('coinDeploymentStatus');
+      const customCoinList = document.getElementById('customCoinList');
       const coinChart = document.getElementById('coinCandleChart');
       const coinChartEmpty = document.getElementById('coinChartEmpty');
       const coinMarketTitle = document.getElementById('coinMarketTitle');
@@ -236,6 +244,98 @@
       const coinChartTools = { indicators: [], candleStyle: { bodyWidth: 56, wickWidth: 1 } };
       const coinChartIntervalMs = { '1s': 1000, '1m': 60000, '5m': 300000, '15m': 900000, '1h': 3600000, '4h': 14400000 };
 
+      function readSavedCoins() {
+        try {
+          const savedCoins = JSON.parse(localStorage.getItem('customCoins') || '[]');
+          return Array.isArray(savedCoins) ? savedCoins : [];
+        } catch (error) {
+          console.error('Unable to read saved coin deployments:', error);
+          return [];
+        }
+      }
+
+      function renderDeployedCoins() {
+        const deployedCoins = readSavedCoins().filter((coin) => coin.contractAddress);
+        customCoinList.replaceChildren();
+        if (!deployedCoins.length) {
+          const emptyState = document.createElement('li');
+          emptyState.textContent = 'No ERC-20 tokens deployed yet.';
+          customCoinList.appendChild(emptyState);
+          return;
+        }
+
+        deployedCoins.slice().reverse().forEach((coin) => {
+          const item = document.createElement('li');
+          const label = document.createElement('span');
+          label.textContent = `${coin.name} (${coin.symbol})`;
+          const link = document.createElement('a');
+          link.href = `https://polygonscan.com/address/${encodeURIComponent(coin.contractAddress)}`;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.textContent = 'View contract';
+          item.append(label, link);
+          customCoinList.appendChild(item);
+        });
+      }
+
+      async function connectPolygonWallet() {
+        if (!window.ethereum) {
+          throw new Error('No compatible wallet found. Install MetaMask or another injected wallet.');
+        }
+
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (!Array.isArray(accounts) || !accounts.length) {
+          throw new Error('No wallet account was returned. Unlock your wallet and try again.');
+        }
+
+        let chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (chainId.toLowerCase() !== '0x89') {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x89' }]
+            });
+          } catch (error) {
+            if (error.code !== 4902) throw error;
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x89',
+                chainName: 'Polygon PoS',
+                nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+                rpcUrls: ['https://polygon-rpc.com'],
+                blockExplorerUrls: ['https://polygonscan.com']
+              }]
+            });
+          }
+          chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        }
+        if (chainId.toLowerCase() !== '0x89') {
+          throw new Error('Switch your wallet to Polygon PoS mainnet (chain ID 137) to deploy.');
+        }
+
+        const { BrowserProvider } = await import('https://cdn.jsdelivr.net/npm/ethers@6.15.0/+esm');
+        const provider = new BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        return { signer, address: await signer.getAddress() };
+      }
+
+      coinWalletButton.addEventListener('click', async () => {
+        coinWalletButton.disabled = true;
+        coinWalletStatus.textContent = 'Connecting wallet and checking Polygon network...';
+        try {
+          const { address } = await connectPolygonWallet();
+          coinWalletStatus.textContent = `Connected on Polygon PoS: ${address}`;
+        } catch (error) {
+          coinWalletStatus.textContent = error.code === 4001
+            ? 'Wallet connection or network change was rejected.'
+            : error.message || 'Unable to connect to the wallet.';
+        } finally {
+          coinWalletButton.disabled = false;
+        }
+      });
+
+      renderDeployedCoins();
       const formatPrice = (value) => '$' + value.toFixed(value < 1 ? 6 : 2);
       const formatTime = (timestamp) => new Intl.DateTimeFormat([], {
         hour: 'numeric',
@@ -493,40 +593,109 @@
       coinForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(event.target);
-        let logo;
-        try {
-          logo = await createCoinLogo(formData.get('coinImage'));
-        } catch (error) {
-          const toast = document.getElementById('toast');
-          toast.textContent = error.message;
-          toast.classList.add('show');
-          setTimeout(() => toast.classList.remove('show'), 5000);
+        const name = formData.get('coinName').trim();
+        const symbol = formData.get('coinSymbol').trim().toUpperCase();
+        const initialSupply = formData.get('initialSupply').trim();
+        if (!/^[A-Z0-9]{2,8}$/.test(symbol)) {
+          coinDeploymentStatus.textContent = 'Enter a token symbol containing 2 to 8 letters or numbers.';
           return;
         }
-        const coin = {
-          name: formData.get('coinName').trim(),
-          symbol: formData.get('coinSymbol').trim().toUpperCase(),
-          website: formData.get('website').trim(),
-          publishFee: Number(formData.get('publishFee')) || 0,
-          imageName: formData.get('coinImage')?.name || '',
-          logo,
-          createdAt: Date.now()
-        };
-        const savedCoins = JSON.parse(localStorage.getItem('customCoins') || '[]');
-        const existingIndex = savedCoins.findIndex((savedCoin) => savedCoin.symbol === coin.symbol);
-        if (existingIndex >= 0) {
-          savedCoins[existingIndex] = coin;
-        } else {
-          savedCoins.push(coin);
+        if (!initialSupply || !Number.isFinite(Number(initialSupply)) || Number(initialSupply) <= 0) {
+          coinDeploymentStatus.textContent = 'Enter an initial token supply greater than zero.';
+          return;
         }
-        localStorage.setItem('customCoins', JSON.stringify(savedCoins));
-        localStorage.setItem('createdCoin', JSON.stringify(coin));
-        showCoin(coin);
-        const toast = document.getElementById('toast');
-        toast.textContent = coin.name + ' published to market successfully!';
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 5000);
-        event.target.reset();
+
+        coinPublishButton.disabled = true;
+        coinPublishButton.textContent = 'Preparing deployment...';
+        coinDeploymentStatus.textContent = 'Preparing your ERC-20 deployment. Confirm the transaction in your wallet when prompted.';
+        let submittedTransactionHash = '';
+        let transactionReverted = false;
+        try {
+          const logo = await createCoinLogo(formData.get('coinImage'));
+          const { ContractFactory, parseUnits } = await import('https://cdn.jsdelivr.net/npm/ethers@6.15.0/+esm');
+          const { erc20Artifact } = await import('./contracts/erc20-artifact.js');
+          const { signer, address: walletAddress } = await connectPolygonWallet();
+          const supplyInBaseUnits = parseUnits(initialSupply, 18);
+          const factory = new ContractFactory(erc20Artifact.abi, erc20Artifact.bytecode, signer);
+          const token = await factory.deploy(name, symbol, supplyInBaseUnits);
+          const transaction = token.deploymentTransaction();
+          if (!transaction) throw new Error('The wallet did not return a deployment transaction.');
+          submittedTransactionHash = transaction.hash;
+          coinPublishButton.textContent = 'Waiting for confirmation...';
+          coinDeploymentStatus.textContent = `Deployment submitted (${transaction.hash}). Waiting for Polygon confirmation...`;
+          const receipt = await transaction.wait();
+          if (!receipt || receipt.status !== 1) {
+            transactionReverted = Boolean(receipt);
+            throw new Error('The Polygon transaction was not confirmed successfully.');
+          }
+          const contractAddress = await token.getAddress();
+          const coin = {
+            name,
+            symbol,
+            website: formData.get('website').trim(),
+            initialSupply,
+            decimals: 18,
+            logo,
+            createdAt: Date.now(),
+            network: 'Polygon PoS',
+            chainId: 137,
+            walletAddress,
+            contractAddress,
+            transactionHash: transaction.hash
+          };
+          let localSaveError = false;
+          try {
+            const savedCoins = readSavedCoins();
+            const existingIndex = savedCoins.findIndex((savedCoin) => savedCoin.contractAddress === contractAddress);
+            if (existingIndex >= 0) savedCoins[existingIndex] = coin;
+            else savedCoins.push(coin);
+            localStorage.setItem('customCoins', JSON.stringify(savedCoins));
+            localStorage.setItem('createdCoin', JSON.stringify(coin));
+            showCoin(coin);
+            renderDeployedCoins();
+          } catch (error) {
+            localSaveError = true;
+            console.error('Token deployed, but the local listing could not be saved:', error);
+          }
+          coinDeploymentStatus.replaceChildren(
+            document.createTextNode(localSaveError
+              ? 'Token deployed, but could not be saved in this browser. Contract: '
+              : 'Deployment confirmed. Contract: ')
+          );
+          const contractLink = document.createElement('a');
+          contractLink.href = `https://polygonscan.com/address/${encodeURIComponent(contractAddress)}`;
+          contractLink.target = '_blank';
+          contractLink.rel = 'noopener noreferrer';
+          contractLink.textContent = contractAddress;
+          coinDeploymentStatus.appendChild(contractLink);
+          const toast = document.getElementById('toast');
+          toast.textContent = `${coin.name} (${coin.symbol}) deployed to Polygon successfully.`;
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 5000);
+          event.target.reset();
+        } catch (error) {
+          if (submittedTransactionHash) {
+            coinDeploymentStatus.replaceChildren(
+              document.createTextNode(transactionReverted
+                ? 'The deployment transaction reverted. Check its status on PolygonScan: '
+                : 'The deployment transaction was submitted but confirmation could not be verified. Check its status before retrying: ')
+            );
+            const transactionLink = document.createElement('a');
+            transactionLink.href = `https://polygonscan.com/tx/${encodeURIComponent(submittedTransactionHash)}`;
+            transactionLink.target = '_blank';
+            transactionLink.rel = 'noopener noreferrer';
+            transactionLink.textContent = submittedTransactionHash;
+            coinDeploymentStatus.appendChild(transactionLink);
+          } else {
+            coinDeploymentStatus.textContent = error.code === 4001
+              ? 'Wallet request rejected. No deployment transaction was submitted.'
+              : error.message || 'Token deployment failed before a transaction was submitted.';
+          }
+          console.error('ERC-20 deployment failed:', error);
+        } finally {
+          coinPublishButton.disabled = false;
+          coinPublishButton.textContent = 'Deploy ERC-20 on Polygon';
+        }
       });
 
       stopMarketForm.addEventListener('submit', (event) => {

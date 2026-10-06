@@ -283,7 +283,7 @@ app.post('/api/bill-payment-email', async (req, res) => {
         <dt>Payment message</dt><dd>Utility bill payment - ${safeDetails.company} - ${safeDetails.billingPeriod} - ${safeDetails.paymentReference}</dd>
       </dl><p>No cryptocurrency has been transferred.</p>`
     }, {
-      headers: { Authorization: `****** },
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
       timeout: 15000
     });
     return res.status(200).json({ sent: true, paymentReference: requestDetails.paymentReference });
