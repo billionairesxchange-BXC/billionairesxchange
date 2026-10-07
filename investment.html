@@ -232,6 +232,18 @@
             <p class="contract-pdf-status" id="coinInvestmentStatus" role="status"></p>
             <p class="coin-investment-empty" id="coinInvestmentEmpty" hidden>No coins are available yet. Create a coin to add it to this investment list.</p>
           </div>
+          <div class="company-investment-setup stock-investment-setup" id="stockInvestmentSetup" hidden>
+            <div class="stock-investment-head">
+              <p class="company-choice-label">Choose a stock exchange by country</p>
+            </div>
+            <div class="stock-country-grid" id="stockCountryChoices" role="group" aria-label="Available stock exchanges"></div>
+            <div class="stock-company-section" id="stockCompanySection" hidden>
+              <p class="company-choice-label" id="stockCompanyLabel">Companies</p>
+              <div class="company-option-grid" id="stockCompanyChoices" role="group" aria-label="Available stocks"></div>
+              <button class="btn btn-ghost" id="stockBackButton" type="button">← Back to exchanges</button>
+            </div>
+            <p class="contract-pdf-status" id="stockInvestmentStatus" role="status"></p>
+          </div>
         </div>
       </section>
     </main>

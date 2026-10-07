@@ -1,6 +1,7 @@
 import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 import { addDoc, collection, getFirestore, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+import { STOCK_EXCHANGES, COUNTRY_ORDER } from './stocks-data.js';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
@@ -25,6 +26,13 @@ const coinsInvestmentSetup = document.getElementById('coinsInvestmentSetup');
 const customCoinChoices = document.getElementById('customCoinChoices');
 const coinInvestmentEmpty = document.getElementById('coinInvestmentEmpty');
 const coinInvestmentStatus = document.getElementById('coinInvestmentStatus');
+const stockInvestmentSetup = document.getElementById('stockInvestmentSetup');
+const stockCountryChoices = document.getElementById('stockCountryChoices');
+const stockCompanySection = document.getElementById('stockCompanySection');
+const stockCompanyChoices = document.getElementById('stockCompanyChoices');
+const stockCompanyLabel = document.getElementById('stockCompanyLabel');
+const stockInvestmentStatus = document.getElementById('stockInvestmentStatus');
+const stockBackButton = document.getElementById('stockBackButton');
 const selectedCompanyDetails = document.getElementById('selectedCompanyDetails');
 const selectedCompanyLogo = document.getElementById('selectedCompanyLogo');
 const selectedCompanyContractStatus = document.getElementById('selectedCompanyContractStatus');
@@ -559,7 +567,9 @@ document.querySelectorAll('[data-investment]').forEach((choice) => {
     investmentSelection.textContent = `${selectedInvestment} selected. Review the available options.`;
     companyInvestmentSetup.hidden = selectedInvestment !== 'Company';
     coinsInvestmentSetup.hidden = selectedInvestment !== 'Coins';
+    stockInvestmentSetup.hidden = selectedInvestment !== 'Stocks';
     if (selectedInvestment === 'Coins') loadInvestmentCoins();
+    if (selectedInvestment === 'Stocks') loadStockExchanges();
     customCoinChoices.querySelectorAll('.company-option').forEach((item) => {
       item.classList.remove('is-selected');
       item.setAttribute('aria-pressed', 'false');
@@ -873,3 +883,87 @@ if (window.location.hash === '#coins') {
   document.getElementById('coinsInvestmentChoice').click();
   coinsInvestmentSetup.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
+
+function loadStockExchanges() {
+  stockCountryChoices.replaceChildren();
+  stockCompanySection.hidden = true;
+  stockInvestmentStatus.textContent = 'Loading stock exchanges...';
+
+  COUNTRY_ORDER.forEach((country) => {
+    const exchangeData = STOCK_EXCHANGES[country];
+    const button = document.createElement('button');
+    button.className = 'company-option';
+    button.type = 'button';
+    button.setAttribute('aria-pressed', 'false');
+
+    const logo = document.createElement('span');
+    logo.className = 'company-option-logo';
+    logo.setAttribute('aria-hidden', 'true');
+    logo.textContent = country.substring(0, 2).toUpperCase();
+
+    const details = document.createElement('span');
+    details.className = 'company-option-details';
+    const countryName = document.createElement('strong');
+    countryName.textContent = country;
+    const exchangeName = document.createElement('small');
+    exchangeName.textContent = exchangeData.exchange;
+    details.append(countryName, exchangeName);
+    button.append(logo, details);
+
+    button.addEventListener('click', () => {
+      showStocksByCountry(country, exchangeData);
+    });
+
+    stockCountryChoices.appendChild(button);
+  });
+
+  stockInvestmentStatus.textContent = `${COUNTRY_ORDER.length} stock exchange${COUNTRY_ORDER.length === 1 ? '' : 's'} available.`;
+}
+
+function showStocksByCountry(country, exchangeData) {
+  stockCountryChoices.hidden = true;
+  stockCompanySection.hidden = false;
+  stockCompanyLabel.textContent = `${country} - ${exchangeData.exchange}`;
+  stockCompanyChoices.replaceChildren();
+
+  const companies = exchangeData.companies || [];
+  companies.forEach((company) => {
+    const option = document.createElement('button');
+    option.className = 'company-option';
+    option.type = 'button';
+    option.setAttribute('aria-pressed', 'false');
+
+    const logo = document.createElement('span');
+    logo.className = 'company-option-logo';
+    logo.setAttribute('aria-hidden', 'true');
+    logo.textContent = company.symbol.substring(0, 4).toUpperCase();
+
+    const details = document.createElement('span');
+    details.className = 'company-option-details';
+    const companyName = document.createElement('strong');
+    companyName.textContent = company.name;
+    const companySector = document.createElement('small');
+    companySector.textContent = company.sector || 'General';
+    details.append(companyName, companySector);
+    option.append(logo, details);
+
+    option.addEventListener('click', () => {
+      stockCompanyChoices.querySelectorAll('.company-option').forEach((item) => {
+        const isSelected = item === option;
+        item.classList.toggle('is-selected', isSelected);
+        item.setAttribute('aria-pressed', String(isSelected));
+      });
+      investmentSelection.textContent = `${company.name} (${company.symbol}) on ${exchangeData.exchange} selected.`;
+    });
+
+    stockCompanyChoices.appendChild(option);
+  });
+
+  stockInvestmentStatus.textContent = `${companies.length} compan${companies.length === 1 ? 'y' : 'ies'} listed.`;
+}
+
+stockBackButton.addEventListener('click', () => {
+  stockCountryChoices.hidden = false;
+  stockCompanySection.hidden = true;
+  investmentSelection.textContent = 'Stocks selected. Choose an exchange.';
+});

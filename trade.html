@@ -115,15 +115,23 @@
               <span class="eyebrow">Position market view</span>
               <h3 id="positionsChartTitle">BTC / USD</h3>
               <div class="positions-market-row">
-                <label class="positions-market-selector">
-                  <span>Choose market</span>
-                  <select id="positionsMarketSelect">
+                <div class="positions-market-selector" role="group" aria-labelledby="positionsMarketLabel">
+                  <span id="positionsMarketLabel">Choose market</span>
+                  <div class="positions-market-picker">
+                    <button class="positions-market-picker-button" id="positionsMarketPickerButton" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="positionsMarketOptions">
+                      <span class="positions-market-logo" id="positionsMarketPickerLogo" aria-hidden="true">B</span>
+                      <span id="positionsMarketPickerText">BTC / USD</span>
+                      <span class="positions-market-picker-chevron" aria-hidden="true">▾</span>
+                    </button>
+                    <div class="positions-market-options" id="positionsMarketOptions" role="group" aria-label="Available crypto markets" hidden></div>
+                  </div>
+                  <select id="positionsMarketSelect" class="positions-market-native-select" aria-hidden="true" tabindex="-1">
                     <option value="BTC" selected>BTC / USD</option>
                     <option value="XRP">XRP / USD</option>
                     <option value="BNB">BNB / USD</option>
                     <option value="ETH">ETH / USD</option>
                   </select>
-                </label>
+                </div>
                 <label class="positions-market-selector positions-time-selector">
                   <span>Time chart</span>
                   <select id="positionsTimeSelect" aria-label="Choose chart timeframe">
