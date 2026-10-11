@@ -32,9 +32,6 @@
           <div><span class="eyebrow">Community marketplace</span><h1 id="productMarketplaceTitle">Gaming Marketplace</h1><p id="productMarketplaceDescription">Buy and sell gaming gear.</p></div>
           <a class="btn btn-ghost" href="shop.html">All shop categories</a>
         </div>
-        <nav class="product-category-nav" aria-label="Marketplace categories">
-          <a href="gadgets.html">Gadgets</a><a class="is-active" href="gaming.html" aria-current="page">Gaming</a><a href="bitcoin-miners.html">Bitcoin Miners</a>
-        </nav>
         <div class="product-marketplace-tabs" role="group" aria-label="Marketplace views">
           <button class="is-active" type="button" data-marketplace-view="browse" aria-pressed="true">Browse</button>
           <button type="button" data-marketplace-view="sell" aria-pressed="false">Sell an item</button>
@@ -55,6 +52,10 @@
               <label>Price (USD)<input name="price" type="number" min="0.01" max="10000000" step="0.01" inputmode="decimal" required placeholder="0.00" /></label>
             </div>
             <label>Description<textarea name="description" rows="4" maxlength="1000" required placeholder="Describe the item, included accessories, and pickup or delivery details."></textarea></label>
+            <label>Item photo (optional)<input name="itemImage" type="file" accept="image/png,image/jpeg,image/webp" data-product-image /></label>
+            <div class="product-image-preview" data-product-image-preview hidden>
+              <img alt="Preview of item photo" data-product-image-preview-image />
+            </div>
             <p class="product-form-status" id="productSellStatus" role="status"></p>
             <button class="btn btn-primary" type="submit" disabled>Publish listing</button>
           </form>

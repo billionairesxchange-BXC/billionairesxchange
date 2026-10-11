@@ -403,7 +403,7 @@ service cloud.firestore {
       allow get, list: if true;
       allow create: if isSignedIn()
         && request.resource.data.keys().hasOnly([
-          'sellerUid', 'sellerUsername', 'category', 'title', 'description', 'condition', 'price', 'createdAt'
+          'sellerUid', 'sellerUsername', 'category', 'title', 'description', 'condition', 'price', 'imageData', 'createdAt'
         ])
         && request.resource.data.keys().hasAll([
           'sellerUid', 'sellerUsername', 'category', 'title', 'description', 'condition', 'price', 'createdAt'
@@ -421,6 +421,11 @@ service cloud.firestore {
         && request.resource.data.price is number
         && request.resource.data.price > 0
         && request.resource.data.price <= 10000000
+        && (!('imageData' in request.resource.data)
+          || (request.resource.data.imageData is string
+            && request.resource.data.imageData.size() <= 250000
+            && (request.resource.data.imageData == ''
+              || request.resource.data.imageData.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$'))))
         && request.resource.data.createdAt == request.time;
       allow update: if false;
       allow delete: if isSignedIn() && resource.data.sellerUid == request.auth.uid;

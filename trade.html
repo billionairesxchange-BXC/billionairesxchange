@@ -179,6 +179,55 @@
             <p id="positionsChartStatus">Loading market candles...</p>
             <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
           </div>
+          <dialog class="positions-tool-dialog" id="positionsToolDialog" aria-labelledby="positionsToolDialogTitle">
+            <form id="positionsToolForm">
+              <div class="positions-tool-dialog-head">
+                <h3 id="positionsToolDialogTitle">Chart tool</h3>
+                <button class="btn btn-ghost" type="button" data-chart-tool-close aria-label="Close chart tool">Close</button>
+              </div>
+              <fieldset data-chart-tool-panel="import" hidden>
+                <legend>Import indicator</legend>
+                <label>Indicator JSON
+                  <textarea name="indicatorJson" rows="5" placeholder='{"name":"SMA 20","type":"sma","period":20,"color":"#f3c969"}'></textarea>
+                </label>
+                <label>Or choose a JSON file
+                  <input name="indicatorFile" type="file" accept=".json,application/json" />
+                </label>
+                <small>Supported types: sma and ema. Period must be 2–100. Import one indicator or a JSON array.</small>
+              </fieldset>
+              <fieldset data-chart-tool-panel="create" hidden>
+                <legend>Create indicator</legend>
+                <label>Name<input name="indicatorName" type="text" maxlength="40" value="SMA 20" required /></label>
+                <div class="positions-tool-form-row">
+                  <label>Type<select name="indicatorType"><option value="sma">Simple moving average (SMA)</option><option value="ema">Exponential moving average (EMA)</option></select></label>
+                  <label>Period<input name="indicatorPeriod" type="number" min="2" max="100" step="1" value="20" required /></label>
+                </div>
+                <label>Line color<input name="indicatorColor" type="color" value="#f3c969" /></label>
+              </fieldset>
+              <fieldset data-chart-tool-panel="custom-candles" hidden>
+                <legend>Custom candlesticks</legend>
+                <div class="positions-tool-form-row">
+                  <label>Body width (% of candle spacing)<input name="candleBodyWidth" type="number" min="10" max="90" step="1" required /></label>
+                  <label>Wick width (px)<input name="candleWickWidth" type="number" min="1" max="5" step="1" required /></label>
+                </div>
+              </fieldset>
+              <fieldset data-chart-tool-panel="layout" hidden>
+                <legend>Chart margins</legend>
+                <div class="positions-tool-form-row">
+                  <label>Top (px)<input name="marginTop" type="number" min="0" max="80" step="1" required /></label>
+                  <label>Right price scale (px)<input name="marginRight" type="number" min="40" max="180" step="1" required /></label>
+                  <label>Bottom time scale (px)<input name="marginBottom" type="number" min="20" max="100" step="1" required /></label>
+                  <label>Left (px)<input name="marginLeft" type="number" min="0" max="100" step="1" required /></label>
+                </div>
+                <small>Keep the combined left and right margins smaller than the chart width.</small>
+              </fieldset>
+              <p class="positions-tool-dialog-status" id="positionsToolDialogStatus" role="status"></p>
+              <div class="positions-tool-dialog-actions">
+                <button class="btn btn-ghost" type="button" data-chart-tool-close>Cancel</button>
+                <button class="btn btn-primary" type="submit">Apply</button>
+              </div>
+            </form>
+          </dialog>
           <div class="positions-chart-actions" role="group" aria-label="Trade actions">
             <label for="positionsOrderQuantity">Quantity</label>
             <input id="positionsOrderQuantity" type="number" min="0.00000001" step="any" value="0.01" inputmode="decimal" />

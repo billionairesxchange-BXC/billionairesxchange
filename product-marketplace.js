@@ -40,6 +40,9 @@ const listingsRef = collection(db, 'shopProductListings');
 const requestsRef = collection(db, 'shopPurchaseRequests');
 const listingForm = document.getElementById('productListingForm');
 const listingContainer = document.getElementById('productListings');
+const listingImageInput = listingForm.querySelector('[data-product-image]');
+const listingImagePreview = listingForm.querySelector('[data-product-image-preview]');
+const listingImagePreviewImage = listingForm.querySelector('[data-product-image-preview-image]');
 const requestContainer = document.getElementById('productRequests');
 const listingStatus = document.getElementById('productListingStatus');
 const sellStatus = document.getElementById('productSellStatus');
@@ -52,6 +55,7 @@ const listingPrice = new Intl.NumberFormat(undefined, { style: 'currency', curre
 let currentUser = null;
 let currentUsername = '';
 let selectedListing = null;
+let listingImageData = '';
 
 document.getElementById('productMarketplaceTitle').textContent = `${categoryName} Marketplace`;
 document.getElementById('productMarketplaceDescription').textContent = `Browse ${categoryName.toLowerCase()} listings from the community, request to buy an item, or post an item for sale.`;
@@ -106,6 +110,14 @@ function renderListings(listings) {
     const price = document.createElement('strong');
     price.textContent = listingPrice.format(listing.price);
     heading.append(title, price);
+
+    if (typeof listing.imageData === 'string' && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(listing.imageData)) {
+      const image = document.createElement('img');
+      image.className = 'product-listing-image';
+      image.src = listing.imageData;
+      image.alt = `Photo of ${listing.title}`;
+      card.appendChild(image);
+    }
 
     const meta = document.createElement('p');
     meta.className = 'product-listing-meta';
@@ -233,8 +245,51 @@ async function loadRequests() {
   }
 }
 
+function resizeProductImage(file) {
+  return createImageBitmap(file).then((image) => {
+    const maxDimension = 640;
+    const scale = Math.min(maxDimension / image.width, maxDimension / image.height, 1);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const context = canvas.getContext('2d');
+    if (!context) {
+      image.close();
+      throw new Error('Could not process this image. Choose another file.');
+    }
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    image.close();
+    return canvas.toDataURL('image/jpeg', 0.78);
+  });
+}
+
 document.querySelectorAll('[data-marketplace-view]').forEach((button) => {
   button.addEventListener('click', () => setView(button.dataset.marketplaceView));
+});
+
+listingImageInput.addEventListener('change', async () => {
+  const file = listingImageInput.files[0];
+  listingImageData = '';
+  listingImagePreview.hidden = true;
+  listingImagePreviewImage.removeAttribute('src');
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    setStatus(sellStatus, 'Choose a JPEG, PNG, or WebP item photo under 5 MB.');
+    listingImageInput.value = '';
+    return;
+  }
+  try {
+    listingImageData = await resizeProductImage(file);
+    if (listingImageData.length > 250000) throw new Error('Choose a smaller or simpler photo.');
+    listingImagePreviewImage.src = listingImageData;
+    listingImagePreview.hidden = false;
+    setStatus(sellStatus, '');
+  } catch (error) {
+    console.error('Unable to process product listing photo:', error);
+    setStatus(sellStatus, error.message || 'Could not read this photo. Choose another file.');
+    listingImageInput.value = '';
+    listingImageData = '';
+  }
 });
 
 listingForm.addEventListener('submit', async (event) => {
@@ -264,9 +319,13 @@ listingForm.addEventListener('submit', async (event) => {
       description,
       condition: String(formData.get('condition')),
       price,
+      ...(listingImageData ? { imageData: listingImageData } : {}),
       createdAt: serverTimestamp()
     });
     listingForm.reset();
+    listingImageData = '';
+    listingImagePreview.hidden = true;
+    listingImagePreviewImage.removeAttribute('src');
     setStatus(sellStatus, 'Your listing is live.');
     await loadListings();
     setView('browse');

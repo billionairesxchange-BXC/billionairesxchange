@@ -460,7 +460,7 @@
           return {
             indicators: Array.isArray(saved.indicators) ? saved.indicators : [],
             candleStyle: {
-              bodyWidth: Number(saved.candleStyle?.bodyWidth) || 58,
+              bodyWidth: Number(saved.candleStyle?.bodyWidth) === 58 ? 64 : Number(saved.candleStyle?.bodyWidth) || 64,
               wickWidth: Number(saved.candleStyle?.wickWidth) || 1
             },
             margins: {
@@ -477,7 +477,7 @@
         } catch (error) {
           return {
             indicators: [],
-            candleStyle: { bodyWidth: 58, wickWidth: 1 },
+            candleStyle: { bodyWidth: 64, wickWidth: 1 },
             margins: { top: 18, right: 76, bottom: 38, left: 12 },
             height: 320,
             width: null,
