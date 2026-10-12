@@ -18,6 +18,7 @@ const db = getFirestore(app);
 let signedInAccount = auth.currentUser;
 
 const investmentSelection = document.getElementById('investmentSelection');
+const investmentSelectionNotice = document.getElementById('investmentSelectionNotice');
 const companyInvestmentSetup = document.getElementById('companyInvestmentSetup');
 const existingCompanyPanel = document.getElementById('existingCompanyPanel');
 const registerCompanyPanel = document.getElementById('registerCompanyPanel');
@@ -560,11 +561,48 @@ investorTypedSignature.addEventListener('input', () => {
   if (usingSelectedDefaultAgreement) insertSelectedCompanyAgreement();
 });
 
+const investmentPageSlugs = {
+  Company: 'company',
+  Coins: 'coins',
+  Stocks: 'stocks',
+  Bonds: 'bonds',
+  CDs: 'cds',
+  Futures: 'futures',
+  Indices: 'indices',
+  Options: 'options',
+  Economy: 'economy',
+  'Corporate Bonds': 'corporate-bonds',
+  'Government Bonds': 'government-bonds',
+  ETFs: 'etfs'
+};
+const keepCompanyManagementOpen = new URLSearchParams(window.location.search).get('manage') === '1';
+
 document.querySelectorAll('[data-investment]').forEach((choice) => {
   choice.addEventListener('click', () => {
     const selectedInvestment = choice.dataset.investment;
-    document.querySelectorAll('[data-investment]').forEach((item) => item.classList.toggle('is-selected', item === choice));
-    investmentSelection.textContent = `${selectedInvestment} selected. Review the available options.`;
+    if (!keepCompanyManagementOpen) {
+      const pageSlug = investmentPageSlugs[selectedInvestment];
+      if (!pageSlug) {
+        investmentSelectionNotice.hidden = false;
+        investmentSelectionNotice.textContent = `The ${selectedInvestment} demo page is not available.`;
+        return;
+      }
+      window.location.href = `investment-${pageSlug}.html`;
+      return;
+    }
+    document.querySelectorAll('[data-investment]').forEach((item) => {
+      const isSelected = item === choice;
+      item.classList.toggle('is-selected', isSelected);
+      item.setAttribute('aria-pressed', String(isSelected));
+    });
+    const hasSetup = ['Company', 'Coins', 'Stocks'].includes(selectedInvestment);
+    investmentSelection.textContent = hasSetup
+      ? `${selectedInvestment} selected. Review the available options.`
+      : `${selectedInvestment} selected.`;
+    investmentSelectionNotice.hidden = hasSetup;
+    investmentSelectionNotice.textContent = hasSetup
+      ? ''
+      : `${selectedInvestment} listings and allocation tools are not available yet.`;
     companyInvestmentSetup.hidden = selectedInvestment !== 'Company';
     coinsInvestmentSetup.hidden = selectedInvestment !== 'Coins';
     stockInvestmentSetup.hidden = selectedInvestment !== 'Stocks';
@@ -810,6 +848,27 @@ availableCompanies.forEach((company) => {
 });
 
 const requestedCompanyName = new URLSearchParams(window.location.search).get('company');
+const investmentQuery = new URLSearchParams(window.location.search);
+const requestedInvestmentType = investmentQuery.get('type');
+const requestedMarketSymbol = investmentQuery.get('market');
+const requestedMarketName = investmentQuery.get('marketName');
+if (requestedInvestmentType) {
+  const requestedChoice = [...document.querySelectorAll('[data-investment]')]
+    .find((choice) => choice.dataset.investment.toLocaleLowerCase() === requestedInvestmentType.trim().toLocaleLowerCase());
+  if (requestedChoice) {
+    requestedChoice.click();
+    if (requestedMarketSymbol) {
+      const marketLabel = requestedMarketName
+        ? `${requestedMarketName} (${requestedMarketSymbol})`
+        : requestedMarketSymbol;
+      investmentSelection.textContent = `${requestedInvestmentType} selected. Market preview: ${marketLabel}.`;
+      investmentSelectionNotice.hidden = false;
+      investmentSelectionNotice.textContent = 'Market charts are informational previews. Orders and investment allocation for this market are not available here yet.';
+    }
+    document.getElementById('investmentPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
 if (requestedCompanyName) {
   const requestedCompany = [...existingCompanyChoices.querySelectorAll('[data-company-name]')]
     .find((option) => option.dataset.companyName.toLocaleLowerCase() === requestedCompanyName.trim().toLocaleLowerCase());

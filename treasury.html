@@ -94,11 +94,11 @@
               <span class="summary-label">Estimated wallet value</span>
               <strong class="summary-value" id="totalHoldingsValue">--</strong>
             </div>
-            <div class="summary-card">
+            <div class="summary-card" hidden>
               <span class="summary-label">Wallet balance update</span>
               <strong class="summary-value" id="holdingsChange">Not connected</strong>
             </div>
-            <div class="summary-card">
+            <div class="summary-card" hidden>
               <span class="summary-label">Networks</span>
               <strong class="summary-value" id="assetCount">5</strong>
             </div>
@@ -110,7 +110,7 @@
                 <div class="wallet-onboarding-copy">
                   <span class="eyebrow">Your self-custody wallet</span>
                   <h3>Welcome to your digital vault</h3>
-                  <p>Review what your wallet can do before you create a new wallet or restore one.</p>
+                  <p>Review your wallet, then continue to create, restore, or unlock it.</p>
                 </div>
                 <section class="wallet-onboarding-details" aria-labelledby="walletOnboardingDetailsTitle">
                   <h4 id="walletOnboardingDetailsTitle">Your wallet at a glance</h4>
@@ -122,8 +122,11 @@
                   </ul>
                 </section>
                 <div class="wallet-onboarding-footer">
-                  <span>Next, choose to create a wallet or restore one.</span>
-                  <button class="btn btn-primary" id="walletOnboardingNext" type="button">Next</button>
+                  <span>Next, choose how to open your vault.</span>
+                  <div class="wallet-onboarding-footer-actions">
+                    <a class="btn btn-secondary" href="index.html#home">Home</a>
+                    <button class="btn btn-primary" id="walletOnboardingNext" type="button">Next</button>
+                  </div>
                 </div>
               </div>
               <div class="wallet-onboarding-screen" id="walletOnboardingOptions" hidden>
@@ -135,6 +138,7 @@
                 <div class="wallet-onboarding-actions">
                   <button class="btn btn-primary" id="walletOnboardingCreate" type="button">Create a wallet</button>
                   <button class="btn btn-secondary" id="walletOnboardingRestore" type="button">Restore a wallet</button>
+                  <button class="btn btn-primary" id="walletOnboardingUnlock" type="button" hidden>Unlock your wallet</button>
                 </div>
                 <p class="wallet-onboarding-meta-status" id="walletOnboardingMetaStatus" role="status" aria-live="polite">Checking MetaMask connection…</p>
                 <div class="wallet-onboarding-footer">
@@ -223,59 +227,90 @@
             </form>
 
             <div class="crypto-wallet-dashboard" id="walletDashboard" hidden>
-              <div class="wallet-addresses">
-                <h4>Derived addresses</h4>
-                <div id="walletAddressList"></div>
-              </div>
-              <div class="wallet-send-receive">
-                <form class="crypto-wallet-form" id="walletSendForm">
-                  <h4>Send native cryptocurrency</h4>
-                  <label class="wallet-ledger-choice"><input id="walletUseLedger" type="checkbox" /> Use connected MetaMask account for EVM sends</label>
-                  <label class="wallet-ledger-choice"><input id="walletUseHardwareLedger" type="checkbox" /> Sign EVM sends directly on connected Ledger device</label>
-                  <label>Network
-                    <select id="walletSendNetwork">
-                      <option value="bitcoin">Bitcoin (BTC)</option>
-                      <option value="ethereum">Ethereum (ETH)</option>
-                      <option value="bsc">BNB Smart Chain (BNB)</option>
-                      <option value="polygon">Polygon PoS (POL)</option>
-                      <option value="solana">Solana (SOL)</option>
-                    </select>
-                  </label>
-                  <label>Recipient address
-                    <input id="walletSendRecipient" type="text" autocomplete="off" spellcheck="false" required />
-                  </label>
-                  <button class="btn btn-secondary" type="button" id="walletScanQrButton">Scan recipient QR</button>
-                  <video class="wallet-qr-video" id="walletScanVideo" playsinline hidden></video>
-                  <label>Amount
-                    <input id="walletSendAmount" type="number" min="0.000000001" step="any" required />
-                  </label>
-                  <p class="wallet-warning">Transactions are irreversible. Check the selected network, address, amount, and network fee before approving.</p>
-                  <button class="btn btn-primary" id="walletSendButton" type="submit">Review and send</button>
-                </form>
-                <div class="crypto-wallet-form wallet-receive">
-                  <h4>Receive crypto</h4>
-                  <label>Network
-                    <select id="walletReceiveNetwork">
-                      <option value="bitcoin">Bitcoin (BTC)</option>
-                      <option value="ethereum">Ethereum (ETH)</option>
-                      <option value="bsc">BNB Smart Chain (BNB)</option>
-                      <option value="polygon">Polygon PoS (POL)</option>
-                      <option value="solana">Solana (SOL)</option>
-                    </select>
-                  </label>
-                  <p id="walletReceiveAddress" class="wallet-address-value"></p>
-                  <canvas id="walletReceiveQr" aria-label="QR code for selected receive address"></canvas>
-                  <button class="btn btn-secondary" type="button" id="walletCopyAddress">Copy address</button>
+              <section class="wallet-send-panel" id="walletSendSection" aria-labelledby="walletSendHeading">
+                <div class="wallet-send-panel-heading">
+                  <span class="eyebrow">Crypto transfers</span>
+                  <h4 id="walletSendHeading">Send &amp; receive</h4>
+                  <p>Review your derived wallet addresses, send cryptocurrency, or receive funds.</p>
                 </div>
-              </div>
+                <div class="wallet-send-receive">
+                  <form class="crypto-wallet-form" id="walletSendForm">
+                    <h4>Send native cryptocurrency</h4>
+                    <label class="wallet-ledger-choice"><input id="walletUseLedger" type="checkbox" /> Use connected MetaMask account for EVM sends</label>
+                    <label class="wallet-ledger-choice"><input id="walletUseHardwareLedger" type="checkbox" /> Sign EVM sends directly on connected Ledger device</label>
+                    <label>Network
+                      <select id="walletSendNetwork">
+                        <option value="bitcoin">Bitcoin (BTC)</option>
+                        <option value="ethereum">Ethereum (ETH)</option>
+                        <option value="bsc">BNB Smart Chain (BNB)</option>
+                        <option value="polygon">Polygon PoS (POL)</option>
+                        <option value="solana">Solana (SOL)</option>
+                      </select>
+                    </label>
+                    <label>Recipient address
+                      <input id="walletSendRecipient" type="text" autocomplete="off" spellcheck="false" required />
+                    </label>
+                    <button class="btn btn-secondary" type="button" id="walletScanQrButton">Scan recipient QR</button>
+                    <video class="wallet-qr-video" id="walletScanVideo" playsinline hidden></video>
+                    <label>Amount
+                      <input id="walletSendAmount" type="number" min="0.000000001" step="any" required />
+                    </label>
+                    <p class="wallet-warning">Transactions are irreversible. Check the selected network, address, amount, and network fee before approving.</p>
+                    <button class="btn btn-primary" id="walletSendButton" type="submit">Review and send</button>
+                  </form>
+                  <div class="crypto-wallet-form wallet-receive">
+                    <h4>Receive crypto</h4>
+                    <p>Select the coin/network you want to receive. Share only the matching address and QR code.</p>
+                    <label>Coin / network to receive
+                      <select id="walletReceiveNetwork">
+                        <option value="bitcoin">Bitcoin (BTC)</option>
+                        <option value="ethereum">Ethereum (ETH)</option>
+                        <option value="bsc">BNB Smart Chain (BNB)</option>
+                        <option value="polygon">Polygon PoS (POL)</option>
+                        <option value="solana">Solana (SOL)</option>
+                      </select>
+                    </label>
+                    <p id="walletReceiveAddress" class="wallet-address-value"></p>
+                    <canvas id="walletReceiveQr" aria-label="QR code for selected receive address"></canvas>
+                    <button class="btn btn-secondary" type="button" id="walletCopyAddress">Copy address</button>
+                  </div>
+                  <form class="crypto-wallet-form wallet-payment-request" id="walletPaymentRequestForm">
+                    <h4>Request payment</h4>
+                    <p>Select the coin you want to receive, optionally enter an amount, then share the payment QR or request string.</p>
+                    <label>Coin to request
+                      <select id="walletRequestNetwork">
+                        <option value="bitcoin">Bitcoin (BTC)</option>
+                        <option value="ethereum">Ethereum (ETH)</option>
+                        <option value="bsc">BNB Smart Chain (BNB)</option>
+                        <option value="polygon">Polygon PoS (POL)</option>
+                        <option value="solana">Solana (SOL)</option>
+                      </select>
+                    </label>
+                    <label>Amount (optional)
+                      <input id="walletRequestAmount" type="number" min="0.000000001" step="any" placeholder="Any amount" />
+                    </label>
+                    <button class="btn btn-primary" id="walletCreatePaymentRequest" type="submit">Create payment request</button>
+                    <p id="walletPaymentRequestStatus" class="wallet-payment-request-status" role="status" aria-live="polite">Unlock your wallet to create a payment request.</p>
+                    <canvas id="walletPaymentRequestQr" aria-label="QR code for payment request" hidden></canvas>
+                    <p id="walletPaymentRequestUri" class="wallet-address-value" hidden></p>
+                    <button class="btn btn-secondary" type="button" id="walletCopyPaymentRequest" hidden>Copy payment request</button>
+                  </form>
+                </div>
+                <div class="wallet-addresses">
+                    <h4>Derived addresses</h4>
+                    <p>Choose the matching coin/network address below when sharing a receive address.</p>
+                    <div id="walletAddressList"></div>
+                </div>
+              </section>
               <section class="crypto-wallet-form wallet-nft-panel" aria-labelledby="walletNftHeading">
                 <h4 id="walletNftHeading">Your NFTs</h4>
-                <p>Discover ERC-721/ERC-1155 NFTs on Ethereum, BNB Smart Chain, and Polygon, plus Solana NFTs. Discovery uses Moralis and sends the selected wallet address to that provider. A Moralis API key is required and is kept in this page's memory only.</p>
+                <p>Automatically discover ERC-721/ERC-1155 NFTs on Ethereum, BNB Smart Chain, and Polygon, plus Solana NFTs. Discovery runs after wallet unlock or connection and when you refresh balances, once a Moralis API key is entered. Your key stays in this page's memory and is sent to Moralis with your public wallet address.</p>
                 <form id="walletNftDiscoveryForm" class="wallet-nft-discovery-form">
                   <label>Moralis API key
                     <input type="password" id="walletNftApiKey" autocomplete="off" spellcheck="false" required />
                   </label>
-                  <button class="btn btn-primary" id="walletNftDiscoverButton" type="submit">Discover my NFTs</button>
+                  <label class="wallet-ledger-choice"><input id="walletNftAutoDiscover" type="checkbox" checked /> Automatically refresh NFT discovery when I unlock/connect or refresh balances</label>
+                  <button class="btn btn-primary" id="walletNftDiscoverButton" type="submit">Save key in this page and discover NFTs</button>
                 </form>
                 <p class="wallet-nft-api-help">Get a key from <a href="https://admin.moralis.com/" target="_blank" rel="noopener noreferrer">Moralis</a>. The key is not saved; it is sent only to Moralis with NFT lookup requests.</p>
                 <p id="walletNftDiscoveryStatus" class="wallet-nft-discovery-status" role="status" aria-live="polite">Unlock your wallet or connect MetaMask, then enter a Moralis API key to discover your NFTs.</p>
@@ -662,6 +697,17 @@
     </footer>
 
     <div id="toast" class="toast" aria-live="polite">Welcome to BillionairesXchange Treasury.</div>
+
+    <div class="treasury-welcome-splash" id="treasuryWelcomeSplash" hidden role="dialog" aria-modal="true" aria-labelledby="treasuryWelcomeTitle">
+      <img
+        src="https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&amp;fit=crop&amp;w=1800&amp;h=1200&amp;q=85"
+        alt="Heavy steel bank vault door with a circular locking wheel"
+      />
+      <div class="treasury-welcome-splash-message">
+        <span class="eyebrow">BillionairesXchange Treasury</span>
+        <h1 id="treasuryWelcomeTitle">Welcome to your Treasury</h1>
+      </div>
+    </div>
 
     <script src="script.js"></script>
     <script type="module" src="auth.js"></script>

@@ -84257,6 +84257,7 @@ var TransportWebHID = class _TransportWebHID extends Transport {
 
 // wallet.js
 var WALLET_STORAGE_KEY = "makingsEncryptedWalletV1";
+var CONNECTED_WALLET_STORAGE_KEY = "makingsTreasuryWalletAdded";
 var KDF_ITERATIONS = 31e4;
 var EVM_LEDGER_PATH = "m/44'/60'/0'/0/0";
 var NETWORKS = {
@@ -84318,6 +84319,12 @@ if (walletRoot) {
       console.error("Stored wallet data could not be read:", error);
       throw new Error("Saved wallet data is damaged. Restore from your recovery phrase.");
     }
+  }, rememberConnectedWallet = function() {
+    try {
+      localStorage.setItem(CONNECTED_WALLET_STORAGE_KEY, "true");
+    } catch (error) {
+      console.error("Could not remember the connected Treasury wallet:", error);
+    }
   }, setMessage = function(text, isError2 = false) {
     message.textContent = text;
     message.classList.toggle("is-error", isError2);
@@ -84366,6 +84373,8 @@ if (walletRoot) {
       card.append(title, address, balance, copy4);
       addressList.appendChild(card);
     });
+    clearPaymentRequest();
+    byId("walletPaymentRequestStatus").textContent = "Wallet addresses updated. Create a new payment request to share the current address.";
     updateReceiveAddress();
   }, currencyInfo = function() {
     const select = byId("preferredCurrency");
@@ -84593,6 +84602,10 @@ if (walletRoot) {
     entry.className = "wallet-nft-discovery-error";
     entry.textContent = `${NETWORKS[network].name}: ${error.message}`;
     byId("walletNftDiscoveryList").appendChild(entry);
+  }, autoDiscoverWalletNfts = function() {
+    if (!byId("walletNftAutoDiscover").checked || !moralisApiKey) return;
+    if (!walletAddresses.ethereum && !walletAddresses.solana) return;
+    void discoverWalletNfts(moralisApiKey);
   }, lockWallet = function(showMessage = true) {
     mnemonicPhrase = null;
     pendingNewPhrase = null;
@@ -84623,6 +84636,7 @@ if (walletRoot) {
     if (hasExternalEvmAccount) {
       renderAddresses();
       renderTrackedNfts();
+      autoDiscoverWalletNfts();
       if (balanceInterval) clearInterval(balanceInterval);
       balanceInterval = setInterval(() => {
         refreshBalances();
@@ -84672,6 +84686,26 @@ if (walletRoot) {
       console.error("Could not generate receive QR code:", error);
       setMessage("Address is available, but the QR-code library could not be loaded.", true);
     });
+  }, createPaymentRequest = function(network, address, amount) {
+    const config = NETWORKS[network];
+    if (!config) throw new Error("Choose a supported coin and network.");
+    if (!address) throw new Error(`Unlock the wallet to receive ${config.symbol} on ${config.name}.`);
+    if (!amount) return address;
+    if (!Number.isFinite(Number(amount)) || Number(amount) <= 0) {
+      throw new Error("Enter a payment amount greater than zero, or leave it blank for any amount.");
+    }
+    if (network === "bitcoin") return `bitcoin:${address}?amount=${encodeURIComponent(amount)}`;
+    if (network === "solana") return `solana:${address}?amount=${encodeURIComponent(amount)}`;
+    const chainId = config.chainId;
+    const value = parseUnits(amount, 18).toString();
+    return `ethereum:${address}@${chainId}?value=${value}`;
+  }, clearPaymentRequest = function() {
+    byId("walletPaymentRequestQr").hidden = true;
+    byId("walletPaymentRequestUri").hidden = true;
+    byId("walletCopyPaymentRequest").hidden = true;
+    byId("walletPaymentRequestUri").textContent = "";
+    const canvas = byId("walletPaymentRequestQr");
+    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
   };
   const byId = (id4) => document.getElementById(id4);
   const state = byId("cryptoWalletState");
@@ -85141,6 +85175,9 @@ if (walletRoot) {
     }
     await discoverWalletNfts(moralisApiKey);
   });
+  byId("walletNftAutoDiscover").addEventListener("change", () => {
+    if (byId("walletNftAutoDiscover").checked) autoDiscoverWalletNfts();
+  });
   async function unlockWithPhrase(phrase) {
     mnemonicPhrase = phrase;
     onboarding.hidden = true;
@@ -85162,6 +85199,7 @@ if (walletRoot) {
     try {
       const unavailableNetworks = await deriveAllAddresses();
       await renderTrackedNfts();
+      autoDiscoverWalletNfts();
       setMessage(
         unavailableNetworks.length ? `Wallet unlocked. Balance services unavailable: ${unavailableNetworks.join(", ")}.` : "Wallet unlocked. Public network services can observe your connection and queried addresses.",
         unavailableNetworks.length > 0
@@ -85465,6 +85503,7 @@ This transaction cannot be reversed.`);
         }
         ledgerAddress = accounts[0];
         ledgerProvider = window.ethereum;
+        rememberConnectedWallet();
         const canSendEvm = ["ethereum", "bsc", "polygon"].includes(byId("walletSendNetwork").value);
         byId("walletUseLedger").disabled = !canSendEvm;
         if (!canSendEvm) byId("walletUseLedger").checked = false;
@@ -85483,6 +85522,7 @@ This transaction cannot be reversed.`);
           byId("walletRefreshButton").hidden = false;
           renderAddresses();
           await refreshBalances();
+          autoDiscoverWalletNfts();
           if (balanceInterval) clearInterval(balanceInterval);
           balanceInterval = setInterval(() => {
             refreshBalances();
@@ -85578,6 +85618,7 @@ This transaction cannot be reversed.`);
       hardwareLedgerTransport = transport;
       hardwareLedgerEth = ethApp;
       hardwareLedgerAddress = getAddress(account.address);
+      rememberConnectedWallet();
       byId("walletUseHardwareLedger").disabled = !["ethereum", "bsc", "polygon"].includes(byId("walletSendNetwork").value);
       button.textContent = "Disconnect Ledger";
       status.textContent = `Ledger EVM address verified on-device: ${hardwareLedgerAddress}. Keep the Ethereum app open to sign EVM transactions.`;
@@ -85588,6 +85629,7 @@ This transaction cannot be reversed.`);
         byId("walletRefreshButton").hidden = false;
         renderAddresses();
         await refreshBalances();
+        autoDiscoverWalletNfts();
         if (balanceInterval) clearInterval(balanceInterval);
         balanceInterval = setInterval(() => {
           refreshBalances();
@@ -85624,24 +85666,44 @@ This transaction cannot be reversed.`);
     });
   }
   const onboarding = byId("walletOnboarding");
+  const treasuryWelcomeSplash = byId("treasuryWelcomeSplash");
   const walletAppContent = byId("walletAppContent");
+  let treasuryWelcomeTimer = null;
+  document.body.append(onboarding, treasuryWelcomeSplash);
+  const setPageInertExcept = (exemptElement) => {
+    Array.from(document.body.children).forEach((child) => {
+      child.inert = child !== exemptElement;
+    });
+  };
+  const setVaultLockScreen = (locked7) => {
+    onboarding.hidden = !locked7;
+    walletAppContent.hidden = locked7;
+    byId("wallet").classList.toggle("wallet-onboarding-active", locked7);
+    document.body.classList.toggle("treasury-vault-locked", locked7);
+    if (locked7) setPageInertExcept(onboarding);
+    else Array.from(document.body.children).forEach((child) => {
+      child.inert = false;
+    });
+  };
+  const showTreasuryWelcome = () => {
+    treasuryWelcomeSplash.hidden = false;
+    document.body.classList.add("treasury-welcome-active");
+    setPageInertExcept(treasuryWelcomeSplash);
+    treasuryWelcomeTimer = window.setTimeout(() => {
+      treasuryWelcomeSplash.hidden = true;
+      document.body.classList.remove("treasury-welcome-active");
+      Array.from(document.body.children).forEach((child) => {
+        child.inert = false;
+      });
+      treasuryWelcomeTimer = null;
+    }, 5e3);
+  };
   const finishOnboarding = () => {
-    onboarding.hidden = true;
-    walletAppContent.hidden = false;
+    setVaultLockScreen(false);
   };
   window.addEventListener("hashchange", () => {
-    const isFirstVisit = !getSavedWallet();
-    if (location.hash === "#wallet" && isFirstVisit) {
-      byId("walletOnboardingOptions").hidden = true;
-      byId("walletOnboardingWelcome").hidden = false;
-      onboarding.hidden = false;
-      walletAppContent.hidden = true;
-      byId("wallet").classList.add("wallet-onboarding-active");
+    if (location.hash === "#wallet") {
       requestAnimationFrame(() => walletRoot.scrollIntoView({ behavior: "smooth", block: "start" }));
-    } else if (location.hash !== "#wallet") {
-      onboarding.hidden = true;
-      walletAppContent.hidden = false;
-      byId("wallet").classList.remove("wallet-onboarding-active");
     }
   });
   byId("walletOnboardingNext").addEventListener("click", () => {
@@ -85666,6 +85728,11 @@ This transaction cannot be reversed.`);
     finishOnboarding();
     showOnlyForm(byId("walletRestoreForm"));
     byId("walletRestorePhrase").focus();
+  });
+  byId("walletOnboardingUnlock").addEventListener("click", () => {
+    finishOnboarding();
+    showOnlyForm(byId("walletUnlockForm"));
+    byId("walletUnlockPassword").focus();
   });
   byId("walletCreateButton").addEventListener("click", () => showOnlyForm(byId("walletCreateForm")));
   byId("walletRestoreButton").addEventListener("click", () => showOnlyForm(byId("walletRestoreForm")));
@@ -85773,6 +85840,51 @@ This transaction cannot be reversed.`);
     } catch (error) {
       console.error("Recovery phrase could not be revealed:", error);
       setMessage(error.message, true);
+    }
+  });
+  byId("walletPaymentRequestForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const network = byId("walletRequestNetwork").value;
+    const amount = byId("walletRequestAmount").value.trim();
+    const address = walletAddresses[network] || "";
+    const status = byId("walletPaymentRequestStatus");
+    const button = byId("walletCreatePaymentRequest");
+    button.disabled = true;
+    clearPaymentRequest();
+    try {
+      const paymentRequest = createPaymentRequest(network, address, amount);
+      await import_qrcode.default.toCanvas(byId("walletPaymentRequestQr"), paymentRequest, { width: 200, margin: 1 });
+      byId("walletPaymentRequestQr").hidden = false;
+      byId("walletPaymentRequestUri").textContent = paymentRequest;
+      byId("walletPaymentRequestUri").hidden = false;
+      byId("walletCopyPaymentRequest").hidden = false;
+      status.textContent = `${amount ? `${amount} ${NETWORKS[network].symbol} requested` : `Any amount in ${NETWORKS[network].symbol}`}. Share this QR code or payment request with the payer.`;
+      status.classList.remove("is-error");
+    } catch (error) {
+      console.error("Payment request could not be created:", error);
+      status.textContent = `Could not create payment request: ${error.message}`;
+      status.classList.add("is-error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+  byId("walletRequestNetwork").addEventListener("change", () => {
+    clearPaymentRequest();
+    byId("walletPaymentRequestStatus").textContent = `Create a request to receive ${NETWORKS[byId("walletRequestNetwork").value].symbol}.`;
+  });
+  byId("walletRequestAmount").addEventListener("input", clearPaymentRequest);
+  byId("walletCopyPaymentRequest").addEventListener("click", async () => {
+    const request = byId("walletPaymentRequestUri").textContent;
+    if (!request) {
+      setMessage("Create a payment request before copying it.", true);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(request);
+      setMessage("Payment request copied.");
+    } catch (error) {
+      console.error("Payment request clipboard copy failed:", error);
+      setMessage("Could not copy the payment request. Select and copy it manually.", true);
     }
   });
   byId("walletReceiveNetwork").addEventListener("change", updateReceiveAddress);
@@ -85922,8 +86034,9 @@ This transaction cannot be reversed.`);
     }
   });
   byId("preferredCurrency").addEventListener("change", renderBalances);
-  byId("walletRefreshButton")?.addEventListener("click", () => {
-    refreshBalances();
+  byId("walletRefreshButton")?.addEventListener("click", async () => {
+    await refreshBalances();
+    autoDiscoverWalletNfts();
   });
   window.addEventListener("pagehide", () => {
     mnemonicPhrase = null;
@@ -85941,10 +86054,14 @@ This transaction cannot be reversed.`);
   });
   try {
     const savedWallet = getSavedWallet();
-    const isFirstVisit = !savedWallet && location.hash === "#wallet";
-    onboarding.hidden = !isFirstVisit;
-    walletAppContent.hidden = isFirstVisit;
-    byId("wallet").classList.toggle("wallet-onboarding-active", isFirstVisit);
+    const hasExistingWallet = Boolean(savedWallet) || localStorage.getItem(CONNECTED_WALLET_STORAGE_KEY) === "true";
+    byId("walletOnboardingCreate").hidden = Boolean(savedWallet);
+    byId("walletOnboardingRestore").hidden = Boolean(savedWallet);
+    byId("walletOnboardingUnlock").hidden = !savedWallet;
+    byId("walletOnboardingOptions").hidden = true;
+    byId("walletOnboardingWelcome").hidden = false;
+    setVaultLockScreen(!hasExistingWallet);
+    if (hasExistingWallet) showTreasuryWelcome();
     const isSecureContext = window.isSecureContext || location.hostname === "localhost" || location.hostname === "127.0.0.1";
     if (!isSecureContext || !crypto.subtle) {
       creationControls.forEach((button) => {
@@ -85959,11 +86076,9 @@ This transaction cannot be reversed.`);
       byId("walletUnlockButton").hidden = false;
       state.textContent = "Wallet locked in this browser";
     }
-    if (window.ethereum && !isFirstVisit) void connectMetaMask(false);
+    if (window.ethereum && !savedWallet) void connectMetaMask(false);
   } catch (error) {
-    onboarding.hidden = false;
-    walletAppContent.hidden = true;
-    byId("wallet").classList.add("wallet-onboarding-active");
+    setVaultLockScreen(true);
     byId("walletCreateButton").hidden = true;
     byId("walletRestoreButton").hidden = true;
     setMessage(error.message, true);
