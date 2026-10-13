@@ -2409,6 +2409,49 @@ canvas {
   opacity: .45;
 }
 
+.positions-risk-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+  margin-top: .8rem;
+}
+
+.positions-risk-control {
+  display: grid;
+  gap: .35rem;
+  padding: .65rem;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.positions-risk-control > div {
+  display: flex;
+  gap: .4rem;
+}
+
+.positions-risk-control input {
+  width: 100%;
+  min-width: 0;
+  padding: .55rem .65rem;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  background: #080808;
+  color: var(--white);
+  font: inherit;
+}
+
+.positions-risk-control-take-profit {
+  color: #31d598;
+  background: rgba(49, 213, 152, .5);
+}
+
+.positions-risk-control-stop-loss {
+  color: #ff6b7a;
+  background: rgba(255, 107, 122, .5);
+}
+
 #botCanvas {
   cursor: crosshair;
 }
@@ -2678,6 +2721,10 @@ canvas {
 
   .trade-page .positions-chart-quick-trades button {
     min-height: 38px;
+  }
+
+  .trade-page .positions-risk-controls {
+    grid-template-columns: 1fr;
   }
 
   .trade-page .positions-chart-actions {

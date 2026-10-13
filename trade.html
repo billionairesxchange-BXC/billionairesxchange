@@ -152,7 +152,7 @@
                   <select id="positionsChartMode" aria-label="Choose chart pointer tool">
                     <option value="crosshair">Crosshair</option>
                     <option value="ruler">Ruler</option>
-                    <option value="entry">Set order price</option>
+                    <option value="entry">Chart trade price</option>
                   </select>
                 </label>
                 <div class="positions-tools-menu">
@@ -175,9 +175,23 @@
               <button class="positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy at chart price</button>
               <button class="positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell at chart price</button>
             </div>
-            <button class="positions-save-risk-button" id="positionsSaveRiskSetup" type="button" disabled>Save risk setup</button>
+            <button class="positions-save-risk-button" id="positionsSaveRiskSetup" type="button" disabled>Show levels</button>
             <p id="positionsChartStatus">Loading market candles...</p>
             <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
+          </div>
+          <div class="positions-risk-controls" role="group" aria-label="Set take profit and stop loss chart levels">
+            <label class="positions-risk-control positions-risk-control-take-profit" for="positionsTakeProfitInput">
+              <span>Take Profit</span>
+              <div>
+                <input id="positionsTakeProfitInput" type="number" min="0.00000001" step="any" inputmode="decimal" placeholder="Price" />
+              </div>
+            </label>
+            <label class="positions-risk-control positions-risk-control-stop-loss" for="positionsStopLossInput">
+              <span>Stop Loss</span>
+              <div>
+                <input id="positionsStopLossInput" type="number" min="0.00000001" step="any" inputmode="decimal" placeholder="Price" />
+              </div>
+            </label>
           </div>
           <dialog class="positions-tool-dialog" id="positionsToolDialog" aria-labelledby="positionsToolDialogTitle">
             <form id="positionsToolForm">
