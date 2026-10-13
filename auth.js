@@ -1,20 +1,6 @@
-import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
-import { doc, getDoc, getFirestore, updateDoc } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
-
-const firebaseConfig = {
-  apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
-  authDomain: 'billionairesxchange-e8162.firebaseapp.com',
-  projectId: 'billionairesxchange-e8162',
-  storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
-  messagingSenderId: '872942229296',
-  appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
-  measurementId: 'G-JCZ6FCKF3M'
-};
-
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { auth, db } from './firebase-client.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+import { doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 window.makingsGetIdToken = async () => auth.currentUser ? auth.currentUser.getIdToken() : null;
 const navActions = document.querySelector('.nav-actions');
 

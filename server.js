@@ -429,28 +429,83 @@ const wss = new WebSocket.Server({ server });
 wss.on('connection', (ws) => {
   console.log('Client connected');
   let pair = 'btcusdt';
-  let socket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@trade`);
+  let socket;
+  let reconnectTimer;
+  let reconnectDelay = 1000;
+  let closed = false;
 
-  socket.on('message', (data) => {
-    const trade = JSON.parse(data);
-    ws.send(JSON.stringify({ price: trade.p, quantity: trade.q }));
-  });
+  function connectUpstream() {
+    if (closed || ws.readyState !== WebSocket.OPEN) return;
+
+    const upstream = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@trade`);
+    socket = upstream;
+
+    upstream.on('open', () => {
+      if (socket === upstream) reconnectDelay = 1000;
+    });
+
+    upstream.on('message', (data) => {
+      if (socket !== upstream || ws.readyState !== WebSocket.OPEN) return;
+      try {
+        const trade = JSON.parse(data);
+        if (trade.p && trade.q) {
+          ws.send(JSON.stringify({ price: trade.p, quantity: trade.q }));
+        }
+      } catch (error) {
+        console.error('Invalid trade data received from Binance:', error.message);
+      }
+    });
+
+    upstream.on('error', (error) => {
+      console.error(`Binance stream error for ${pair}:`, error.message);
+    });
+
+    upstream.on('close', () => {
+      if (socket !== upstream || closed || ws.readyState !== WebSocket.OPEN) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = undefined;
+        connectUpstream();
+      }, reconnectDelay);
+      reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+    });
+  }
+
+  connectUpstream();
 
   ws.on('message', (msg) => {
-    const { newPair } = JSON.parse(msg);
-    if (newPair) {
-      socket.close();
-      pair = newPair.toLowerCase();
-      socket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@trade`);
-      socket.on('message', (data) => {
-        const trade = JSON.parse(data);
-        ws.send(JSON.stringify({ price: trade.p, quantity: trade.q }));
-      });
+    let request;
+    try {
+      request = JSON.parse(msg);
+    } catch (error) {
+      ws.send(JSON.stringify({ error: 'Invalid stream request.' }));
+      return;
     }
+
+    const newPair = request?.newPair;
+    if (typeof newPair !== 'string' || !/^[a-zA-Z0-9]{5,20}$/.test(newPair)) {
+      ws.send(JSON.stringify({ error: 'Choose a valid trading pair.' }));
+      return;
+    }
+
+    const normalizedPair = newPair.toLowerCase();
+    if (normalizedPair === pair) return;
+
+    pair = normalizedPair;
+    clearTimeout(reconnectTimer);
+    reconnectTimer = undefined;
+    reconnectDelay = 1000;
+    socket?.close();
+    connectUpstream();
   });
 
   ws.on('close', () => {
+    closed = true;
     console.log('Client disconnected');
-    socket.close();
+    clearTimeout(reconnectTimer);
+    socket?.close();
+  });
+
+  ws.on('error', (error) => {
+    console.error('Client WebSocket error:', error.message);
   });
 });
