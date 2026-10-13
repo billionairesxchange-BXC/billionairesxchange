@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Settings</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <meta name="description" content="Choose and save your BillionairesXchange display theme." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand-wrap" href="index.html#home">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange" width="100" />
+        <span>
+          <strong class="brand-name">BillionairesXchange</strong>
+          <small>Crypto Trading &amp; Investment</small>
+        </span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Trading Bot</a>
+        <a href="treasury.html#wallet">Treasury/Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="settings-page section-shell" aria-labelledby="settingsHeading">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Preferences</span>
+            <h1 id="settingsHeading">Settings</h1>
+            <p>Choose a display theme. Your choice is saved in this browser and used across the site.</p>
+          </div>
+        </div>
+
+        <section class="settings-panel card-glass" aria-labelledby="themeHeading">
+          <div class="settings-panel-heading">
+            <div>
+              <span class="eyebrow">Appearance</span>
+              <h2 id="themeHeading">Theme</h2>
+              <p>Select a theme to preview and apply it immediately.</p>
+            </div>
+            <p id="themeSaveStatus" class="settings-save-status" role="status" aria-live="polite"></p>
+          </div>
+
+          <fieldset class="theme-choice-grid">
+            <legend class="visually-hidden">Choose a site theme</legend>
+            <label class="theme-choice-card">
+              <input type="radio" name="siteTheme" value="black-yellow" />
+              <span class="theme-choice-preview theme-choice-preview-black" aria-hidden="true">
+                <span></span><span></span><i></i>
+              </span>
+              <span class="theme-choice-copy">
+                <strong>Black and Yellow</strong>
+                <small>Classic BillionairesXchange colors. This is the default theme.</small>
+              </span>
+            </label>
+            <label class="theme-choice-card">
+              <input type="radio" name="siteTheme" value="white-yellow" />
+              <span class="theme-choice-preview theme-choice-preview-white" aria-hidden="true">
+                <span></span><span></span><i></i>
+              </span>
+              <span class="theme-choice-copy">
+                <strong>White and Yellow</strong>
+                <small>Light surfaces, white button text, yellow figures, and black chart backgrounds.</small>
+              </span>
+            </label>
+            <label class="theme-choice-card">
+              <input type="radio" name="siteTheme" value="live-pixel" />
+              <span class="theme-choice-preview theme-choice-preview-pixel" aria-hidden="true">
+                <span></span><span></span><i></i>
+              </span>
+              <span class="theme-choice-copy">
+                <strong>Live Pixel Theme</strong>
+                <small>Use the current pixel-style colors. A live video background can be added later.</small>
+              </span>
+              <span class="theme-choice-badge">Video coming later</span>
+            </label>
+          </fieldset>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2026 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
+    </footer>
+
+    <script src="site-header.js"></script>
+    <script src="settings.js"></script>
+  </body>
+</html>

@@ -6,11 +6,11 @@ export const STOCK_EXCHANGES = {
       { symbol: 'HSBA', name: 'HSBC Holdings', sector: 'Financial Services' },
       { symbol: 'SHEL', name: 'Shell', sector: 'Energy' },
       { symbol: 'ULVR', name: 'Unilever', sector: 'Consumer Goods' },
-      { symbol: 'AVGO', name: 'AstraZeneca', sector: 'Pharmaceuticals' },
-      { symbol: 'PRX', name: 'Prudential', sector: 'Financial Services' },
+      { symbol: 'AZN', name: 'AstraZeneca', sector: 'Pharmaceuticals' },
+      { symbol: 'PRU', name: 'Prudential', sector: 'Financial Services' },
       { symbol: 'DGE', name: 'Diageo', sector: 'Beverages' },
       { symbol: 'GSK', name: 'GSK (GlaxoSmithKline)', sector: 'Pharmaceuticals' },
-      { symbol: 'BAR', name: 'Barclays', sector: 'Financial Services' },
+      { symbol: 'BARC', name: 'Barclays', sector: 'Financial Services' },
       { symbol: 'LLOY', name: 'Lloyds Banking', sector: 'Financial Services' },
       { symbol: 'RIO', name: 'Rio Tinto', sector: 'Mining' }
     ]

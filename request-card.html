@@ -43,7 +43,7 @@
           <div>
             <span class="eyebrow">ATM card request</span>
             <h1>Choose your card</h1>
-            <p>Choose Metal for the Black Platinum or Bronze Day to Day design, or choose Plastic for the regular white card.</p>
+            <p>Choose a Silver, Black, or Bronze metal card, or the regular white plastic card.</p>
           </div>
         </div>
 
@@ -58,19 +58,26 @@
           <section id="metalCardOptions" class="metal-card-options" hidden aria-labelledby="metalCardHeading">
             <h3 id="metalCardHeading">Metal card designs</h3>
             <div class="metal-card-grid">
-              <button class="metal-card-choice" type="button" data-card-style="black-platinum" aria-pressed="false">
-                <span class="metal-card-preview metal-card-preview-black" aria-hidden="true">
-                  <span>MAKINGS</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>PLATINUM</small>
+              <button class="metal-card-choice" type="button" data-card-style="silver-metal" aria-pressed="false">
+                <span class="metal-card-preview metal-card-preview-silver" aria-hidden="true">
+                  <span>BILLIONAIRES</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>SILVER</small>
                 </span>
-                <strong>Black Platinum</strong>
-                <span>Black metal premium card</span>
+                <strong>Silver Metal</strong>
+                <span>Silver metal card</span>
               </button>
-              <button class="metal-card-choice" type="button" data-card-style="bronze-day-to-day" aria-pressed="false">
-                <span class="metal-card-preview metal-card-preview-bronze" aria-hidden="true">
-                  <span>MAKINGS</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>DAY TO DAY</small>
+              <button class="metal-card-choice" type="button" data-card-style="black-metal" aria-pressed="false">
+                <span class="metal-card-preview metal-card-preview-black" aria-hidden="true">
+                  <span>BILLIONAIRES</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>BLACK</small>
                 </span>
-                <strong>Bronze Day to Day</strong>
-                <span>Bronze metal everyday card</span>
+                <strong>Black Metal</strong>
+                <span>Black metal card</span>
+              </button>
+              <button class="metal-card-choice" type="button" data-card-style="bronze-metal" aria-pressed="false">
+                <span class="metal-card-preview metal-card-preview-bronze" aria-hidden="true">
+                  <span>BILLIONAIRES</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>BRONZE</small>
+                </span>
+                <strong>Bronze Metal</strong>
+                <span>Bronze metal card</span>
               </button>
             </div>
           </section>
@@ -79,7 +86,7 @@
             <p class="request-card-help">The white blank card is the default. Upload a photo design below to preview it on the card.</p>
             <div class="plastic-card-preview" aria-label="Regular white plastic card preview">
               <img class="plastic-card-full-artwork" id="plasticCardArtwork" alt="Uploaded design covering the plastic card preview" hidden />
-              <div class="plastic-card-preview-brand">MAKINGS <span aria-hidden="true">▦</span></div>
+              <div class="plastic-card-preview-brand">BILLIONAIRESXCHANGE <span aria-hidden="true">▦</span></div>
               <span class="plastic-card-artwork-placeholder" id="plasticCardArtworkPlaceholder">Your card design will appear here</span>
               <strong id="plasticCardPreviewName">YOUR NAME</strong>
               <small>REGULAR PLASTIC</small>
@@ -169,8 +176,9 @@
       let designImageData = '';
 
       const cardStyles = {
-        'black-platinum': { name: 'Black Platinum', material: 'Metal' },
-        'bronze-day-to-day': { name: 'Bronze Day to Day', material: 'Metal' },
+        'silver-metal': { name: 'Silver Metal', material: 'Metal' },
+        'black-metal': { name: 'Black Metal', material: 'Metal' },
+        'bronze-metal': { name: 'Bronze Metal', material: 'Metal' },
         'white-plastic-regular': { name: 'White Regular', material: 'Plastic' }
       };
 
@@ -197,7 +205,7 @@
           plasticCardArtworkPlaceholder.hidden = true;
         }
         if (material === 'Metal') {
-          materialStatus.textContent = 'Choose one of the available metal card designs.';
+          materialStatus.textContent = 'Select a metal card design to continue.';
         } else {
           selectedStyle = 'white-plastic-regular';
           cardRequestFormPanel.hidden = false;
@@ -419,5 +427,6 @@
         }
       });
     </script>
-  </body>
+    <script src="site-header.js"></script>
+</body>
 </html>

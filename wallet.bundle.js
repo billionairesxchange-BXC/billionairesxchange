@@ -84259,6 +84259,8 @@ var TransportWebHID = class _TransportWebHID extends Transport {
 var WALLET_STORAGE_KEY = "makingsEncryptedWalletV1";
 var CONNECTED_WALLET_STORAGE_KEY = "makingsTreasuryWalletAdded";
 var KDF_ITERATIONS = 31e4;
+var WALLET_IDLE_LOCK_MS = 15 * 60 * 1e3;
+var BACKUP_PHRASE_VISIBLE_MS = 60 * 1e3;
 var EVM_LEDGER_PATH = "m/44'/60'/0'/0/0";
 var NETWORKS = {
   bitcoin: {
@@ -84328,11 +84330,44 @@ if (walletRoot) {
   }, setMessage = function(text, isError2 = false) {
     message.textContent = text;
     message.classList.toggle("is-error", isError2);
+  }, clearIdleLockTimer = function() {
+    if (idleLockTimer) window.clearTimeout(idleLockTimer);
+    idleLockTimer = null;
+  }, lockAfterInactivity = function() {
+    clearIdleLockTimer();
+    lockWallet(false);
+    setMessage("Wallet locked after 15 minutes of inactivity. Unlock it to continue.");
+  }, scheduleIdleLock = function() {
+    clearIdleLockTimer();
+    if (!mnemonicPhrase) return;
+    idleLockTimer = window.setTimeout(lockAfterInactivity, WALLET_IDLE_LOCK_MS);
+  }, recordWalletActivity = function() {
+    if (!mnemonicPhrase) return;
+    lastWalletActivity = Date.now();
+    scheduleIdleLock();
+  }, hideRevealedBackupPhrase = function(messageText = "Recovery phrase hidden.") {
+    if (backupPhraseHideTimer) window.clearTimeout(backupPhraseHideTimer);
+    backupPhraseHideTimer = null;
+    byId("walletRecoveryWords").replaceChildren();
+    byId("walletPhrasePanel").hidden = true;
+    byId("walletPhrasePanel").dataset.mode = "";
+    byId("walletPhrasePanel").querySelector(".wallet-backup-close")?.remove();
+    setMessage(messageText);
   }, showOnlyForm = function(formToShow) {
     forms.forEach((form) => {
       form.hidden = form !== formToShow;
     });
-    byId("walletPhrasePanel").hidden = true;
+    if (byId("walletPhrasePanel").dataset.mode === "backup") {
+      hideRevealedBackupPhrase("");
+    } else if (byId("walletPhrasePanel").dataset.mode === "create") {
+      byId("walletRecoveryWords").replaceChildren();
+      byId("walletPhrasePanel").hidden = true;
+      byId("walletPhrasePanel").dataset.mode = "";
+      pendingNewPhrase = null;
+      pendingPassword = null;
+    }
+    if (backupPhraseHideTimer) window.clearTimeout(backupPhraseHideTimer);
+    backupPhraseHideTimer = null;
     setMessage("");
   }, bytesToBase64 = function(bytes2) {
     let binary = "";
@@ -84607,6 +84642,9 @@ if (walletRoot) {
     if (!walletAddresses.ethereum && !walletAddresses.solana) return;
     void discoverWalletNfts(moralisApiKey);
   }, lockWallet = function(showMessage = true) {
+    clearIdleLockTimer();
+    if (backupPhraseHideTimer) window.clearTimeout(backupPhraseHideTimer);
+    backupPhraseHideTimer = null;
     mnemonicPhrase = null;
     pendingNewPhrase = null;
     pendingPassword = null;
@@ -84629,6 +84667,7 @@ if (walletRoot) {
     byId("holdingsTableBody").replaceChildren();
     byId("walletNftList").textContent = hasExternalEvmAccount ? "Connect an EVM account to verify tracked NFTs." : "Unlock the wallet or connect MetaMask or Ledger to verify and display tracked NFTs.";
     byId("walletPhrasePanel").hidden = true;
+    byId("walletPhrasePanel").dataset.mode = "";
     byId("walletRecoveryWords").replaceChildren();
     byId("walletBackupForm").reset();
     byId("walletRestoreForm").reset();
@@ -84646,6 +84685,7 @@ if (walletRoot) {
   }, renderPhrase = function(phrase, isBackup) {
     const list = byId("walletRecoveryWords");
     list.replaceChildren();
+    byId("walletPhrasePanel").dataset.mode = isBackup ? "backup" : "create";
     byId("walletPhrasePanel").querySelector(".wallet-backup-close")?.remove();
     phrase.trim().split(/\s+/).forEach((word, index) => {
       const item = document.createElement("li");
@@ -84667,12 +84707,12 @@ if (walletRoot) {
       close.className = "btn btn-ghost";
       close.classList.add("wallet-backup-close");
       close.textContent = "Hide recovery phrase";
-      close.addEventListener("click", () => {
-        list.replaceChildren();
-        byId("walletPhrasePanel").hidden = true;
-        setMessage("Recovery phrase hidden.");
-      });
+      close.addEventListener("click", () => hideRevealedBackupPhrase());
       byId("walletPhrasePanel").appendChild(close);
+      backupPhraseHideTimer = window.setTimeout(
+        () => hideRevealedBackupPhrase("Recovery phrase hidden automatically after 60 seconds."),
+        BACKUP_PHRASE_VISIBLE_MS
+      );
     }
   }, updateReceiveAddress = function() {
     const network = byId("walletReceiveNetwork").value;
@@ -84732,6 +84772,9 @@ if (walletRoot) {
   let exchangeRates = { USD: 1 };
   let lastPriceRefresh = 0;
   let balanceInterval = null;
+  let idleLockTimer = null;
+  let backupPhraseHideTimer = null;
+  let lastWalletActivity = Date.now();
   let ledgerAddress = null;
   let ledgerProvider = null;
   let metaMaskConnection = null;
@@ -85180,6 +85223,8 @@ if (walletRoot) {
   });
   async function unlockWithPhrase(phrase) {
     mnemonicPhrase = phrase;
+    lastWalletActivity = Date.now();
+    scheduleIdleLock();
     onboarding.hidden = true;
     walletAppContent.hidden = false;
     byId("wallet").classList.remove("wallet-onboarding-active");
@@ -85798,21 +85843,22 @@ This transaction cannot be reversed.`);
   });
   byId("walletRestoreForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const phrase = byId("walletRestorePhrase").value.trim().toLowerCase().replace(/\s+/g, " ");
     const password = byId("walletRestorePassword").value;
-    if (password.length < 12 || password !== byId("walletRestorePasswordConfirm").value) {
+    const confirmPassword = byId("walletRestorePasswordConfirm").value;
+    if (password.length < 12 || password !== confirmPassword) {
       setMessage("Use the same wallet password in both fields; it must be at least 12 characters.", true);
       return;
     }
+    const phrase = byId("walletRestorePhrase").value.trim().toLowerCase().replace(/\s+/g, " ");
+    byId("walletRestorePhrase").value = "";
+    byId("walletRestorePassword").value = "";
+    byId("walletRestorePasswordConfirm").value = "";
     try {
       const mnemonic = Mnemonic.fromPhrase(phrase);
       if (![12, 15, 18, 21, 24].includes(mnemonic.phrase.split(" ").length)) {
         throw new Error("Use a valid 12-, 15-, 18-, 21-, or 24-word BIP-39 recovery phrase.");
       }
       await encryptPhrase(mnemonic.phrase, password);
-      byId("walletRestorePhrase").value = "";
-      byId("walletRestorePassword").value = "";
-      byId("walletRestorePasswordConfirm").value = "";
       await unlockWithPhrase(mnemonic.phrase);
     } catch (error) {
       console.error("Wallet restore failed:", error);
@@ -85821,9 +85867,10 @@ This transaction cannot be reversed.`);
   });
   byId("walletUnlockForm").addEventListener("submit", async (event) => {
     event.preventDefault();
+    const password = byId("walletUnlockPassword").value;
+    byId("walletUnlockPassword").value = "";
     try {
-      const phrase = await decryptPhrase(byId("walletUnlockPassword").value);
-      byId("walletUnlockPassword").value = "";
+      const phrase = await decryptPhrase(password);
       await unlockWithPhrase(phrase);
     } catch (error) {
       console.error("Wallet unlock failed:", error);
@@ -85832,11 +85879,12 @@ This transaction cannot be reversed.`);
   });
   byId("walletBackupForm").addEventListener("submit", async (event) => {
     event.preventDefault();
+    const password = byId("walletBackupPassword").value;
+    byId("walletBackupPassword").value = "";
     try {
-      const phrase = await decryptPhrase(byId("walletBackupPassword").value);
-      byId("walletBackupPassword").value = "";
+      const phrase = await decryptPhrase(password);
       renderPhrase(phrase, true);
-      setMessage("Recovery phrase revealed. Keep it offline and hide it when finished.");
+      setMessage("Recovery phrase revealed. It will be hidden after 60 seconds; keep it offline and never share it.");
     } catch (error) {
       console.error("Recovery phrase could not be revealed:", error);
       setMessage(error.message, true);
@@ -86039,6 +86087,9 @@ This transaction cannot be reversed.`);
     autoDiscoverWalletNfts();
   });
   window.addEventListener("pagehide", () => {
+    clearIdleLockTimer();
+    if (backupPhraseHideTimer) window.clearTimeout(backupPhraseHideTimer);
+    backupPhraseHideTimer = null;
     mnemonicPhrase = null;
     pendingNewPhrase = null;
     pendingPassword = null;
@@ -86049,6 +86100,17 @@ This transaction cannot be reversed.`);
     if (hardwareLedgerTransport) {
       void hardwareLedgerTransport.close().catch((error) => {
         console.error("Ledger USB transport could not be closed during page navigation:", error);
+      });
+      ["pointerdown", "keydown", "touchstart"].forEach((eventName) => {
+        document.addEventListener(eventName, recordWalletActivity, { passive: true });
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (!mnemonicPhrase) return;
+        if (Date.now() - lastWalletActivity >= WALLET_IDLE_LOCK_MS) {
+          lockAfterInactivity();
+          return;
+        }
+        if (document.visibilityState === "visible") scheduleIdleLock();
       });
     }
   });

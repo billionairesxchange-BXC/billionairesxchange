@@ -9,6 +9,11 @@
     ['#a5d86e', '#3c6422']
   ];
   const categoryMarks = {
+    Company: '<path d="M12 41h30M16 39V19h9v20m4 0V11h9v28M13 17h15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M19 23h3m-3 5h3m11-11h3m-3 6h3m-3 6h3" stroke="currentColor" stroke-width="2"/>',
+    Coins: '<circle cx="27" cy="27" r="17" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M31 19c-1-2-3-3-6-3-4 0-7 2-7 5 0 8 15 3 15 11 0 3-3 6-8 6-3 0-6-1-8-4m10-23v27" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>',
+    Stocks: '<path d="M13 39h29M17 35V25h6v10m5 0V17h6v18m5 0V11h6v24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="m13 20 9-7 8 3 12-8" fill="none" stroke="currentColor" stroke-width="2.5"/>',
+    Bonds: '<path d="M11 20h32L27 10zm4 18h24M17 22v14m7-14v14m7-14v14m7-14v14M12 42h30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>',
+    CDs: '<rect x="13" y="12" width="28" height="29" rx="4" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M19 20h16m-16 7h16m-16 7h10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>',
     Futures: '<path d="M12 37 21 27l6 5 11-15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M31 17h7v7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>',
     Indices: '<path d="M13 36V26h6v10zm11 0V18h6v18zm11 0V12h6v24z" fill="currentColor"/>',
     Options: '<circle cx="17" cy="18" r="4" fill="currentColor"/><circle cx="36" cy="17" r="4" fill="currentColor"/><circle cx="27" cy="36" r="4" fill="currentColor"/><path d="m20 20 5 12m8-12-5 12m-7-14h11" fill="none" stroke="currentColor" stroke-width="2.5"/>',
@@ -17,9 +22,34 @@
     'Government Bonds': '<path d="M11 20h32L27 10zm4 18h24M17 22v14m7-14v14m7-14v14m7-14v14M12 42h30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>',
     ETFs: '<rect x="13" y="12" width="11" height="11" rx="2" fill="currentColor"/><rect x="30" y="12" width="11" height="11" rx="2" fill="currentColor" opacity=".72"/><rect x="13" y="29" width="11" height="11" rx="2" fill="currentColor" opacity=".72"/><rect x="30" y="29" width="11" height="11" rx="2" fill="currentColor"/>'
   };
+  const stockLogoNames = {
+    AAPL: 'apple',
+    TSLA: 'tesla',
+    MSFT: 'microsoft',
+    GOOGL: 'alphabet',
+    AMZN: 'amazon',
+    NVDA: 'nvidia',
+    JPM: 'jpmorgan',
+    V: 'visa',
+    WMT: 'walmart',
+    JNJ: 'johnson-and-johnson',
+    HSBA: 'hsbc',
+    SHEL: 'shell',
+    ULVR: 'unilever',
+    AZN: 'astrazeneca',
+    PRU: 'prudential',
+    DGE: 'diageo',
+    GSK: 'gsk',
+    BARC: 'barclays',
+    LLOY: 'lloyds',
+    RIO: 'rio-tinto'
+  };
 
   window.createMarketLogoSrc = (symbol, category) => {
     const cleanSymbol = String(symbol || '').split(':').pop().replace(/[^a-z0-9]/gi, '').toUpperCase();
+    if (category === 'Stocks' && stockLogoNames[cleanSymbol]) {
+      return `https://s3-symbol-logo.tradingview.com/${stockLogoNames[cleanSymbol]}.svg`;
+    }
     const initials = (cleanSymbol.slice(0, 3) || 'MKT').replace(/&/g, '&amp;').replace(/</g, '&lt;');
     let hash = 0;
     for (const character of String(symbol || category || 'market')) {

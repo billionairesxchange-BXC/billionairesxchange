@@ -108,7 +108,7 @@
             <div class="wallet-onboarding" id="walletOnboarding" hidden>
               <div class="wallet-onboarding-screen" id="walletOnboardingWelcome">
                 <div class="wallet-onboarding-copy">
-                  <span class="eyebrow">Your self-custody wallet</span>
+                  <span class="eyebrow">Your encrypted wallet</span>
                   <h3>Welcome to your digital vault</h3>
                   <p>Review your wallet, then continue to create, restore, or unlock it.</p>
                 </div>
@@ -116,7 +116,7 @@
                   <h4 id="walletOnboardingDetailsTitle">Your wallet at a glance</h4>
                   <ul>
                     <li><strong>Five networks</strong><span>Bitcoin, Ethereum, BNB Smart Chain, Polygon, and Solana.</span></li>
-                    <li><strong>Your keys, your control</strong><span>Your recovery phrase is encrypted in this browser; Makings does not receive your phrase or private keys.</span></li>
+                    <li><strong>Your keys stay on this device</strong><span>Your recovery phrase is encrypted in this browser; BillionairesXchange does not receive your phrase or private keys.</span></li>
                     <li><strong>Send and receive</strong><span>View addresses and QR codes, check balances, and sign transactions in your wallet.</span></li>
                     <li><strong>Optional hardware signing</strong><span>Connect Ledger directly for Ethereum, BNB Smart Chain, and Polygon transactions.</span></li>
                   </ul>
@@ -133,7 +133,7 @@
                 <div class="wallet-onboarding-copy">
                   <span class="eyebrow">Choose your wallet</span>
                   <h3>Open your vault</h3>
-                  <p>Create a new self-custody wallet or restore one with your recovery phrase. MetaMask connection is requested securely by your browser.</p>
+                  <p>Create an encrypted wallet or restore one with your recovery phrase. MetaMask connection is requested securely by your browser.</p>
                 </div>
                 <div class="wallet-onboarding-actions">
                   <button class="btn btn-primary" id="walletOnboardingCreate" type="button">Create a wallet</button>
@@ -150,9 +150,9 @@
             <div id="walletAppContent">
             <div class="crypto-wallet-heading">
               <div>
-                <span class="eyebrow">Self-custody</span>
+                <span class="eyebrow">Encrypted browser wallet</span>
                 <h3 id="cryptoWalletTitle">Your blockchain wallet</h3>
-                <p>Your recovery phrase is encrypted with your wallet password and stored only in this browser. Makings never receives your phrase or private keys.</p>
+                <p>Your recovery phrase is encrypted with your wallet password and stored only in this browser. The wallet automatically locks after 15 minutes of inactivity. BillionairesXchange never receives your phrase or private keys.</p>
               </div>
               <span class="crypto-wallet-state" id="cryptoWalletState" role="status">No wallet set up</span>
             </div>
@@ -178,7 +178,7 @@
               <label>Confirm password
                 <input type="password" id="walletCreatePasswordConfirm" minlength="12" autocomplete="new-password" required />
               </label>
-              <p>Use at least 12 characters. This password encrypts the recovery phrase in this browser; it cannot be reset by Makings.</p>
+              <p>Use at least 12 characters. This password encrypts the recovery phrase in this browser; it cannot be reset by BillionairesXchange.</p>
               <button class="btn btn-primary" type="submit">Generate recovery phrase</button>
               <button class="btn btn-ghost" type="button" data-wallet-cancel>Cancel</button>
             </form>
@@ -219,6 +219,7 @@
 
             <form class="crypto-wallet-form" id="walletBackupForm" hidden>
               <h4>Verify password to view backup</h4>
+              <p>The recovery phrase will be hidden automatically after 60 seconds.</p>
               <label>Wallet password
                 <input type="password" id="walletBackupPassword" autocomplete="current-password" required />
               </label>
@@ -437,7 +438,7 @@
             </div>
 
             <form class="payment-form bank-online-form" id="bankOnlineForm" hidden>
-              <div class="form-heading"><h4>Secure online bank connection</h4><p>You will be redirected to your bank's secure authorization page. Makings does not collect or store your bank password.</p></div>
+              <div class="form-heading"><h4>Secure online bank connection</h4><p>You will be redirected to your bank's secure authorization page. BillionairesXchange does not collect or store your bank password.</p></div>
               <div class="online-bank-summary"><strong id="onlineBankName">Bank of Jamaica</strong><span>Secure authorization required</span></div>
               <div class="form-actions"><button class="btn btn-primary" type="submit">Continue to secure bank login</button><button class="btn btn-ghost" type="button" data-close-form="bankOnlineForm">Cancel</button></div>
             </form>
@@ -634,10 +635,15 @@
             <div class="feature-item">
               <span class="feature-icon">🛡️</span>
               <h4>You Control Your Keys</h4>
-              <p>Private keys are derived in your browser and are not sent to Makings. Anyone with your recovery phrase can control your assets.</p>
+              <p>Private keys are derived in your browser and are not sent to BillionairesXchange. Anyone with your recovery phrase can control your assets.</p>
             </div>
             <div class="feature-item">
               <span class="feature-icon">⏱️</span>
+              <h4>Automatic Wallet Lock</h4>
+              <p>The wallet locks after 15 minutes of inactivity. A revealed backup phrase is hidden automatically after 60 seconds.</p>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">✍️</span>
               <h4>Local Transaction Signing</h4>
               <p>Transactions are signed in your browser and broadcast through public blockchain services after your confirmation.</p>
             </div>
@@ -657,6 +663,7 @@
               <p>Deposit and withdraw using bank transfers, cards, crypto, and other payment options.</p>
             </div>
           </div>
+          <p class="wallet-security-note">These are browser-wallet safeguards, not exchange custody, account insurance, or a guarantee against compromised devices. Secure your device and keep your recovery phrase offline.</p>
         </div>
 
         <div class="wallet-guide card-glass">
@@ -675,7 +682,7 @@
             <div class="step">
               <div class="step-number">3</div>
               <h4>Trade & Invest</h4>
-              <p>Use your vault funds to trade crypto, stocks, and other assets on Makings.</p>
+              <p>Use your vault funds to trade crypto, stocks, and other assets on BillionairesXchange.</p>
             </div>
             <div class="step">
               <div class="step-number">4</div>
@@ -794,5 +801,6 @@
 
     </script>
     <script type="module" src="wallet.bundle.js"></script>
-  </body>
+    <script src="site-header.js"></script>
+</body>
 </html>

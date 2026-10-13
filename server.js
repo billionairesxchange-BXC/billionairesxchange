@@ -86,8 +86,9 @@ app.post('/api/card-request-email', async (req, res) => {
 
   const { material, cardStyle, styleId, engravingText, designNote, designImageData } = req.body || {};
   const allowedStyles = {
-    'black-platinum': { material: 'Metal', cardStyle: 'Black Platinum' },
-    'bronze-day-to-day': { material: 'Metal', cardStyle: 'Bronze Day to Day' },
+    'silver-metal': { material: 'Metal', cardStyle: 'Silver Metal' },
+    'black-metal': { material: 'Metal', cardStyle: 'Black Metal' },
+    'bronze-metal': { material: 'Metal', cardStyle: 'Bronze Metal' },
     'white-plastic-regular': { material: 'Plastic', cardStyle: 'White Regular' }
   };
   const style = allowedStyles[styleId];

@@ -578,6 +578,16 @@ const investmentPageSlugs = {
 const keepCompanyManagementOpen = new URLSearchParams(window.location.search).get('manage') === '1';
 
 document.querySelectorAll('[data-investment]').forEach((choice) => {
+  const category = choice.dataset.investment;
+  const logo = document.createElement('img');
+  logo.className = 'investment-choice-logo';
+  logo.src = window.createMarketLogoSrc(category, category);
+  logo.alt = '';
+  logo.setAttribute('aria-hidden', 'true');
+  choice.prepend(logo);
+});
+
+document.querySelectorAll('[data-investment]').forEach((choice) => {
   choice.addEventListener('click', () => {
     const selectedInvestment = choice.dataset.investment;
     if (!keepCompanyManagementOpen) {
@@ -995,7 +1005,14 @@ function showStocksByCountry(country, exchangeData) {
     const logo = document.createElement('span');
     logo.className = 'company-option-logo';
     logo.setAttribute('aria-hidden', 'true');
-    logo.textContent = company.symbol.substring(0, 4).toUpperCase();
+    const logoImage = document.createElement('img');
+    logoImage.src = window.createMarketLogoSrc(company.symbol, 'Stocks');
+    logoImage.alt = '';
+    logoImage.addEventListener('error', () => {
+      logo.replaceChildren();
+      logo.textContent = company.symbol.substring(0, 4).toUpperCase();
+    }, { once: true });
+    logo.appendChild(logoImage);
 
     const details = document.createElement('span');
     details.className = 'company-option-details';

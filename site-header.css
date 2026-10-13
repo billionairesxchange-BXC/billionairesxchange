@@ -1,0 +1,425 @@
+header.topbar {
+  flex-wrap: wrap;
+}
+
+.site-utility-banner {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 0 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .5rem;
+  padding: .4rem .7rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, .035);
+}
+
+.site-utility-link {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  padding: .35rem .7rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #f5f5f5;
+  font: inherit;
+  font-size: .85rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.site-utility-link:hover,
+.site-utility-link:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, .1);
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .site-utility-banner {
+    justify-content: flex-end;
+  }
+}
+
+.settings-page {
+  margin: 2rem auto 4rem;
+}
+
+.settings-panel {
+  margin-top: 1.5rem;
+  padding: clamp(1rem, 3vw, 1.75rem);
+}
+
+.settings-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.settings-panel-heading h2 {
+  margin: .25rem 0;
+}
+
+.settings-panel-heading p {
+  color: var(--light-gold);
+}
+
+.settings-save-status {
+  min-height: 1.5em;
+  color: var(--primary-gold) !important;
+  font-size: .8rem;
+  text-align: right;
+}
+
+.theme-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .85rem;
+  border: 0;
+}
+
+.theme-choice-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: .8rem;
+  min-width: 0;
+  padding: .85rem;
+  border: 1px solid rgba(212, 175, 55, .3);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .2);
+  cursor: pointer;
+}
+
+.theme-choice-card:has(input:checked) {
+  border-color: var(--primary-gold);
+  box-shadow: 0 0 0 1px var(--primary-gold), 0 0 20px rgba(212, 175, 55, .12);
+}
+
+.theme-choice-card input {
+  grid-row: span 2;
+  margin-top: .2rem;
+  accent-color: var(--primary-gold);
+}
+
+.theme-choice-preview {
+  display: flex;
+  grid-column: 2;
+  width: 100%;
+  height: 72px;
+  align-items: flex-end;
+  gap: .3rem;
+  padding: .55rem;
+  border: 1px solid rgba(127, 127, 127, .3);
+}
+
+.theme-choice-preview span {
+  width: 25%;
+  height: 35%;
+  background: #d4af37;
+}
+
+.theme-choice-preview span + span {
+  height: 55%;
+  background: #fff;
+}
+
+.theme-choice-preview i {
+  width: 25%;
+  height: 72%;
+  background: #777;
+}
+
+.theme-choice-preview-black {
+  background: linear-gradient(135deg, #050505, #1b1b1b);
+}
+
+.theme-choice-preview-white {
+  background: linear-gradient(135deg, #fff, #f4f1e7);
+}
+
+.theme-choice-preview-white span + span {
+  background: #171717;
+}
+
+.theme-choice-preview-white i {
+  background: #d4af37;
+}
+
+.theme-choice-preview-pixel {
+  background-color: #050b1b;
+  background-image:
+    linear-gradient(rgba(63, 255, 224, .2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(63, 255, 224, .2) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+
+.theme-choice-preview-pixel span,
+.theme-choice-preview-pixel span + span,
+.theme-choice-preview-pixel i {
+  background: #3fffe0;
+}
+
+.theme-choice-copy {
+  display: grid;
+  grid-column: 2;
+  gap: .25rem;
+}
+
+.theme-choice-copy strong {
+  color: var(--white);
+  font-size: .9rem;
+}
+
+.theme-choice-copy small {
+  color: var(--light-gold);
+  font-size: .75rem;
+  line-height: 1.5;
+}
+
+.theme-choice-badge {
+  grid-column: 2;
+  justify-self: start;
+  padding: .15rem .4rem;
+  border: 1px solid rgba(63, 255, 224, .35);
+  color: #3fffe0;
+  font-size: .65rem;
+}
+
+html[data-site-theme="white-yellow"] .settings-panel,
+html[data-site-theme="white-yellow"] .theme-choice-card {
+  background: #fff;
+}
+
+html[data-site-theme="white-yellow"] .theme-choice-copy strong {
+  color: #171717;
+}
+
+html[data-site-theme="live-pixel"] .theme-choice-card,
+html[data-site-theme="live-pixel"] .settings-panel {
+  border-color: rgba(63, 255, 224, .55);
+}
+
+@media (max-width: 800px) {
+  .theme-choice-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .settings-panel-heading {
+    flex-direction: column;
+  }
+
+  .settings-save-status {
+    text-align: left;
+  }
+}
+
+html[data-site-theme="white-yellow"] {
+  --white: #171717;
+  --soft-white: #393939;
+  --light-gold: #4a4a4a;
+  --gold-soft: #9a7415;
+  --black: #fff;
+  --charcoal: #f4f1e7;
+}
+
+html[data-site-theme="white-yellow"] body {
+  background: #fff;
+  color: #171717;
+}
+
+html[data-site-theme="white-yellow"] header.topbar,
+html[data-site-theme="white-yellow"] .site-footer {
+  background: #fff;
+  color: #171717;
+  border-color: #d4af37;
+  box-shadow: 0 2px 12px rgba(70, 55, 10, .1);
+}
+
+html[data-site-theme="white-yellow"] .main-nav a,
+html[data-site-theme="white-yellow"] .brand-name,
+html[data-site-theme="white-yellow"] h1,
+html[data-site-theme="white-yellow"] h2,
+html[data-site-theme="white-yellow"] h3,
+html[data-site-theme="white-yellow"] h4,
+html[data-site-theme="white-yellow"] .eyebrow {
+  color: #85620b;
+}
+
+html[data-site-theme="white-yellow"] .brand-wrap small,
+html[data-site-theme="white-yellow"] .main-nav a,
+html[data-site-theme="white-yellow"] p,
+html[data-site-theme="white-yellow"] label,
+html[data-site-theme="white-yellow"] .section-heading p {
+  color: #353535;
+}
+
+html[data-site-theme="white-yellow"] .card-glass,
+html[data-site-theme="white-yellow"] .section-shell,
+html[data-site-theme="white-yellow"] .investment-panel,
+html[data-site-theme="white-yellow"] .home-coin-ticker,
+html[data-site-theme="white-yellow"] .home-coin-ticker-card,
+html[data-site-theme="white-yellow"] .hero-card-promo,
+html[data-site-theme="white-yellow"] .home-company-card,
+html[data-site-theme="white-yellow"] .home-market-explorer,
+html[data-site-theme="white-yellow"] .home-market-option,
+html[data-site-theme="white-yellow"] .market-card,
+html[data-site-theme="white-yellow"] .profile-card,
+html[data-site-theme="white-yellow"] .investment-demo-catalog,
+html[data-site-theme="white-yellow"] .investment-demo-detail,
+html[data-site-theme="white-yellow"] .investment-demo-portfolio {
+  background-color: #fff;
+  color: #171717;
+  border-color: rgba(155, 116, 15, .3);
+}
+
+html[data-site-theme="white-yellow"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+html[data-site-theme="white-yellow"] select,
+html[data-site-theme="white-yellow"] textarea {
+  background-color: #fff;
+  color: #171717;
+  border-color: rgba(155, 116, 15, .5);
+}
+
+html[data-site-theme="white-yellow"] .site-utility-banner {
+  background: #faf8f0;
+  border-color: rgba(155, 116, 15, .18);
+}
+
+html[data-site-theme="white-yellow"] .site-utility-link {
+  color: #171717;
+}
+
+html[data-site-theme="white-yellow"] .site-utility-link:hover,
+html[data-site-theme="white-yellow"] .site-utility-link:focus-visible,
+html[data-site-theme="white-yellow"] .site-utility-link[aria-expanded="true"] {
+  background: rgba(155, 116, 15, .12);
+  color: #171717;
+}
+
+html[data-site-theme="white-yellow"] button,
+html[data-site-theme="white-yellow"] .btn,
+html[data-site-theme="white-yellow"] input[type="button"],
+html[data-site-theme="white-yellow"] input[type="submit"],
+html[data-site-theme="white-yellow"] input[type="reset"] {
+  background-color: #262626;
+  color: #fff;
+  border-color: #9a7415;
+}
+
+html[data-site-theme="white-yellow"] button:hover,
+html[data-site-theme="white-yellow"] button:focus-visible,
+html[data-site-theme="white-yellow"] .btn:hover,
+html[data-site-theme="white-yellow"] .btn:focus-visible,
+html[data-site-theme="white-yellow"] input[type="button"]:hover,
+html[data-site-theme="white-yellow"] input[type="submit"]:hover,
+html[data-site-theme="white-yellow"] input[type="reset"]:hover {
+  background-color: #3b3b3b;
+  color: #fff;
+}
+
+html[data-site-theme="white-yellow"] header.topbar .nav-actions .btn,
+html[data-site-theme="white-yellow"] .site-utility-link {
+  background-color: #262626;
+  color: #fff;
+}
+
+html[data-site-theme="white-yellow"] header.topbar .nav-actions .btn:hover,
+html[data-site-theme="white-yellow"] header.topbar .nav-actions .btn:focus-visible,
+html[data-site-theme="white-yellow"] .site-utility-link:hover,
+html[data-site-theme="white-yellow"] .site-utility-link:focus-visible {
+  background-color: #3b3b3b;
+  color: #fff;
+}
+
+html[data-site-theme="white-yellow"] .hero-stats strong,
+html[data-site-theme="white-yellow"] .home-coin-numeric,
+html[data-site-theme="white-yellow"] .home-coin-ticker-market-cap,
+html[data-site-theme="white-yellow"] .investment-demo-stat strong,
+html[data-site-theme="white-yellow"] .trade-balance-card strong,
+html[data-site-theme="white-yellow"] .account-balance strong,
+html[data-site-theme="white-yellow"] .vault-asset-balance strong,
+html[data-site-theme="white-yellow"] .mini-portfolio strong,
+html[data-site-theme="white-yellow"] .market-quote strong,
+html[data-site-theme="white-yellow"] .market-card strong,
+html[data-site-theme="white-yellow"] .asset-card strong {
+  color: #9a7415;
+}
+
+html[data-site-theme="white-yellow"] .positions-chart-wrap,
+html[data-site-theme="white-yellow"] #positionsCandleChart,
+html[data-site-theme="white-yellow"] .terminal-chart-shell,
+html[data-site-theme="white-yellow"] #terminalChart,
+html[data-site-theme="white-yellow"] #terminalRsiChart,
+html[data-site-theme="white-yellow"] .home-market-chart-preview,
+html[data-site-theme="white-yellow"] .home-market-chart-preview canvas {
+  background: #000 !important;
+}
+
+html[data-site-theme="live-pixel"] {
+  --primary-gold: #3fffe0;
+  --dark-gold: #00b89c;
+  --gold-soft: #caff4a;
+  --light-gold: #a8fff2;
+  --bright-red: #3fffe0;
+}
+
+html[data-site-theme="live-pixel"] body {
+  background-color: #050b1b;
+  background-image:
+    linear-gradient(rgba(63, 255, 224, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(63, 255, 224, .045) 1px, transparent 1px),
+    linear-gradient(135deg, #050b1b, #10102a 55%, #061b25);
+  background-size: 8px 8px, 8px 8px, auto;
+  color: #eafffb;
+  font-family: "Courier New", monospace;
+}
+
+html[data-site-theme="live-pixel"] * {
+  border-radius: 0 !important;
+}
+
+html[data-site-theme="live-pixel"] header.topbar,
+html[data-site-theme="live-pixel"] .site-footer {
+  background: #080e22;
+  border-color: #3fffe0;
+  box-shadow: 0 3px 0 #006b6a, 0 0 18px rgba(63, 255, 224, .12);
+}
+
+html[data-site-theme="live-pixel"] .card-glass,
+html[data-site-theme="live-pixel"] .section-shell,
+html[data-site-theme="live-pixel"] .investment-panel,
+html[data-site-theme="live-pixel"] .home-coin-ticker,
+html[data-site-theme="live-pixel"] .home-coin-ticker-card,
+html[data-site-theme="live-pixel"] .hero-card-promo,
+html[data-site-theme="live-pixel"] .home-company-card,
+html[data-site-theme="live-pixel"] .home-market-explorer,
+html[data-site-theme="live-pixel"] .home-market-option,
+html[data-site-theme="live-pixel"] .market-card,
+html[data-site-theme="live-pixel"] .profile-card,
+html[data-site-theme="live-pixel"] .investment-demo-catalog,
+html[data-site-theme="live-pixel"] .investment-demo-detail,
+html[data-site-theme="live-pixel"] .investment-demo-portfolio {
+  border-color: rgba(63, 255, 224, .55);
+  box-shadow: 3px 3px 0 rgba(0, 184, 156, .35);
+}
+
+html[data-site-theme="live-pixel"] .site-utility-banner {
+  border-color: rgba(63, 255, 224, .3);
+  background: rgba(5, 11, 27, .82);
+}
+
+html[data-site-theme="live-pixel"] .site-utility-link {
+  color: #a8fff2;
+  font-family: inherit;
+}

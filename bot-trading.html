@@ -380,7 +380,7 @@
       <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
     </footer>
 
-    <div id="toast" class="toast" aria-live="polite">Welcome to Makings Bot Trading.</div>
+    <div id="toast" class="toast" aria-live="polite">Welcome to BillionairesXchange Bot Trading.</div>
 
     <script>
       const coinSelect = document.getElementById('coinSelect');
@@ -1314,7 +1314,7 @@
         addFeedItem(message);
         showToast(message, type);
         if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('Makings AI trading bot', { body: message });
+          new Notification('BillionairesXchange AI trading bot', { body: message });
         }
       }
 
@@ -2115,5 +2115,6 @@
       renderBotChart();
     </script>
     <script type="module" src="auth.js"></script>
-  </body>
+    <script src="site-header.js"></script>
+</body>
 </html>

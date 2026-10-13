@@ -1164,6 +1164,14 @@ header.topbar .nav-actions .btn:hover {
     margin-top: .4rem;
   }
 
+  .investment-choice-logo {
+    display: block;
+    width: 38px;
+    height: 38px;
+    margin-bottom: .15rem;
+    object-fit: contain;
+  }
+
   .investment-choice-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1209,7 +1217,7 @@ header.topbar .nav-actions .btn:hover {
   .company-option-details { display: grid; min-width: 0; gap: .1rem; }
   .company-option-details strong { overflow-wrap: anywhere; color: var(--white); font-size: .85rem; }
   .company-option-details small { color: #9b927a; font-size: .7rem; }
-  .company-option-logo img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .company-option-logo img { display: block; width: 100%; height: 100%; padding: 5px; object-fit: contain; border-radius: 50%; }
   .selected-company-details { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(212, 175, 55, .25); }
   .selected-company-details[hidden] { display: none; }
   .selected-company-heading { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
@@ -1464,6 +1472,46 @@ header.topbar .nav-actions .btn:hover {
   box-shadow: 0 8px 32px rgba(212, 175, 55, 0.15);
 }
 
+.about-support-pages,
+.about-support-departments {
+  display: grid;
+  gap: 1.15rem;
+  margin-top: 1.5rem;
+}
+
+.about-support-pages > h2,
+.about-support-departments > h2 {
+  margin-bottom: -.35rem;
+}
+
+.about-support-pages > p,
+.about-support-departments > .about-support-intro {
+  max-width: 74ch;
+  line-height: 1.75;
+}
+
+.about-support-pages > article,
+.about-support-departments > article {
+  padding-top: 1rem;
+  border-top: 1px solid rgba(212, 175, 55, .2);
+}
+
+.about-support-pages > article h3,
+.about-support-departments > article h3 {
+  margin-bottom: .4rem;
+  line-height: 1.4;
+}
+
+.about-support-pages > article p,
+.about-support-departments > article p {
+  max-width: 82ch;
+  line-height: 1.75;
+}
+
+.about-support-departments > article {
+  padding-top: 1.15rem;
+}
+
 /* Main Content */
 main {
   max-width: 1400px;
@@ -1555,12 +1603,153 @@ section {
   letter-spacing: 1px;
 }
 
+.home-coin-ticker {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 1rem 0 0;
+  padding: .55rem max(1rem, calc((100vw - 1360px) / 2));
+  border-top: 1px solid rgba(212, 175, 55, .2);
+  border-bottom: 1px solid rgba(212, 175, 55, .2);
+  background: linear-gradient(90deg, rgba(212, 175, 55, .08), rgba(8, 8, 8, .96) 28%, rgba(8, 8, 8, .96) 72%, rgba(212, 175, 55, .08));
+}
+
+.home-coin-ticker-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 auto .35rem;
+  color: var(--primary-gold);
+  font-size: .72rem;
+}
+
+.home-coin-ticker-heading span {
+  overflow: hidden;
+  color: var(--light-gold);
+  font-size: .65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-coin-ticker-heading span {
+  max-width: 70%;
+  text-align: right;
+}
+
+.home-coin-ticker-viewport {
+  overflow: hidden;
+}
+
+.home-coin-ticker-track {
+  display: flex;
+  width: max-content;
+  gap: .55rem;
+  transition: transform .65s cubic-bezier(.22, .68, 0, 1);
+  will-change: transform;
+}
+
+.home-coin-ticker-track.is-resetting {
+  transition: none;
+}
+
+.home-coin-ticker-card {
+  display: flex;
+  flex: 0 0 205px;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  min-width: 0;
+  min-height: 36px;
+  padding: .25rem .5rem;
+  border: 1px solid rgba(212, 175, 55, .18);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, .45);
+}
+
+.home-coin-ticker-identity {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  min-width: 0;
+}
+
+.home-coin-ticker-identity img,
+.home-coin-ticker-fallback {
+  display: grid;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: #262626;
+  object-fit: cover;
+  color: var(--white);
+  font-size: .5rem;
+  font-weight: 800;
+}
+
+.home-coin-ticker-labels {
+  display: grid;
+  min-width: 0;
+}
+
+.home-coin-ticker-labels strong,
+.home-coin-ticker-labels small {
+  overflow: hidden;
+  color: var(--white);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-coin-ticker-labels strong {
+  max-width: 105px;
+  font-size: .67rem;
+}
+
+.home-coin-ticker-labels small {
+  color: #9b927a;
+  font-size: .58rem;
+}
+
+.home-coin-ticker-market-cap {
+  flex: 0 0 auto;
+  color: var(--primary-gold);
+  font-size: .68rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .home-coin-ticker {
+    padding-right: .75rem;
+    padding-left: .75rem;
+  }
+
+  .home-coin-ticker-heading span {
+    max-width: 65%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-coin-ticker-viewport {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .home-coin-ticker-track {
+    transition: none;
+  }
+
+  .hero-promo-slide {
+    animation: none;
+  }
+}
+
 /* Hero Section */
 .hero {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, .8fr);
   gap: 3rem;
-  align-items: flex-start;
+  align-items: center;
   margin: 4rem 0;
 }
 
@@ -1568,9 +1757,105 @@ section {
   padding-top: 2rem;
 }
 
+.hero-copy .eyebrow,
+.hero-copy h1 {
+  color: var(--white);
+}
+
+.hero-card-promo {
+  display: grid;
+  gap: 1rem;
+  max-width: 440px;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid rgba(212, 175, 55, .3);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(38, 38, 38, .32), rgba(14, 14, 14, .76));
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
+}
+
+.hero-promo-slides {
+  min-height: 300px;
+}
+
+.hero-promo-slide[hidden] {
+  display: none;
+}
+
+.hero-promo-slide {
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: .8rem;
+  animation: hero-promo-enter .25s ease-out;
+}
+
+@keyframes hero-promo-enter {
+  from { opacity: .55; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.hero-card-promo h2 {
+  margin: 0;
+  color: var(--primary-gold);
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+}
+
+.hero-card-promo p {
+  margin: 0 0 .35rem;
+  color: var(--light-gold);
+}
+
+.hero-shop-categories {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
+  width: 100%;
+  margin-bottom: .35rem;
+}
+
+.hero-shop-categories span {
+  padding: .7rem .6rem;
+  border: 1px solid rgba(212, 175, 55, .28);
+  border-radius: 10px;
+  color: var(--light-gold);
+  background: rgba(38, 38, 38, .12);
+  font-size: .8rem;
+  text-align: center;
+}
+
+.hero-metal-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .55rem;
+  width: 100%;
+  margin-bottom: .35rem;
+}
+
+.hero-metal-cards .metal-card-preview {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1.586 / 1;
+  padding: .55rem;
+  border-radius: 10px;
+  font-size: clamp(.38rem, 1vw, .55rem);
+  letter-spacing: .04rem;
+}
+
+.hero-metal-cards .metal-card-chip {
+  font-size: 1rem;
+}
+
+.hero-metal-cards .metal-card-preview strong {
+  font-size: clamp(.42rem, 1.1vw, .62rem);
+}
+
+.hero-metal-cards .metal-card-preview small {
+  font-size: clamp(.36rem, .9vw, .5rem);
+}
+
 .hero-copy h1 {
   font-size: 48px;
-  color: var(--primary-gold);
   margin: 1rem 0;
   line-height: 1.2;
 }
@@ -4542,6 +4827,11 @@ body.treasury-welcome-active {
   font-size: .68rem;
 }
 
+.metal-card-preview-silver {
+  color: #24282d;
+  background: linear-gradient(135deg, #f4f5f6, #aeb4bb 52%, #e6e8ea);
+}
+
 .metal-card-preview-black {
   color: #f4e5b5;
   background: linear-gradient(135deg, #050505, #292929 58%, #050505);
@@ -5141,6 +5431,13 @@ body.treasury-welcome-active {
   color: var(--light-gold);
   font-size: 14px;
   line-height: 1.6;
+}
+
+.wallet-security-note {
+  margin-top: 1rem;
+  color: #9b927a;
+  font-size: .78rem;
+  line-height: 1.5;
 }
 
 .atm-locator {
@@ -6502,6 +6799,60 @@ body.treasury-welcome-active {
   color: var(--light-gold);
   background: rgba(38, 38, 38, .06);
   font-size: .8rem;
+}
+
+.grocery-stores[hidden] {
+  display: none;
+}
+
+.grocery-stores {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(212, 175, 55, .25);
+}
+
+.grocery-stores-note {
+  margin: 0 0 1rem;
+}
+
+.grocery-country-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 1rem;
+}
+
+.grocery-country {
+  padding: 1rem;
+  border: 1px solid rgba(212, 175, 55, .25);
+  border-radius: 12px;
+  background: rgba(38, 38, 38, .06);
+}
+
+.grocery-country h4 {
+  margin: 0 0 .65rem;
+  color: var(--primary-gold);
+}
+
+.grocery-country ul {
+  display: grid;
+  gap: .55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grocery-country a {
+  display: flex;
+  justify-content: space-between;
+  gap: .5rem;
+  color: var(--light-gold);
+  text-decoration: none;
+}
+
+.grocery-country a:hover,
+.grocery-country a:focus-visible {
+  color: var(--primary-gold);
+  text-decoration: underline;
 }
 
 .gift-card-marketplace {

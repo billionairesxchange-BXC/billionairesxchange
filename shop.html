@@ -48,8 +48,8 @@
         <div class="section-head">
           <div>
             <span class="eyebrow">Marketplace</span>
-            <h2>Shop technology, gaming gear, and gift cards</h2>
-            <p>Browse our product categories. We sell Bitcoin miners, gaming gear, phones, laptops, and tablets, and buy and sell gift cards.</p>
+            <h2>Shop technology, gaming gear, groceries, and gift cards</h2>
+            <p>Browse our product categories, find popular grocery stores in Jamaica, the United States, and the United Kingdom, and buy or sell gift cards.</p>
           </div>
         </div>
 
@@ -57,6 +57,7 @@
           <a class="btn btn-secondary shop-category-button" href="gadgets.html" aria-label="Browse gadgets for sale">📱 Gadgets</a>
           <a class="btn btn-secondary shop-category-button" href="gaming.html" aria-label="Browse gaming items for sale">🎮 Gaming</a>
           <a class="btn btn-secondary shop-category-button" href="bitcoin-miners.html" aria-label="Browse Bitcoin miners for sale">⛏️ Bitcoin Miners</a>
+          <button class="btn btn-secondary shop-category-button" type="button" data-shop-category="grocery" aria-pressed="false">🛒 Grocery</button>
           <button class="btn btn-primary shop-category-button" type="button" data-shop-category="gift-cards" aria-pressed="false">🎁 Gift Cards</button>
         </div>
 
@@ -69,6 +70,35 @@
             <li>Laptops</li>
             <li>Tablets</li>
           </ul>
+          <section id="groceryStores" class="grocery-stores" hidden aria-label="Popular grocery stores by country">
+            <p class="grocery-stores-note">Choose a store to find nearby locations and check local opening hours.</p>
+            <div class="grocery-country-grid">
+              <section class="grocery-country" aria-labelledby="jamaicaGroceryHeading">
+                <h4 id="jamaicaGroceryHeading">Jamaica</h4>
+                <ul>
+                  <li><a href="https://www.google.com/maps/search/?api=1&amp;query=Hi-Lo+Food+Stores+Jamaica" target="_blank" rel="noopener noreferrer">Hi-Lo Food Stores <span aria-hidden="true">↗</span></a></li>
+                  <li><a href="https://www.google.com/maps/search/?api=1&amp;query=MegaMart+Jamaica" target="_blank" rel="noopener noreferrer">MegaMart <span aria-hidden="true">↗</span></a></li>
+                  <li><a href="https://www.google.com/maps/search/?api=1&amp;query=PriceSmart+Jamaica" target="_blank" rel="noopener noreferrer">PriceSmart <span aria-hidden="true">↗</span></a></li>
+                </ul>
+              </section>
+              <section class="grocery-country" aria-labelledby="usGroceryHeading">
+                <h4 id="usGroceryHeading">United States</h4>
+                <ul>
+                  <li><a href="https://www.google.com/maps/search/?api=1&amp;query=Walmart+grocery+store+United+States" target="_blank" rel="noopener noreferrer">Walmart <span aria-hidden="true">↗</span></a></li>
+                  <li><a href="https://www.google.com/maps/search/?api=1&amp;query=Kroger+grocery+store+United+States" target="_blank" rel="noopener noreferrer">Kroger <span aria-hidden="true">↗</span></a></li>
+                  <li><a href="https://www.google.com/maps/search/?api=1&amp;query=Target+grocery+store+United+States" target="_blank" rel="noopener noreferrer">Target <span aria-hidden="true">↗</span></a></li>
+                </ul>
+              </section>
+              <section class="grocery-country" aria-labelledby="ukGroceryHeading">
+                <h4 id="ukGroceryHeading">United Kingdom</h4>
+                <ul>
+                  <li><a href="https://www.google.com/maps/search/?api=1&amp;query=Tesco+supermarket+United+Kingdom" target="_blank" rel="noopener noreferrer">Tesco <span aria-hidden="true">↗</span></a></li>
+                  <li><a href="https://www.google.com/maps/search/?api=1&amp;query=Sainsbury%27s+supermarket+United+Kingdom" target="_blank" rel="noopener noreferrer">Sainsbury's <span aria-hidden="true">↗</span></a></li>
+                  <li><a href="https://www.google.com/maps/search/?api=1&amp;query=ASDA+supermarket+United+Kingdom" target="_blank" rel="noopener noreferrer">ASDA <span aria-hidden="true">↗</span></a></li>
+                </ul>
+              </section>
+            </div>
+          </section>
           <section id="giftCardMarketplace" class="gift-card-marketplace" hidden aria-label="Gift card marketplace">
             <div class="gift-card-marketplace-tabs" role="group" aria-label="Gift card actions">
               <button class="btn btn-primary" id="buyGiftCardsButton" type="button" aria-pressed="true">Buy</button>
@@ -134,7 +164,7 @@
       <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
     </footer>
 
-    <div id="toast" class="toast" aria-live="polite">Welcome to Makings Shop.</div>
+    <div id="toast" class="toast" aria-live="polite">Welcome to BillionairesXchange Shop.</div>
 
     <script type="module">
       import { getApp, getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
@@ -155,6 +185,11 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const categories = {
+          grocery: {
+            title: 'Popular Grocery Stores',
+            description: 'Find popular grocery stores in Jamaica, the United States, and the United Kingdom.',
+            products: []
+          },
           'gift-cards': {
             title: 'Gift Cards',
             description: 'Purchase gift cards for various products and services.',
@@ -169,6 +204,7 @@
         const title = document.getElementById('shopCategoryTitle');
         const description = document.getElementById('shopCategoryDescription');
         const products = document.getElementById('shopCategoryProducts');
+        const groceryStores = document.getElementById('groceryStores');
         const giftCardMarketplace = document.getElementById('giftCardMarketplace');
         const buyPanel = document.getElementById('buyGiftCardsPanel');
         const sellPanel = document.getElementById('sellGiftCardsPanel');
@@ -492,6 +528,7 @@
             });
             title.textContent = category.title;
             description.textContent = category.description;
+            groceryStores.hidden = button.dataset.shopCategory !== 'grocery';
             giftCardMarketplace.hidden = button.dataset.shopCategory !== 'gift-cards';
             products.replaceChildren(...category.products.map((product) => {
               const item = document.createElement('li');
@@ -600,5 +637,6 @@
     </script>
     <script src="script.js"></script>
     <script type="module" src="auth.js"></script>
-  </body>
+    <script src="site-header.js"></script>
+</body>
 </html>

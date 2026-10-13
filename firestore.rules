@@ -178,11 +178,14 @@ service cloud.firestore {
           ])
           && (
             (request.resource.data.material == 'Metal'
-              && request.resource.data.styleId == 'black-platinum'
-              && request.resource.data.cardStyle == 'Black Platinum')
+              && request.resource.data.styleId == 'silver-metal'
+              && request.resource.data.cardStyle == 'Silver Metal')
             || (request.resource.data.material == 'Metal'
-              && request.resource.data.styleId == 'bronze-day-to-day'
-              && request.resource.data.cardStyle == 'Bronze Day to Day')
+              && request.resource.data.styleId == 'black-metal'
+              && request.resource.data.cardStyle == 'Black Metal')
+            || (request.resource.data.material == 'Metal'
+              && request.resource.data.styleId == 'bronze-metal'
+              && request.resource.data.cardStyle == 'Bronze Metal')
             || (request.resource.data.material == 'Plastic'
               && request.resource.data.styleId == 'white-plastic-regular'
               && request.resource.data.cardStyle == 'White Regular')

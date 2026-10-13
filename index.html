@@ -44,13 +44,22 @@
       </div>
     </header>
 
+    <section class="home-coin-ticker" aria-label="Live crypto market caps">
+      <div class="home-coin-ticker-heading">
+        <strong>Live crypto market</strong>
+        <span id="homeCoinTickerStatus" role="status" aria-live="polite">Loading coin market data...</span>
+      </div>
+      <div class="home-coin-ticker-viewport">
+        <div class="home-coin-ticker-track" id="homeCoinTickerTrack"></div>
+      </div>
+    </section>
     <main>
       <section class="hero" id="home">
         <div class="hero-copy">
           <span class="eyebrow">Secure digital wealth economy</span>
           <h1>Trade the world’s top crypto, companies, and assets with confidence.</h1>
           <p>
-            Makings gives you a secure wallet, real-time market intelligence, automated bots,
+            BillionairesXchange gives you a secure wallet, real-time market intelligence, automated bots,
             custom coin publishing, and a marketplace for crypto goods and digital assets.
           </p>
 
@@ -74,15 +83,46 @@
             </div>
           </div>
         </div>
+        <aside class="hero-card-promo" aria-label="Featured promotions">
+          <div class="hero-promo-slides" aria-live="off">
+            <section class="hero-promo-slide" data-hero-promo-slide aria-labelledby="heroCardPromoHeading">
+              <div class="hero-metal-cards" aria-hidden="true">
+                <span class="metal-card-preview metal-card-preview-silver">
+                  <span>BILLIONAIRES</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>SILVER</small>
+                </span>
+                <span class="metal-card-preview metal-card-preview-black">
+                  <span>BILLIONAIRES</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>BLACK</small>
+                </span>
+                <span class="metal-card-preview metal-card-preview-bronze">
+                  <span>BILLIONAIRES</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>BRONZE</small>
+                </span>
+              </div>
+              <span class="eyebrow">Made for your wallet</span>
+              <h2 id="heroCardPromoHeading">Meet the BillionairesXchange Metal Card</h2>
+              <p>Choose your look in Silver, Black, or Bronze and submit a card request.</p>
+              <a class="btn btn-primary" href="request-card.html">Request your card</a>
+            </section>
+            <section class="hero-promo-slide" data-hero-promo-slide aria-labelledby="heroShopPromoHeading" hidden>
+              <div class="hero-shop-categories" aria-hidden="true">
+                <span>📱 Gadgets</span>
+                <span>🎮 Gaming</span>
+                <span>⛏️ Bitcoin Miners</span>
+                <span>🛒 Grocery</span>
+                <span>🎁 Gift Cards</span>
+              </div>
+              <span class="eyebrow">Explore the marketplace</span>
+              <h2 id="heroShopPromoHeading">Find more in the BillionairesXchange Shop</h2>
+              <a class="btn btn-primary" href="shop.html">Explore the shop</a>
+            </section>
+          </div>
+        </aside>
       </section>
 
       <section class="section-shell" aria-labelledby="top-investments-heading">
         <div class="section-heading">
           <span class="eyebrow">Investment Center companies</span>
           <h2 id="top-investments-heading">Companies Available for Investment</h2>
-          <p>Explore company profiles currently listed in the Investment Center. Company information is provided for review, not as investment advice.</p>
         </div>
-        <p id="homeCompanyStatus" class="home-company-status" aria-live="polite">Loading company profiles...</p>
         <div class="home-company-grid" id="homeCompanyGrid" aria-label="Companies available for investment"></div>
         <nav class="home-investment-banner" aria-label="Investment categories">
           <span class="home-investment-banner-label">Explore markets</span>
@@ -119,7 +159,6 @@
         <div class="section-heading">
           <span class="eyebrow">Live crypto market</span>
           <h2 id="homeCoinMarketHeading">All Coins</h2>
-          <p>Browse market-listed cryptocurrencies and your deployed tokens. Live quotes are shown only for market-listed coins; tracked contracts link to their network explorer.</p>
         </div>
         <form class="home-coin-market-toolbar" id="homeCoinSearchForm" role="search">
           <label class="home-coin-search">
@@ -162,7 +201,6 @@
     <script>
       (() => {
         const companyGrid = document.getElementById('homeCompanyGrid');
-        const companyStatus = document.getElementById('homeCompanyStatus');
         const featuredCompanies = [
           {
             name: 'Caribbean Renewables Ltd',
@@ -189,13 +227,12 @@
         };
 
         let registeredCompanies = [];
-        let registrationWarning = '';
         try {
           const saved = JSON.parse(localStorage.getItem('makingsRegisteredCompanies') || '[]');
           if (!Array.isArray(saved)) throw new Error('Saved company list is not valid.');
           registeredCompanies = saved.filter((company) => company && typeof company.name === 'string' && company.name.trim());
         } catch (error) {
-          registrationWarning = ` Registered company profiles could not be loaded: ${error.message}`;
+          console.error('Unable to load registered company profiles:', error);
         }
 
         const seen = new Set();
@@ -265,7 +302,6 @@
           companyGrid.appendChild(card);
         });
 
-        companyStatus.textContent = `${companies.length} company profile${companies.length === 1 ? '' : 's'} available.${registrationWarning}`;
       })();
     </script>
     <script>
@@ -686,16 +722,14 @@
             if (reset) renderTrackedCoins();
             page = nextPage;
             marketStatus.textContent = coins.length
-              ? `Showing ${marketBody.rows.length.toLocaleString()} coins, including locally tracked token contracts. Live market statistics are from CoinGecko; tracked-token quotes are unavailable.`
-              : marketBody.rows.length
-                ? 'No more market-listed coins were returned. Locally tracked token contracts remain shown.'
-                : 'No more market-listed coins were returned.';
+              ? `Showing ${marketBody.rows.length.toLocaleString()} market-listed coins.`
+              : 'No more market-listed coins were returned.';
             loadMoreButton.hidden = coins.length < pageSize;
           } catch (error) {
             console.error('Unable to load the home coin market:', error);
             if (reset && marketBody.rows.length === 0) renderTrackedCoins();
             marketStatus.textContent = marketBody.rows.length
-              ? `${error.message} Tracked token contracts are shown below; live market data is unavailable.`
+              ? `${error.message}`
               : `${error.message} Please try again later.`;
             if (reset && marketBody.rows.length === 0) {
               marketBody.replaceChildren();
@@ -798,6 +832,24 @@
     </script>
     <script>
       (() => {
+        const promoSlides = [...document.querySelectorAll('[data-hero-promo-slide]')];
+        if (!promoSlides.length) return;
+        let activePromoIndex = 0;
+
+        function showPromo(index) {
+          activePromoIndex = (index + promoSlides.length) % promoSlides.length;
+          promoSlides.forEach((slide, slideIndex) => {
+            slide.hidden = slideIndex !== activePromoIndex;
+          });
+        }
+
+        showPromo(activePromoIndex);
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          window.setInterval(() => {
+            if (!document.hidden) showPromo(activePromoIndex + 1);
+          }, 7000);
+        }
+
         const hasWorldAccess = () => {
           const username = localStorage.getItem('makingsCurrentUser');
           return Boolean(username && localStorage.getItem('makingsAuthUid'));
@@ -813,7 +865,9 @@
 
       })();
     </script>
+    <script type="module" src="home-market-ticker.js"></script>
     <script src="script.js"></script>
     <script type="module" src="auth.js"></script>
-  </body>
+    <script src="site-header.js"></script>
+</body>
 </html>

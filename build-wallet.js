@@ -13,7 +13,7 @@ esbuild.build({
   inject: [path.join(__dirname, 'buffer-inject.js')],
   legalComments: 'none'
 }).then(() => {
-  console.log('Built local self-custody wallet bundle.');
+  console.log('Built local encrypted wallet bundle.');
 }).catch((error) => {
   console.error('Wallet bundle build failed:', error);
   process.exitCode = 1;
