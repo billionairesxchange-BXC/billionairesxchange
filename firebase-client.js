@@ -6,13 +6,12 @@ import {
 } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyAWX1q9Up79p8A7kEWtfofDDmq4WWJDh4c',
-  authDomain: 'billionairesxchange-e8162.firebaseapp.com',
-  projectId: 'billionairesxchange-e8162',
-  storageBucket: 'billionairesxchange-e8162.firebasestorage.app',
-  messagingSenderId: '872942229296',
-  appId: '1:872942229296:web:49af2cd9798dc1c0dfdaf5',
-  measurementId: 'G-JCZ6FCKF3M'
+  apiKey: 'AIzaSyApU1ayHJvQnvN0OCh9_8MBHu0gaaTvyPQ',
+  authDomain: 'auth-verify-fa0f6.firebaseapp.com',
+  projectId: 'auth-verify-fa0f6',
+  storageBucket: 'auth-verify-fa0f6.firebasestorage.app',
+  messagingSenderId: '450216403893',
+  appId: '1:450216403893:web:78534dbaf95805d62d2ffc'
 };
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);

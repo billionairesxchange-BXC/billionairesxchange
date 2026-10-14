@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "billionairesxchange-e8162"
+    "default": "billionairesxchange-e8162",
+    "database": "auth-verify-fa0f6"
   }
 }

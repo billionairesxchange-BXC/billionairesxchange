@@ -243,6 +243,34 @@
         font-size: 0.96rem;
       }
 
+      .password-input-wrap {
+        position: relative;
+      }
+
+      #loginPassword {
+        padding-right: 5rem;
+      }
+
+      .password-toggle {
+        position: absolute;
+        top: 50%;
+        right: 0.65rem;
+        transform: translateY(-50%);
+        border: 0;
+        background: transparent;
+        color: var(--primary-gold);
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .password-toggle:focus-visible {
+        outline: 2px solid var(--primary-gold);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+
       select[name="countryBirth"],
       select[name="countryBirth"] option {
         background: #000;
@@ -466,7 +494,10 @@
               </label>
               <label>
                 Password
-                <input type="password" name="loginPassword" autocomplete="current-password" placeholder="Enter password" required />
+                <span class="password-input-wrap">
+                  <input id="loginPassword" type="password" name="loginPassword" autocomplete="current-password" placeholder="Enter password" required />
+                  <button class="password-toggle" id="toggleLoginPassword" type="button" aria-controls="loginPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                </span>
               </label>
               <button class="secondary-btn" id="resetPasswordBtn" type="button">Forgot password?</button>
               <button class="primary-btn" type="submit">Login</button>
@@ -843,11 +874,21 @@
       const onboardingIntro = document.getElementById('onboardingIntro');
       const authPanel = document.getElementById('authPanel');
       const toast = document.getElementById('toast');
+      const loginPassword = document.getElementById('loginPassword');
+      const toggleLoginPassword = document.getElementById('toggleLoginPassword');
       const signupSteps = Array.from(document.querySelectorAll('.signup-step'));
       const preferredCurrencySelect = document.querySelector('[name="preferredCurrency"]');
       const tradingAmountSelect = document.querySelector('[name="tradingAmount"]');
       document.querySelector('.signup-step[data-step="1"] .form-grid').appendChild(preferredCurrencySelect.closest('label'));
       const identityGuidance = document.getElementById('identityGuidance');
+
+      toggleLoginPassword.addEventListener('click', () => {
+        const isVisible = loginPassword.type === 'text';
+        loginPassword.type = isVisible ? 'password' : 'text';
+        toggleLoginPassword.textContent = isVisible ? 'Show' : 'Hide';
+        toggleLoginPassword.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+        toggleLoginPassword.setAttribute('aria-pressed', String(!isVisible));
+      });
       const taxIdentifierFields = document.getElementById('taxIdentifierFields');
       const governmentIdTypeSelect = document.querySelector('[name="governmentIdType"]');
       const governmentIdNumberInput = document.querySelector('[name="governmentIdNumber"]');
