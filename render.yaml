@@ -12,6 +12,10 @@ services:
         value: https://billionairesxchange-e8162.web.app,https://billionairesxchange-e8162.firebaseapp.com
       - key: FIREBASE_WEB_API_KEY
         sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_PUBLIC_URL
+        value: https://billionairesxchange-e8162.web.app
       - key: BINANCE_API_KEY
         sync: false
       - key: BINANCE_API_SECRET

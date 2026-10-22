@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -32,7 +32,7 @@
         <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Trading Bot</a>
-        <a href="treasury.html#wallet">Treasury/Wallet</a>
+        <a href="treasury.html#wallet">Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
 
@@ -86,7 +86,7 @@
                     Currency type
                     <select id="currencySelect" name="currencyType" required>
                       <option value="usd">USD ($)</option>
-                      <option value="gbp">GBP (£)</option>
+                      <option value="gbp">GBP (Â£)</option>
                       <option value="cad">CAD (C$)</option>
                       <option value="jmd">JMD (J$)</option>
                       <option value="ttd">TTD (TT$)</option>
@@ -294,7 +294,7 @@
         utilityCompaniesByCountry[selectedCountry].forEach((company) => {
           const option = document.createElement('option');
           option.value = company.name;
-          option.textContent = `${company.name} — ${company.service}`;
+          option.textContent = `${company.name} â€” ${company.service}`;
           companySelect.appendChild(option);
         });
 
@@ -424,7 +424,7 @@
       simulateCardPaymentButton.addEventListener('click', () => {
         cardPaymentDialog.close();
         setPaymentResult(
-          'DEMO CARD CHECKOUT — no card details were collected and no payment was processed. ' +
+          'DEMO CARD CHECKOUT â€” no card details were collected and no payment was processed. ' +
           'Connect a secure hosted payment provider to accept real card payments.'
         );
       });

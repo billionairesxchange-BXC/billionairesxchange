@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -31,7 +31,7 @@
         <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Trading Bot</a>
-        <a href="treasury.html#wallet">Treasury/Wallet</a>
+        <a href="treasury.html#wallet">Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
       <div class="nav-actions">
@@ -83,7 +83,7 @@
                     Currency type
                     <select id="mortgageCurrency" name="currency" required>
                       <option value="USD">USD ($)</option>
-                      <option value="GBP">GBP (£)</option>
+                      <option value="GBP">GBP (Â£)</option>
                       <option value="CAD">CAD (C$)</option>
                       <option value="JMD">JMD (J$)</option>
                       <option value="TTD">TTD (TT$)</option>
@@ -233,7 +233,7 @@
         const title = document.createElement('strong');
         title.textContent = 'Mortgage payment summary';
         const provider = document.createElement('span');
-        provider.textContent = company ? `${company} · ${country}` : 'Select your country and mortgage company.';
+        provider.textContent = company ? `${company} Â· ${country}` : 'Select your country and mortgage company.';
         const details = document.createElement('div');
         details.className = 'summary-meta';
         const loan = document.createElement('span');

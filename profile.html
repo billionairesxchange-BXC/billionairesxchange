@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -21,7 +21,7 @@
         <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Trading Bot</a>
-        <a href="treasury.html#wallet">Treasury/Wallet</a>
+        <a href="treasury.html#wallet">Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
       <div class="nav-actions">
@@ -43,7 +43,7 @@
     </main>
 
     <footer class="site-footer">
-      <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
+      <p>Â© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
     </footer>
 
     <script type="module" src="auth.js"></script>
@@ -181,7 +181,7 @@
           </section>
           <section class="profile-transactions card-glass" aria-labelledby="profileTransactionsTitle">
             <h2 id="profileTransactionsTitle">Track transactions</h2>
-            <p class="profile-payment-note">Shows recorded account activity and this user’s paper-trading history. Deposits and withdrawals are not connected.</p>
+            <p class="profile-payment-note">Shows recorded account activity and this userâ€™s paper-trading history. Deposits and withdrawals are not connected.</p>
             <div class="profile-transaction-list" id="profileTransactionList" aria-live="polite"></div>
           </section>
           <section class="profile-account-close card-glass" aria-labelledby="profileCloseTitle">
@@ -262,12 +262,12 @@
             const botMemory = JSON.parse(localStorage.getItem(`makingsBotMemory:${user.username}`) || '{}');
             (Array.isArray(botMemory.closedTrades) ? botMemory.closedTrades : []).forEach((trade) => {
               entries.push({
-                description: `Paper trade closed: ${trade.strategy || 'Strategy'} ${trade.symbol || ''} · ${Number(trade.pnl) >= 0 ? '+' : ''}${Number(trade.pnl || 0).toFixed(2)} USD`,
+                description: `Paper trade closed: ${trade.strategy || 'Strategy'} ${trade.symbol || ''} Â· ${Number(trade.pnl) >= 0 ? '+' : ''}${Number(trade.pnl || 0).toFixed(2)} USD`,
                 createdAt: new Date(trade.closedAt || Date.now())
               });
             });
           } catch (error) {
-            console.error('Unable to load this user’s paper-trading history:', error);
+            console.error('Unable to load this userâ€™s paper-trading history:', error);
           }
 
           entries.sort((left, right) => right.createdAt - left.createdAt);
@@ -349,11 +349,11 @@
               item.className = 'profile-payment-item';
               const description = document.createElement('p');
               description.textContent = method.type === 'bank'
-                ? `${method.bankName} (${method.bankCountry}) · ${method.accountType} · •••• ${method.accountLast4}`
-                : `${method.cardNetwork} ${method.cardType} · •••• ${method.cardLast4} · ${method.expiry} · ${method.status === 'frozen' ? 'Frozen' : 'Active'}`;
+                ? `${method.bankName} (${method.bankCountry}) Â· ${method.accountType} Â· â€¢â€¢â€¢â€¢ ${method.accountLast4}`
+                : `${method.cardNetwork} ${method.cardType} Â· â€¢â€¢â€¢â€¢ ${method.cardLast4} Â· ${method.expiry} Â· ${method.status === 'frozen' ? 'Frozen' : 'Active'}`;
               if (method.type === 'card') {
                 savedCardsById.set(methodSnapshot.id, { ...method, id: methodSnapshot.id });
-                managedCardSelect.add(new Option(`${method.cardNetwork} •••• ${method.cardLast4}`, methodSnapshot.id));
+                managedCardSelect.add(new Option(`${method.cardNetwork} â€¢â€¢â€¢â€¢ ${method.cardLast4}`, methodSnapshot.id));
               }
               const removeButton = document.createElement('button');
               removeButton.className = 'profile-payment-remove';
@@ -501,7 +501,7 @@
         const mediaFeed = document.getElementById('profileMediaFeed');
         const mediaStatus = document.getElementById('profileMediaStatus');
         const mediaKey = `profileMedia:${user.username}`;
-        const reactionOptions = ['❤️', '🔥', '👏', '🚀', '😍'];
+        const reactionOptions = ['â¤ï¸', 'ðŸ”¥', 'ðŸ‘', 'ðŸš€', 'ðŸ˜'];
         let mediaPosts = JSON.parse(localStorage.getItem(mediaKey) || '[]');
 
         function saveMedia() {
@@ -620,5 +620,6 @@
         });
       });
     </script>
+    <script src="site-header.js"></script>
 </body>
 </html>

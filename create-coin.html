@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -32,7 +32,7 @@
         <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Trading Bot</a>
-        <a href="treasury.html#wallet">Treasury/Wallet</a>
+        <a href="treasury.html#wallet">Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
 
@@ -193,22 +193,22 @@
           <h3>Benefits of Creating Your Coin</h3>
           <div class="benefits-grid">
             <div class="benefit-item">
-              <span class="benefit-icon">🚀</span>
+              <span class="benefit-icon">ðŸš€</span>
               <h4>Global Reach</h4>
               <p>Your token can be transferred by compatible wallets on the network you selected.</p>
             </div>
             <div class="benefit-item">
-              <span class="benefit-icon">💰</span>
+              <span class="benefit-icon">ðŸ’°</span>
               <h4>Monetization</h4>
               <p>The token has a fixed initial supply minted to your connected wallet.</p>
             </div>
             <div class="benefit-item">
-              <span class="benefit-icon">📊</span>
+              <span class="benefit-icon">ðŸ“Š</span>
               <h4>Live Analytics</h4>
               <p>Find your deployed token contract on its network's block explorer.</p>
             </div>
             <div class="benefit-item">
-              <span class="benefit-icon">🔒</span>
+              <span class="benefit-icon">ðŸ”’</span>
               <h4>Secure Platform</h4>
               <p>The token follows OpenZeppelin's ERC-20 implementation. Keep your wallet secure.</p>
             </div>
@@ -218,7 +218,7 @@
     </main>
 
     <footer class="site-footer">
-      <p>© 2026 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
+      <p>Â© 2026 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
     </footer>
 
     <div id="toast" class="toast" aria-live="polite">Coin published successfully!</div>
@@ -307,7 +307,7 @@
         deployedCoins.slice().reverse().forEach((coin) => {
           const item = document.createElement('li');
           const label = document.createElement('span');
-          label.textContent = `${coin.name} (${coin.symbol}) · ${coin.network || 'EVM network'}`;
+          label.textContent = `${coin.name} (${coin.symbol}) Â· ${coin.network || 'EVM network'}`;
           const link = document.createElement('a');
           const network = Object.values(deploymentNetworks).find((item) => item.chainId === Number(coin.chainId));
           link.href = `${network?.explorerUrl || 'https://etherscan.io'}/address/${encodeURIComponent(coin.contractAddress)}`;
@@ -523,8 +523,8 @@
           : seedCandles(coin);
         savedHistory[coin.symbol] = candles;
         localStorage.setItem('customCoinMarketHistory', JSON.stringify(savedHistory));
-        coinMarketTitle.textContent = `${coin.name} (${coin.symbol}) · ${coinChartInterval}`;
-        coinCandleStatus.textContent = `${coinChartInterval} candles • local market feed`;
+        coinMarketTitle.textContent = `${coin.name} (${coin.symbol}) Â· ${coinChartInterval}`;
+        coinCandleStatus.textContent = `${coinChartInterval} candles â€¢ local market feed`;
         coinChartEmpty.hidden = true;
         stopMarketPrice.value = candles[candles.length - 1].close.toFixed(6);
         drawCoinChart();
@@ -546,8 +546,8 @@
       updateStopMarketButton();
       coinTimeSelect.addEventListener('change', () => {
         coinChartInterval = coinTimeSelect.value;
-        if (activeCoin) coinMarketTitle.textContent = `${activeCoin.name} (${activeCoin.symbol}) · ${coinChartInterval}`;
-        coinCandleStatus.textContent = `${coinChartInterval} candles • local market feed`;
+        if (activeCoin) coinMarketTitle.textContent = `${activeCoin.name} (${activeCoin.symbol}) Â· ${coinChartInterval}`;
+        coinCandleStatus.textContent = `${coinChartInterval} candles â€¢ local market feed`;
         drawCoinChart();
       });
       coinToolsButton.addEventListener('click', () => {
@@ -729,7 +729,7 @@
           contractLink.rel = 'noopener noreferrer';
           contractLink.textContent = contractAddress;
           coinDeploymentStatus.appendChild(contractLink);
-          if (!localSaveError) coinDeploymentStatus.append(' · tracked in this browser on the home page.');
+          if (!localSaveError) coinDeploymentStatus.append(' Â· tracked in this browser on the home page.');
           const toast = document.getElementById('toast');
           toast.textContent = `${coin.name} (${coin.symbol}) deployed to ${network.name} successfully.`;
           toast.classList.add('show');

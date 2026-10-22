@@ -4,6 +4,7 @@ const WebSocket = require('ws');
 const axios = require('axios');
 const crypto = require('crypto');
 const app = express();
+const { registerMobileApi } = require('./mobile-api');
 const PORT = Number(process.env.PORT) || 3000;
 const allowedOrigins = new Set(
   (process.env.ALLOWED_ORIGINS || '')
@@ -25,7 +26,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-BXC-Pairing-Token');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -422,6 +423,8 @@ app.get('/api/account', requireAllowedBinanceUser, async (_req, res) => {
     res.status(502).json({ error: error.response?.data?.msg || 'Binance account information is unavailable.' });
   }
 });
+
+registerMobileApi(app);
 
 const server = app.listen(PORT, '0.0.0.0', () => console.log(`Server listening on port ${PORT}`));
 const wss = new WebSocket.Server({ server });

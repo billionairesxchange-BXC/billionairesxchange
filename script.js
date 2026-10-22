@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let positionsMarketPickerLogo = document.getElementById('positionsMarketPickerLogo');
   const positionsMarketPickerText = document.getElementById('positionsMarketPickerText');
   const positionsMarketOptions = document.getElementById('positionsMarketOptions');
+  const positionsMarketSearch = document.getElementById('positionsMarketSearch');
+  const positionsMarketOptionList = document.getElementById('positionsMarketOptionList');
+  const loadAllChartMarketsButton = document.getElementById('loadAllChartMarkets');
   const loadMoreMarketCoinsButton = document.getElementById('loadMoreMarketCoins');
   const positionsTimeSelect = document.getElementById('positionsTimeSelect');
   const positionsToolsButton = document.getElementById('positionsToolsButton');
@@ -717,6 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
       option.value = asset.symbol;
       option.textContent = `${asset.symbol} / USD`;
       positionsMarketSelect.appendChild(option);
+      availableChartMarkets.add(asset.symbol.toUpperCase());
     });
     renderPositionsMarketPicker();
   }
@@ -730,6 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
       option.value = symbol;
       option.textContent = `${asset.name} (${symbol})`;
       positionsMarketSelect.appendChild(option);
+      availableChartMarkets.add(symbol);
     });
     renderPositionsMarketPicker();
   }
@@ -774,8 +779,15 @@ document.addEventListener('DOMContentLoaded', () => {
     positionsMarketPickerLogo = selectedLogo;
     positionsMarketPickerText.textContent = `${selectedSymbol} / USD`;
     positionsMarketPickerButton.setAttribute('aria-label', `Choose market, ${selectedSymbol} / USD`);
-    positionsMarketOptions.replaceChildren();
-    Array.from(positionsMarketSelect.options).forEach((option) => {
+    const query = positionsMarketSearch?.value.trim().toLowerCase() || '';
+    const matchingOptions = Array.from(positionsMarketSelect.options).filter((option) => {
+      const symbol = option.value.toUpperCase();
+      const asset = assets.find((item) => item.symbol.toUpperCase() === symbol);
+      return !query || symbol.toLowerCase().includes(query) || (asset?.name || '').toLowerCase().includes(query);
+    });
+    const visibleOptions = matchingOptions.slice(0, 100);
+    positionsMarketOptionList.replaceChildren();
+    visibleOptions.forEach((option) => {
       const symbol = option.value.toUpperCase();
       const asset = assets.find((item) => item.symbol.toUpperCase() === symbol);
       const choice = document.createElement('button');
@@ -792,8 +804,74 @@ document.addEventListener('DOMContentLoaded', () => {
       pair.textContent = `${symbol} / USD`;
       details.append(name, pair);
       choice.appendChild(details);
-      positionsMarketOptions.appendChild(choice);
+      positionsMarketOptionList.appendChild(choice);
     });
+    if (matchingOptions.length > visibleOptions.length) {
+      const hint = document.createElement('p');
+      hint.className = 'positions-market-search-hint';
+      hint.textContent = `${matchingOptions.length} matches. Refine your search to show more.`;
+      positionsMarketOptionList.appendChild(hint);
+    } else if (!visibleOptions.length) {
+      const hint = document.createElement('p');
+      hint.className = 'positions-market-search-hint';
+      hint.textContent = 'No supported market matches that search.';
+      positionsMarketOptionList.appendChild(hint);
+    }
+  }
+
+  async function loadAllChartMarkets() {
+    if (!loadAllChartMarketsButton || loadAllChartMarketsButton.disabled) return;
+    loadAllChartMarketsButton.disabled = true;
+    loadAllChartMarketsButton.textContent = 'Loading supported coins...';
+    if (positionsChartStatus) positionsChartStatus.textContent = 'Loading all currently tradeable Binance USDT spot markets...';
+    try {
+      const exchangeInfo = await fetchBinanceData('/api/v3/exchangeInfo');
+      const symbols = Array.isArray(exchangeInfo.symbols) ? exchangeInfo.symbols : [];
+      const supportedMarkets = symbols.filter((market) =>
+        market.quoteAsset === 'USDT'
+        && market.status === 'TRADING'
+        && market.isSpotTradingAllowed !== false
+        && /^[A-Z0-9]{2,16}$/.test(market.baseAsset)
+      );
+      if (!supportedMarkets.length) throw new Error('The exchange returned no active USDT spot markets.');
+
+      const newAssets = [];
+      supportedMarkets.forEach((market) => {
+        const symbol = market.baseAsset.toUpperCase();
+        tickerPairs[symbol] = market.symbol.toLowerCase();
+        if (!positionsMarketSelect.querySelector(`option[value="${symbol}"]`)) {
+          const option = document.createElement('option');
+          option.value = symbol;
+          option.textContent = `${symbol} / USD`;
+          positionsMarketSelect.appendChild(option);
+          availableChartMarkets.add(symbol);
+        }
+        if (!assets.some((asset) => asset.symbol.toUpperCase() === symbol)) {
+          newAssets.push({
+            id: `binance-${symbol.toLowerCase()}`,
+            name: symbol,
+            symbol,
+            current_price: 0,
+            market_cap: 0,
+            total_volume: 0,
+            market_cap_rank: null,
+            price_change_percentage_24h: 0,
+            sparkline_in_7d: { price: [] }
+          });
+        }
+      });
+      assets = [...assets, ...newAssets];
+      renderPositionsMarketPicker();
+      if (positionsChartStatus) {
+        positionsChartStatus.textContent = `${supportedMarkets.length.toLocaleString()} active USDT spot markets are available in the chart picker. Search by coin symbol, then click a candle to set its closing price for a paper trade.`;
+      }
+    } catch (error) {
+      console.error('Could not load all supported chart markets:', error);
+      if (positionsChartStatus) positionsChartStatus.textContent = `Could not load all supported markets: ${error.message}`;
+    } finally {
+      loadAllChartMarketsButton.disabled = false;
+      loadAllChartMarketsButton.textContent = 'Load all supported coins';
+    }
   }
 
   async function loadMoreMarketCoins() {
@@ -868,7 +946,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ...(chartInterval === '1s' ? { second: '2-digit' } : {})
     });
     context.font = '11px Inter, sans-serif';
-    context.strokeStyle = 'rgba(212, 175, 55, .12)';
+    context.strokeStyle = 'rgba(255, 255, 255, .12)';
     context.fillStyle = '#fff';
     for (let row = 0; row < 5; row += 1) {
       const value = min + (max - min) * row / 4;
@@ -892,8 +970,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const isSelected = candle.time === positionsSelectedCandleTime;
       if (isSelected) {
         context.save();
-        context.fillStyle = 'rgba(243, 201, 105, .24)';
-        context.strokeStyle = '#f3c969';
+        context.fillStyle = 'rgba(255, 255, 255, .16)';
+        context.strokeStyle = '#ffffff';
         context.lineWidth = 2;
         context.fillRect(pointX - candleWidth, padding.top, candleWidth * 2, plotHeight);
         context.strokeRect(pointX - candleWidth / 2 - 2, Math.min(y(candle.open), y(candle.close), y(candle.high)), candleWidth + 4, Math.max(4, Math.max(y(candle.open), y(candle.close), y(candle.low)) - Math.min(y(candle.open), y(candle.close), y(candle.high))));
@@ -944,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', () => {
       context.fillText(`${label} ${formatPrice(value)}`, Math.max(padding.left + 4, width - padding.right + 6), Math.max(12, lineY - 5));
       context.restore();
     };
-    if (positionsSelectedPrice) drawPriceLevel(positionsSelectedPrice, '#f3c969', 'Order');
+    if (positionsSelectedPrice) drawPriceLevel(positionsSelectedPrice, '#ffffff', 'Order');
     if (chartRiskVisible && riskReferencePrice > 0) {
       const drawRiskPanel = (level, fill) => {
         if (!(level > 0) || level < min || level > max) return;
@@ -992,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const startY = y(start.price);
       const endY = y(end.price);
       context.save();
-      context.strokeStyle = '#f3c969';
+      context.strokeStyle = '#ffffff';
       context.fillStyle = '#fff';
       context.setLineDash([5, 4]);
       context.beginPath();
@@ -1011,8 +1089,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (chartPointer && ['crosshair', 'ruler'].includes(positionsChartTools.mode)) {
       const { x: pointerX, y: pointerY, price } = chartPointer;
       context.save();
-      context.strokeStyle = 'rgba(243, 201, 105, .7)';
-      context.fillStyle = '#f3c969';
+      context.strokeStyle = 'rgba(255, 255, 255, .7)';
+      context.fillStyle = '#ffffff';
       context.setLineDash([3, 4]);
       context.beginPath();
       context.moveTo(pointerX, padding.top);
@@ -1280,15 +1358,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ctx.clearRect(0, 0, width, height);
     const background = ctx.createLinearGradient(0, 0, width, height);
-    background.addColorStop(0, 'rgba(212, 175, 55, 0.10)');
+    background.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
     background.addColorStop(1, 'rgba(0, 0, 0, 0.20)');
     ctx.fillStyle = background;
     ctx.fillRect(0, 0, width, height);
 
     ctx.beginPath();
     ctx.lineWidth = 3;
-    ctx.strokeStyle = '#d4af37';
-    ctx.shadowColor = 'rgba(212, 175, 55, 0.35)';
+    ctx.strokeStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.35)';
     ctx.shadowBlur = 12;
 
     values.forEach((value, index) => {
@@ -1308,7 +1386,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const lastY = height - padding - ((values[values.length - 1] - min) / range) * (height - padding * 2);
 
     ctx.beginPath();
-    ctx.fillStyle = '#d4af37';
+    ctx.fillStyle = '#ffffff';
     ctx.arc(lastX, lastY, 5, 0, Math.PI * 2);
     ctx.fill();
 
@@ -1537,6 +1615,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const expanded = positionsMarketPickerButton.getAttribute('aria-expanded') === 'true';
       positionsMarketPickerButton.setAttribute('aria-expanded', String(!expanded));
       positionsMarketOptions.hidden = expanded;
+      if (!expanded && positionsMarketSearch) {
+        positionsMarketSearch.value = '';
+        renderPositionsMarketPicker();
+        positionsMarketSearch.focus();
+      }
     });
     positionsMarketOptions.addEventListener('click', (event) => {
       const choice = event.target.closest('[data-market-symbol]');
@@ -1558,7 +1641,13 @@ document.addEventListener('DOMContentLoaded', () => {
       positionsMarketOptions.hidden = true;
       positionsMarketPickerButton.focus();
     });
+    if (positionsMarketSearch) {
+      positionsMarketSearch.addEventListener('input', renderPositionsMarketPicker);
+    }
     renderPositionsMarketPicker();
+  }
+  if (loadAllChartMarketsButton) {
+    loadAllChartMarketsButton.addEventListener('click', loadAllChartMarkets);
   }
   if (loadMoreMarketCoinsButton) loadMoreMarketCoinsButton.addEventListener('click', loadMoreMarketCoins);
   if (positionsTimeSelect) {
@@ -1887,9 +1976,9 @@ document.addEventListener('DOMContentLoaded', () => {
           positionsChartStatus.textContent = `Ruler: ${formatCurrency(point.price - positionsChartTools.ruler.start.price)} price change across the chart.`;
         }
       } else {
-        positionsSelectedCandleTime = null;
-        positionsSelectedPrice = point.price;
-        positionsChartStatus.textContent = `Chart order price selected at ${formatCurrency(point.price)}. Choose Buy or Sell below the chart.`;
+        positionsSelectedCandleTime = point.candle.time;
+        positionsSelectedPrice = Number(point.candle.close);
+        positionsChartStatus.textContent = `${point.candle.time ? new Date(point.candle.time).toLocaleString() : 'Selected'} candle selected at its close of ${formatCurrency(positionsSelectedPrice)}. Set quantity, then choose Buy at chart price or Sell at chart price. Paper trading only.`;
         savePositionsChartTools();
       }
       drawPositionsChart();
@@ -1952,7 +2041,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const name = typeof indicator?.name === 'string' ? indicator.name.trim() : '';
           const type = typeof indicator?.type === 'string' ? indicator.type.toLowerCase() : '';
           const period = Number(indicator?.period);
-          const color = indicator?.color || '#f3c969';
+          const color = indicator?.color || '#ffffff';
           if (!name || name.length > 40 || !['sma', 'ema'].includes(type)
             || !Number.isInteger(period) || period < 2 || period > 100
             || typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color)) {
@@ -2062,7 +2151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeIndicatorPanel: document.getElementById('closeIndicatorPanel'),
     indicatorSearch: document.getElementById('indicatorSearch')
   };
-  const chartOptions = { layout: { background: { type: 'solid', color: '#101010' }, textColor: '#9b927a' }, grid: { vertLines: { color: 'rgba(212,175,55,.08)' }, horzLines: { color: 'rgba(212,175,55,.08)' } }, rightPriceScale: { borderColor: 'rgba(212,175,55,.18)' }, timeScale: { borderColor: 'rgba(212,175,55,.18)', timeVisible: true, secondsVisible: false }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal } };
+  const chartOptions = { layout: { background: { type: 'solid', color: '#101010' }, textColor: '#bdbdbd' }, grid: { vertLines: { color: 'rgba(255,255,255,.08)' }, horzLines: { color: 'rgba(255,255,255,.08)' } }, rightPriceScale: { borderColor: 'rgba(255,255,255,.18)' }, timeScale: { borderColor: 'rgba(255,255,255,.18)', timeVisible: true, secondsVisible: false }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal } };
   const chart = LightweightCharts.createChart(terminal, chartOptions);
   const rsiChart = LightweightCharts.createChart(document.getElementById('terminalRsiChart'), chartOptions);
   const candleSeries = chart.addCandlestickSeries({ upColor: '#31d598', downColor: '#ff6b7a', borderVisible: false, wickUpColor: '#31d598', wickDownColor: '#ff6b7a' });
@@ -2072,7 +2161,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const resizeCharts = () => { chart.applyOptions({ width: terminal.clientWidth }); const rsiContainer = document.getElementById('terminalRsiChart'); rsiChart.applyOptions({ width: rsiContainer.clientWidth }); };
   window.addEventListener('resize', resizeCharts);
   const state = { symbol: ui.symbol.value, interval: '1m', mode: 'spot', side: 'BUY', price: 0, change: 0, connected: false, candles: [], trades: [], socket: null, tradeSocket: null, tickerRetryTimer: null, tradeRetryTimer: null, tickerRetryCount: 0, tradeRetryCount: 0, connectionVersion: 0, positions: readStoredArray('makingsPaperPositions', []), orders: readStoredArray('makingsPaperOrders', []), indicators: readStoredArray('makingsIndicators', []), settings: readStoredJSON('makingsIndicatorSettings', {}), active: ['SMA 20', 'EMA 50'] };
-  const indicatorCatalog = [{ name: 'SMA 20', type: 'sma', period: 20, color: '#f3c969' }, { name: 'EMA 50', type: 'ema', period: 50, color: '#69d2ff' }, { name: 'Bollinger Bands', type: 'bollinger', period: 20, color: '#d59cff' }, { name: 'RSI 14', type: 'rsi', period: 14, color: '#ff8b6a' }, { name: 'MACD', type: 'macd', period: 12, color: '#7ee2a8' }, { name: 'Community Trend Pack', type: 'ema', period: 21, color: '#ffb86b', price: '4.99' }];
+  const indicatorCatalog = [{ name: 'SMA 20', type: 'sma', period: 20, color: '#ffffff' }, { name: 'EMA 50', type: 'ema', period: 50, color: '#69d2ff' }, { name: 'Bollinger Bands', type: 'bollinger', period: 20, color: '#d59cff' }, { name: 'RSI 14', type: 'rsi', period: 14, color: '#ff8b6a' }, { name: 'MACD', type: 'macd', period: 12, color: '#7ee2a8' }, { name: 'Community Trend Pack', type: 'ema', period: 21, color: '#ffb86b', price: '4.99' }];
 
   const formatPrice = (value) => Number(value).toLocaleString('en-US', { minimumFractionDigits: value < 1 ? 5 : 2, maximumFractionDigits: value < 1 ? 5 : 2 });
   const saveState = () => { localStorage.setItem('makingsPaperPositions', JSON.stringify(state.positions)); localStorage.setItem('makingsPaperOrders', JSON.stringify(state.orders)); localStorage.setItem('makingsIndicators', JSON.stringify(state.indicators)); localStorage.setItem('makingsIndicatorSettings', JSON.stringify(state.settings)); };

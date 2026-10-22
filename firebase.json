@@ -5,11 +5,13 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**",
+      "mobile/**",
       "server.js",
       "app.js",
       "firebase.ts",
       "package.json",
       "package-lock.json",
+      "mobile-api.js",
       "*.rules",
       "files if needed/**",
       "*.log"

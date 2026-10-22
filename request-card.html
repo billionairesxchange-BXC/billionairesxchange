@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -28,7 +28,7 @@
         <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Trading Bot</a>
-        <a href="treasury.html#wallet">Treasury/Wallet</a>
+        <a href="treasury.html#wallet">Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
       <div class="nav-actions">
@@ -60,21 +60,21 @@
             <div class="metal-card-grid">
               <button class="metal-card-choice" type="button" data-card-style="silver-metal" aria-pressed="false">
                 <span class="metal-card-preview metal-card-preview-silver" aria-hidden="true">
-                  <span>BILLIONAIRES</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>SILVER</small>
+                  <span>BILLIONAIRES</span><span class="metal-card-chip">â–¦</span><strong>YOUR NAME</strong><small>SILVER</small>
                 </span>
                 <strong>Silver Metal</strong>
                 <span>Silver metal card</span>
               </button>
               <button class="metal-card-choice" type="button" data-card-style="black-metal" aria-pressed="false">
                 <span class="metal-card-preview metal-card-preview-black" aria-hidden="true">
-                  <span>BILLIONAIRES</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>BLACK</small>
+                  <span>BILLIONAIRES</span><span class="metal-card-chip">â–¦</span><strong>YOUR NAME</strong><small>BLACK</small>
                 </span>
                 <strong>Black Metal</strong>
                 <span>Black metal card</span>
               </button>
               <button class="metal-card-choice" type="button" data-card-style="bronze-metal" aria-pressed="false">
                 <span class="metal-card-preview metal-card-preview-bronze" aria-hidden="true">
-                  <span>BILLIONAIRES</span><span class="metal-card-chip">▦</span><strong>YOUR NAME</strong><small>BRONZE</small>
+                  <span>BILLIONAIRES</span><span class="metal-card-chip">â–¦</span><strong>YOUR NAME</strong><small>BRONZE</small>
                 </span>
                 <strong>Bronze Metal</strong>
                 <span>Bronze metal card</span>
@@ -86,7 +86,7 @@
             <p class="request-card-help">The white blank card is the default. Upload a photo design below to preview it on the card.</p>
             <div class="plastic-card-preview" aria-label="Regular white plastic card preview">
               <img class="plastic-card-full-artwork" id="plasticCardArtwork" alt="Uploaded design covering the plastic card preview" hidden />
-              <div class="plastic-card-preview-brand">BILLIONAIRESXCHANGE <span aria-hidden="true">▦</span></div>
+              <div class="plastic-card-preview-brand">BILLIONAIRESXCHANGE <span aria-hidden="true">â–¦</span></div>
               <span class="plastic-card-artwork-placeholder" id="plasticCardArtworkPlaceholder">Your card design will appear here</span>
               <strong id="plasticCardPreviewName">YOUR NAME</strong>
               <small>REGULAR PLASTIC</small>
@@ -132,7 +132,7 @@
     </main>
 
     <footer class="site-footer">
-      <p>© 2026 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
+      <p>Â© 2026 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
     </footer>
 
     <script src="api-config.js"></script>
@@ -241,9 +241,9 @@
             const title = document.createElement('h3');
             title.textContent = request.cardStyle || 'ATM card';
             const details = document.createElement('p');
-            details.textContent = `Material: ${request.material} · Engraving: ${request.engravingText || 'Not provided'}`;
+            details.textContent = `Material: ${request.material} Â· Engraving: ${request.engravingText || 'Not provided'}`;
             const status = document.createElement('p');
-            status.textContent = `Status: ${request.status || 'Submitted'} · ${formatRequestDate(request.createdAt)}`;
+            status.textContent = `Status: ${request.status || 'Submitted'} Â· ${formatRequestDate(request.createdAt)}`;
             article.append(title, details, status);
             requestList.appendChild(article);
           });

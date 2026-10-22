@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -32,7 +32,7 @@
         <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Trading Bot</a>
-        <a href="treasury.html#wallet">Treasury/Wallet</a>
+        <a href="treasury.html#wallet">Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
 
@@ -76,7 +76,7 @@
                   <label for="savedContact">
                     Saved friend, family member, or payee
                     <select id="savedContact" name="savedContact">
-                      <option value="">Loading saved contacts…</option>
+                      <option value="">Loading saved contactsâ€¦</option>
                     </select>
                   </label>
                   <p id="contactsStatus" role="status" aria-live="polite"></p>
@@ -153,7 +153,7 @@
 
             <aside class="bill-payment-side">
               <h3>Send securely</h3>
-              <p>Confirm the recipient’s account key and amount before continuing.</p>
+              <p>Confirm the recipientâ€™s account key and amount before continuing.</p>
               <ul>
                 <li>Recipients are identified by their unique username key</li>
                 <li>Save trusted recipients as friends, family, or payees</li>
@@ -237,7 +237,7 @@
               username: contact.username,
               relationship: contact.relationship || 'payee'
             });
-            const option = new Option(`@${contact.username} · ${contact.relationship || 'payee'}`, contact.uid);
+            const option = new Option(`@${contact.username} Â· ${contact.relationship || 'payee'}`, contact.uid);
             savedContact.add(option);
           });
           contactsStatus.textContent = savedContact.options.length > 1
@@ -287,7 +287,7 @@
 
         const lookupButton = document.getElementById('lookupRecipient');
         lookupButton.disabled = true;
-        sendStatus.textContent = 'Looking up account…';
+        sendStatus.textContent = 'Looking up accountâ€¦';
         try {
           const usernameSnapshot = await getDoc(doc(db, 'usernames', usernameKey));
           if (!usernameSnapshot.exists()) {

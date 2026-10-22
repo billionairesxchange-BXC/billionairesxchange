@@ -9,6 +9,24 @@ const searchInput = document.getElementById('investmentDemoSearch');
 const selectedTitle = document.getElementById('investmentDemoSelectedTitle');
 const selectedDescription = document.getElementById('investmentDemoDescription');
 const factsList = document.getElementById('investmentDemoFacts');
+const chartSection = document.createElement('section');
+chartSection.className = 'investment-demo-chart';
+chartSection.setAttribute('aria-label', 'Illustrative listing chart');
+chartSection.hidden = true;
+const chartHeading = document.createElement('div');
+chartHeading.className = 'investment-demo-chart-heading';
+const chartTitle = document.createElement('strong');
+chartTitle.textContent = 'Illustrative market chart';
+const chartBadge = document.createElement('span');
+chartBadge.textContent = 'SAMPLE DATA';
+chartHeading.append(chartTitle, chartBadge);
+const chartCanvas = document.createElement('canvas');
+chartCanvas.setAttribute('aria-label', 'Illustrative sample chart for the selected listing');
+const chartNote = document.createElement('p');
+chartNote.className = 'investment-demo-chart-note';
+chartNote.textContent = 'Example visualization only. This is not live market data or an investment recommendation.';
+chartSection.append(chartHeading, chartCanvas, chartNote);
+selectedDescription.insertAdjacentElement('afterend', chartSection);
 const allocationForm = document.getElementById('investmentDemoForm');
 const amountInput = document.getElementById('investmentDemoAmount');
 const amountLabel = document.getElementById('investmentDemoAmountLabel');
@@ -250,6 +268,7 @@ if (!titles[pageType]) {
 
 let products = getProducts();
 let selectedProduct = null;
+let chartProduct = null;
 let state = { cash: 10000, entries: [] };
 let storageWarning = '';
 
@@ -327,8 +346,92 @@ function renderFacts(product) {
   });
 }
 
+function drawProductChart(product) {
+  const bounds = chartCanvas.getBoundingClientRect();
+  if (!bounds.width || !bounds.height) return;
+
+  const ratio = window.devicePixelRatio || 1;
+  const width = bounds.width;
+  const height = bounds.height;
+  chartCanvas.width = Math.round(width * ratio);
+  chartCanvas.height = Math.round(height * ratio);
+  const context = chartCanvas.getContext('2d');
+  if (!context) return;
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = '#0c0c0c';
+  context.fillRect(0, 0, width, height);
+
+  const padding = { top: 22, right: 48, bottom: 28, left: 12 };
+  const min = 94;
+  const max = 106;
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const y = (value) => padding.top + ((max - value) / (max - min)) * plotHeight;
+  context.font = '10px Inter, sans-serif';
+  context.lineWidth = 1;
+  context.strokeStyle = 'rgba(212, 175, 55, .12)';
+  context.fillStyle = '#9b927a';
+
+  for (let row = 0; row <= 4; row += 1) {
+    const value = max - row * 3;
+    const lineY = y(value);
+    context.beginPath();
+    context.moveTo(padding.left, lineY);
+    context.lineTo(width - padding.right, lineY);
+    context.stroke();
+    context.fillText(value.toFixed(0), width - padding.right + 8, lineY + 3);
+  }
+  for (let column = 0; column <= 6; column += 1) {
+    const lineX = padding.left + (plotWidth * column) / 6;
+    context.beginPath();
+    context.moveTo(lineX, padding.top);
+    context.lineTo(lineX, height - padding.bottom);
+    context.stroke();
+  }
+
+  let seed = 0;
+  for (const character of product.symbol) seed = (seed * 31 + character.charCodeAt(0)) >>> 0;
+  const random = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const candleCount = 48;
+  const step = plotWidth / candleCount;
+  let previous = 100;
+  for (let index = 0; index < candleCount; index += 1) {
+    const open = previous;
+    const close = Math.max(94.5, Math.min(105.5, open + (random() - 0.49) * 1.7));
+    const high = Math.min(106, Math.max(open, close) + random() * 0.7);
+    const low = Math.max(94, Math.min(open, close) - random() * 0.7);
+    const x = padding.left + step * (index + 0.5);
+    const color = close >= open ? '#31d598' : '#ff6b7a';
+    context.strokeStyle = color;
+    context.fillStyle = color;
+    context.beginPath();
+    context.moveTo(x, y(high));
+    context.lineTo(x, y(low));
+    context.stroke();
+    const candleHeight = Math.max(2, Math.abs(y(open) - y(close)));
+    context.fillRect(
+      x - Math.max(2, step * 0.32),
+      Math.min(y(open), y(close)),
+      Math.max(3, step * 0.64),
+      candleHeight
+    );
+    previous = close;
+  }
+  context.fillStyle = '#9b927a';
+  context.fillText('Illustrative index (100 base)', padding.left, 13);
+  context.fillText('Sample history', padding.left, height - 8);
+}
+
 function selectProduct(product) {
   selectedProduct = product;
+  chartProduct = product;
+  chartSection.hidden = false;
+  chartCanvas.setAttribute('aria-label', `Illustrative sample chart for ${product.name}`);
+  drawProductChart(product);
   selectedTitle.textContent = product.name;
   const detail = product.detail || 'Static listing example for the demo portfolio.';
   selectedDescription.textContent = pageType === 'Options'
@@ -493,3 +596,7 @@ if (requestedSymbol) {
   if (linkedProduct) selectProduct(linkedProduct);
   else actionStatus.textContent = `The linked market (${requestedSymbol}) is not in this page's demo catalog.`;
 }
+
+window.addEventListener('resize', () => {
+  if (chartProduct && !chartSection.hidden) drawProductChart(chartProduct);
+});
