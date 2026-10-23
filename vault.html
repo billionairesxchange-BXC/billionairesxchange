@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -31,7 +31,7 @@
         <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Trading Bot</a>
-        <a href="treasury.html#wallet">Treasury/Wallet</a>
+        <a href="treasury.html#wallet">Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
       <div class="nav-actions">
@@ -52,12 +52,12 @@
         </div>
 
         <p class="vault-demo-notice">
-          Vault transfers are recorded in your savings ledger for this demo. They do not move or lock funds in your wallet, investments, or coin holdings. The 4–8 digit PIN is a demo confirmation check, not a security boundary for real funds.
+          Vault transfers are recorded in your savings ledger for this demo. They do not move or lock funds in your wallet, investments, or coin holdings. The 4â€“8 digit PIN is a demo confirmation check, not a security boundary for real funds.
         </p>
 
         <section class="card-glass vault-lock-panel" id="vaultLockPanel" aria-labelledby="vaultLockHeading">
           <h3 id="vaultLockHeading">Vault locked</h3>
-          <p id="vaultLockMessage">Checking your account…</p>
+          <p id="vaultLockMessage">Checking your accountâ€¦</p>
           <p id="vaultLoginRequired" hidden><a class="btn btn-primary" href="verification.html#login">Sign in to continue</a></p>
           <form class="bill-payment-form" id="vaultUnlockForm" hidden>
             <label for="vaultUnlockPin">
@@ -72,7 +72,7 @@
           </form>
           <form class="bill-payment-form vault-recovery-form" id="vaultRecoveryForm" hidden>
             <h4>Reset Vault PIN</h4>
-            <p>Verify your signed-in account password, then choose a new 4–8 digit Vault PIN.</p>
+            <p>Verify your signed-in account password, then choose a new 4â€“8 digit Vault PIN.</p>
             <label for="vaultRecoveryPassword">
               Account password
               <input id="vaultRecoveryPassword" name="password" type="password" autocomplete="current-password" required />
@@ -98,7 +98,7 @@
         <div id="vaultProtectedContent" hidden>
         <section class="card-glass vault-account-panel" aria-labelledby="vaultAccountHeading">
           <h3 id="vaultAccountHeading">Savings account &amp; Vault PIN</h3>
-          <p>Create a savings account and set a 4–8 digit PIN to confirm vault ledger entries.</p>
+          <p>Create a savings account and set a 4â€“8 digit PIN to confirm vault ledger entries.</p>
           <form class="bill-payment-form" id="vaultAccountForm">
             <div class="form-grid">
               <label for="vaultAccountName">
@@ -106,8 +106,8 @@
                 <input id="vaultAccountName" name="accountName" type="text" maxlength="60" placeholder="e.g. Long-term savings" required />
               </label>
               <label for="vaultPin">
-                Vault PIN (4–8 digits)
-                <input id="vaultPin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" placeholder="Enter a 4–8 digit PIN" required />
+                Vault PIN (4â€“8 digits)
+                <input id="vaultPin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" placeholder="Enter a 4â€“8 digit PIN" required />
               </label>
             </div>
             <label for="vaultPinConfirm">
@@ -342,7 +342,7 @@
           return;
         }
         if (!currentUser.email) {
-          recoveryStatus.textContent = 'This account has no password-based sign-in. Sign out and use the account’s normal sign-in method to recover access.';
+          recoveryStatus.textContent = 'This account has no password-based sign-in. Sign out and use the accountâ€™s normal sign-in method to recover access.';
           return;
         }
 
@@ -464,7 +464,7 @@
           title.textContent = transaction.sourceLabel || 'Savings transfer';
           const description = document.createElement('small');
           const unit = transaction.unit || transaction.currency || '';
-          description.textContent = `${transaction.sourceType === 'coin' ? 'Coin holding' : 'Company contract'} · ${Number(transaction.amount).toLocaleString(undefined, { maximumFractionDigits: 8 })} ${unit}`;
+          description.textContent = `${transaction.sourceType === 'coin' ? 'Coin holding' : 'Company contract'} Â· ${Number(transaction.amount).toLocaleString(undefined, { maximumFractionDigits: 8 })} ${unit}`;
           const createdAt = document.createElement('time');
           const date = transaction.createdAt?.toDate?.() || new Date(transaction.createdAt || Date.now());
           createdAt.dateTime = date.toISOString();
@@ -499,7 +499,7 @@
           if (current) current.quantity += quantity;
           else eligible.set(symbol, {
             id: `coin:${symbol}`,
-            label: `${symbol} · ${quantity.toLocaleString(undefined, { maximumFractionDigits: 8 })} held`,
+            label: `${symbol} Â· ${quantity.toLocaleString(undefined, { maximumFractionDigits: 8 })} held`,
             unit: symbol,
             quantity
           });
@@ -517,7 +517,7 @@
           if (order.side === 'BUY' && availableSymbols.has(symbol) && !eligible.has(symbol)) {
             const quantity = Number(order.quantity);
             if (Number.isFinite(quantity) && quantity > 0) {
-              eligible.set(symbol, { id: `coin:${symbol}`, label: `${symbol} · ${quantity} purchased`, unit: symbol, quantity });
+              eligible.set(symbol, { id: `coin:${symbol}`, label: `${symbol} Â· ${quantity} purchased`, unit: symbol, quantity });
             }
           }
         });
@@ -552,7 +552,7 @@
           .map((contract) => ({
             id: `company:${contract.id}`,
             contractId: contract.id,
-            label: `${contract.companyName} · ${Number(contract.amount).toLocaleString()} ${String(contract.currency || 'USD').toUpperCase()} contract`,
+            label: `${contract.companyName} Â· ${Number(contract.amount).toLocaleString()} ${String(contract.currency || 'USD').toUpperCase()} contract`,
             unit: String(contract.currency || 'USD').toUpperCase(),
             amount: Number(contract.amount),
             companyName: contract.companyName
@@ -573,7 +573,7 @@
           updateTransferSummary();
           return;
         }
-        setSourcePlaceholder('Loading available sources…');
+        setSourcePlaceholder('Loading available sourcesâ€¦');
         try {
           const availableSources = type === 'coin' ? await loadCoinSources() : await loadCompanySources();
           const savedBySource = new Map();
@@ -588,8 +588,8 @@
               ...source,
               ...(type === 'coin' ? { quantity: remaining } : { amount: remaining }),
               label: type === 'coin'
-                ? `${source.unit} · ${remaining.toLocaleString(undefined, { maximumFractionDigits: 8 })} available`
-                : `${source.companyName} · ${remaining.toLocaleString()} ${source.unit} available`
+                ? `${source.unit} Â· ${remaining.toLocaleString(undefined, { maximumFractionDigits: 8 })} available`
+                : `${source.companyName} Â· ${remaining.toLocaleString()} ${source.unit} available`
             };
           }).filter((source) => (type === 'coin' ? source.quantity : source.amount) > 0);
           sourceSelect.replaceChildren(new Option(

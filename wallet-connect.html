@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Connect BXC Wallet to BillionairesXchange with secure QR sign-in." />
+    <title>BXC Wallet | Connect</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="api-config.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand-wrap" href="index.html#home">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange" width="100" />
+        <span><strong class="brand-name">BillionairesXchange</strong><small>BXC Wallet</small></span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="treasury.html#wallet">Wallet</a>
+        <a href="trade.html">Trade &amp; Positions</a>
+        <a href="profile.html">Activity History</a>
+        <a href="investment.html">Investment Center</a>
+        <a href="shop.html">Shop</a>
+      </nav>
+    </header>
+
+    <main class="section-shell bxc-wallet-connect">
+      <section class="card-glass bxc-wallet-connect-card" aria-labelledby="walletConnectTitle">
+        <span class="eyebrow">Secure website connection</span>
+        <h1 id="walletConnectTitle">Connect BXC Wallet</h1>
+        <p class="bxc-wallet-connect-intro">Sign in to your BXC Wallet account, then scan the short-lived QR code with the BXC Wallet mobile app.</p>
+        <div id="walletConnectAuth">
+          <button class="btn btn-secondary bxc-wallet-qr-login" id="walletConnectByPhone" type="button">Sign in with mobile wallet</button>
+          <p class="bxc-wallet-connect-help">Or sign in below to link this website session to the same wallet account.</p>
+          <div class="bxc-wallet-connect-tabs" role="tablist" aria-label="Wallet account actions">
+            <button class="is-active" id="connectLoginTab" type="button" role="tab" aria-selected="true">Sign in</button>
+            <button id="connectSignupTab" type="button" role="tab" aria-selected="false">Create account</button>
+            <button id="connectMigrateTab" type="button" role="tab" aria-selected="false">Move existing account</button>
+          </div>
+          <form id="walletConnectForm">
+            <label id="connectNameLabel" hidden>Name<input id="connectName" autocomplete="name" maxlength="80" /></label>
+            <label>Email<input id="connectEmail" type="email" autocomplete="email" required /></label>
+            <label>Password<input id="connectPassword" type="password" autocomplete="current-password" minlength="12" required /></label>
+            <p class="bxc-wallet-connect-help" id="connectFormHelp">Use your BXC Wallet password. For existing website accounts, choose â€œMove existing accountâ€.</p>
+            <button class="btn btn-primary" id="connectSubmit" type="submit">Sign in</button>
+          </form>
+        </div>
+        <div class="bxc-wallet-pairing" id="walletPairing" hidden>
+          <p class="bxc-wallet-pairing-status" id="walletPairingStatus" role="status" aria-live="polite">Preparing a secure sign-in requestâ€¦</p>
+          <img id="walletPairingQr" alt="Short-lived QR code to approve BXC Wallet website sign-in" hidden />
+          <p class="bxc-wallet-pairing-expiry" id="walletPairingExpiry"></p>
+        </div>
+        <p class="bxc-wallet-connect-status" id="walletConnectStatus" role="status" aria-live="polite"></p>
+        <p class="bxc-wallet-connect-warning">Never scan a sign-in QR code you did not request. Your wallet recovery phrase is never needed to link an account.</p>
+        <p class="bxc-wallet-connect-warning">QR sign-in currently establishes a BXC Wallet session on this page. Other website sections still use the existing Firebase sign-in flow.</p>
+      </section>
+    </main>
+
+    <script type="module" src="wallet-connect.js"></script>
+    <script src="site-header.js"></script>
+  </body>
+</html>

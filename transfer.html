@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -32,7 +32,7 @@
         <a href="trade.html">Trade</a>
         <a href="shop.html">Shop</a>
         <a href="bot-trading.html">Trading Bot</a>
-        <a href="treasury.html#wallet">Treasury/Wallet</a>
+        <a href="treasury.html#wallet">Wallet</a>
         <a href="create-coin.html">Create Coin</a>
       </nav>
 
@@ -76,7 +76,7 @@
                   <label for="savedAccountSelect">
                     Saved bank account
                     <select id="savedAccountSelect" name="savedAccount">
-                      <option value="">Loading saved accounts…</option>
+                      <option value="">Loading saved accountsâ€¦</option>
                     </select>
                   </label>
                   <p id="savedAccountStatus" role="status" aria-live="polite"></p>
@@ -188,13 +188,13 @@
         if (selectedAccountOption() === 'saved') {
           const account = savedAccounts.find((item) => item.id === savedAccountSelect.value);
           return account
-            ? `${account.bankName} (${account.bankCountry}) · ${account.accountType} · •••• ${account.accountLast4}`
+            ? `${account.bankName} (${account.bankCountry}) Â· ${account.accountType} Â· â€¢â€¢â€¢â€¢ ${account.accountLast4}`
             : '';
         }
 
         const country = bankCountry.options[bankCountry.selectedIndex]?.text || '';
         const bank = bankSelect.value;
-        return country && bank ? `${bank} · ${country}` : '';
+        return country && bank ? `${bank} Â· ${country}` : '';
       }
 
       function updateSummary() {
@@ -259,7 +259,7 @@
         if (!transferForm.reportValidity()) return;
         if (!chosenDestination()) {
           transferStatus.textContent = selectedAccountOption() === 'saved'
-            ? 'Select a saved bank account or choose “Select my bank”.'
+            ? 'Select a saved bank account or choose â€œSelect my bankâ€.'
             : 'Choose a country and bank for the transfer.';
           return;
         }
@@ -308,12 +308,12 @@
 
           if (savedAccounts.length) {
             savedAccounts.forEach((account) => {
-              const label = `${account.bankName} (${account.bankCountry}) · ${account.accountType} · •••• ${account.accountLast4}`;
+              const label = `${account.bankName} (${account.bankCountry}) Â· ${account.accountType} Â· â€¢â€¢â€¢â€¢ ${account.accountLast4}`;
               savedAccountSelect.add(new Option(label, account.id));
             });
             savedAccountStatus.textContent = 'Choose one of your saved bank accounts.';
           } else {
-            savedAccountStatus.textContent = 'No saved bank accounts found. Choose “Select my bank” or add a bank account in your profile.';
+            savedAccountStatus.textContent = 'No saved bank accounts found. Choose â€œSelect my bankâ€ or add a bank account in your profile.';
           }
           updateSummary();
         } catch (error) {

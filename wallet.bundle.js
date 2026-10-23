@@ -42,7 +42,7 @@ var __toCommonJS = (mod3) => __copyProps(__defProp({}, "__esModule", { value: tr
 var require_base64_js = __commonJS({
   "node_modules/base64-js/index.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     exports.byteLength = byteLength;
     exports.toByteArray = toByteArray;
     exports.fromByteArray = fromByteArray;
@@ -143,7 +143,7 @@ var require_base64_js = __commonJS({
 // node_modules/ieee754/index.js
 var require_ieee754 = __commonJS({
   "node_modules/ieee754/index.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     exports.read = function(buffer, offset2, isLE3, mLen, nBytes) {
       var e, m;
       var eLen = nBytes * 8 - mLen - 1;
@@ -228,7 +228,7 @@ var require_ieee754 = __commonJS({
 var require_buffer = __commonJS({
   "node_modules/buffer/index.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var base64 = require_base64_js();
     var ieee754 = require_ieee754();
     var customInspectSymbol = typeof Symbol === "function" && typeof Symbol["for"] === "function" ? Symbol["for"]("nodejs.util.inspect.custom") : null;
@@ -1817,11 +1817,12 @@ var require_buffer = __commonJS({
   }
 });
 
-// scripts/buffer-inject.js
+// wallet-buffer-shim.js
 var import_buffer;
-var init_buffer_inject = __esm({
-  "scripts/buffer-inject.js"() {
+var init_wallet_buffer_shim = __esm({
+  "wallet-buffer-shim.js"() {
     import_buffer = __toESM(require_buffer());
+    globalThis.Buffer = import_buffer.Buffer;
   }
 });
 
@@ -1829,7 +1830,7 @@ var init_buffer_inject = __esm({
 var require_networks = __commonJS({
   "node_modules/bitcoinjs-lib/src/networks.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.testnet = exports.regtest = exports.bitcoin = void 0;
     exports.bitcoin = {
@@ -1896,7 +1897,7 @@ var require_networks = __commonJS({
 var require_bip66 = __commonJS({
   "node_modules/bitcoinjs-lib/src/bip66.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.encode = exports.decode = exports.check = void 0;
     function check(buffer) {
@@ -1959,7 +1960,7 @@ var require_bip66 = __commonJS({
         throw new Error("R value excessively padded");
       if (lenS > 1 && s[0] === 0 && !(s[1] & 128))
         throw new Error("S value excessively padded");
-      const signature3 = import_buffer.Buffer.allocUnsafe(6 + lenR + lenS);
+      const signature3 = Buffer.allocUnsafe(6 + lenR + lenS);
       signature3[0] = 48;
       signature3[1] = signature3.length - 2;
       signature3[2] = 2;
@@ -1978,7 +1979,7 @@ var require_bip66 = __commonJS({
 var require_ops = __commonJS({
   "node_modules/bitcoinjs-lib/src/ops.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.REVERSE_OPS = exports.OPS = void 0;
     var OPS = {
@@ -2116,7 +2117,7 @@ var require_ops = __commonJS({
 var require_push_data = __commonJS({
   "node_modules/bitcoinjs-lib/src/push_data.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.decode = exports.encode = exports.encodingLength = void 0;
     var ops_1 = require_ops();
@@ -2176,7 +2177,7 @@ var require_push_data = __commonJS({
 var require_script_number = __commonJS({
   "node_modules/bitcoinjs-lib/src/script_number.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.encode = exports.decode = void 0;
     function decode3(buffer, maxLength, minimal) {
@@ -2212,7 +2213,7 @@ var require_script_number = __commonJS({
     function encode9(_number) {
       let value = Math.abs(_number);
       const size = scriptNumSize(value);
-      const buffer = import_buffer.Buffer.allocUnsafe(size);
+      const buffer = Buffer.allocUnsafe(size);
       const negative = _number < 0;
       for (let i = 0; i < size; ++i) {
         buffer.writeUInt8(value & 255, i);
@@ -2232,7 +2233,7 @@ var require_script_number = __commonJS({
 // node_modules/typeforce/native.js
 var require_native = __commonJS({
   "node_modules/typeforce/native.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var types = {
       Array: function(value) {
         return value !== null && value !== void 0 && value.constructor === Array;
@@ -2273,7 +2274,7 @@ var require_native = __commonJS({
 // node_modules/typeforce/errors.js
 var require_errors = __commonJS({
   "node_modules/typeforce/errors.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var native = require_native();
     function getTypeName(fn) {
       return fn.name || fn.toString().match(/function (.*?)\s*\(/)[1];
@@ -2372,11 +2373,11 @@ var require_errors = __commonJS({
 // node_modules/typeforce/extra.js
 var require_extra = __commonJS({
   "node_modules/typeforce/extra.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var NATIVE = require_native();
     var ERRORS = require_errors();
     function _Buffer(value) {
-      return import_buffer.Buffer.isBuffer(value);
+      return Buffer.isBuffer(value);
     }
     function Hex(value) {
       return typeof value === "string" && /^([0-9a-f]{2})+$/i.test(value);
@@ -2466,7 +2467,7 @@ var require_extra = __commonJS({
 // node_modules/typeforce/index.js
 var require_typeforce = __commonJS({
   "node_modules/typeforce/index.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var ERRORS = require_errors();
     var NATIVE = require_native();
     var tfJSON = ERRORS.tfJSON;
@@ -2693,7 +2694,7 @@ var require_typeforce = __commonJS({
 var require_types = __commonJS({
   "node_modules/bitcoinjs-lib/src/types.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.oneOf = exports.Null = exports.BufferN = exports.Function = exports.UInt32 = exports.UInt8 = exports.tuple = exports.maybe = exports.Hex = exports.Buffer = exports.String = exports.Boolean = exports.Array = exports.Number = exports.Hash256bit = exports.Hash160bit = exports.Buffer256bit = exports.isTaptree = exports.isTapleaf = exports.TAPLEAF_VERSION_MASK = exports.Satoshi = exports.isPoint = exports.stacksEqual = exports.typeforce = void 0;
     var buffer_1 = require_buffer();
@@ -2771,25 +2772,25 @@ var require_types = __commonJS({
 var require_script_signature = __commonJS({
   "node_modules/bitcoinjs-lib/src/script_signature.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.encode = exports.decode = void 0;
     var bip66 = require_bip66();
     var script_1 = require_script();
     var types = require_types();
     var { typeforce } = types;
-    var ZERO = import_buffer.Buffer.alloc(1, 0);
+    var ZERO = Buffer.alloc(1, 0);
     function toDER2(x) {
       let i = 0;
       while (x[i] === 0) ++i;
       if (i === x.length) return ZERO;
       x = x.slice(i);
-      if (x[0] & 128) return import_buffer.Buffer.concat([ZERO, x], 1 + x.length);
+      if (x[0] & 128) return Buffer.concat([ZERO, x], 1 + x.length);
       return x;
     }
     function fromDER(x) {
       if (x[0] === 0) x = x.slice(1);
-      const buffer = import_buffer.Buffer.alloc(32, 0);
+      const buffer = Buffer.alloc(32, 0);
       const bstart = Math.max(0, 32 - x.length);
       x.copy(buffer, bstart);
       return buffer;
@@ -2802,7 +2803,7 @@ var require_script_signature = __commonJS({
       const decoded = bip66.decode(buffer.slice(0, -1));
       const r = fromDER(decoded.r);
       const s = fromDER(decoded.s);
-      const signature3 = import_buffer.Buffer.concat([r, s], 64);
+      const signature3 = Buffer.concat([r, s], 64);
       return { signature: signature3, hashType };
     }
     exports.decode = decode3;
@@ -2817,11 +2818,11 @@ var require_script_signature = __commonJS({
       if (!(0, script_1.isDefinedHashType)(hashType)) {
         throw new Error("Invalid hashType " + hashType);
       }
-      const hashTypeBuffer = import_buffer.Buffer.allocUnsafe(1);
+      const hashTypeBuffer = Buffer.allocUnsafe(1);
       hashTypeBuffer.writeUInt8(hashType, 0);
       const r = toDER2(signature3.slice(0, 32));
       const s = toDER2(signature3.slice(32, 64));
-      return import_buffer.Buffer.concat([bip66.encode(r, s), hashTypeBuffer]);
+      return Buffer.concat([bip66.encode(r, s), hashTypeBuffer]);
     }
     exports.encode = encode9;
   }
@@ -2831,7 +2832,7 @@ var require_script_signature = __commonJS({
 var require_script = __commonJS({
   "node_modules/bitcoinjs-lib/src/script.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.signature = exports.number = exports.isCanonicalScriptSignature = exports.isDefinedHashType = exports.isCanonicalPubKey = exports.toStack = exports.fromASM = exports.toASM = exports.decompile = exports.compile = exports.countNonPushOnlyOPs = exports.isPushOnly = exports.OPS = void 0;
     var bip66 = require_bip66();
@@ -2869,13 +2870,13 @@ var require_script = __commonJS({
       if (buffer[0] === 129) return ops_1.OPS.OP_1NEGATE;
     }
     function chunksIsBuffer(buf) {
-      return import_buffer.Buffer.isBuffer(buf);
+      return Buffer.isBuffer(buf);
     }
     function chunksIsArray(buf) {
       return types.Array(buf);
     }
     function singleChunkIsBuffer(buf) {
-      return import_buffer.Buffer.isBuffer(buf);
+      return Buffer.isBuffer(buf);
     }
     function compile(chunks) {
       if (chunksIsBuffer(chunks)) return chunks;
@@ -2889,7 +2890,7 @@ var require_script = __commonJS({
         }
         return accum + 1;
       }, 0);
-      const buffer = import_buffer.Buffer.allocUnsafe(bufferSize);
+      const buffer = Buffer.allocUnsafe(bufferSize);
       let offset2 = 0;
       chunks.forEach((chunk) => {
         if (singleChunkIsBuffer(chunk)) {
@@ -2962,7 +2963,7 @@ var require_script = __commonJS({
         asm.split(" ").map((chunkStr) => {
           if (ops_1.OPS[chunkStr] !== void 0) return ops_1.OPS[chunkStr];
           typeforce(types.Hex, chunkStr);
-          return import_buffer.Buffer.from(chunkStr, "hex");
+          return Buffer.from(chunkStr, "hex");
         })
       );
     }
@@ -2972,7 +2973,7 @@ var require_script = __commonJS({
       typeforce(isPushOnly, chunks);
       return chunks.map((op) => {
         if (singleChunkIsBuffer(op)) return op;
-        if (op === ops_1.OPS.OP_0) return import_buffer.Buffer.allocUnsafe(0);
+        if (op === ops_1.OPS.OP_0) return Buffer.allocUnsafe(0);
         return scriptNumber.encode(op - OP_INT_BASE);
       });
     }
@@ -2987,7 +2988,7 @@ var require_script = __commonJS({
     }
     exports.isDefinedHashType = isDefinedHashType;
     function isCanonicalScriptSignature(buffer) {
-      if (!import_buffer.Buffer.isBuffer(buffer)) return false;
+      if (!Buffer.isBuffer(buffer)) return false;
       if (!isDefinedHashType(buffer[buffer.length - 1])) return false;
       return bip66.check(buffer.slice(0, -1));
     }
@@ -3001,7 +3002,7 @@ var require_script = __commonJS({
 var require_lazy = __commonJS({
   "node_modules/bitcoinjs-lib/src/payments/lazy.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.value = exports.prop = void 0;
     function prop(object2, name, f3) {
@@ -3040,7 +3041,7 @@ var require_lazy = __commonJS({
 var require_embed = __commonJS({
   "node_modules/bitcoinjs-lib/src/payments/embed.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.p2data = void 0;
     var networks_1 = require_networks();
@@ -3091,7 +3092,7 @@ var require_embed = __commonJS({
 var require_p2ms = __commonJS({
   "node_modules/bitcoinjs-lib/src/payments/p2ms.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.p2ms = void 0;
     var networks_1 = require_networks();
@@ -3228,7 +3229,7 @@ var require_p2ms = __commonJS({
 var require_p2pk = __commonJS({
   "node_modules/bitcoinjs-lib/src/payments/p2pk.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.p2pk = void 0;
     var networks_1 = require_networks();
@@ -3304,7 +3305,7 @@ var require_p2pk = __commonJS({
 var require_crypto = __commonJS({
   "node_modules/@noble/hashes/crypto.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.crypto = void 0;
     exports.crypto = typeof globalThis === "object" && "crypto" in globalThis ? globalThis.crypto : void 0;
@@ -3315,7 +3316,7 @@ var require_crypto = __commonJS({
 var require_utils = __commonJS({
   "node_modules/@noble/hashes/utils.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.wrapXOFConstructorWithOpts = exports.wrapConstructorWithOpts = exports.wrapConstructor = exports.Hash = exports.nextTick = exports.swap32IfBE = exports.byteSwapIfBE = exports.swap8IfBE = exports.isLE = void 0;
     exports.isBytes = isBytes3;
@@ -3558,7 +3559,7 @@ var require_utils = __commonJS({
 var require_md = __commonJS({
   "node_modules/@noble/hashes/_md.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.SHA512_IV = exports.SHA384_IV = exports.SHA224_IV = exports.SHA256_IV = exports.HashMD = void 0;
     exports.setBigUint64 = setBigUint643;
@@ -3737,7 +3738,7 @@ var require_md = __commonJS({
 var require_legacy = __commonJS({
   "node_modules/@noble/hashes/legacy.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ripemd160 = exports.RIPEMD160 = exports.md5 = exports.MD5 = exports.sha1 = exports.SHA1 = void 0;
     var _md_ts_1 = require_md();
@@ -4006,7 +4007,7 @@ var require_legacy = __commonJS({
 var require_ripemd160 = __commonJS({
   "node_modules/@noble/hashes/ripemd160.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ripemd160 = exports.RIPEMD160 = void 0;
     var legacy_ts_1 = require_legacy();
@@ -4019,7 +4020,7 @@ var require_ripemd160 = __commonJS({
 var require_sha1 = __commonJS({
   "node_modules/@noble/hashes/sha1.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.sha1 = exports.SHA1 = void 0;
     var legacy_ts_1 = require_legacy();
@@ -4032,7 +4033,7 @@ var require_sha1 = __commonJS({
 var require_u64 = __commonJS({
   "node_modules/@noble/hashes/_u64.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.toBig = exports.shrSL = exports.shrSH = exports.rotrSL = exports.rotrSH = exports.rotrBL = exports.rotrBH = exports.rotr32L = exports.rotr32H = exports.rotlSL = exports.rotlSH = exports.rotlBL = exports.rotlBH = exports.add5L = exports.add5H = exports.add4L = exports.add4H = exports.add3L = exports.add3H = void 0;
     exports.add = add5;
@@ -4129,7 +4130,7 @@ var require_u64 = __commonJS({
 var require_sha2 = __commonJS({
   "node_modules/@noble/hashes/sha2.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.sha512_224 = exports.sha512_256 = exports.sha384 = exports.sha512 = exports.sha224 = exports.sha256 = exports.SHA512_256 = exports.SHA512_224 = exports.SHA384 = exports.SHA512 = exports.SHA224 = exports.SHA256 = void 0;
     var _md_ts_1 = require_md();
@@ -4600,7 +4601,7 @@ var require_sha2 = __commonJS({
 var require_sha256 = __commonJS({
   "node_modules/@noble/hashes/sha256.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.sha224 = exports.SHA224 = exports.sha256 = exports.SHA256 = void 0;
     var sha2_ts_1 = require_sha2();
@@ -4615,32 +4616,32 @@ var require_sha256 = __commonJS({
 var require_crypto2 = __commonJS({
   "node_modules/bitcoinjs-lib/src/crypto.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.taggedHash = exports.TAGGED_HASH_PREFIXES = exports.TAGS = exports.hash256 = exports.hash160 = exports.sha256 = exports.sha1 = exports.ripemd160 = void 0;
     var ripemd160_1 = require_ripemd160();
     var sha1_1 = require_sha1();
     var sha256_1 = require_sha256();
     function ripemd1603(buffer) {
-      return import_buffer.Buffer.from((0, ripemd160_1.ripemd160)(Uint8Array.from(buffer)));
+      return Buffer.from((0, ripemd160_1.ripemd160)(Uint8Array.from(buffer)));
     }
     exports.ripemd160 = ripemd1603;
     function sha12(buffer) {
-      return import_buffer.Buffer.from((0, sha1_1.sha1)(Uint8Array.from(buffer)));
+      return Buffer.from((0, sha1_1.sha1)(Uint8Array.from(buffer)));
     }
     exports.sha1 = sha12;
     function sha2565(buffer) {
-      return import_buffer.Buffer.from((0, sha256_1.sha256)(Uint8Array.from(buffer)));
+      return Buffer.from((0, sha256_1.sha256)(Uint8Array.from(buffer)));
     }
     exports.sha256 = sha2565;
     function hash160(buffer) {
-      return import_buffer.Buffer.from(
+      return Buffer.from(
         (0, ripemd160_1.ripemd160)((0, sha256_1.sha256)(Uint8Array.from(buffer)))
       );
     }
     exports.hash160 = hash160;
     function hash256(buffer) {
-      return import_buffer.Buffer.from(
+      return Buffer.from(
         (0, sha256_1.sha256)((0, sha256_1.sha256)(Uint8Array.from(buffer)))
       );
     }
@@ -4657,7 +4658,7 @@ var require_crypto2 = __commonJS({
       "KeyAgg coefficient"
     ];
     exports.TAGGED_HASH_PREFIXES = {
-      "BIP0340/challenge": import_buffer.Buffer.from([
+      "BIP0340/challenge": Buffer.from([
         123,
         181,
         45,
@@ -4723,7 +4724,7 @@ var require_crypto2 = __commonJS({
         211,
         124
       ]),
-      "BIP0340/aux": import_buffer.Buffer.from([
+      "BIP0340/aux": Buffer.from([
         241,
         239,
         78,
@@ -4789,7 +4790,7 @@ var require_crypto2 = __commonJS({
         204,
         144
       ]),
-      "BIP0340/nonce": import_buffer.Buffer.from([
+      "BIP0340/nonce": Buffer.from([
         7,
         73,
         119,
@@ -4855,7 +4856,7 @@ var require_crypto2 = __commonJS({
         235,
         47
       ]),
-      TapLeaf: import_buffer.Buffer.from([
+      TapLeaf: Buffer.from([
         174,
         234,
         143,
@@ -4921,7 +4922,7 @@ var require_crypto2 = __commonJS({
         233,
         238
       ]),
-      TapBranch: import_buffer.Buffer.from([
+      TapBranch: Buffer.from([
         25,
         65,
         161,
@@ -4987,7 +4988,7 @@ var require_crypto2 = __commonJS({
         160,
         21
       ]),
-      TapSighash: import_buffer.Buffer.from([
+      TapSighash: Buffer.from([
         244,
         10,
         72,
@@ -5053,7 +5054,7 @@ var require_crypto2 = __commonJS({
         160,
         49
       ]),
-      TapTweak: import_buffer.Buffer.from([
+      TapTweak: Buffer.from([
         232,
         15,
         225,
@@ -5119,7 +5120,7 @@ var require_crypto2 = __commonJS({
         197,
         233
       ]),
-      "KeyAgg list": import_buffer.Buffer.from([
+      "KeyAgg list": Buffer.from([
         72,
         28,
         151,
@@ -5185,7 +5186,7 @@ var require_crypto2 = __commonJS({
         148,
         240
       ]),
-      "KeyAgg coefficient": import_buffer.Buffer.from([
+      "KeyAgg coefficient": Buffer.from([
         191,
         201,
         4,
@@ -5253,7 +5254,7 @@ var require_crypto2 = __commonJS({
       ])
     };
     function taggedHash(prefix, data) {
-      return sha2565(import_buffer.Buffer.concat([exports.TAGGED_HASH_PREFIXES[prefix], data]));
+      return sha2565(Buffer.concat([exports.TAGGED_HASH_PREFIXES[prefix], data]));
     }
     exports.taggedHash = taggedHash;
   }
@@ -5263,7 +5264,7 @@ var require_crypto2 = __commonJS({
 var require_src = __commonJS({
   "node_modules/bs58check/node_modules/base-x/src/index.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     function base2(ALPHABET) {
       if (ALPHABET.length >= 255) {
         throw new TypeError("Alphabet too long");
@@ -5399,7 +5400,7 @@ var require_src = __commonJS({
 // node_modules/bs58check/node_modules/bs58/index.js
 var require_bs58 = __commonJS({
   "node_modules/bs58check/node_modules/bs58/index.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var basex = require_src();
     var ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
     module.exports = basex(ALPHABET);
@@ -5410,7 +5411,7 @@ var require_bs58 = __commonJS({
 var require_base = __commonJS({
   "node_modules/bs58check/base.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var base58 = require_bs58();
     module.exports = function(checksumFn) {
       function encode9(payload) {
@@ -5453,7 +5454,7 @@ var require_base = __commonJS({
 var require_bs58check = __commonJS({
   "node_modules/bs58check/index.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var { sha256: sha2565 } = require_sha256();
     var bs58checkBase = require_base();
     function sha256x2(buffer) {
@@ -5467,7 +5468,7 @@ var require_bs58check = __commonJS({
 var require_p2pkh = __commonJS({
   "node_modules/bitcoinjs-lib/src/payments/p2pkh.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.p2pkh = void 0;
     var bcrypto = require_crypto2();
@@ -5494,7 +5495,7 @@ var require_p2pkh = __commonJS({
         a
       );
       const _address = lazy.value(() => {
-        const payload = import_buffer.Buffer.from(bs58check.decode(a.address));
+        const payload = Buffer.from(bs58check.decode(a.address));
         const version13 = payload.readUInt8(0);
         const hash3 = payload.slice(1);
         return { version: version13, hash: hash3 };
@@ -5506,7 +5507,7 @@ var require_p2pkh = __commonJS({
       const o = { name: "p2pkh", network };
       lazy.prop(o, "address", () => {
         if (!o.hash) return;
-        const payload = import_buffer.Buffer.allocUnsafe(21);
+        const payload = Buffer.allocUnsafe(21);
         payload.writeUInt8(network.pubKeyHash, 0);
         o.hash.copy(payload, 1);
         return bs58check.encode(payload);
@@ -5544,7 +5545,7 @@ var require_p2pkh = __commonJS({
         return [];
       });
       if (opts.validate) {
-        let hash3 = import_buffer.Buffer.from([]);
+        let hash3 = Buffer.from([]);
         if (a.address) {
           if (_address().version !== network.pubKeyHash)
             throw new TypeError("Invalid version or Network mismatch");
@@ -5596,7 +5597,7 @@ var require_p2pkh = __commonJS({
 var require_p2sh = __commonJS({
   "node_modules/bitcoinjs-lib/src/payments/p2sh.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.p2sh = void 0;
     var bcrypto = require_crypto2();
@@ -5637,7 +5638,7 @@ var require_p2sh = __commonJS({
       }
       const o = { network };
       const _address = lazy.value(() => {
-        const payload = import_buffer.Buffer.from(bs58check.decode(a.address));
+        const payload = Buffer.from(bs58check.decode(a.address));
         const version13 = payload.readUInt8(0);
         const hash3 = payload.slice(1);
         return { version: version13, hash: hash3 };
@@ -5650,14 +5651,14 @@ var require_p2sh = __commonJS({
         const lastChunk = chunks[chunks.length - 1];
         return {
           network,
-          output: lastChunk === OPS.OP_FALSE ? import_buffer.Buffer.from([]) : lastChunk,
+          output: lastChunk === OPS.OP_FALSE ? Buffer.from([]) : lastChunk,
           input: bscript.compile(chunks.slice(0, -1)),
           witness: a.witness || []
         };
       });
       lazy.prop(o, "address", () => {
         if (!o.hash) return;
-        const payload = import_buffer.Buffer.allocUnsafe(21);
+        const payload = Buffer.allocUnsafe(21);
         payload.writeUInt8(o.network.scriptHash, 0);
         o.hash.copy(payload, 1);
         return bs58check.encode(payload);
@@ -5692,7 +5693,7 @@ var require_p2sh = __commonJS({
         return nameParts.join("-");
       });
       if (opts.validate) {
-        let hash3 = import_buffer.Buffer.from([]);
+        let hash3 = Buffer.from([]);
         if (a.address) {
           if (_address().version !== network.scriptHash)
             throw new TypeError("Invalid version or Network mismatch");
@@ -5746,7 +5747,7 @@ var require_p2sh = __commonJS({
         if (a.input) {
           const chunks = _chunks();
           if (!chunks || chunks.length < 1) throw new TypeError("Input too short");
-          if (!import_buffer.Buffer.isBuffer(_redeem().output))
+          if (!Buffer.isBuffer(_redeem().output))
             throw new TypeError("Input is invalid");
           checkRedeem(_redeem());
         }
@@ -5777,7 +5778,7 @@ var require_p2sh = __commonJS({
 var require_dist = __commonJS({
   "node_modules/bech32/dist/index.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.bech32m = exports.bech32 = void 0;
     var ALPHABET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
@@ -5944,7 +5945,7 @@ var require_dist = __commonJS({
 var require_p2wpkh = __commonJS({
   "node_modules/bitcoinjs-lib/src/payments/p2wpkh.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.p2wpkh = void 0;
     var bcrypto = require_crypto2();
@@ -5954,7 +5955,7 @@ var require_p2wpkh = __commonJS({
     var lazy = require_lazy();
     var bech32_1 = require_dist();
     var OPS = bscript.OPS;
-    var EMPTY_BUFFER = import_buffer.Buffer.alloc(0);
+    var EMPTY_BUFFER = Buffer.alloc(0);
     function p2wpkh(a, opts) {
       if (!a.address && !a.hash && !a.output && !a.pubkey && !a.witness)
         throw new TypeError("Not enough data");
@@ -5981,7 +5982,7 @@ var require_p2wpkh = __commonJS({
         return {
           version: version13,
           prefix: result.prefix,
-          data: import_buffer.Buffer.from(data)
+          data: Buffer.from(data)
         };
       });
       const network = a.network || networks_1.bitcoin;
@@ -6020,7 +6021,7 @@ var require_p2wpkh = __commonJS({
         return [a.signature, a.pubkey];
       });
       if (opts.validate) {
-        let hash3 = import_buffer.Buffer.from([]);
+        let hash3 = Buffer.from([]);
         if (a.address) {
           if (network && network.bech32 !== _address().prefix)
             throw new TypeError("Invalid prefix or Network mismatch");
@@ -6075,7 +6076,7 @@ var require_p2wpkh = __commonJS({
 var require_p2wsh = __commonJS({
   "node_modules/bitcoinjs-lib/src/payments/p2wsh.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.p2wsh = void 0;
     var bcrypto = require_crypto2();
@@ -6085,9 +6086,9 @@ var require_p2wsh = __commonJS({
     var lazy = require_lazy();
     var bech32_1 = require_dist();
     var OPS = bscript.OPS;
-    var EMPTY_BUFFER = import_buffer.Buffer.alloc(0);
+    var EMPTY_BUFFER = Buffer.alloc(0);
     function chunkHasUncompressedPubkey(chunk) {
-      if (import_buffer.Buffer.isBuffer(chunk) && chunk.length === 65 && chunk[0] === 4 && (0, types_1.isPoint)(chunk)) {
+      if (Buffer.isBuffer(chunk) && chunk.length === 65 && chunk[0] === 4 && (0, types_1.isPoint)(chunk)) {
         return true;
       } else {
         return false;
@@ -6125,7 +6126,7 @@ var require_p2wsh = __commonJS({
         return {
           version: version13,
           prefix: result.prefix,
-          data: import_buffer.Buffer.from(data)
+          data: Buffer.from(data)
         };
       });
       const _rchunks = lazy.value(() => {
@@ -6182,7 +6183,7 @@ var require_p2wsh = __commonJS({
         return nameParts.join("-");
       });
       if (opts.validate) {
-        let hash3 = import_buffer.Buffer.from([]);
+        let hash3 = Buffer.from([]);
         if (a.address) {
           if (_address().prefix !== network.bech32)
             throw new TypeError("Invalid prefix or Network mismatch");
@@ -6257,7 +6258,7 @@ var require_p2wsh = __commonJS({
 var require_ecc_lib = __commonJS({
   "node_modules/bitcoinjs-lib/src/ecc_lib.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getEccLib = exports.initEccLib = void 0;
     var _ECCLIB_CACHE = {};
@@ -6279,7 +6280,7 @@ var require_ecc_lib = __commonJS({
       return _ECCLIB_CACHE.eccLib;
     }
     exports.getEccLib = getEccLib;
-    var h = (hex) => import_buffer.Buffer.from(hex, "hex");
+    var h = (hex) => Buffer.from(hex, "hex");
     function verifyEcc(ecc) {
       assert5(typeof ecc.isXOnlyPoint === "function");
       assert5(
@@ -6320,7 +6321,7 @@ var require_ecc_lib = __commonJS({
         } else {
           assert5(r !== null);
           assert5(r.parity === t.parity);
-          assert5(import_buffer.Buffer.from(r.xOnlyPubkey).equals(h(t.result)));
+          assert5(Buffer.from(r.xOnlyPubkey).equals(h(t.result)));
         }
       });
     }
@@ -6353,7 +6354,7 @@ var require_ecc_lib = __commonJS({
 // node_modules/safe-buffer/index.js
 var require_safe_buffer = __commonJS({
   "node_modules/safe-buffer/index.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var buffer = require_buffer();
     var Buffer6 = buffer.Buffer;
     function copyProps(src, dst) {
@@ -6413,7 +6414,7 @@ var require_safe_buffer = __commonJS({
 var require_varuint_bitcoin = __commonJS({
   "node_modules/varuint-bitcoin/index.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Buffer6 = require_safe_buffer().Buffer;
     var MAX_SAFE_INTEGER3 = 9007199254740991;
     function checkUInt53(n2) {
@@ -6477,7 +6478,7 @@ var require_varuint_bitcoin = __commonJS({
 var require_bufferutils = __commonJS({
   "node_modules/bitcoinjs-lib/src/bufferutils.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BufferReader = exports.BufferWriter = exports.cloneBuffer = exports.reverseBuffer = exports.writeUInt64LE = exports.readUInt64LE = exports.varuint = void 0;
     var types = require_types();
@@ -6522,14 +6523,14 @@ var require_bufferutils = __commonJS({
     }
     exports.reverseBuffer = reverseBuffer;
     function cloneBuffer(buffer) {
-      const clone2 = import_buffer.Buffer.allocUnsafe(buffer.length);
+      const clone2 = Buffer.allocUnsafe(buffer.length);
       buffer.copy(clone2);
       return clone2;
     }
     exports.cloneBuffer = cloneBuffer;
     var BufferWriter = class _BufferWriter {
       static withCapacity(size) {
-        return new _BufferWriter(import_buffer.Buffer.alloc(size));
+        return new _BufferWriter(Buffer.alloc(size));
       }
       constructor(buffer, offset2 = 0) {
         this.buffer = buffer;
@@ -6631,7 +6632,7 @@ var require_bufferutils = __commonJS({
 var require_bip341 = __commonJS({
   "node_modules/bitcoinjs-lib/src/payments/bip341.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.tweakKey = exports.tapTweakHash = exports.tapleafHash = exports.findScriptPath = exports.toHashTree = exports.rootHashFromPath = exports.MAX_TAPTREE_DEPTH = exports.LEAF_VERSION_TAPSCRIPT = void 0;
     var buffer_1 = require_buffer();
@@ -6732,7 +6733,7 @@ var require_bip341 = __commonJS({
 var require_p2tr = __commonJS({
   "node_modules/bitcoinjs-lib/src/payments/p2tr.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.p2tr = void 0;
     var buffer_1 = require_buffer();
@@ -6996,7 +6997,7 @@ var require_p2tr = __commonJS({
 var require_payments = __commonJS({
   "node_modules/bitcoinjs-lib/src/payments/index.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.p2tr = exports.p2wsh = exports.p2wpkh = exports.p2sh = exports.p2pkh = exports.p2pk = exports.p2ms = exports.embed = void 0;
     var embed_1 = require_embed();
@@ -7062,7 +7063,7 @@ var require_payments = __commonJS({
 var require_address = __commonJS({
   "node_modules/bitcoinjs-lib/src/address.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.toOutputScript = exports.fromOutputScript = exports.toBech32 = exports.toBase58Check = exports.fromBech32 = exports.fromBase58Check = void 0;
     var networks = require_networks();
@@ -7090,7 +7091,7 @@ var require_address = __commonJS({
       return toBech32(data, version13, network.bech32);
     }
     function fromBase58Check(address) {
-      const payload = import_buffer.Buffer.from(bs58check.decode(address));
+      const payload = Buffer.from(bs58check.decode(address));
       if (payload.length < 21) throw new TypeError(address + " is too short");
       if (payload.length > 21) throw new TypeError(address + " is too long");
       const version13 = payload.readUInt8(0);
@@ -7117,7 +7118,7 @@ var require_address = __commonJS({
       return {
         version: version13,
         prefix: result.prefix,
-        data: import_buffer.Buffer.from(data)
+        data: Buffer.from(data)
       };
     }
     exports.fromBech32 = fromBech32;
@@ -7126,7 +7127,7 @@ var require_address = __commonJS({
         (0, types_1.tuple)(types_1.Hash160bit, types_1.UInt8),
         arguments
       );
-      const payload = import_buffer.Buffer.allocUnsafe(21);
+      const payload = Buffer.allocUnsafe(21);
       payload.writeUInt8(version13, 0);
       hash3.copy(payload, 1);
       return bs58check.encode(payload);
@@ -7215,7 +7216,7 @@ var require_address = __commonJS({
 var require_merkle = __commonJS({
   "node_modules/bitcoinjs-lib/src/merkle.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.fastMerkleRoot = void 0;
     function fastMerkleRoot(values, digestFn) {
@@ -7229,7 +7230,7 @@ var require_merkle = __commonJS({
         for (let i = 0; i < length; i += 2, ++j) {
           const left = results[i];
           const right = i + 1 === length ? left : results[i + 1];
-          const data = import_buffer.Buffer.concat([left, right]);
+          const data = Buffer.concat([left, right]);
           results[j] = digestFn(data);
         }
         length = j;
@@ -7244,7 +7245,7 @@ var require_merkle = __commonJS({
 var require_transaction = __commonJS({
   "node_modules/bitcoinjs-lib/src/transaction.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Transaction = void 0;
     var bufferutils_1 = require_bufferutils();
@@ -7263,17 +7264,17 @@ var require_transaction = __commonJS({
         return sum + varSliceSize(witness);
       }, 0);
     }
-    var EMPTY_BUFFER = import_buffer.Buffer.allocUnsafe(0);
+    var EMPTY_BUFFER = Buffer.allocUnsafe(0);
     var EMPTY_WITNESS = [];
-    var ZERO = import_buffer.Buffer.from(
+    var ZERO = Buffer.from(
       "0000000000000000000000000000000000000000000000000000000000000000",
       "hex"
     );
-    var ONE = import_buffer.Buffer.from(
+    var ONE = Buffer.from(
       "0000000000000000000000000000000000000000000000000000000000000001",
       "hex"
     );
-    var VALUE_UINT64_MAX = import_buffer.Buffer.from("ffffffffffffffff", "hex");
+    var VALUE_UINT64_MAX = Buffer.from("ffffffffffffffff", "hex");
     var BLANK_OUTPUT = {
       script: EMPTY_BUFFER,
       valueBuffer: VALUE_UINT64_MAX
@@ -7331,7 +7332,7 @@ var require_transaction = __commonJS({
         return tx;
       }
       static fromHex(hex) {
-        return _Transaction.fromBuffer(import_buffer.Buffer.from(hex, "hex"), false);
+        return _Transaction.fromBuffer(Buffer.from(hex, "hex"), false);
       }
       static isCoinbaseHash(buffer) {
         typeforce(types.Hash256bit, buffer);
@@ -7471,7 +7472,7 @@ var require_transaction = __commonJS({
           });
           txTmp.ins[inIndex].script = ourScript;
         }
-        const buffer = import_buffer.Buffer.allocUnsafe(txTmp.byteLength(false) + 4);
+        const buffer = Buffer.allocUnsafe(txTmp.byteLength(false) + 4);
         buffer.writeInt32LE(hashType, buffer.length - 4);
         txTmp.__toBuffer(buffer, 0, false);
         return bcrypto.hash256(buffer);
@@ -7584,7 +7585,7 @@ var require_transaction = __commonJS({
         }
         return bcrypto.taggedHash(
           "TapSighash",
-          import_buffer.Buffer.concat([import_buffer.Buffer.from([0]), sigMsgWriter.end()])
+          Buffer.concat([Buffer.from([0]), sigMsgWriter.end()])
         );
       }
       hashForWitnessV0(inIndex, prevOutScript, value, hashType) {
@@ -7592,13 +7593,13 @@ var require_transaction = __commonJS({
           types.tuple(types.UInt32, types.Buffer, types.Satoshi, types.UInt32),
           arguments
         );
-        let tbuffer = import_buffer.Buffer.from([]);
+        let tbuffer = Buffer.from([]);
         let bufferWriter;
         let hashOutputs = ZERO;
         let hashPrevouts = ZERO;
         let hashSequence = ZERO;
         if (!(hashType & _Transaction.SIGHASH_ANYONECANPAY)) {
-          tbuffer = import_buffer.Buffer.allocUnsafe(36 * this.ins.length);
+          tbuffer = Buffer.allocUnsafe(36 * this.ins.length);
           bufferWriter = new bufferutils_1.BufferWriter(tbuffer, 0);
           this.ins.forEach((txIn) => {
             bufferWriter.writeSlice(txIn.hash);
@@ -7607,7 +7608,7 @@ var require_transaction = __commonJS({
           hashPrevouts = bcrypto.hash256(tbuffer);
         }
         if (!(hashType & _Transaction.SIGHASH_ANYONECANPAY) && (hashType & 31) !== _Transaction.SIGHASH_SINGLE && (hashType & 31) !== _Transaction.SIGHASH_NONE) {
-          tbuffer = import_buffer.Buffer.allocUnsafe(4 * this.ins.length);
+          tbuffer = Buffer.allocUnsafe(4 * this.ins.length);
           bufferWriter = new bufferutils_1.BufferWriter(tbuffer, 0);
           this.ins.forEach((txIn) => {
             bufferWriter.writeUInt32(txIn.sequence);
@@ -7618,7 +7619,7 @@ var require_transaction = __commonJS({
           const txOutsSize = this.outs.reduce((sum, output2) => {
             return sum + 8 + varSliceSize(output2.script);
           }, 0);
-          tbuffer = import_buffer.Buffer.allocUnsafe(txOutsSize);
+          tbuffer = Buffer.allocUnsafe(txOutsSize);
           bufferWriter = new bufferutils_1.BufferWriter(tbuffer, 0);
           this.outs.forEach((out) => {
             bufferWriter.writeUInt64(out.value);
@@ -7627,13 +7628,13 @@ var require_transaction = __commonJS({
           hashOutputs = bcrypto.hash256(tbuffer);
         } else if ((hashType & 31) === _Transaction.SIGHASH_SINGLE && inIndex < this.outs.length) {
           const output2 = this.outs[inIndex];
-          tbuffer = import_buffer.Buffer.allocUnsafe(8 + varSliceSize(output2.script));
+          tbuffer = Buffer.allocUnsafe(8 + varSliceSize(output2.script));
           bufferWriter = new bufferutils_1.BufferWriter(tbuffer, 0);
           bufferWriter.writeUInt64(output2.value);
           bufferWriter.writeVarSlice(output2.script);
           hashOutputs = bcrypto.hash256(tbuffer);
         }
-        tbuffer = import_buffer.Buffer.allocUnsafe(156 + varSliceSize(prevOutScript));
+        tbuffer = Buffer.allocUnsafe(156 + varSliceSize(prevOutScript));
         bufferWriter = new bufferutils_1.BufferWriter(tbuffer, 0);
         const input = this.ins[inIndex];
         bufferWriter.writeInt32(this.version);
@@ -7650,7 +7651,7 @@ var require_transaction = __commonJS({
         return bcrypto.hash256(tbuffer);
       }
       getHash(forWitness) {
-        if (forWitness && this.isCoinbase()) return import_buffer.Buffer.alloc(32, 0);
+        if (forWitness && this.isCoinbase()) return Buffer.alloc(32, 0);
         return bcrypto.hash256(this.__toBuffer(void 0, void 0, forWitness));
       }
       getId() {
@@ -7673,7 +7674,7 @@ var require_transaction = __commonJS({
         this.ins[index].witness = witness;
       }
       __toBuffer(buffer, initialOffset, _ALLOW_WITNESS = false) {
-        if (!buffer) buffer = import_buffer.Buffer.allocUnsafe(this.byteLength(_ALLOW_WITNESS));
+        if (!buffer) buffer = Buffer.allocUnsafe(this.byteLength(_ALLOW_WITNESS));
         const bufferWriter = new bufferutils_1.BufferWriter(
           buffer,
           initialOffset || 0
@@ -7729,7 +7730,7 @@ var require_transaction = __commonJS({
 var require_block = __commonJS({
   "node_modules/bitcoinjs-lib/src/block.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Block = void 0;
     var bufferutils_1 = require_bufferutils();
@@ -7785,12 +7786,12 @@ var require_block = __commonJS({
         return block;
       }
       static fromHex(hex) {
-        return _Block.fromBuffer(import_buffer.Buffer.from(hex, "hex"));
+        return _Block.fromBuffer(Buffer.from(hex, "hex"));
       }
       static calculateTarget(bits) {
         const exponent = ((bits & 4278190080) >> 24) - 3;
         const mantissa = bits & 8388607;
-        const target = import_buffer.Buffer.alloc(32, 0);
+        const target = Buffer.alloc(32, 0);
         target.writeUIntBE(mantissa, 29 - exponent, 3);
         return target;
       }
@@ -7804,21 +7805,21 @@ var require_block = __commonJS({
         );
         const rootHash = (0, merkle_1.fastMerkleRoot)(hashes, bcrypto.hash256);
         return forWitness ? bcrypto.hash256(
-          import_buffer.Buffer.concat([rootHash, transactions[0].ins[0].witness[0]])
+          Buffer.concat([rootHash, transactions[0].ins[0].witness[0]])
         ) : rootHash;
       }
       getWitnessCommit() {
         if (!txesHaveWitnessCommit(this.transactions)) return null;
         const witnessCommits = this.transactions[0].outs.filter(
-          (out) => out.script.slice(0, 6).equals(import_buffer.Buffer.from("6a24aa21a9ed", "hex"))
+          (out) => out.script.slice(0, 6).equals(Buffer.from("6a24aa21a9ed", "hex"))
         ).map((out) => out.script.slice(6, 38));
         if (witnessCommits.length === 0) return null;
         const result = witnessCommits[witnessCommits.length - 1];
-        if (!(result instanceof import_buffer.Buffer && result.length === 32)) return null;
+        if (!(result instanceof Buffer && result.length === 32)) return null;
         return result;
       }
       hasWitnessCommit() {
-        if (this.witnessCommit instanceof import_buffer.Buffer && this.witnessCommit.length === 32)
+        if (this.witnessCommit instanceof Buffer && this.witnessCommit.length === 32)
           return true;
         if (this.getWitnessCommit() !== null) return true;
         return false;
@@ -7848,7 +7849,7 @@ var require_block = __commonJS({
       }
       // TODO: buffer, offset compatibility
       toBuffer(headersOnly) {
-        const buffer = import_buffer.Buffer.allocUnsafe(this.byteLength(headersOnly));
+        const buffer = Buffer.allocUnsafe(this.byteLength(headersOnly));
         const bufferWriter = new bufferutils_1.BufferWriter(buffer);
         bufferWriter.writeInt32(this.version);
         bufferWriter.writeSlice(this.prevHash);
@@ -7916,7 +7917,7 @@ var require_block = __commonJS({
 var require_typeFields = __commonJS({
   "node_modules/bip174/src/lib/typeFields.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var GlobalTypes;
     (function(GlobalTypes2) {
@@ -7985,7 +7986,7 @@ var require_typeFields = __commonJS({
 var require_globalXpub = __commonJS({
   "node_modules/bip174/src/lib/converter/global/globalXpub.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     var range = (n2) => [...Array(n2).keys()];
@@ -8021,10 +8022,10 @@ var require_globalXpub = __commonJS({
     }
     exports.decode = decode3;
     function encode9(data) {
-      const head = import_buffer.Buffer.from([typeFields_1.GlobalTypes.GLOBAL_XPUB]);
-      const key2 = import_buffer.Buffer.concat([head, data.extendedPubkey]);
+      const head = Buffer.from([typeFields_1.GlobalTypes.GLOBAL_XPUB]);
+      const key2 = Buffer.concat([head, data.extendedPubkey]);
       const splitPath2 = data.path.split("/");
-      const value = import_buffer.Buffer.allocUnsafe(splitPath2.length * 4);
+      const value = Buffer.allocUnsafe(splitPath2.length * 4);
       data.masterFingerprint.copy(value, 0);
       let offset2 = 4;
       splitPath2.slice(1).forEach((level) => {
@@ -8045,7 +8046,7 @@ var require_globalXpub = __commonJS({
       const epk = data.extendedPubkey;
       const mfp = data.masterFingerprint;
       const p = data.path;
-      return import_buffer.Buffer.isBuffer(epk) && epk.length === 78 && [2, 3].indexOf(epk[45]) > -1 && import_buffer.Buffer.isBuffer(mfp) && mfp.length === 4 && typeof p === "string" && !!p.match(/^m(\/\d+'?)*$/);
+      return Buffer.isBuffer(epk) && epk.length === 78 && [2, 3].indexOf(epk[45]) > -1 && Buffer.isBuffer(mfp) && mfp.length === 4 && typeof p === "string" && !!p.match(/^m(\/\d+'?)*$/);
     }
     exports.check = check;
     function canAddToArray(array2, item, dupeSet) {
@@ -8062,12 +8063,12 @@ var require_globalXpub = __commonJS({
 var require_unsignedTx = __commonJS({
   "node_modules/bip174/src/lib/converter/global/unsignedTx.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     function encode9(data) {
       return {
-        key: import_buffer.Buffer.from([typeFields_1.GlobalTypes.UNSIGNED_TX]),
+        key: Buffer.from([typeFields_1.GlobalTypes.UNSIGNED_TX]),
         value: data.toBuffer()
       };
     }
@@ -8079,7 +8080,7 @@ var require_unsignedTx = __commonJS({
 var require_finalScriptSig = __commonJS({
   "node_modules/bip174/src/lib/converter/input/finalScriptSig.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     function decode3(keyVal) {
@@ -8092,7 +8093,7 @@ var require_finalScriptSig = __commonJS({
     }
     exports.decode = decode3;
     function encode9(data) {
-      const key2 = import_buffer.Buffer.from([typeFields_1.InputTypes.FINAL_SCRIPTSIG]);
+      const key2 = Buffer.from([typeFields_1.InputTypes.FINAL_SCRIPTSIG]);
       return {
         key: key2,
         value: data
@@ -8101,7 +8102,7 @@ var require_finalScriptSig = __commonJS({
     exports.encode = encode9;
     exports.expected = "Buffer";
     function check(data) {
-      return import_buffer.Buffer.isBuffer(data);
+      return Buffer.isBuffer(data);
     }
     exports.check = check;
     function canAdd(currentData, newData) {
@@ -8115,7 +8116,7 @@ var require_finalScriptSig = __commonJS({
 var require_finalScriptWitness = __commonJS({
   "node_modules/bip174/src/lib/converter/input/finalScriptWitness.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     function decode3(keyVal) {
@@ -8128,7 +8129,7 @@ var require_finalScriptWitness = __commonJS({
     }
     exports.decode = decode3;
     function encode9(data) {
-      const key2 = import_buffer.Buffer.from([typeFields_1.InputTypes.FINAL_SCRIPTWITNESS]);
+      const key2 = Buffer.from([typeFields_1.InputTypes.FINAL_SCRIPTWITNESS]);
       return {
         key: key2,
         value: data
@@ -8137,7 +8138,7 @@ var require_finalScriptWitness = __commonJS({
     exports.encode = encode9;
     exports.expected = "Buffer";
     function check(data) {
-      return import_buffer.Buffer.isBuffer(data);
+      return Buffer.isBuffer(data);
     }
     exports.check = check;
     function canAdd(currentData, newData) {
@@ -8151,7 +8152,7 @@ var require_finalScriptWitness = __commonJS({
 var require_nonWitnessUtxo = __commonJS({
   "node_modules/bip174/src/lib/converter/input/nonWitnessUtxo.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     function decode3(keyVal) {
@@ -8165,14 +8166,14 @@ var require_nonWitnessUtxo = __commonJS({
     exports.decode = decode3;
     function encode9(data) {
       return {
-        key: import_buffer.Buffer.from([typeFields_1.InputTypes.NON_WITNESS_UTXO]),
+        key: Buffer.from([typeFields_1.InputTypes.NON_WITNESS_UTXO]),
         value: data
       };
     }
     exports.encode = encode9;
     exports.expected = "Buffer";
     function check(data) {
-      return import_buffer.Buffer.isBuffer(data);
+      return Buffer.isBuffer(data);
     }
     exports.check = check;
     function canAdd(currentData, newData) {
@@ -8186,7 +8187,7 @@ var require_nonWitnessUtxo = __commonJS({
 var require_partialSig = __commonJS({
   "node_modules/bip174/src/lib/converter/input/partialSig.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     function decode3(keyVal) {
@@ -8208,20 +8209,20 @@ var require_partialSig = __commonJS({
     }
     exports.decode = decode3;
     function encode9(pSig) {
-      const head = import_buffer.Buffer.from([typeFields_1.InputTypes.PARTIAL_SIG]);
+      const head = Buffer.from([typeFields_1.InputTypes.PARTIAL_SIG]);
       return {
-        key: import_buffer.Buffer.concat([head, pSig.pubkey]),
+        key: Buffer.concat([head, pSig.pubkey]),
         value: pSig.signature
       };
     }
     exports.encode = encode9;
     exports.expected = "{ pubkey: Buffer; signature: Buffer; }";
     function check(data) {
-      return import_buffer.Buffer.isBuffer(data.pubkey) && import_buffer.Buffer.isBuffer(data.signature) && [33, 65].includes(data.pubkey.length) && [2, 3, 4].includes(data.pubkey[0]) && isDerSigWithSighash(data.signature);
+      return Buffer.isBuffer(data.pubkey) && Buffer.isBuffer(data.signature) && [33, 65].includes(data.pubkey.length) && [2, 3, 4].includes(data.pubkey[0]) && isDerSigWithSighash(data.signature);
     }
     exports.check = check;
     function isDerSigWithSighash(buf) {
-      if (!import_buffer.Buffer.isBuffer(buf) || buf.length < 9) return false;
+      if (!Buffer.isBuffer(buf) || buf.length < 9) return false;
       if (buf[0] !== 48) return false;
       if (buf.length !== buf[1] + 3) return false;
       if (buf[2] !== 2) return false;
@@ -8247,7 +8248,7 @@ var require_partialSig = __commonJS({
 var require_porCommitment = __commonJS({
   "node_modules/bip174/src/lib/converter/input/porCommitment.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     function decode3(keyVal) {
@@ -8260,10 +8261,10 @@ var require_porCommitment = __commonJS({
     }
     exports.decode = decode3;
     function encode9(data) {
-      const key2 = import_buffer.Buffer.from([typeFields_1.InputTypes.POR_COMMITMENT]);
+      const key2 = Buffer.from([typeFields_1.InputTypes.POR_COMMITMENT]);
       return {
         key: key2,
-        value: import_buffer.Buffer.from(data, "utf8")
+        value: Buffer.from(data, "utf8")
       };
     }
     exports.encode = encode9;
@@ -8283,7 +8284,7 @@ var require_porCommitment = __commonJS({
 var require_sighashType = __commonJS({
   "node_modules/bip174/src/lib/converter/input/sighashType.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     function decode3(keyVal) {
@@ -8296,8 +8297,8 @@ var require_sighashType = __commonJS({
     }
     exports.decode = decode3;
     function encode9(data) {
-      const key2 = import_buffer.Buffer.from([typeFields_1.InputTypes.SIGHASH_TYPE]);
-      const value = import_buffer.Buffer.allocUnsafe(4);
+      const key2 = Buffer.from([typeFields_1.InputTypes.SIGHASH_TYPE]);
+      const value = Buffer.allocUnsafe(4);
       value.writeUInt32LE(data, 0);
       return {
         key: key2,
@@ -8321,7 +8322,7 @@ var require_sighashType = __commonJS({
 var require_tapKeySig = __commonJS({
   "node_modules/bip174/src/lib/converter/input/tapKeySig.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     function decode3(keyVal) {
@@ -8339,13 +8340,13 @@ var require_tapKeySig = __commonJS({
     }
     exports.decode = decode3;
     function encode9(value) {
-      const key2 = import_buffer.Buffer.from([typeFields_1.InputTypes.TAP_KEY_SIG]);
+      const key2 = Buffer.from([typeFields_1.InputTypes.TAP_KEY_SIG]);
       return { key: key2, value };
     }
     exports.encode = encode9;
     exports.expected = "Buffer";
     function check(data) {
-      return import_buffer.Buffer.isBuffer(data) && (data.length === 64 || data.length === 65);
+      return Buffer.isBuffer(data) && (data.length === 64 || data.length === 65);
     }
     exports.check = check;
     function canAdd(currentData, newData) {
@@ -8359,7 +8360,7 @@ var require_tapKeySig = __commonJS({
 var require_tapLeafScript = __commonJS({
   "node_modules/bip174/src/lib/converter/input/tapLeafScript.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     function decode3(keyVal) {
@@ -8385,17 +8386,17 @@ var require_tapLeafScript = __commonJS({
     }
     exports.decode = decode3;
     function encode9(tScript) {
-      const head = import_buffer.Buffer.from([typeFields_1.InputTypes.TAP_LEAF_SCRIPT]);
-      const verBuf = import_buffer.Buffer.from([tScript.leafVersion]);
+      const head = Buffer.from([typeFields_1.InputTypes.TAP_LEAF_SCRIPT]);
+      const verBuf = Buffer.from([tScript.leafVersion]);
       return {
-        key: import_buffer.Buffer.concat([head, tScript.controlBlock]),
-        value: import_buffer.Buffer.concat([tScript.script, verBuf])
+        key: Buffer.concat([head, tScript.controlBlock]),
+        value: Buffer.concat([tScript.script, verBuf])
       };
     }
     exports.encode = encode9;
     exports.expected = "{ controlBlock: Buffer; leafVersion: number, script: Buffer; }";
     function check(data) {
-      return import_buffer.Buffer.isBuffer(data.controlBlock) && (data.controlBlock.length - 1) % 32 === 0 && (data.controlBlock[0] & 254) === data.leafVersion && import_buffer.Buffer.isBuffer(data.script);
+      return Buffer.isBuffer(data.controlBlock) && (data.controlBlock.length - 1) % 32 === 0 && (data.controlBlock[0] & 254) === data.leafVersion && Buffer.isBuffer(data.script);
     }
     exports.check = check;
     function canAddToArray(array2, item, dupeSet) {
@@ -8412,7 +8413,7 @@ var require_tapLeafScript = __commonJS({
 var require_tapMerkleRoot = __commonJS({
   "node_modules/bip174/src/lib/converter/input/tapMerkleRoot.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     function decode3(keyVal) {
@@ -8428,13 +8429,13 @@ var require_tapMerkleRoot = __commonJS({
     }
     exports.decode = decode3;
     function encode9(value) {
-      const key2 = import_buffer.Buffer.from([typeFields_1.InputTypes.TAP_MERKLE_ROOT]);
+      const key2 = Buffer.from([typeFields_1.InputTypes.TAP_MERKLE_ROOT]);
       return { key: key2, value };
     }
     exports.encode = encode9;
     exports.expected = "Buffer";
     function check(data) {
-      return import_buffer.Buffer.isBuffer(data) && data.length === 32;
+      return Buffer.isBuffer(data) && data.length === 32;
     }
     exports.check = check;
     function canAdd(currentData, newData) {
@@ -8448,7 +8449,7 @@ var require_tapMerkleRoot = __commonJS({
 var require_tapScriptSig = __commonJS({
   "node_modules/bip174/src/lib/converter/input/tapScriptSig.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     function decode3(keyVal) {
@@ -8477,16 +8478,16 @@ var require_tapScriptSig = __commonJS({
     }
     exports.decode = decode3;
     function encode9(tSig) {
-      const head = import_buffer.Buffer.from([typeFields_1.InputTypes.TAP_SCRIPT_SIG]);
+      const head = Buffer.from([typeFields_1.InputTypes.TAP_SCRIPT_SIG]);
       return {
-        key: import_buffer.Buffer.concat([head, tSig.pubkey, tSig.leafHash]),
+        key: Buffer.concat([head, tSig.pubkey, tSig.leafHash]),
         value: tSig.signature
       };
     }
     exports.encode = encode9;
     exports.expected = "{ pubkey: Buffer; leafHash: Buffer; signature: Buffer; }";
     function check(data) {
-      return import_buffer.Buffer.isBuffer(data.pubkey) && import_buffer.Buffer.isBuffer(data.leafHash) && import_buffer.Buffer.isBuffer(data.signature) && data.pubkey.length === 32 && data.leafHash.length === 32 && (data.signature.length === 64 || data.signature.length === 65);
+      return Buffer.isBuffer(data.pubkey) && Buffer.isBuffer(data.leafHash) && Buffer.isBuffer(data.signature) && data.pubkey.length === 32 && data.leafHash.length === 32 && (data.signature.length === 64 || data.signature.length === 65);
     }
     exports.check = check;
     function canAddToArray(array2, item, dupeSet) {
@@ -8505,7 +8506,7 @@ var require_tapScriptSig = __commonJS({
 var require_varint = __commonJS({
   "node_modules/bip174/src/lib/converter/varint.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var MAX_SAFE_INTEGER3 = 9007199254740991;
     function checkUInt53(n2) {
@@ -8514,8 +8515,8 @@ var require_varint = __commonJS({
     }
     function encode9(_number, buffer, offset2) {
       checkUInt53(_number);
-      if (!buffer) buffer = import_buffer.Buffer.allocUnsafe(encodingLength(_number));
-      if (!import_buffer.Buffer.isBuffer(buffer))
+      if (!buffer) buffer = Buffer.allocUnsafe(encodingLength(_number));
+      if (!Buffer.isBuffer(buffer))
         throw new TypeError("buffer must be a Buffer instance");
       if (!offset2) offset2 = 0;
       if (_number < 253) {
@@ -8539,7 +8540,7 @@ var require_varint = __commonJS({
     }
     exports.encode = encode9;
     function decode3(buffer, offset2) {
-      if (!import_buffer.Buffer.isBuffer(buffer))
+      if (!Buffer.isBuffer(buffer))
         throw new TypeError("buffer must be a Buffer instance");
       if (!offset2) offset2 = 0;
       const first = buffer.readUInt8(offset2);
@@ -8574,7 +8575,7 @@ var require_varint = __commonJS({
 var require_tools = __commonJS({
   "node_modules/bip174/src/lib/converter/tools.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var varuint = require_varint();
     exports.range = (n2) => [...Array(n2).keys()];
@@ -8593,8 +8594,8 @@ var require_tools = __commonJS({
     exports.reverseBuffer = reverseBuffer;
     function keyValsToBuffer(keyVals) {
       const buffers = keyVals.map(keyValToBuffer);
-      buffers.push(import_buffer.Buffer.from([0]));
-      return import_buffer.Buffer.concat(buffers);
+      buffers.push(Buffer.from([0]));
+      return Buffer.concat(buffers);
     }
     exports.keyValsToBuffer = keyValsToBuffer;
     function keyValToBuffer(keyVal) {
@@ -8602,7 +8603,7 @@ var require_tools = __commonJS({
       const valLen = keyVal.value.length;
       const keyVarIntLen = varuint.encodingLength(keyLen);
       const valVarIntLen = varuint.encodingLength(valLen);
-      const buffer = import_buffer.Buffer.allocUnsafe(
+      const buffer = Buffer.allocUnsafe(
         keyVarIntLen + keyLen + valVarIntLen + valLen
       );
       varuint.encode(keyLen, buffer, 0);
@@ -8643,7 +8644,7 @@ var require_tools = __commonJS({
 var require_witnessUtxo = __commonJS({
   "node_modules/bip174/src/lib/converter/input/witnessUtxo.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     var tools_1 = require_tools();
@@ -8671,19 +8672,19 @@ var require_witnessUtxo = __commonJS({
     function encode9(data) {
       const { script, value } = data;
       const varintLen = varuint.encodingLength(script.length);
-      const result = import_buffer.Buffer.allocUnsafe(8 + varintLen + script.length);
+      const result = Buffer.allocUnsafe(8 + varintLen + script.length);
       tools_1.writeUInt64LE(result, value, 0);
       varuint.encode(script.length, result, 8);
       script.copy(result, 8 + varintLen);
       return {
-        key: import_buffer.Buffer.from([typeFields_1.InputTypes.WITNESS_UTXO]),
+        key: Buffer.from([typeFields_1.InputTypes.WITNESS_UTXO]),
         value: result
       };
     }
     exports.encode = encode9;
     exports.expected = "{ script: Buffer; value: number; }";
     function check(data) {
-      return import_buffer.Buffer.isBuffer(data.script) && typeof data.value === "number";
+      return Buffer.isBuffer(data.script) && typeof data.value === "number";
     }
     exports.check = check;
     function canAdd(currentData, newData) {
@@ -8697,7 +8698,7 @@ var require_witnessUtxo = __commonJS({
 var require_tapTree = __commonJS({
   "node_modules/bip174/src/lib/converter/output/tapTree.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     var varuint = require_varint();
@@ -8725,24 +8726,24 @@ var require_tapTree = __commonJS({
     }
     exports.decode = decode3;
     function encode9(tree) {
-      const key2 = import_buffer.Buffer.from([typeFields_1.OutputTypes.TAP_TREE]);
+      const key2 = Buffer.from([typeFields_1.OutputTypes.TAP_TREE]);
       const bufs = [].concat(
         ...tree.leaves.map((tapLeaf) => [
-          import_buffer.Buffer.of(tapLeaf.depth, tapLeaf.leafVersion),
+          Buffer.of(tapLeaf.depth, tapLeaf.leafVersion),
           varuint.encode(tapLeaf.script.length),
           tapLeaf.script
         ])
       );
       return {
         key: key2,
-        value: import_buffer.Buffer.concat(bufs)
+        value: Buffer.concat(bufs)
       };
     }
     exports.encode = encode9;
     exports.expected = "{ leaves: [{ depth: number; leafVersion: number, script: Buffer; }] }";
     function check(data) {
       return Array.isArray(data.leaves) && data.leaves.every(
-        (tapLeaf) => tapLeaf.depth >= 0 && tapLeaf.depth <= 128 && (tapLeaf.leafVersion & 254) === tapLeaf.leafVersion && import_buffer.Buffer.isBuffer(tapLeaf.script)
+        (tapLeaf) => tapLeaf.depth >= 0 && tapLeaf.depth <= 128 && (tapLeaf.leafVersion & 254) === tapLeaf.leafVersion && Buffer.isBuffer(tapLeaf.script)
       );
     }
     exports.check = check;
@@ -8757,7 +8758,7 @@ var require_tapTree = __commonJS({
 var require_bip32Derivation = __commonJS({
   "node_modules/bip174/src/lib/converter/shared/bip32Derivation.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var range = (n2) => [...Array(n2).keys()];
     var isValidDERKey = (pubkey) => pubkey.length === 33 && [2, 3].includes(pubkey[0]) || pubkey.length === 65 && 4 === pubkey[0];
@@ -8793,10 +8794,10 @@ var require_bip32Derivation = __commonJS({
         return data;
       }
       function encode9(data) {
-        const head = import_buffer.Buffer.from([TYPE_BYTE]);
-        const key2 = import_buffer.Buffer.concat([head, data.pubkey]);
+        const head = Buffer.from([TYPE_BYTE]);
+        const key2 = Buffer.concat([head, data.pubkey]);
         const splitPath2 = data.path.split("/");
-        const value = import_buffer.Buffer.allocUnsafe(splitPath2.length * 4);
+        const value = Buffer.allocUnsafe(splitPath2.length * 4);
         data.masterFingerprint.copy(value, 0);
         let offset2 = 4;
         splitPath2.slice(1).forEach((level) => {
@@ -8813,7 +8814,7 @@ var require_bip32Derivation = __commonJS({
       }
       const expected = "{ masterFingerprint: Buffer; pubkey: Buffer; path: string; }";
       function check(data) {
-        return import_buffer.Buffer.isBuffer(data.pubkey) && import_buffer.Buffer.isBuffer(data.masterFingerprint) && typeof data.path === "string" && isValidPubkey(data.pubkey) && data.masterFingerprint.length === 4;
+        return Buffer.isBuffer(data.pubkey) && Buffer.isBuffer(data.masterFingerprint) && typeof data.path === "string" && isValidPubkey(data.pubkey) && data.masterFingerprint.length === 4;
       }
       function canAddToArray(array2, item, dupeSet) {
         const dupeString = item.pubkey.toString("hex");
@@ -8837,7 +8838,7 @@ var require_bip32Derivation = __commonJS({
 var require_checkPubkey = __commonJS({
   "node_modules/bip174/src/lib/converter/shared/checkPubkey.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     function makeChecker(pubkeyTypes) {
       return checkPubkey;
@@ -8862,7 +8863,7 @@ var require_checkPubkey = __commonJS({
 var require_redeemScript = __commonJS({
   "node_modules/bip174/src/lib/converter/shared/redeemScript.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     function makeConverter(TYPE_BYTE) {
       function decode3(keyVal) {
@@ -8874,7 +8875,7 @@ var require_redeemScript = __commonJS({
         return keyVal.value;
       }
       function encode9(data) {
-        const key2 = import_buffer.Buffer.from([TYPE_BYTE]);
+        const key2 = Buffer.from([TYPE_BYTE]);
         return {
           key: key2,
           value: data
@@ -8882,7 +8883,7 @@ var require_redeemScript = __commonJS({
       }
       const expected = "Buffer";
       function check(data) {
-        return import_buffer.Buffer.isBuffer(data);
+        return Buffer.isBuffer(data);
       }
       function canAdd(currentData, newData) {
         return !!currentData && !!newData && currentData.redeemScript === void 0;
@@ -8903,7 +8904,7 @@ var require_redeemScript = __commonJS({
 var require_tapBip32Derivation = __commonJS({
   "node_modules/bip174/src/lib/converter/shared/tapBip32Derivation.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var varuint = require_varint();
     var bip32Derivation = require_bip32Derivation();
@@ -8926,15 +8927,15 @@ var require_tapBip32Derivation = __commonJS({
       function encode9(data) {
         const base2 = parent.encode(data);
         const nHashesLen = varuint.encodingLength(data.leafHashes.length);
-        const nHashesBuf = import_buffer.Buffer.allocUnsafe(nHashesLen);
+        const nHashesBuf = Buffer.allocUnsafe(nHashesLen);
         varuint.encode(data.leafHashes.length, nHashesBuf);
-        const value = import_buffer.Buffer.concat([nHashesBuf, ...data.leafHashes, base2.value]);
+        const value = Buffer.concat([nHashesBuf, ...data.leafHashes, base2.value]);
         return Object.assign({}, base2, { value });
       }
       const expected = "{ masterFingerprint: Buffer; pubkey: Buffer; path: string; leafHashes: Buffer[]; }";
       function check(data) {
         return Array.isArray(data.leafHashes) && data.leafHashes.every(
-          (leafHash) => import_buffer.Buffer.isBuffer(leafHash) && leafHash.length === 32
+          (leafHash) => Buffer.isBuffer(leafHash) && leafHash.length === 32
         ) && parent.check(data);
       }
       return {
@@ -8953,7 +8954,7 @@ var require_tapBip32Derivation = __commonJS({
 var require_tapInternalKey = __commonJS({
   "node_modules/bip174/src/lib/converter/shared/tapInternalKey.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     function makeConverter(TYPE_BYTE) {
       function decode3(keyVal) {
@@ -8970,12 +8971,12 @@ var require_tapInternalKey = __commonJS({
         return keyVal.value;
       }
       function encode9(value) {
-        const key2 = import_buffer.Buffer.from([TYPE_BYTE]);
+        const key2 = Buffer.from([TYPE_BYTE]);
         return { key: key2, value };
       }
       const expected = "Buffer";
       function check(data) {
-        return import_buffer.Buffer.isBuffer(data) && data.length === 32;
+        return Buffer.isBuffer(data) && data.length === 32;
       }
       function canAdd(currentData, newData) {
         return !!currentData && !!newData && currentData.tapInternalKey === void 0;
@@ -8996,7 +8997,7 @@ var require_tapInternalKey = __commonJS({
 var require_witnessScript = __commonJS({
   "node_modules/bip174/src/lib/converter/shared/witnessScript.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     function makeConverter(TYPE_BYTE) {
       function decode3(keyVal) {
@@ -9008,7 +9009,7 @@ var require_witnessScript = __commonJS({
         return keyVal.value;
       }
       function encode9(data) {
-        const key2 = import_buffer.Buffer.from([TYPE_BYTE]);
+        const key2 = Buffer.from([TYPE_BYTE]);
         return {
           key: key2,
           value: data
@@ -9016,7 +9017,7 @@ var require_witnessScript = __commonJS({
       }
       const expected = "Buffer";
       function check(data) {
-        return import_buffer.Buffer.isBuffer(data);
+        return Buffer.isBuffer(data);
       }
       function canAdd(currentData, newData) {
         return !!currentData && !!newData && currentData.witnessScript === void 0;
@@ -9037,7 +9038,7 @@ var require_witnessScript = __commonJS({
 var require_converter = __commonJS({
   "node_modules/bip174/src/lib/converter/index.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var typeFields_1 = require_typeFields();
     var globalXpub = require_globalXpub();
@@ -9129,7 +9130,7 @@ var require_converter = __commonJS({
 var require_fromBuffer = __commonJS({
   "node_modules/bip174/src/lib/parser/fromBuffer.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var convert = require_converter();
     var tools_1 = require_tools();
@@ -9243,7 +9244,7 @@ var require_fromBuffer = __commonJS({
     }
     exports.psbtFromBuffer = psbtFromBuffer;
     function checkKeyBuffer(type2, keyBuf, keyNum) {
-      if (!keyBuf.equals(import_buffer.Buffer.from([keyNum]))) {
+      if (!keyBuf.equals(Buffer.from([keyNum]))) {
         throw new Error(
           `Format Error: Invalid ${type2} key: ${keyBuf.toString("hex")}`
         );
@@ -9512,7 +9513,7 @@ var require_fromBuffer = __commonJS({
 var require_toBuffer = __commonJS({
   "node_modules/bip174/src/lib/parser/toBuffer.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var convert = require_converter();
     var tools_1 = require_tools();
@@ -9523,12 +9524,12 @@ var require_toBuffer = __commonJS({
         outputs
       });
       const globalBuffer = tools_1.keyValsToBuffer(globalKeyVals);
-      const keyValsOrEmptyToBuffer = (keyVals) => keyVals.length === 0 ? [import_buffer.Buffer.from([0])] : keyVals.map(tools_1.keyValsToBuffer);
+      const keyValsOrEmptyToBuffer = (keyVals) => keyVals.length === 0 ? [Buffer.from([0])] : keyVals.map(tools_1.keyValsToBuffer);
       const inputBuffers = keyValsOrEmptyToBuffer(inputKeyVals);
       const outputBuffers = keyValsOrEmptyToBuffer(outputKeyVals);
-      const header = import_buffer.Buffer.allocUnsafe(5);
+      const header = Buffer.allocUnsafe(5);
       header.writeUIntBE(482972169471, 0, 5);
-      return import_buffer.Buffer.concat(
+      return Buffer.concat(
         [header, globalBuffer].concat(inputBuffers, outputBuffers)
       );
     }
@@ -9573,7 +9574,7 @@ var require_toBuffer = __commonJS({
 var require_parser = __commonJS({
   "node_modules/bip174/src/lib/parser/index.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     function __export2(m) {
       for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
     }
@@ -9587,7 +9588,7 @@ var require_parser = __commonJS({
 var require_combiner = __commonJS({
   "node_modules/bip174/src/lib/combiner/index.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var parser_1 = require_parser();
     function combine(psbts) {
@@ -9674,7 +9675,7 @@ var require_combiner = __commonJS({
 var require_utils2 = __commonJS({
   "node_modules/bip174/src/lib/utils.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var converter = require_converter();
     function checkForInput(inputs, inputIndex) {
@@ -9785,7 +9786,7 @@ var require_utils2 = __commonJS({
     }
     exports.addOutputAttributes = addOutputAttributes;
     function defaultVersionSetter(version13, txBuf) {
-      if (!import_buffer.Buffer.isBuffer(txBuf) || txBuf.length < 4) {
+      if (!Buffer.isBuffer(txBuf) || txBuf.length < 4) {
         throw new Error("Set Version: Invalid Transaction");
       }
       txBuf.writeUInt32LE(version13, 0);
@@ -9793,7 +9794,7 @@ var require_utils2 = __commonJS({
     }
     exports.defaultVersionSetter = defaultVersionSetter;
     function defaultLocktimeSetter(locktime, txBuf) {
-      if (!import_buffer.Buffer.isBuffer(txBuf) || txBuf.length < 4) {
+      if (!Buffer.isBuffer(txBuf) || txBuf.length < 4) {
         throw new Error("Set Locktime: Invalid Transaction");
       }
       txBuf.writeUInt32LE(locktime, txBuf.length - 4);
@@ -9807,7 +9808,7 @@ var require_utils2 = __commonJS({
 var require_psbt = __commonJS({
   "node_modules/bip174/src/lib/psbt.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     var combiner_1 = require_combiner();
     var parser_1 = require_parser();
@@ -9822,11 +9823,11 @@ var require_psbt = __commonJS({
         };
       }
       static fromBase64(data, txFromBuffer) {
-        const buffer = import_buffer.Buffer.from(data, "base64");
+        const buffer = Buffer.from(data, "base64");
         return this.fromBuffer(buffer, txFromBuffer);
       }
       static fromHex(data, txFromBuffer) {
-        const buffer = import_buffer.Buffer.from(data, "hex");
+        const buffer = Buffer.from(data, "hex");
         return this.fromBuffer(buffer, txFromBuffer);
       }
       static fromBuffer(buffer, txFromBuffer) {
@@ -9957,7 +9958,7 @@ var require_psbt = __commonJS({
 var require_psbtutils = __commonJS({
   "node_modules/bitcoinjs-lib/src/psbt/psbtutils.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.signatureBlocksAction = exports.checkInputForSig = exports.pubkeyInScript = exports.pubkeyPositionInScript = exports.witnessStackToScriptWitness = exports.isP2TR = exports.isP2SHScript = exports.isP2WSHScript = exports.isP2WPKH = exports.isP2PKH = exports.isP2PK = exports.isP2MS = void 0;
     var varuint = require_varint();
@@ -9983,14 +9984,14 @@ var require_psbtutils = __commonJS({
     exports.isP2SHScript = isPaymentFactory(payments.p2sh);
     exports.isP2TR = isPaymentFactory(payments.p2tr);
     function witnessStackToScriptWitness(witness) {
-      let buffer = import_buffer.Buffer.allocUnsafe(0);
+      let buffer = Buffer.allocUnsafe(0);
       function writeSlice(slice) {
-        buffer = import_buffer.Buffer.concat([buffer, import_buffer.Buffer.from(slice)]);
+        buffer = Buffer.concat([buffer, Buffer.from(slice)]);
       }
       function writeVarInt(i) {
         const currentLen = buffer.length;
         const varintLen = varuint.encodingLength(i);
-        buffer = import_buffer.Buffer.concat([buffer, import_buffer.Buffer.allocUnsafe(varintLen)]);
+        buffer = Buffer.concat([buffer, Buffer.allocUnsafe(varintLen)]);
         varuint.encode(i, buffer, currentLen);
       }
       function writeVarSlice(slice) {
@@ -10062,7 +10063,7 @@ var require_psbtutils = __commonJS({
       const scriptItems = !input.finalScriptSig ? [] : bscript.decompile(input.finalScriptSig) || [];
       const witnessItems = !input.finalScriptWitness ? [] : bscript.decompile(input.finalScriptWitness) || [];
       return scriptItems.concat(witnessItems).filter((item) => {
-        return import_buffer.Buffer.isBuffer(item) && bscript.isCanonicalScriptSignature(item);
+        return Buffer.isBuffer(item) && bscript.isCanonicalScriptSignature(item);
       }).map((sig) => ({ signature: sig }));
     }
   }
@@ -10072,7 +10073,7 @@ var require_psbtutils = __commonJS({
 var require_bip371 = __commonJS({
   "node_modules/bitcoinjs-lib/src/psbt/bip371.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.checkTaprootInputForSigs = exports.tapTreeFromList = exports.tapTreeToList = exports.tweakInternalPubKey = exports.checkTaprootOutputFields = exports.checkTaprootInputFields = exports.isTaprootOutput = exports.isTaprootInput = exports.serializeTaprootSignature = exports.tapScriptFinalizer = exports.toXOnly = void 0;
     var types_1 = require_types();
@@ -10101,8 +10102,8 @@ var require_bip371 = __commonJS({
     }
     exports.tapScriptFinalizer = tapScriptFinalizer;
     function serializeTaprootSignature(sig, sighashType) {
-      const sighashTypeByte = sighashType ? import_buffer.Buffer.from([sighashType]) : import_buffer.Buffer.from([]);
-      return import_buffer.Buffer.concat([sig, sighashTypeByte]);
+      const sighashTypeByte = sighashType ? Buffer.from([sighashType]) : Buffer.from([]);
+      return Buffer.concat([sig, sighashTypeByte]);
     }
     exports.serializeTaprootSignature = serializeTaprootSignature;
     function isTaprootInput(input) {
@@ -10341,7 +10342,7 @@ var require_bip371 = __commonJS({
 var require_psbt2 = __commonJS({
   "node_modules/bitcoinjs-lib/src/psbt.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Psbt = void 0;
     var bip174_1 = require_psbt();
@@ -10372,11 +10373,11 @@ var require_psbt2 = __commonJS({
     };
     var Psbt = class _Psbt {
       static fromBase64(data, opts = {}) {
-        const buffer = import_buffer.Buffer.from(data, "base64");
+        const buffer = Buffer.from(data, "base64");
         return this.fromBuffer(buffer, opts);
       }
       static fromHex(data, opts = {}) {
-        const buffer = import_buffer.Buffer.from(data, "hex");
+        const buffer = Buffer.from(data, "hex");
         return this.fromBuffer(buffer, opts);
       }
       static fromBuffer(buffer, opts = {}) {
@@ -11136,7 +11137,7 @@ var require_psbt2 = __commonJS({
     exports.Psbt = Psbt;
     var transactionFromBuffer = (buffer) => new PsbtTransaction(buffer);
     var PsbtTransaction = class {
-      constructor(buffer = import_buffer.Buffer.from([2, 0, 0, 0, 0, 0, 0, 0, 0, 0])) {
+      constructor(buffer = Buffer.from([2, 0, 0, 0, 0, 0, 0, 0, 0, 0])) {
         this.tx = transaction_1.Transaction.fromBuffer(buffer);
         checkTxEmpty(this.tx);
         Object.defineProperty(this, "tx", {
@@ -11151,14 +11152,14 @@ var require_psbt2 = __commonJS({
         };
       }
       addInput(input) {
-        if (input.hash === void 0 || input.index === void 0 || !import_buffer.Buffer.isBuffer(input.hash) && typeof input.hash !== "string" || typeof input.index !== "number") {
+        if (input.hash === void 0 || input.index === void 0 || !Buffer.isBuffer(input.hash) && typeof input.hash !== "string" || typeof input.index !== "number") {
           throw new Error("Error adding input.");
         }
-        const hash3 = typeof input.hash === "string" ? (0, bufferutils_1.reverseBuffer)(import_buffer.Buffer.from(input.hash, "hex")) : input.hash;
+        const hash3 = typeof input.hash === "string" ? (0, bufferutils_1.reverseBuffer)(Buffer.from(input.hash, "hex")) : input.hash;
         this.tx.addInput(hash3, input.index, input.sequence);
       }
       addOutput(output2) {
-        if (output2.script === void 0 || output2.value === void 0 || !import_buffer.Buffer.isBuffer(output2.script) || typeof output2.value !== "number") {
+        if (output2.script === void 0 || output2.value === void 0 || !Buffer.isBuffer(output2.script) || typeof output2.value !== "number") {
           throw new Error("Error adding output.");
         }
         this.tx.addOutput(output2.script, output2.value);
@@ -11262,7 +11263,7 @@ var require_psbt2 = __commonJS({
       });
     }
     function checkTxInputCache(cache, input) {
-      const key2 = (0, bufferutils_1.reverseBuffer)(import_buffer.Buffer.from(input.hash)).toString("hex") + ":" + input.index;
+      const key2 = (0, bufferutils_1.reverseBuffer)(Buffer.from(input.hash)).toString("hex") + ":" + input.index;
       if (cache.__TX_IN_CACHE[key2]) throw new Error("Duplicate input detected.");
       cache.__TX_IN_CACHE[key2] = 1;
     }
@@ -11465,7 +11466,7 @@ var require_psbt2 = __commonJS({
       const values = prevOuts.map((o) => o.value);
       const hashes = [];
       if (input.tapInternalKey && !tapLeafHashToSign) {
-        const outputKey = getPrevoutTaprootKey(inputIndex, input, cache) || import_buffer.Buffer.from([]);
+        const outputKey = getPrevoutTaprootKey(inputIndex, input, cache) || Buffer.from([]);
         if ((0, bip371_1.toXOnly)(pubkey).equals(outputKey)) {
           const tapKeyHash = unsignedTx.hashForWitnessV1(
             inputIndex,
@@ -11755,7 +11756,7 @@ var require_psbt2 = __commonJS({
       const decomp = bscript.decompile(finalScript);
       if (!decomp) return;
       const lastItem = decomp[decomp.length - 1];
-      if (!import_buffer.Buffer.isBuffer(lastItem) || isPubkeyLike(lastItem) || isSigLike(lastItem))
+      if (!Buffer.isBuffer(lastItem) || isPubkeyLike(lastItem) || isSigLike(lastItem))
         return;
       const sDecomp = bscript.decompile(lastItem);
       if (!sDecomp) return;
@@ -11838,7 +11839,7 @@ var require_psbt2 = __commonJS({
 var require_src2 = __commonJS({
   "node_modules/bitcoinjs-lib/src/index.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.initEccLib = exports.Transaction = exports.opcodes = exports.Psbt = exports.Block = exports.script = exports.payments = exports.networks = exports.crypto = exports.address = void 0;
     var address = require_address();
@@ -11892,14 +11893,14 @@ var require_src2 = __commonJS({
 // (disabled):node_modules/buffer/index.js
 var require_buffer2 = __commonJS({
   "(disabled):node_modules/buffer/index.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
   }
 });
 
 // node_modules/bn.js/lib/bn.js
 var require_bn = __commonJS({
   "node_modules/bn.js/lib/bn.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     (function(module2, exports2) {
       "use strict";
       function assert5(val, msg) {
@@ -14801,7 +14802,7 @@ var require_bn = __commonJS({
 var require_src3 = __commonJS({
   "node_modules/base-x/src/index.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var _Buffer = require_safe_buffer().Buffer;
     function base2(ALPHABET) {
       if (ALPHABET.length >= 255) {
@@ -14936,7 +14937,7 @@ var require_src3 = __commonJS({
 // node_modules/bs58/index.js
 var require_bs582 = __commonJS({
   "node_modules/bs58/index.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var basex = require_src3();
     var ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
     module.exports = basex(ALPHABET);
@@ -14947,7 +14948,7 @@ var require_bs582 = __commonJS({
 var require_encoding_lib = __commonJS({
   "node_modules/text-encoding-utf-8/lib/encoding.lib.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     function inRange2(a, min, max) {
       return min <= a && a <= max;
     }
@@ -15315,7 +15316,7 @@ var require_encoding_lib = __commonJS({
 var require_lib = __commonJS({
   "node_modules/borsh/lib/index.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       Object.defineProperty(o, k2, { enumerable: true, get: function() {
@@ -15357,13 +15358,13 @@ var require_lib = __commonJS({
     var textDecoder = new ResolvedTextDecoder("utf-8", { fatal: true });
     function baseEncode(value) {
       if (typeof value === "string") {
-        value = import_buffer.Buffer.from(value, "utf8");
+        value = Buffer.from(value, "utf8");
       }
-      return bs58_1.default.encode(import_buffer.Buffer.from(value));
+      return bs58_1.default.encode(Buffer.from(value));
     }
     exports.baseEncode = baseEncode;
     function baseDecode(value) {
-      return import_buffer.Buffer.from(bs58_1.default.decode(value));
+      return Buffer.from(bs58_1.default.decode(value));
     }
     exports.baseDecode = baseDecode;
     var INITIAL_LENGTH = 1024;
@@ -15381,12 +15382,12 @@ var require_lib = __commonJS({
     exports.BorshError = BorshError;
     var BinaryWriter = class {
       constructor() {
-        this.buf = import_buffer.Buffer.alloc(INITIAL_LENGTH);
+        this.buf = Buffer.alloc(INITIAL_LENGTH);
         this.length = 0;
       }
       maybeResize() {
         if (this.buf.length < 16 + this.length) {
-          this.buf = import_buffer.Buffer.concat([this.buf, import_buffer.Buffer.alloc(INITIAL_LENGTH)]);
+          this.buf = Buffer.concat([this.buf, Buffer.alloc(INITIAL_LENGTH)]);
         }
       }
       writeU8(value) {
@@ -15406,36 +15407,36 @@ var require_lib = __commonJS({
       }
       writeU64(value) {
         this.maybeResize();
-        this.writeBuffer(import_buffer.Buffer.from(new bn_js_1.default(value).toArray("le", 8)));
+        this.writeBuffer(Buffer.from(new bn_js_1.default(value).toArray("le", 8)));
       }
       writeU128(value) {
         this.maybeResize();
-        this.writeBuffer(import_buffer.Buffer.from(new bn_js_1.default(value).toArray("le", 16)));
+        this.writeBuffer(Buffer.from(new bn_js_1.default(value).toArray("le", 16)));
       }
       writeU256(value) {
         this.maybeResize();
-        this.writeBuffer(import_buffer.Buffer.from(new bn_js_1.default(value).toArray("le", 32)));
+        this.writeBuffer(Buffer.from(new bn_js_1.default(value).toArray("le", 32)));
       }
       writeU512(value) {
         this.maybeResize();
-        this.writeBuffer(import_buffer.Buffer.from(new bn_js_1.default(value).toArray("le", 64)));
+        this.writeBuffer(Buffer.from(new bn_js_1.default(value).toArray("le", 64)));
       }
       writeBuffer(buffer) {
-        this.buf = import_buffer.Buffer.concat([
-          import_buffer.Buffer.from(this.buf.subarray(0, this.length)),
+        this.buf = Buffer.concat([
+          Buffer.from(this.buf.subarray(0, this.length)),
           buffer,
-          import_buffer.Buffer.alloc(INITIAL_LENGTH)
+          Buffer.alloc(INITIAL_LENGTH)
         ]);
         this.length += buffer.length;
       }
       writeString(str) {
         this.maybeResize();
-        const b2 = import_buffer.Buffer.from(str, "utf8");
+        const b2 = Buffer.from(str, "utf8");
         this.writeU32(b2.length);
         this.writeBuffer(b2);
       }
       writeFixedArray(array2) {
-        this.writeBuffer(import_buffer.Buffer.from(array2));
+        this.writeBuffer(Buffer.from(array2));
       }
       writeArray(array2, fn) {
         this.maybeResize();
@@ -15742,7 +15743,7 @@ var require_lib = __commonJS({
 var require_Layout = __commonJS({
   "node_modules/@solana/buffer-layout/lib/Layout.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.s16 = exports.s8 = exports.nu64be = exports.u48be = exports.u40be = exports.u32be = exports.u24be = exports.u16be = exports.nu64 = exports.u48 = exports.u40 = exports.u32 = exports.u24 = exports.u16 = exports.u8 = exports.offset = exports.greedy = exports.Constant = exports.UTF8 = exports.CString = exports.Blob = exports.Boolean = exports.BitField = exports.BitStructure = exports.VariantLayout = exports.Union = exports.UnionLayoutDiscriminator = exports.UnionDiscriminator = exports.Structure = exports.Sequence = exports.DoubleBE = exports.Double = exports.FloatBE = exports.Float = exports.NearInt64BE = exports.NearInt64 = exports.NearUInt64BE = exports.NearUInt64 = exports.IntBE = exports.Int = exports.UIntBE = exports.UInt = exports.OffsetLayout = exports.GreedyCount = exports.ExternalLayout = exports.bindConstructorLayout = exports.nameWithProperty = exports.Layout = exports.uint8ArrayToBuffer = exports.checkUint8Array = void 0;
     exports.constant = exports.utf8 = exports.cstr = exports.blob = exports.unionLayoutDiscriminator = exports.union = exports.seq = exports.bits = exports.struct = exports.f64be = exports.f64 = exports.f32be = exports.f32 = exports.ns64be = exports.s48be = exports.s40be = exports.s32be = exports.s24be = exports.s16be = exports.ns64 = exports.s48 = exports.s40 = exports.s32 = exports.s24 = void 0;
@@ -17109,7 +17110,7 @@ function rng() {
 var getRandomValues, rnds8;
 var init_rng = __esm({
   "node_modules/uuid/dist/esm-browser/rng.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     rnds8 = new Uint8Array(16);
   }
 });
@@ -17118,7 +17119,7 @@ var init_rng = __esm({
 var regex_default;
 var init_regex = __esm({
   "node_modules/uuid/dist/esm-browser/regex.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     regex_default = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i;
   }
 });
@@ -17130,7 +17131,7 @@ function validate2(uuid) {
 var validate_default;
 var init_validate = __esm({
   "node_modules/uuid/dist/esm-browser/validate.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     init_regex();
     validate_default = validate2;
   }
@@ -17148,7 +17149,7 @@ function stringify3(arr) {
 var byteToHex, i, stringify_default;
 var init_stringify = __esm({
   "node_modules/uuid/dist/esm-browser/stringify.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     init_validate();
     byteToHex = [];
     for (i = 0; i < 256; ++i) {
@@ -17210,7 +17211,7 @@ function v1(options, buf, offset2) {
 var _nodeId, _clockseq, _lastMSecs, _lastNSecs, v1_default;
 var init_v1 = __esm({
   "node_modules/uuid/dist/esm-browser/v1.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     init_rng();
     init_stringify();
     _lastMSecs = 0;
@@ -17247,7 +17248,7 @@ function parse(uuid) {
 var parse_default;
 var init_parse = __esm({
   "node_modules/uuid/dist/esm-browser/parse.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     init_validate();
     parse_default = parse;
   }
@@ -17299,7 +17300,7 @@ function v35_default(name, version13, hashfunc) {
 var DNS, URL2;
 var init_v35 = __esm({
   "node_modules/uuid/dist/esm-browser/v35.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     init_stringify();
     init_parse();
     DNS = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
@@ -17452,7 +17453,7 @@ function md5ii(a, b2, c, d, x, s, t) {
 var md5_default;
 var init_md5 = __esm({
   "node_modules/uuid/dist/esm-browser/md5.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     md5_default = md5;
   }
 });
@@ -17461,7 +17462,7 @@ var init_md5 = __esm({
 var v3, v3_default;
 var init_v3 = __esm({
   "node_modules/uuid/dist/esm-browser/v3.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     init_v35();
     init_md5();
     v3 = v35_default("v3", 48, md5_default);
@@ -17487,7 +17488,7 @@ function v4(options, buf, offset2) {
 var v4_default;
 var init_v4 = __esm({
   "node_modules/uuid/dist/esm-browser/v4.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     init_rng();
     init_stringify();
     v4_default = v4;
@@ -17569,7 +17570,7 @@ function sha1(bytes2) {
 var sha1_default;
 var init_sha1 = __esm({
   "node_modules/uuid/dist/esm-browser/sha1.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     sha1_default = sha1;
   }
 });
@@ -17578,7 +17579,7 @@ var init_sha1 = __esm({
 var v5, v5_default;
 var init_v5 = __esm({
   "node_modules/uuid/dist/esm-browser/v5.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     init_v35();
     init_sha1();
     v5 = v35_default("v5", 80, sha1_default);
@@ -17590,7 +17591,7 @@ var init_v5 = __esm({
 var nil_default;
 var init_nil = __esm({
   "node_modules/uuid/dist/esm-browser/nil.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     nil_default = "00000000-0000-0000-0000-000000000000";
   }
 });
@@ -17605,7 +17606,7 @@ function version2(uuid) {
 var version_default;
 var init_version = __esm({
   "node_modules/uuid/dist/esm-browser/version.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     init_validate();
     version_default = version2;
   }
@@ -17626,7 +17627,7 @@ __export(esm_browser_exports, {
 });
 var init_esm_browser = __esm({
   "node_modules/uuid/dist/esm-browser/index.js"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     init_v1();
     init_v3();
     init_v4();
@@ -17643,7 +17644,7 @@ var init_esm_browser = __esm({
 var require_generateRequest = __commonJS({
   "node_modules/jayson/lib/generateRequest.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var uuid = (init_esm_browser(), __toCommonJS(esm_browser_exports)).v4;
     var generateRequest = function(method, params, id4, options) {
       if (typeof method !== "string") {
@@ -17688,7 +17689,7 @@ var require_generateRequest = __commonJS({
 var require_browser = __commonJS({
   "node_modules/jayson/lib/client/browser/index.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var uuid = (init_esm_browser(), __toCommonJS(esm_browser_exports)).v4;
     var generateRequest = require_generateRequest();
     var ClientBrowser = function(callServer, options) {
@@ -17796,7 +17797,7 @@ var require_browser = __commonJS({
 var require_eventemitter3 = __commonJS({
   "node_modules/eventemitter3/index.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var has = Object.prototype.hasOwnProperty;
     var prefix = "~";
     function Events() {
@@ -17958,7 +17959,7 @@ var require_eventemitter3 = __commonJS({
 // node_modules/qrcode/lib/can-promise.js
 var require_can_promise = __commonJS({
   "node_modules/qrcode/lib/can-promise.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     module.exports = function() {
       return typeof Promise === "function" && Promise.prototype && Promise.prototype.then;
     };
@@ -17968,7 +17969,7 @@ var require_can_promise = __commonJS({
 // node_modules/qrcode/lib/core/utils.js
 var require_utils3 = __commonJS({
   "node_modules/qrcode/lib/core/utils.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var toSJISFunction;
     var CODEWORDS_COUNT = [
       0,
@@ -18048,7 +18049,7 @@ var require_utils3 = __commonJS({
 // node_modules/qrcode/lib/core/error-correction-level.js
 var require_error_correction_level = __commonJS({
   "node_modules/qrcode/lib/core/error-correction-level.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     exports.L = { bit: 1 };
     exports.M = { bit: 0 };
     exports.Q = { bit: 3 };
@@ -18094,7 +18095,7 @@ var require_error_correction_level = __commonJS({
 // node_modules/qrcode/lib/core/bit-buffer.js
 var require_bit_buffer = __commonJS({
   "node_modules/qrcode/lib/core/bit-buffer.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     function BitBuffer() {
       this.buffer = [];
       this.length = 0;
@@ -18130,7 +18131,7 @@ var require_bit_buffer = __commonJS({
 // node_modules/qrcode/lib/core/bit-matrix.js
 var require_bit_matrix = __commonJS({
   "node_modules/qrcode/lib/core/bit-matrix.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     function BitMatrix(size) {
       if (!size || size < 1) {
         throw new Error("BitMatrix size must be defined and greater than 0");
@@ -18160,7 +18161,7 @@ var require_bit_matrix = __commonJS({
 // node_modules/qrcode/lib/core/alignment-pattern.js
 var require_alignment_pattern = __commonJS({
   "node_modules/qrcode/lib/core/alignment-pattern.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var getSymbolSize = require_utils3().getSymbolSize;
     exports.getRowColCoords = function getRowColCoords(version13) {
       if (version13 === 1) return [];
@@ -18196,7 +18197,7 @@ var require_alignment_pattern = __commonJS({
 // node_modules/qrcode/lib/core/finder-pattern.js
 var require_finder_pattern = __commonJS({
   "node_modules/qrcode/lib/core/finder-pattern.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var getSymbolSize = require_utils3().getSymbolSize;
     var FINDER_PATTERN_SIZE = 7;
     exports.getPositions = function getPositions(version13) {
@@ -18216,7 +18217,7 @@ var require_finder_pattern = __commonJS({
 // node_modules/qrcode/lib/core/mask-pattern.js
 var require_mask_pattern = __commonJS({
   "node_modules/qrcode/lib/core/mask-pattern.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     exports.Patterns = {
       PATTERN000: 0,
       PATTERN001: 1,
@@ -18359,7 +18360,7 @@ var require_mask_pattern = __commonJS({
 // node_modules/qrcode/lib/core/error-correction-code.js
 var require_error_correction_code = __commonJS({
   "node_modules/qrcode/lib/core/error-correction-code.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var ECLevel = require_error_correction_level();
     var EC_BLOCKS_TABLE = [
       // L  M  Q  H
@@ -18721,7 +18722,7 @@ var require_error_correction_code = __commonJS({
 // node_modules/qrcode/lib/core/galois-field.js
 var require_galois_field = __commonJS({
   "node_modules/qrcode/lib/core/galois-field.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var EXP_TABLE = new Uint8Array(512);
     var LOG_TABLE = new Uint8Array(256);
     (function initTables() {
@@ -18755,7 +18756,7 @@ var require_galois_field = __commonJS({
 // node_modules/qrcode/lib/core/polynomial.js
 var require_polynomial = __commonJS({
   "node_modules/qrcode/lib/core/polynomial.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var GF = require_galois_field();
     exports.mul = function mul3(p1, p2) {
       const coeff = new Uint8Array(p1.length + p2.length - 1);
@@ -18792,7 +18793,7 @@ var require_polynomial = __commonJS({
 // node_modules/qrcode/lib/core/reed-solomon-encoder.js
 var require_reed_solomon_encoder = __commonJS({
   "node_modules/qrcode/lib/core/reed-solomon-encoder.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Polynomial = require_polynomial();
     function ReedSolomonEncoder(degree) {
       this.genPoly = void 0;
@@ -18825,7 +18826,7 @@ var require_reed_solomon_encoder = __commonJS({
 // node_modules/qrcode/lib/core/version-check.js
 var require_version_check = __commonJS({
   "node_modules/qrcode/lib/core/version-check.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     exports.isValid = function isValid(version13) {
       return !isNaN(version13) && version13 >= 1 && version13 <= 40;
     };
@@ -18835,7 +18836,7 @@ var require_version_check = __commonJS({
 // node_modules/qrcode/lib/core/regex.js
 var require_regex = __commonJS({
   "node_modules/qrcode/lib/core/regex.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var numeric = "[0-9]+";
     var alphanumeric = "[A-Z $%*+\\-./:]+";
     var kanji = "(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+";
@@ -18864,7 +18865,7 @@ var require_regex = __commonJS({
 // node_modules/qrcode/lib/core/mode.js
 var require_mode = __commonJS({
   "node_modules/qrcode/lib/core/mode.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var VersionCheck = require_version_check();
     var Regex = require_regex();
     exports.NUMERIC = {
@@ -18946,7 +18947,7 @@ var require_mode = __commonJS({
 // node_modules/qrcode/lib/core/version.js
 var require_version = __commonJS({
   "node_modules/qrcode/lib/core/version.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Utils = require_utils3();
     var ECCode = require_error_correction_code();
     var ECLevel = require_error_correction_level();
@@ -19042,7 +19043,7 @@ var require_version = __commonJS({
 // node_modules/qrcode/lib/core/format-info.js
 var require_format_info = __commonJS({
   "node_modules/qrcode/lib/core/format-info.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Utils = require_utils3();
     var G15 = 1 << 10 | 1 << 8 | 1 << 5 | 1 << 4 | 1 << 2 | 1 << 1 | 1 << 0;
     var G15_MASK = 1 << 14 | 1 << 12 | 1 << 10 | 1 << 4 | 1 << 1;
@@ -19061,7 +19062,7 @@ var require_format_info = __commonJS({
 // node_modules/qrcode/lib/core/numeric-data.js
 var require_numeric_data = __commonJS({
   "node_modules/qrcode/lib/core/numeric-data.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Mode = require_mode();
     function NumericData(data) {
       this.mode = Mode.NUMERIC;
@@ -19097,7 +19098,7 @@ var require_numeric_data = __commonJS({
 // node_modules/qrcode/lib/core/alphanumeric-data.js
 var require_alphanumeric_data = __commonJS({
   "node_modules/qrcode/lib/core/alphanumeric-data.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Mode = require_mode();
     var ALPHA_NUM_CHARS = [
       "0",
@@ -19177,7 +19178,7 @@ var require_alphanumeric_data = __commonJS({
 // node_modules/qrcode/lib/core/byte-data.js
 var require_byte_data = __commonJS({
   "node_modules/qrcode/lib/core/byte-data.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Mode = require_mode();
     function ByteData(data) {
       this.mode = Mode.BYTE;
@@ -19208,7 +19209,7 @@ var require_byte_data = __commonJS({
 // node_modules/qrcode/lib/core/kanji-data.js
 var require_kanji_data = __commonJS({
   "node_modules/qrcode/lib/core/kanji-data.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Mode = require_mode();
     var Utils = require_utils3();
     function KanjiData(data) {
@@ -19249,7 +19250,7 @@ var require_kanji_data = __commonJS({
 var require_dijkstra = __commonJS({
   "node_modules/dijkstrajs/dijkstra.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var dijkstra = {
       single_source_shortest_paths: function(graph, s, d) {
         var predecessors = {};
@@ -19350,7 +19351,7 @@ var require_dijkstra = __commonJS({
 // node_modules/qrcode/lib/core/segments.js
 var require_segments = __commonJS({
   "node_modules/qrcode/lib/core/segments.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Mode = require_mode();
     var NumericData = require_numeric_data();
     var AlphanumericData = require_alphanumeric_data();
@@ -19537,7 +19538,7 @@ var require_segments = __commonJS({
 // node_modules/qrcode/lib/core/qrcode.js
 var require_qrcode = __commonJS({
   "node_modules/qrcode/lib/core/qrcode.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Utils = require_utils3();
     var ECLevel = require_error_correction_level();
     var BitBuffer = require_bit_buffer();
@@ -19799,7 +19800,7 @@ var require_qrcode = __commonJS({
 // node_modules/qrcode/lib/renderer/utils.js
 var require_utils4 = __commonJS({
   "node_modules/qrcode/lib/renderer/utils.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     function hex2rgba(hex) {
       if (typeof hex === "number") {
         hex = hex.toString();
@@ -19880,7 +19881,7 @@ var require_utils4 = __commonJS({
 // node_modules/qrcode/lib/renderer/canvas.js
 var require_canvas = __commonJS({
   "node_modules/qrcode/lib/renderer/canvas.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Utils = require_utils4();
     function clearCanvas(ctx, canvas, size) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -19934,7 +19935,7 @@ var require_canvas = __commonJS({
 // node_modules/qrcode/lib/renderer/svg-tag.js
 var require_svg_tag = __commonJS({
   "node_modules/qrcode/lib/renderer/svg-tag.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Utils = require_utils4();
     function getColorAttrib(color, attrib) {
       const alpha = color.a / 255;
@@ -19993,7 +19994,7 @@ var require_svg_tag = __commonJS({
 // node_modules/qrcode/lib/browser.js
 var require_browser2 = __commonJS({
   "node_modules/qrcode/lib/browser.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var canPromise = require_can_promise();
     var QRCode2 = require_qrcode();
     var CanvasRenderer = require_canvas();
@@ -20065,7 +20066,7 @@ var require_browser2 = __commonJS({
 var require_constants = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/internal/constants.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SEMVER_SPEC_VERSION = "2.0.0";
     var MAX_LENGTH = 256;
     var MAX_SAFE_INTEGER3 = Number.MAX_SAFE_INTEGER || /* istanbul ignore next */
@@ -20098,7 +20099,7 @@ var require_constants = __commonJS({
 var require_debug = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/internal/debug.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var debug = typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {
     };
     module.exports = debug;
@@ -20109,7 +20110,7 @@ var require_debug = __commonJS({
 var require_re = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/internal/re.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var {
       MAX_SAFE_COMPONENT_LENGTH,
       MAX_SAFE_BUILD_LENGTH,
@@ -20198,7 +20199,7 @@ var require_re = __commonJS({
 var require_parse_options = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/internal/parse-options.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var looseOption = Object.freeze({ loose: true });
     var emptyOpts = Object.freeze({});
     var parseOptions = (options) => {
@@ -20218,7 +20219,7 @@ var require_parse_options = __commonJS({
 var require_identifiers = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/internal/identifiers.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var numeric = /^[0-9]+$/;
     var compareIdentifiers = (a, b2) => {
       if (typeof a === "number" && typeof b2 === "number") {
@@ -20244,7 +20245,7 @@ var require_identifiers = __commonJS({
 var require_semver = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/classes/semver.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var debug = require_debug();
     var { MAX_LENGTH, MAX_SAFE_INTEGER: MAX_SAFE_INTEGER3 } = require_constants();
     var { safeRe: re, t } = require_re();
@@ -20524,7 +20525,7 @@ var require_semver = __commonJS({
 var require_parse = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/parse.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var parse4 = (version13, options, throwErrors = false) => {
       if (version13 instanceof SemVer) {
@@ -20547,7 +20548,7 @@ var require_parse = __commonJS({
 var require_valid = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/valid.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var parse4 = require_parse();
     var valid = (version13, options) => {
       const v = parse4(version13, options);
@@ -20561,7 +20562,7 @@ var require_valid = __commonJS({
 var require_clean = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/clean.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var parse4 = require_parse();
     var clean2 = (version13, options) => {
       const s = parse4(version13.trim().replace(/^[=v]+/, ""), options);
@@ -20575,7 +20576,7 @@ var require_clean = __commonJS({
 var require_inc = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/inc.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var inc = (version13, release, options, identifier, identifierBase) => {
       if (typeof options === "string") {
@@ -20600,7 +20601,7 @@ var require_inc = __commonJS({
 var require_diff = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/diff.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var parse4 = require_parse();
     var diff = (version1, version22) => {
       const v12 = parse4(version1, null, true);
@@ -20645,7 +20646,7 @@ var require_diff = __commonJS({
 var require_major = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/major.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var major = (a, loose) => new SemVer(a, loose).major;
     module.exports = major;
@@ -20656,7 +20657,7 @@ var require_major = __commonJS({
 var require_minor = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/minor.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var minor = (a, loose) => new SemVer(a, loose).minor;
     module.exports = minor;
@@ -20667,7 +20668,7 @@ var require_minor = __commonJS({
 var require_patch = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/patch.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var patch = (a, loose) => new SemVer(a, loose).patch;
     module.exports = patch;
@@ -20678,7 +20679,7 @@ var require_patch = __commonJS({
 var require_prerelease = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/prerelease.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var parse4 = require_parse();
     var prerelease = (version13, options) => {
       const parsed = parse4(version13, options);
@@ -20692,7 +20693,7 @@ var require_prerelease = __commonJS({
 var require_compare = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/compare.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var compare2 = (a, b2, loose) => new SemVer(a, loose).compare(new SemVer(b2, loose));
     module.exports = compare2;
@@ -20703,7 +20704,7 @@ var require_compare = __commonJS({
 var require_rcompare = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/rcompare.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare();
     var rcompare = (a, b2, loose) => compare2(b2, a, loose);
     module.exports = rcompare;
@@ -20714,7 +20715,7 @@ var require_rcompare = __commonJS({
 var require_compare_loose = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/compare-loose.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare();
     var compareLoose = (a, b2) => compare2(a, b2, true);
     module.exports = compareLoose;
@@ -20725,7 +20726,7 @@ var require_compare_loose = __commonJS({
 var require_compare_build = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/compare-build.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var compareBuild = (a, b2, loose) => {
       const versionA = new SemVer(a, loose);
@@ -20740,7 +20741,7 @@ var require_compare_build = __commonJS({
 var require_sort = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/sort.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compareBuild = require_compare_build();
     var sort = (list, loose) => list.sort((a, b2) => compareBuild(a, b2, loose));
     module.exports = sort;
@@ -20751,7 +20752,7 @@ var require_sort = __commonJS({
 var require_rsort = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/rsort.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compareBuild = require_compare_build();
     var rsort = (list, loose) => list.sort((a, b2) => compareBuild(b2, a, loose));
     module.exports = rsort;
@@ -20762,7 +20763,7 @@ var require_rsort = __commonJS({
 var require_gt = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/gt.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare();
     var gt = (a, b2, loose) => compare2(a, b2, loose) > 0;
     module.exports = gt;
@@ -20773,7 +20774,7 @@ var require_gt = __commonJS({
 var require_lt = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/lt.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare();
     var lt = (a, b2, loose) => compare2(a, b2, loose) < 0;
     module.exports = lt;
@@ -20784,7 +20785,7 @@ var require_lt = __commonJS({
 var require_eq = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/eq.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare();
     var eq4 = (a, b2, loose) => compare2(a, b2, loose) === 0;
     module.exports = eq4;
@@ -20795,7 +20796,7 @@ var require_eq = __commonJS({
 var require_neq = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/neq.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare();
     var neq = (a, b2, loose) => compare2(a, b2, loose) !== 0;
     module.exports = neq;
@@ -20806,7 +20807,7 @@ var require_neq = __commonJS({
 var require_gte = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/gte.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare();
     var gte = (a, b2, loose) => compare2(a, b2, loose) >= 0;
     module.exports = gte;
@@ -20817,7 +20818,7 @@ var require_gte = __commonJS({
 var require_lte = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/lte.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare();
     var lte = (a, b2, loose) => compare2(a, b2, loose) <= 0;
     module.exports = lte;
@@ -20828,7 +20829,7 @@ var require_lte = __commonJS({
 var require_cmp = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/cmp.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var eq4 = require_eq();
     var neq = require_neq();
     var gt = require_gt();
@@ -20879,7 +20880,7 @@ var require_cmp = __commonJS({
 var require_coerce = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/coerce.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var parse4 = require_parse();
     var { safeRe: re, t } = require_re();
@@ -20926,7 +20927,7 @@ var require_coerce = __commonJS({
 var require_lrucache = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/internal/lrucache.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var LRUCache = class {
       constructor() {
         this.max = 1e3;
@@ -20965,7 +20966,7 @@ var require_lrucache = __commonJS({
 var require_range = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/classes/range.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SPACE_CHARACTERS = /\s+/g;
     var Range = class _Range {
       constructor(range, options) {
@@ -21343,7 +21344,7 @@ var require_range = __commonJS({
 var require_comparator = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/classes/comparator.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var ANY = Symbol("SemVer ANY");
     var Comparator = class _Comparator {
       static get ANY() {
@@ -21457,7 +21458,7 @@ var require_comparator = __commonJS({
 var require_satisfies = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/functions/satisfies.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Range = require_range();
     var satisfies = (version13, range, options) => {
       try {
@@ -21475,7 +21476,7 @@ var require_satisfies = __commonJS({
 var require_to_comparators = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/ranges/to-comparators.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Range = require_range();
     var toComparators = (range, options) => new Range(range, options).set.map((comp) => comp.map((c) => c.value).join(" ").trim().split(" "));
     module.exports = toComparators;
@@ -21486,7 +21487,7 @@ var require_to_comparators = __commonJS({
 var require_max_satisfying = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/ranges/max-satisfying.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var Range = require_range();
     var maxSatisfying = (versions, range, options) => {
@@ -21516,7 +21517,7 @@ var require_max_satisfying = __commonJS({
 var require_min_satisfying = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/ranges/min-satisfying.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var Range = require_range();
     var minSatisfying = (versions, range, options) => {
@@ -21546,7 +21547,7 @@ var require_min_satisfying = __commonJS({
 var require_min_version = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/ranges/min-version.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var Range = require_range();
     var gt = require_gt();
@@ -21606,7 +21607,7 @@ var require_min_version = __commonJS({
 var require_valid2 = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/ranges/valid.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Range = require_range();
     var validRange = (range, options) => {
       try {
@@ -21623,7 +21624,7 @@ var require_valid2 = __commonJS({
 var require_outside = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/ranges/outside.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver();
     var Comparator = require_comparator();
     var { ANY } = Comparator;
@@ -21693,7 +21694,7 @@ var require_outside = __commonJS({
 var require_gtr = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/ranges/gtr.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var outside = require_outside();
     var gtr = (version13, range, options) => outside(version13, range, ">", options);
     module.exports = gtr;
@@ -21704,7 +21705,7 @@ var require_gtr = __commonJS({
 var require_ltr = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/ranges/ltr.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var outside = require_outside();
     var ltr = (version13, range, options) => outside(version13, range, "<", options);
     module.exports = ltr;
@@ -21715,7 +21716,7 @@ var require_ltr = __commonJS({
 var require_intersects = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/ranges/intersects.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Range = require_range();
     var intersects = (r1, r2, options) => {
       r1 = new Range(r1, options);
@@ -21730,7 +21731,7 @@ var require_intersects = __commonJS({
 var require_simplify = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/ranges/simplify.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var satisfies = require_satisfies();
     var compare2 = require_compare();
     module.exports = (versions, range, options) => {
@@ -21781,7 +21782,7 @@ var require_simplify = __commonJS({
 var require_subset = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/ranges/subset.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Range = require_range();
     var Comparator = require_comparator();
     var { ANY } = Comparator;
@@ -21944,7 +21945,7 @@ var require_subset = __commonJS({
 var require_semver2 = __commonJS({
   "node_modules/@ledgerhq/hw-app-eth/node_modules/semver/index.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var internalRe = require_re();
     var constants = require_constants();
     var SemVer = require_semver();
@@ -22039,14 +22040,14 @@ var require_semver2 = __commonJS({
 // (disabled):crypto
 var require_crypto3 = __commonJS({
   "(disabled):crypto"() {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
   }
 });
 
 // node_modules/crypto-js/core.js
 var require_core = __commonJS({
   "node_modules/crypto-js/core.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     (function(root, factory4) {
       if (typeof exports === "object") {
         module.exports = exports = factory4();
@@ -22655,7 +22656,7 @@ var require_core = __commonJS({
 // node_modules/crypto-js/sha256.js
 var require_sha2562 = __commonJS({
   "node_modules/crypto-js/sha256.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     (function(root, factory4) {
       if (typeof exports === "object") {
         module.exports = exports = factory4(require_core());
@@ -22777,7 +22778,7 @@ var require_sha2562 = __commonJS({
 // node_modules/crypto-js/sha224.js
 var require_sha224 = __commonJS({
   "node_modules/crypto-js/sha224.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     (function(root, factory4, undef) {
       if (typeof exports === "object") {
         module.exports = exports = factory4(require_core(), require_sha2562());
@@ -22823,7 +22824,7 @@ var require_sha224 = __commonJS({
 // node_modules/js-sha3/src/sha3.js
 var require_sha3 = __commonJS({
   "node_modules/js-sha3/src/sha3.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     (function() {
       "use strict";
       var INPUT_ERROR = "input is invalid type";
@@ -23473,7 +23474,7 @@ var require_sha3 = __commonJS({
 // node_modules/minimalistic-assert/index.js
 var require_minimalistic_assert = __commonJS({
   "node_modules/minimalistic-assert/index.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     module.exports = assert5;
     function assert5(val, msg) {
       if (!val)
@@ -23489,7 +23490,7 @@ var require_minimalistic_assert = __commonJS({
 // node_modules/inherits/inherits_browser.js
 var require_inherits_browser = __commonJS({
   "node_modules/inherits/inherits_browser.js"(exports, module) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     if (typeof Object.create === "function") {
       module.exports = function inherits4(ctor, superCtor) {
         if (superCtor) {
@@ -23523,7 +23524,7 @@ var require_inherits_browser = __commonJS({
 var require_utils5 = __commonJS({
   "node_modules/hash.js/lib/hash/utils.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var assert5 = require_minimalistic_assert();
     var inherits4 = require_inherits_browser();
     exports.inherits = inherits4;
@@ -23769,7 +23770,7 @@ var require_utils5 = __commonJS({
 var require_common = __commonJS({
   "node_modules/hash.js/lib/hash/common.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var utils = require_utils5();
     var assert5 = require_minimalistic_assert();
     function BlockHash() {
@@ -23849,7 +23850,7 @@ var require_common = __commonJS({
 var require_common2 = __commonJS({
   "node_modules/hash.js/lib/hash/sha/common.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var utils = require_utils5();
     var rotr32 = utils.rotr32;
     function ft_1(s, x, y, z) {
@@ -23896,7 +23897,7 @@ var require_common2 = __commonJS({
 var require__ = __commonJS({
   "node_modules/hash.js/lib/hash/sha/1.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var utils = require_utils5();
     var common = require_common();
     var shaCommon = require_common2();
@@ -23969,7 +23970,7 @@ var require__ = __commonJS({
 var require__2 = __commonJS({
   "node_modules/hash.js/lib/hash/sha/256.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var utils = require_utils5();
     var common = require_common();
     var shaCommon = require_common2();
@@ -24122,7 +24123,7 @@ var require__2 = __commonJS({
 var require__3 = __commonJS({
   "node_modules/hash.js/lib/hash/sha/224.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var utils = require_utils5();
     var SHA2563 = require__2();
     function SHA2243() {
@@ -24159,7 +24160,7 @@ var require__3 = __commonJS({
 var require__4 = __commonJS({
   "node_modules/hash.js/lib/hash/sha/512.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var utils = require_utils5();
     var common = require_common();
     var assert5 = require_minimalistic_assert();
@@ -24599,7 +24600,7 @@ var require__4 = __commonJS({
 var require__5 = __commonJS({
   "node_modules/hash.js/lib/hash/sha/384.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var utils = require_utils5();
     var SHA5123 = require__4();
     function SHA384() {
@@ -24644,7 +24645,7 @@ var require__5 = __commonJS({
 var require_sha = __commonJS({
   "node_modules/hash.js/lib/hash/sha.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     exports.sha1 = require__();
     exports.sha224 = require__3();
     exports.sha256 = require__2();
@@ -24657,7 +24658,7 @@ var require_sha = __commonJS({
 var require_ripemd = __commonJS({
   "node_modules/hash.js/lib/hash/ripemd.js"(exports) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var utils = require_utils5();
     var common = require_common();
     var rotl32 = utils.rotl32;
@@ -25099,7 +25100,7 @@ var require_ripemd = __commonJS({
 var require_hmac = __commonJS({
   "node_modules/hash.js/lib/hash/hmac.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var utils = require_utils5();
     var assert5 = require_minimalistic_assert();
     function Hmac(hash3, key2, enc) {
@@ -25140,7 +25141,7 @@ var require_hmac = __commonJS({
 // node_modules/hash.js/lib/hash.js
 var require_hash = __commonJS({
   "node_modules/hash.js/lib/hash.js"(exports) {
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var hash3 = exports;
     hash3.utils = require_utils5();
     hash3.common = require_common();
@@ -25160,7 +25161,7 @@ var require_hash = __commonJS({
 var require_events = __commonJS({
   "node_modules/events/events.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var R = typeof Reflect === "object" ? Reflect : null;
     var ReflectApply = R && typeof R.apply === "function" ? R.apply : function ReflectApply2(target, receiver, args) {
       return Function.prototype.apply.call(target, receiver, args);
@@ -25530,7 +25531,7 @@ var require_events = __commonJS({
 var require_constants2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/internal/constants.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SEMVER_SPEC_VERSION = "2.0.0";
     var MAX_LENGTH = 256;
     var MAX_SAFE_INTEGER3 = Number.MAX_SAFE_INTEGER || /* istanbul ignore next */
@@ -25563,7 +25564,7 @@ var require_constants2 = __commonJS({
 var require_debug2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/internal/debug.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var debug = typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {
     };
     module.exports = debug;
@@ -25574,7 +25575,7 @@ var require_debug2 = __commonJS({
 var require_re2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/internal/re.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var {
       MAX_SAFE_COMPONENT_LENGTH,
       MAX_SAFE_BUILD_LENGTH,
@@ -25663,7 +25664,7 @@ var require_re2 = __commonJS({
 var require_parse_options2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/internal/parse-options.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var looseOption = Object.freeze({ loose: true });
     var emptyOpts = Object.freeze({});
     var parseOptions = (options) => {
@@ -25683,7 +25684,7 @@ var require_parse_options2 = __commonJS({
 var require_identifiers2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/internal/identifiers.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var numeric = /^[0-9]+$/;
     var compareIdentifiers = (a, b2) => {
       if (typeof a === "number" && typeof b2 === "number") {
@@ -25709,7 +25710,7 @@ var require_identifiers2 = __commonJS({
 var require_semver3 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/classes/semver.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var debug = require_debug2();
     var { MAX_LENGTH, MAX_SAFE_INTEGER: MAX_SAFE_INTEGER3 } = require_constants2();
     var { safeRe: re, t } = require_re2();
@@ -25989,7 +25990,7 @@ var require_semver3 = __commonJS({
 var require_parse2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/parse.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var parse4 = (version13, options, throwErrors = false) => {
       if (version13 instanceof SemVer) {
@@ -26012,7 +26013,7 @@ var require_parse2 = __commonJS({
 var require_valid3 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/valid.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var parse4 = require_parse2();
     var valid = (version13, options) => {
       const v = parse4(version13, options);
@@ -26026,7 +26027,7 @@ var require_valid3 = __commonJS({
 var require_clean2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/clean.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var parse4 = require_parse2();
     var clean2 = (version13, options) => {
       const s = parse4(version13.trim().replace(/^[=v]+/, ""), options);
@@ -26040,7 +26041,7 @@ var require_clean2 = __commonJS({
 var require_inc2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/inc.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var inc = (version13, release, options, identifier, identifierBase) => {
       if (typeof options === "string") {
@@ -26065,7 +26066,7 @@ var require_inc2 = __commonJS({
 var require_diff2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/diff.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var parse4 = require_parse2();
     var diff = (version1, version22) => {
       const v12 = parse4(version1, null, true);
@@ -26110,7 +26111,7 @@ var require_diff2 = __commonJS({
 var require_major2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/major.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var major = (a, loose) => new SemVer(a, loose).major;
     module.exports = major;
@@ -26121,7 +26122,7 @@ var require_major2 = __commonJS({
 var require_minor2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/minor.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var minor = (a, loose) => new SemVer(a, loose).minor;
     module.exports = minor;
@@ -26132,7 +26133,7 @@ var require_minor2 = __commonJS({
 var require_patch2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/patch.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var patch = (a, loose) => new SemVer(a, loose).patch;
     module.exports = patch;
@@ -26143,7 +26144,7 @@ var require_patch2 = __commonJS({
 var require_prerelease2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/prerelease.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var parse4 = require_parse2();
     var prerelease = (version13, options) => {
       const parsed = parse4(version13, options);
@@ -26157,7 +26158,7 @@ var require_prerelease2 = __commonJS({
 var require_compare2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/compare.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var compare2 = (a, b2, loose) => new SemVer(a, loose).compare(new SemVer(b2, loose));
     module.exports = compare2;
@@ -26168,7 +26169,7 @@ var require_compare2 = __commonJS({
 var require_rcompare2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/rcompare.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare2();
     var rcompare = (a, b2, loose) => compare2(b2, a, loose);
     module.exports = rcompare;
@@ -26179,7 +26180,7 @@ var require_rcompare2 = __commonJS({
 var require_compare_loose2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/compare-loose.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare2();
     var compareLoose = (a, b2) => compare2(a, b2, true);
     module.exports = compareLoose;
@@ -26190,7 +26191,7 @@ var require_compare_loose2 = __commonJS({
 var require_compare_build2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/compare-build.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var compareBuild = (a, b2, loose) => {
       const versionA = new SemVer(a, loose);
@@ -26205,7 +26206,7 @@ var require_compare_build2 = __commonJS({
 var require_sort2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/sort.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compareBuild = require_compare_build2();
     var sort = (list, loose) => list.sort((a, b2) => compareBuild(a, b2, loose));
     module.exports = sort;
@@ -26216,7 +26217,7 @@ var require_sort2 = __commonJS({
 var require_rsort2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/rsort.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compareBuild = require_compare_build2();
     var rsort = (list, loose) => list.sort((a, b2) => compareBuild(b2, a, loose));
     module.exports = rsort;
@@ -26227,7 +26228,7 @@ var require_rsort2 = __commonJS({
 var require_gt2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/gt.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare2();
     var gt = (a, b2, loose) => compare2(a, b2, loose) > 0;
     module.exports = gt;
@@ -26238,7 +26239,7 @@ var require_gt2 = __commonJS({
 var require_lt2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/lt.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare2();
     var lt = (a, b2, loose) => compare2(a, b2, loose) < 0;
     module.exports = lt;
@@ -26249,7 +26250,7 @@ var require_lt2 = __commonJS({
 var require_eq2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/eq.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare2();
     var eq4 = (a, b2, loose) => compare2(a, b2, loose) === 0;
     module.exports = eq4;
@@ -26260,7 +26261,7 @@ var require_eq2 = __commonJS({
 var require_neq2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/neq.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare2();
     var neq = (a, b2, loose) => compare2(a, b2, loose) !== 0;
     module.exports = neq;
@@ -26271,7 +26272,7 @@ var require_neq2 = __commonJS({
 var require_gte2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/gte.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare2();
     var gte = (a, b2, loose) => compare2(a, b2, loose) >= 0;
     module.exports = gte;
@@ -26282,7 +26283,7 @@ var require_gte2 = __commonJS({
 var require_lte2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/lte.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var compare2 = require_compare2();
     var lte = (a, b2, loose) => compare2(a, b2, loose) <= 0;
     module.exports = lte;
@@ -26293,7 +26294,7 @@ var require_lte2 = __commonJS({
 var require_cmp2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/cmp.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var eq4 = require_eq2();
     var neq = require_neq2();
     var gt = require_gt2();
@@ -26344,7 +26345,7 @@ var require_cmp2 = __commonJS({
 var require_coerce2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/coerce.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var parse4 = require_parse2();
     var { safeRe: re, t } = require_re2();
@@ -26391,7 +26392,7 @@ var require_coerce2 = __commonJS({
 var require_lrucache2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/internal/lrucache.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var LRUCache = class {
       constructor() {
         this.max = 1e3;
@@ -26430,7 +26431,7 @@ var require_lrucache2 = __commonJS({
 var require_range2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/classes/range.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SPACE_CHARACTERS = /\s+/g;
     var Range = class _Range {
       constructor(range, options) {
@@ -26808,7 +26809,7 @@ var require_range2 = __commonJS({
 var require_comparator2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/classes/comparator.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var ANY = Symbol("SemVer ANY");
     var Comparator = class _Comparator {
       static get ANY() {
@@ -26922,7 +26923,7 @@ var require_comparator2 = __commonJS({
 var require_satisfies2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/functions/satisfies.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Range = require_range2();
     var satisfies = (version13, range, options) => {
       try {
@@ -26940,7 +26941,7 @@ var require_satisfies2 = __commonJS({
 var require_to_comparators2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/ranges/to-comparators.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Range = require_range2();
     var toComparators = (range, options) => new Range(range, options).set.map((comp) => comp.map((c) => c.value).join(" ").trim().split(" "));
     module.exports = toComparators;
@@ -26951,7 +26952,7 @@ var require_to_comparators2 = __commonJS({
 var require_max_satisfying2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/ranges/max-satisfying.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var Range = require_range2();
     var maxSatisfying = (versions, range, options) => {
@@ -26981,7 +26982,7 @@ var require_max_satisfying2 = __commonJS({
 var require_min_satisfying2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/ranges/min-satisfying.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var Range = require_range2();
     var minSatisfying = (versions, range, options) => {
@@ -27011,7 +27012,7 @@ var require_min_satisfying2 = __commonJS({
 var require_min_version2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/ranges/min-version.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var Range = require_range2();
     var gt = require_gt2();
@@ -27071,7 +27072,7 @@ var require_min_version2 = __commonJS({
 var require_valid4 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/ranges/valid.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Range = require_range2();
     var validRange = (range, options) => {
       try {
@@ -27088,7 +27089,7 @@ var require_valid4 = __commonJS({
 var require_outside2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/ranges/outside.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var SemVer = require_semver3();
     var Comparator = require_comparator2();
     var { ANY } = Comparator;
@@ -27158,7 +27159,7 @@ var require_outside2 = __commonJS({
 var require_gtr2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/ranges/gtr.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var outside = require_outside2();
     var gtr = (version13, range, options) => outside(version13, range, ">", options);
     module.exports = gtr;
@@ -27169,7 +27170,7 @@ var require_gtr2 = __commonJS({
 var require_ltr2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/ranges/ltr.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var outside = require_outside2();
     var ltr = (version13, range, options) => outside(version13, range, "<", options);
     module.exports = ltr;
@@ -27180,7 +27181,7 @@ var require_ltr2 = __commonJS({
 var require_intersects2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/ranges/intersects.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Range = require_range2();
     var intersects = (r1, r2, options) => {
       r1 = new Range(r1, options);
@@ -27195,7 +27196,7 @@ var require_intersects2 = __commonJS({
 var require_simplify2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/ranges/simplify.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var satisfies = require_satisfies2();
     var compare2 = require_compare2();
     module.exports = (versions, range, options) => {
@@ -27246,7 +27247,7 @@ var require_simplify2 = __commonJS({
 var require_subset2 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/ranges/subset.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var Range = require_range2();
     var Comparator = require_comparator2();
     var { ANY } = Comparator;
@@ -27409,7 +27410,7 @@ var require_subset2 = __commonJS({
 var require_semver4 = __commonJS({
   "node_modules/@ledgerhq/hw-transport-webhid/node_modules/semver/index.js"(exports, module) {
     "use strict";
-    init_buffer_inject();
+    init_wallet_buffer_shim();
     var internalRe = require_re2();
     var constants = require_constants2();
     var SemVer = require_semver3();
@@ -27502,7 +27503,7 @@ var require_semver4 = __commonJS({
 });
 
 // wallet.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/index.js
 var lib_exports = {};
@@ -27702,7 +27703,7 @@ __export(lib_exports, {
   zeroPadBytes: () => zeroPadBytes,
   zeroPadValue: () => zeroPadValue
 });
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/ethers.js
 var ethers_exports = {};
@@ -27901,32 +27902,32 @@ __export(ethers_exports, {
   zeroPadBytes: () => zeroPadBytes,
   zeroPadValue: () => zeroPadValue
 });
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/_version.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var version = "6.15.0";
 
 // node_modules/ethers/lib.esm/abi/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/abi/abi-coder.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/utils/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/utils/base58.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/utils/data.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/utils/errors.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/utils/properties.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function checkType(value, type2, name) {
   const types = type2.split("|").map((t) => t.trim());
   for (let i = 0; i < types.length; i++) {
@@ -28227,7 +28228,7 @@ function zeroPadBytes(data, length) {
 }
 
 // node_modules/ethers/lib.esm/utils/maths.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var BN_0 = BigInt(0);
 var BN_1 = BigInt(1);
 var maxValue = 9007199254740991;
@@ -28429,7 +28430,7 @@ function decodeBase58(value) {
 }
 
 // node_modules/ethers/lib.esm/utils/base64-browser.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function decodeBase64(textData) {
   textData = atob(textData);
   const data = new Uint8Array(textData.length);
@@ -28448,7 +28449,7 @@ function encodeBase64(_data) {
 }
 
 // node_modules/ethers/lib.esm/utils/events.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var EventPayload = class {
   /**
    *  The event filter.
@@ -28479,10 +28480,10 @@ var EventPayload = class {
 };
 
 // node_modules/ethers/lib.esm/utils/fetch.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/utils/utf8.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function errorFunc(reason, offset2, bytes2, output2, badCodepoint) {
   assertArgument(false, `invalid codepoint at offset ${offset2}; ${reason}`, "bytes", bytes2);
 }
@@ -28631,7 +28632,7 @@ function toUtf8CodePoints(str, form) {
 }
 
 // node_modules/ethers/lib.esm/utils/geturl-browser.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function createGetUrl(options) {
   async function getUrl2(req, _signal) {
     assert(_signal == null || !_signal.cancelled, "request cancelled before sending", "CANCELLED");
@@ -29480,7 +29481,7 @@ function wait(delay) {
 }
 
 // node_modules/ethers/lib.esm/utils/fixednumber.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var BN_N1 = BigInt(-1);
 var BN_03 = BigInt(0);
 var BN_12 = BigInt(1);
@@ -29968,7 +29969,7 @@ var FixedNumber = class _FixedNumber {
 };
 
 // node_modules/ethers/lib.esm/utils/rlp-decode.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function hexlifyByte(value) {
   let result = value.toString(16);
   while (result.length < 2) {
@@ -30043,7 +30044,7 @@ function decodeRlp(_data) {
 }
 
 // node_modules/ethers/lib.esm/utils/rlp-encode.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function arrayifyInteger(value) {
   const result = [];
   while (value) {
@@ -30088,7 +30089,7 @@ function encodeRlp(object2) {
 }
 
 // node_modules/ethers/lib.esm/utils/units.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var names = [
   "wei",
   "kwei",
@@ -30129,7 +30130,7 @@ function parseEther(ether) {
 }
 
 // node_modules/ethers/lib.esm/utils/uuid.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function uuidV4(randomBytes5) {
   const bytes2 = getBytes(randomBytes5, "randomBytes");
   bytes2[6] = bytes2[6] & 15 | 64;
@@ -30145,7 +30146,7 @@ function uuidV4(randomBytes5) {
 }
 
 // node_modules/ethers/lib.esm/abi/coders/abstract-coder.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var WordSize = 32;
 var Padding = new Uint8Array(WordSize);
 var passProperties = ["then"];
@@ -30569,28 +30570,28 @@ var Reader = class _Reader {
 };
 
 // node_modules/ethers/lib.esm/abi/coders/address.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/address/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/address/address.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/crypto/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/crypto/hmac.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/crypto/crypto-browser.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/hmac.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/_assert.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function number(n2) {
   if (!Number.isSafeInteger(n2) || n2 < 0)
     throw new Error(`Wrong positive integer: ${n2}`);
@@ -30622,10 +30623,10 @@ function output(out, instance2) {
 }
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/utils.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/crypto.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var crypto2 = typeof globalThis === "object" && "crypto" in globalThis ? globalThis.crypto : void 0;
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/utils.js
@@ -30774,7 +30775,7 @@ var hmac = (hash3, key2, message) => new HMAC(hash3, key2).update(message).diges
 hmac.create = (hash3, key2) => new HMAC(hash3, key2);
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/pbkdf2.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function pbkdf2Init(hash3, _password, _salt, _opts) {
   hash(hash3);
   const opts = checkOpts({ dkLen: 32, asyncTick: 10 }, _opts);
@@ -30820,10 +30821,10 @@ function pbkdf2(hash3, password, salt, opts) {
 }
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/sha256.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/_sha2.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function setBigUint64(view, byteOffset, value, isLE3) {
   if (typeof view.setBigUint64 === "function")
     return view.setBigUint64(byteOffset, value, isLE3);
@@ -31076,10 +31077,10 @@ var SHA256 = class extends SHA2 {
 var sha256 = /* @__PURE__ */ wrapConstructor(() => new SHA256());
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/sha512.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/_u64.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var U32_MASK64 = /* @__PURE__ */ BigInt(2 ** 32 - 1);
 var _32n = /* @__PURE__ */ BigInt(32);
 function fromBig(n2, le = false) {
@@ -31412,10 +31413,10 @@ computeHmac.register = function(func) {
 Object.freeze(computeHmac);
 
 // node_modules/ethers/lib.esm/crypto/keccak.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/sha3.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var [SHA3_PI, SHA3_ROTL, _SHA3_IOTA] = [[], [], []];
 var _0n = /* @__PURE__ */ BigInt(0);
 var _1n = /* @__PURE__ */ BigInt(1);
@@ -31618,10 +31619,10 @@ keccak256.register = function(func) {
 Object.freeze(keccak256);
 
 // node_modules/ethers/lib.esm/crypto/ripemd160.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/ripemd160.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var Rho = /* @__PURE__ */ new Uint8Array([7, 4, 13, 1, 10, 6, 15, 3, 12, 0, 9, 5, 2, 14, 11, 8]);
 var Id = /* @__PURE__ */ Uint8Array.from({ length: 16 }, (_, i) => i);
 var Pi = /* @__PURE__ */ Id.map((i) => (9 * i + 5) % 16);
@@ -31741,7 +31742,7 @@ ripemd1602.register = function(func) {
 Object.freeze(ripemd1602);
 
 // node_modules/ethers/lib.esm/crypto/pbkdf2.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var locked5 = false;
 var _pbkdf2 = function(password, salt, iterations, keylen, algo) {
   return pbkdf2Sync(password, salt, iterations, keylen, algo);
@@ -31765,7 +31766,7 @@ pbkdf22.register = function(func) {
 Object.freeze(pbkdf22);
 
 // node_modules/ethers/lib.esm/crypto/random.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var locked6 = false;
 var _randomBytes = function(length) {
   return new Uint8Array(randomBytes2(length));
@@ -31787,10 +31788,10 @@ randomBytes3.register = function(func) {
 Object.freeze(randomBytes3);
 
 // node_modules/ethers/lib.esm/crypto/scrypt.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/hashes/esm/scrypt.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var rotl2 = (a, b2) => a << b2 | a >>> 32 - b2;
 function XorAndSalsa(prev, pi, input, ii, out, oi) {
   let y00 = prev[pi++] ^ input[ii++], y01 = prev[pi++] ^ input[ii++];
@@ -32011,7 +32012,7 @@ scryptSync.register = function(func) {
 Object.freeze(scryptSync);
 
 // node_modules/ethers/lib.esm/crypto/sha2.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var _sha256 = function(data) {
   return createHash("sha256").update(data).digest();
 };
@@ -32054,13 +32055,13 @@ sha5122.register = function(func) {
 Object.freeze(sha2562);
 
 // node_modules/ethers/lib.esm/crypto/signing-key.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/curves/esm/secp256k1.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/curves/esm/abstract/modular.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/curves/esm/abstract/utils.js
 var utils_exports = {};
@@ -32085,7 +32086,7 @@ __export(utils_exports, {
   utf8ToBytes: () => utf8ToBytes2,
   validateObject: () => validateObject
 });
-init_buffer_inject();
+init_wallet_buffer_shim();
 var _0n2 = BigInt(0);
 var _1n2 = BigInt(1);
 var _2n2 = BigInt(2);
@@ -32545,10 +32546,10 @@ function mapHashToField(key2, fieldOrder, isLE3 = false) {
 }
 
 // node_modules/ethers/node_modules/@noble/curves/esm/abstract/weierstrass.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/node_modules/@noble/curves/esm/abstract/curve.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var _0n4 = BigInt(0);
 var _1n4 = BigInt(1);
 function wNAF(c, bits) {
@@ -33459,7 +33460,7 @@ function weierstrass(curveDef) {
 }
 
 // node_modules/ethers/node_modules/@noble/curves/esm/_shortw_utils.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function getHash(hash3) {
   return {
     hash: hash3,
@@ -33547,21 +33548,21 @@ var _0n6 = BigInt(0);
 var Point = secp256k1.ProjectivePoint;
 
 // node_modules/ethers/lib.esm/crypto/signature.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/constants/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/constants/addresses.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var ZeroAddress = "0x0000000000000000000000000000000000000000";
 
 // node_modules/ethers/lib.esm/constants/hashes.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var ZeroHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 // node_modules/ethers/lib.esm/constants/numbers.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var N = BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
 var WeiPerEther = BigInt("1000000000000000000");
 var MaxUint256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -33569,7 +33570,7 @@ var MinInt256 = BigInt("0x800000000000000000000000000000000000000000000000000000
 var MaxInt256 = BigInt("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
 // node_modules/ethers/lib.esm/constants/strings.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var EtherSymbol = "\u039E";
 var MessagePrefix = "Ethereum Signed Message:\n";
 
@@ -34148,7 +34149,7 @@ function getIcapAddress(address) {
 }
 
 // node_modules/ethers/lib.esm/address/contract-address.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function getCreateAddress(tx) {
   const from = getAddress(tx.from);
   const nonce = getBigInt(tx.nonce, "tx.nonce");
@@ -34172,7 +34173,7 @@ function getCreate2Address(_from, _salt, _initCodeHash) {
 }
 
 // node_modules/ethers/lib.esm/address/checks.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function isAddressable(value) {
   return value && typeof value.getAddress === "function";
 }
@@ -34208,7 +34209,7 @@ function resolveAddress(target, resolver) {
 }
 
 // node_modules/ethers/lib.esm/abi/typed.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var _gaurd = {};
 function n(value, width) {
   let signed2 = false;
@@ -35012,10 +35013,10 @@ var AddressCoder = class extends Coder {
 };
 
 // node_modules/ethers/lib.esm/abi/coders/array.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/abi/coders/anonymous.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var AnonymousCoder = class extends Coder {
   coder;
   constructor(coder) {
@@ -35164,7 +35165,7 @@ var ArrayCoder = class extends Coder {
 };
 
 // node_modules/ethers/lib.esm/abi/coders/boolean.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var BooleanCoder = class extends Coder {
   constructor(localName) {
     super("bool", "bool", localName, false);
@@ -35182,7 +35183,7 @@ var BooleanCoder = class extends Coder {
 };
 
 // node_modules/ethers/lib.esm/abi/coders/bytes.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var DynamicBytesCoder = class extends Coder {
   constructor(type2, localName) {
     super(type2, type2, localName, true);
@@ -35210,7 +35211,7 @@ var BytesCoder = class extends DynamicBytesCoder {
 };
 
 // node_modules/ethers/lib.esm/abi/coders/fixed-bytes.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var FixedBytesCoder = class extends Coder {
   size;
   constructor(size, localName) {
@@ -35234,7 +35235,7 @@ var FixedBytesCoder = class extends Coder {
 };
 
 // node_modules/ethers/lib.esm/abi/coders/null.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var Empty = new Uint8Array([]);
 var NullCoder = class extends Coder {
   constructor(localName) {
@@ -35256,7 +35257,7 @@ var NullCoder = class extends Coder {
 };
 
 // node_modules/ethers/lib.esm/abi/coders/number.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var BN_06 = BigInt(0);
 var BN_14 = BigInt(1);
 var BN_MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -35295,7 +35296,7 @@ var NumberCoder = class extends Coder {
 };
 
 // node_modules/ethers/lib.esm/abi/coders/string.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var StringCoder = class extends DynamicBytesCoder {
   constructor(localName) {
     super("string", localName);
@@ -35312,7 +35313,7 @@ var StringCoder = class extends DynamicBytesCoder {
 };
 
 // node_modules/ethers/lib.esm/abi/coders/tuple.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var TupleCoder = class extends Coder {
   coders;
   constructor(coders, localName) {
@@ -35368,19 +35369,19 @@ var TupleCoder = class extends Coder {
 };
 
 // node_modules/ethers/lib.esm/abi/fragments.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/hash/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/hash/authorization.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/transaction/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/transaction/accesslist.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function accessSetify(addr, storageKeys) {
   return {
     address: getAddress(addr),
@@ -35414,7 +35415,7 @@ function accessListify(value) {
 }
 
 // node_modules/ethers/lib.esm/transaction/authorization.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function authorizationify(auth) {
   return {
     address: getAddress(auth.address),
@@ -35425,7 +35426,7 @@ function authorizationify(auth) {
 }
 
 // node_modules/ethers/lib.esm/transaction/address.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function computeAddress(key2) {
   let pubkey;
   if (typeof key2 === "string") {
@@ -35440,7 +35441,7 @@ function recoverAddress(digest, signature3) {
 }
 
 // node_modules/ethers/lib.esm/transaction/transaction.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var BN_07 = BigInt(0);
 var BN_22 = BigInt(2);
 var BN_272 = BigInt(27);
@@ -36546,16 +36547,16 @@ function verifyAuthorization(auth, sig) {
 }
 
 // node_modules/ethers/lib.esm/hash/id.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function id(value) {
   return keccak256(toUtf8Bytes(value));
 }
 
 // node_modules/ethers/lib.esm/hash/namehash.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@adraffy/ens-normalize/dist/index.mjs
-init_buffer_inject();
+init_wallet_buffer_shim();
 var COMPRESSED$1 = "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";
 var FENCED = /* @__PURE__ */ new Map([[8217, "apostrophe"], [8260, "fraction slash"], [12539, "middle dot"]]);
 var NSM_MAX = 4;
@@ -37405,7 +37406,7 @@ function dnsEncode(name, _maxLength) {
 }
 
 // node_modules/ethers/lib.esm/hash/message.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function hashMessage(message) {
   if (typeof message === "string") {
     message = toUtf8Bytes(message);
@@ -37422,7 +37423,7 @@ function verifyMessage(message, sig) {
 }
 
 // node_modules/ethers/lib.esm/hash/solidity.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var regexBytes = new RegExp("^bytes([0-9]+)$");
 var regexNumber = new RegExp("^(u?int)([0-9]*)$");
 var regexArray = new RegExp("^(.*)\\[([0-9]*)\\]$");
@@ -37496,7 +37497,7 @@ function solidityPackedSha256(types, values) {
 }
 
 // node_modules/ethers/lib.esm/hash/typed-data.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var padding = new Uint8Array(32);
 padding.fill(0);
 var BN__1 = BigInt(-1);
@@ -39386,7 +39387,7 @@ var AbiCoder = class _AbiCoder {
 };
 
 // node_modules/ethers/lib.esm/abi/bytes32.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function encodeBytes32String(text) {
   const bytes2 = toUtf8Bytes(text);
   if (bytes2.length > 31) {
@@ -39410,7 +39411,7 @@ function decodeBytes32String(_bytes) {
 }
 
 // node_modules/ethers/lib.esm/abi/interface.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var LogDescription = class {
   /**
    *  The matching fragment for the ``topic0``.
@@ -40419,13 +40420,13 @@ var Interface = class _Interface {
 };
 
 // node_modules/ethers/lib.esm/contract/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/contract/contract.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/providers/provider.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var BN_09 = BigInt(0);
 function getValue2(value) {
   if (value == null) {
@@ -41714,7 +41715,7 @@ function createRemovedLogFilter(log2) {
 }
 
 // node_modules/ethers/lib.esm/contract/wrappers.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var EventLog = class extends Log {
   /**
    *  The Contract Interface.
@@ -42747,7 +42748,7 @@ var Contract = class extends _ContractBase() {
 };
 
 // node_modules/ethers/lib.esm/contract/factory.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var ContractFactory = class _ContractFactory {
   /**
    *  The Contract Interface.
@@ -42851,13 +42852,13 @@ var ContractFactory = class _ContractFactory {
 };
 
 // node_modules/ethers/lib.esm/providers/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/providers/abstract-provider.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/providers/ens-resolver.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function getIpfsLink(link) {
   if (link.match(/^ipfs:\/\/ipfs\//i)) {
     link = link.substring(12);
@@ -43276,7 +43277,7 @@ var EnsResolver = class _EnsResolver {
 };
 
 // node_modules/ethers/lib.esm/providers/format.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var BN_011 = BigInt(0);
 function allowNull(format, nullValue) {
   return function(value) {
@@ -43513,10 +43514,10 @@ function formatTransactionResponse(value) {
 }
 
 // node_modules/ethers/lib.esm/providers/network.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/providers/plugins-network.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var EnsAddress = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
 var NetworkPlugin = class _NetworkPlugin {
   /**
@@ -44001,7 +44002,7 @@ function injectCommonNetworks() {
 }
 
 // node_modules/ethers/lib.esm/providers/subscriber-polling.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function copy(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -45572,7 +45573,7 @@ function parseOffchainLookup(data) {
 }
 
 // node_modules/ethers/lib.esm/providers/abstract-signer.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function checkProvider(signer, operation) {
   if (signer.provider) {
     return signer.provider;
@@ -45760,7 +45761,7 @@ var VoidSigner = class _VoidSigner extends AbstractSigner {
 };
 
 // node_modules/ethers/lib.esm/providers/community.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var shown = /* @__PURE__ */ new Set();
 function showThrottleMessage(service) {
   if (shown.has(service)) {
@@ -45782,16 +45783,16 @@ function showThrottleMessage(service) {
 }
 
 // node_modules/ethers/lib.esm/providers/default-provider.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/providers/provider-ankr.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/providers/provider-jsonrpc.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/providers/subscriber-filterid.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function copy3(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -46895,7 +46896,7 @@ var AnkrProvider = class _AnkrProvider extends JsonRpcProvider {
 };
 
 // node_modules/ethers/lib.esm/providers/provider-alchemy.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var defaultApiKey2 = "_gg7wSSi0KMBsdKnGVfHDueq6xMB9EkC";
 function getHost2(name) {
   switch (name) {
@@ -47005,7 +47006,7 @@ var AlchemyProvider = class _AlchemyProvider extends JsonRpcProvider {
 };
 
 // node_modules/ethers/lib.esm/providers/provider-chainstack.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function getApiKey(name) {
   switch (name) {
     case "mainnet":
@@ -47083,7 +47084,7 @@ var ChainstackProvider = class _ChainstackProvider extends JsonRpcProvider {
 };
 
 // node_modules/ethers/lib.esm/providers/provider-cloudflare.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var CloudflareProvider = class extends JsonRpcProvider {
   constructor(_network) {
     if (_network == null) {
@@ -47096,7 +47097,7 @@ var CloudflareProvider = class extends JsonRpcProvider {
 };
 
 // node_modules/ethers/lib.esm/providers/provider-etherscan.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var THROTTLE = 2e3;
 function isPromise2(value) {
   return value && typeof value.then === "function";
@@ -47618,13 +47619,13 @@ var EtherscanProvider = class extends AbstractProvider {
 };
 
 // node_modules/ethers/lib.esm/providers/provider-infura.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/providers/provider-websocket.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/providers/ws-browser.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function getGlobal2() {
   if (typeof self !== "undefined") {
     return self;
@@ -47640,7 +47641,7 @@ function getGlobal2() {
 var _WebSocket = getGlobal2().WebSocket;
 
 // node_modules/ethers/lib.esm/providers/provider-socket.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var SocketSubscriber = class {
   #provider;
   #filter;
@@ -48095,7 +48096,7 @@ var InfuraProvider = class _InfuraProvider extends JsonRpcProvider {
 };
 
 // node_modules/ethers/lib.esm/providers/provider-quicknode.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var defaultToken = "919b412a057b5e9c9b6dce193c5a60242d6efadb";
 function getHost5(name) {
   switch (name) {
@@ -48189,7 +48190,7 @@ var QuickNodeProvider = class _QuickNodeProvider extends JsonRpcProvider {
 };
 
 // node_modules/ethers/lib.esm/providers/provider-fallback.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var BN_16 = BigInt("1");
 var BN_24 = BigInt("2");
 function shuffle(array2) {
@@ -48849,7 +48850,7 @@ function getDefaultProvider(network, options) {
 }
 
 // node_modules/ethers/lib.esm/providers/signer-noncemanager.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var NonceManager = class _NonceManager extends AbstractSigner {
   /**
    *  The Signer being managed.
@@ -48916,7 +48917,7 @@ var NonceManager = class _NonceManager extends AbstractSigner {
 };
 
 // node_modules/ethers/lib.esm/providers/provider-browser.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var BrowserProvider = class _BrowserProvider extends JsonRpcApiPollingProvider {
   #request;
   #providerInfo;
@@ -49090,7 +49091,7 @@ var BrowserProvider = class _BrowserProvider extends JsonRpcApiPollingProvider {
 };
 
 // node_modules/ethers/lib.esm/providers/provider-blockscout.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function getUrl(name) {
   switch (name) {
     case "mainnet":
@@ -49195,7 +49196,7 @@ var BlockscoutProvider = class _BlockscoutProvider extends JsonRpcProvider {
 };
 
 // node_modules/ethers/lib.esm/providers/provider-pocket.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var defaultApplicationId = "62e1ad51b37b8e00394bda3b";
 function getHost6(name) {
   switch (name) {
@@ -49276,14 +49277,14 @@ var PocketProvider = class _PocketProvider extends JsonRpcProvider {
 };
 
 // node_modules/ethers/lib.esm/providers/provider-ipcsocket-browser.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var IpcSocketProvider = void 0;
 
 // node_modules/ethers/lib.esm/wallet/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/wallet/base-wallet.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var BaseWallet = class _BaseWallet extends AbstractSigner {
   /**
    *  The wallet address.
@@ -49393,16 +49394,16 @@ var BaseWallet = class _BaseWallet extends AbstractSigner {
 };
 
 // node_modules/ethers/lib.esm/wallet/hdwallet.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/wordlists/lang-en.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/wordlists/wordlist-owl.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/wordlists/decode-owl.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var subsChrs = " !#$%&'()*+,-./<=>?@[]^_`{|}~";
 var Word = /^[a-z]*$/i;
 function unfold(words2, sep) {
@@ -49445,7 +49446,7 @@ function decodeOwl(data) {
 }
 
 // node_modules/ethers/lib.esm/wordlists/wordlist.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var Wordlist = class {
   locale;
   /**
@@ -49559,7 +49560,7 @@ var LangEn = class _LangEn extends WordlistOwl {
 };
 
 // node_modules/ethers/lib.esm/wallet/mnemonic.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function getUpperMask(bits) {
   return (1 << bits) - 1 << 8 - bits & 255;
 }
@@ -49710,13 +49711,13 @@ var Mnemonic = class _Mnemonic {
 };
 
 // node_modules/ethers/lib.esm/wallet/json-keystore.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/aes-js/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/aes-js/lib.esm/aes.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var __classPrivateFieldGet = function(receiver, state, kind, f3) {
   if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a getter");
   if (typeof state === "function" ? receiver !== state || !f3 : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
@@ -49879,7 +49880,7 @@ var AES = class _AES {
 _AES_key = /* @__PURE__ */ new WeakMap(), _AES_Kd = /* @__PURE__ */ new WeakMap(), _AES_Ke = /* @__PURE__ */ new WeakMap();
 
 // node_modules/aes-js/lib.esm/mode.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var ModeOfOperation = class {
   constructor(name, key2, cls) {
     if (cls && !(this instanceof cls)) {
@@ -49893,7 +49894,7 @@ var ModeOfOperation = class {
 };
 
 // node_modules/aes-js/lib.esm/mode-cbc.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var __classPrivateFieldSet2 = function(receiver, state, value, kind, f3) {
   if (kind === "m") throw new TypeError("Private method is not writable");
   if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a setter");
@@ -49957,7 +49958,7 @@ var CBC = class _CBC extends ModeOfOperation {
 _CBC_iv = /* @__PURE__ */ new WeakMap(), _CBC_lastBlock = /* @__PURE__ */ new WeakMap();
 
 // node_modules/aes-js/lib.esm/mode-cfb.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var __classPrivateFieldGet3 = function(receiver, state, kind, f3) {
   if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a getter");
   if (typeof state === "function" ? receiver !== state || !f3 : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
@@ -49974,7 +49975,7 @@ _CFB_iv = /* @__PURE__ */ new WeakMap(), _CFB_shiftRegister = /* @__PURE__ */ ne
 };
 
 // node_modules/aes-js/lib.esm/mode-ctr.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var __classPrivateFieldSet3 = function(receiver, state, value, kind, f3) {
   if (kind === "m") throw new TypeError("Private method is not writable");
   if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a setter");
@@ -50056,17 +50057,17 @@ var CTR = class _CTR extends ModeOfOperation {
 _CTR_remaining = /* @__PURE__ */ new WeakMap(), _CTR_remainingIndex = /* @__PURE__ */ new WeakMap(), _CTR_counter = /* @__PURE__ */ new WeakMap();
 
 // node_modules/aes-js/lib.esm/mode-ecb.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/aes-js/lib.esm/mode-ofb.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var _OFB_iv;
 var _OFB_lastPrecipher;
 var _OFB_lastPrecipherIndex;
 _OFB_iv = /* @__PURE__ */ new WeakMap(), _OFB_lastPrecipher = /* @__PURE__ */ new WeakMap(), _OFB_lastPrecipherIndex = /* @__PURE__ */ new WeakMap();
 
 // node_modules/aes-js/lib.esm/padding.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function pkcs7Strip(data) {
   if (data.length < 16) {
     throw new TypeError("PKCS#7 invalid length");
@@ -50085,7 +50086,7 @@ function pkcs7Strip(data) {
 }
 
 // node_modules/ethers/lib.esm/wallet/utils.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function looseArrayify(hexString) {
   if (typeof hexString === "string" && !hexString.startsWith("0x")) {
     hexString = "0x" + hexString;
@@ -50814,7 +50815,7 @@ function getIndexedAccountPath(_index) {
 }
 
 // node_modules/ethers/lib.esm/wallet/json-crowdsale.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function isCrowdsaleJson(json) {
   try {
     const data = JSON.parse(json);
@@ -50844,7 +50845,7 @@ function decryptCrowdsaleJson(json, _password) {
 }
 
 // node_modules/ethers/lib.esm/wallet/wallet.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function stall4(duration) {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -50974,16 +50975,16 @@ var Wallet = class _Wallet extends BaseWallet {
 };
 
 // node_modules/ethers/lib.esm/wordlists/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/wordlists/wordlist-owla.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/wordlists/decode-owla.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/ethers/lib.esm/wordlists/bit-reader.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var Base64 = ")!@#$%^&*(ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
 function decodeBits(width, data) {
   const maxValue2 = (1 << width) - 1;
@@ -51055,7 +51056,7 @@ var WordlistOwlA = class extends WordlistOwl {
 };
 
 // node_modules/ethers/lib.esm/wordlists/wordlists-browser.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var wordlists = {
   en: LangEn.wordlist()
 };
@@ -51144,23 +51145,23 @@ __export(index_browser_esm_exports, {
   sendAndConfirmRawTransaction: () => sendAndConfirmRawTransaction,
   sendAndConfirmTransaction: () => sendAndConfirmTransaction
 });
-init_buffer_inject();
+init_wallet_buffer_shim();
 var import_buffer3 = __toESM(require_buffer());
 
 // node_modules/@noble/curves/esm/ed25519.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@noble/hashes/esm/sha2.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@noble/hashes/esm/_md.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@noble/hashes/esm/utils.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@noble/hashes/esm/crypto.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var crypto4 = typeof globalThis === "object" && "crypto" in globalThis ? globalThis.crypto : void 0;
 
 // node_modules/@noble/hashes/esm/utils.js
@@ -51452,7 +51453,7 @@ var SHA512_IV = /* @__PURE__ */ Uint32Array.from([
 ]);
 
 // node_modules/@noble/hashes/esm/_u64.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var U32_MASK642 = /* @__PURE__ */ BigInt(2 ** 32 - 1);
 var _32n2 = /* @__PURE__ */ BigInt(32);
 function fromBig2(n2, le = false) {
@@ -51830,10 +51831,10 @@ var sha2563 = /* @__PURE__ */ createHasher(() => new SHA2562());
 var sha5123 = /* @__PURE__ */ createHasher(() => new SHA5122());
 
 // node_modules/@noble/curves/esm/abstract/curve.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@noble/curves/esm/utils.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var _0n7 = /* @__PURE__ */ BigInt(0);
 var _1n7 = /* @__PURE__ */ BigInt(1);
 function _abool2(value, title = "") {
@@ -52001,7 +52002,7 @@ function memoized(fn) {
 }
 
 // node_modules/@noble/curves/esm/abstract/modular.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var _0n8 = BigInt(0);
 var _1n8 = BigInt(1);
 var _2n6 = /* @__PURE__ */ BigInt(2);
@@ -52626,7 +52627,7 @@ function _createCurveFields(type2, CURVE, curveOpts = {}, FpFnLE) {
 }
 
 // node_modules/@noble/curves/esm/abstract/edwards.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var _0n10 = BigInt(0);
 var _1n10 = BigInt(1);
 var _2n7 = BigInt(2);
@@ -53405,7 +53406,7 @@ var import_bn = __toESM(require_bn());
 var import_bs58 = __toESM(require_bs582());
 
 // node_modules/@noble/hashes/esm/sha256.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var sha2564 = sha2563;
 
 // node_modules/@solana/web3.js/lib/index.browser.esm.js
@@ -53414,10 +53415,10 @@ var BufferLayout = __toESM(require_Layout());
 var import_buffer_layout = __toESM(require_Layout());
 
 // node_modules/@solana/codecs-numbers/dist/index.browser.mjs
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@solana/errors/dist/index.browser.mjs
-init_buffer_inject();
+init_wallet_buffer_shim();
 var SOLANA_ERROR__BLOCK_HEIGHT_EXCEEDED = 1;
 var SOLANA_ERROR__INVALID_NONCE = 2;
 var SOLANA_ERROR__NONCE_ACCOUNT_NOT_FOUND = 3;
@@ -54007,7 +54008,7 @@ var SolanaError = class extends Error {
 };
 
 // node_modules/@solana/codecs-core/dist/index.browser.mjs
-init_buffer_inject();
+init_wallet_buffer_shim();
 function getEncodedSize(value, encoder) {
   return "fixedSize" in encoder ? encoder.fixedSize : encoder.getSizeFromValue(value);
 }
@@ -54133,7 +54134,7 @@ var getU64Decoder = (config = {}) => numberDecoderFactory({
 var getU64Codec = (config = {}) => combineCodec(getU64Encoder(config), getU64Decoder(config));
 
 // node_modules/superstruct/dist/index.mjs
-init_buffer_inject();
+init_wallet_buffer_shim();
 var StructError = class extends TypeError {
   constructor(failure, failures) {
     let cached;
@@ -54549,11 +54550,11 @@ function coerce(struct2, condition, coercer) {
 var import_browser = __toESM(require_browser());
 
 // node_modules/rpc-websockets/dist/index.browser.mjs
-init_buffer_inject();
+init_wallet_buffer_shim();
 var import_buffer2 = __toESM(require_buffer(), 1);
 
 // node_modules/eventemitter3/index.mjs
-init_buffer_inject();
+init_wallet_buffer_shim();
 var import_index = __toESM(require_eventemitter3(), 1);
 
 // node_modules/rpc-websockets/dist/index.browser.mjs
@@ -54943,7 +54944,7 @@ var CommonClient = class extends import_index.default {
 };
 
 // node_modules/@noble/hashes/esm/sha3.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var _0n12 = BigInt(0);
 var _1n12 = BigInt(1);
 var _2n9 = BigInt(2);
@@ -55125,16 +55126,16 @@ var gen2 = (suffix, blockLen, outputLen) => createHasher(() => new Keccak2(block
 var keccak_2562 = /* @__PURE__ */ (() => gen2(1, 136, 256 / 8))();
 
 // node_modules/@noble/curves/esm/secp256k1.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@noble/curves/esm/_shortw_utils.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@noble/curves/esm/abstract/weierstrass.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@noble/hashes/esm/hmac.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var HMAC2 = class extends Hash2 {
   constructor(hash3, _key) {
     super();
@@ -64741,10 +64742,10 @@ var LAMPORTS_PER_SOL = 1e9;
 var import_qrcode = __toESM(require_browser2());
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/Eth.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/logs/lib-es/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var id2 = 0;
 var subscribers = [];
 var log = (type2, message, data) => {
@@ -64858,7 +64859,7 @@ if (typeof window !== "undefined") {
 }
 
 // node_modules/bignumber.js/bignumber.mjs
-init_buffer_inject();
+init_wallet_buffer_shim();
 var isNumeric = /^-?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
 var mathceil = Math.ceil;
 var mathfloor = Math.floor;
@@ -66203,7 +66204,7 @@ var BigNumber = clone();
 var bignumber_default = BigNumber;
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/errors.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var EthAppPleaseEnableContractData = class extends Error {
   name = "EthAppPleaseEnableContractData";
   constructor(message) {
@@ -66224,23 +66225,23 @@ var CeloAppPleaseEnableContractData = class extends Error {
 };
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/modules/EIP712/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var import_semver = __toESM(require_semver2());
 
 // node_modules/@ledgerhq/evm-tools/lib-es/message/EIP712/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/axios.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/utils.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/bind.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function bind(fn, thisArg) {
   return function wrap() {
     return fn.apply(thisArg, arguments);
@@ -66661,19 +66662,19 @@ var utils_default = {
 };
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/core/Axios.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/buildURL.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/AxiosURLSearchParams.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/toFormData.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/core/AxiosError.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var AxiosError = class _AxiosError extends Error {
   static from(error, code, config, request, response, customProps) {
     const axiosError = new _AxiosError(error.message, code || error.code, config, request, response);
@@ -66740,7 +66741,7 @@ AxiosError.ERR_INVALID_URL = "ERR_INVALID_URL";
 var AxiosError_default = AxiosError;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/null.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var null_default = null;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/toFormData.js
@@ -66796,7 +66797,7 @@ function toFormData(obj, formData, options) {
       throw new AxiosError_default("Blob is not supported. Use a Buffer instead.");
     }
     if (utils_default.isArrayBuffer(value) || utils_default.isTypedArray(value)) {
-      return useBlob && typeof Blob === "function" ? new Blob([value]) : import_buffer.Buffer.from(value);
+      return useBlob && typeof Blob === "function" ? new Blob([value]) : Buffer.from(value);
     }
     return value;
   }
@@ -66921,7 +66922,7 @@ function buildURL(url, params, options) {
 }
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/core/InterceptorManager.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var InterceptorManager = class {
   constructor() {
     this.handlers = [];
@@ -66987,16 +66988,16 @@ var InterceptorManager = class {
 var InterceptorManager_default = InterceptorManager;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/core/dispatchRequest.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/core/transformData.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/defaults/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/defaults/transitional.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var transitional_default = {
   silentJSONParsing: true,
   forcedJSONParsing: true,
@@ -67005,24 +67006,24 @@ var transitional_default = {
 };
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/toURLEncodedForm.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/platform/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/platform/browser/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/platform/browser/classes/URLSearchParams.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var URLSearchParams_default = typeof URLSearchParams !== "undefined" ? URLSearchParams : AxiosURLSearchParams_default;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/platform/browser/classes/FormData.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var FormData_default = typeof FormData !== "undefined" ? FormData : null;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/platform/browser/classes/Blob.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var Blob_default = typeof Blob !== "undefined" ? Blob : null;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/platform/browser/index.js
@@ -67045,7 +67046,7 @@ __export(utils_exports2, {
   navigator: () => _navigator,
   origin: () => origin
 });
-init_buffer_inject();
+init_wallet_buffer_shim();
 var hasBrowserEnv = typeof window !== "undefined" && typeof document !== "undefined";
 var _navigator = typeof navigator === "object" && navigator || void 0;
 var hasStandardBrowserEnv = hasBrowserEnv && (!_navigator || ["ReactNative", "NativeScript", "NS"].indexOf(_navigator.product) < 0);
@@ -67076,7 +67077,7 @@ function toURLEncodedForm(data, options) {
 }
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/formDataToJSON.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function parsePropPath(name) {
   return utils_default.matchAll(/\w+|\[(\w*)]/g, name).map((match) => {
     return match[0] === "[]" ? "" : match[1] || match[0];
@@ -67239,10 +67240,10 @@ utils_default.forEach(["delete", "get", "head", "post", "put", "patch"], (method
 var defaults_default = defaults;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/core/AxiosHeaders.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/parseHeaders.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var ignoreDuplicateOf = utils_default.toObjectSet([
   "age",
   "authorization",
@@ -67530,13 +67531,13 @@ function transformData(fns, response) {
 }
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/cancel/isCancel.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function isCancel(value) {
   return !!(value && value.__CANCEL__);
 }
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/cancel/CanceledError.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var CanceledError = class extends AxiosError_default {
   /**
    * A `CanceledError` is an object that is thrown when an operation is canceled.
@@ -67556,13 +67557,13 @@ var CanceledError = class extends AxiosError_default {
 var CanceledError_default = CanceledError;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/adapters/adapters.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/adapters/xhr.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/core/settle.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function settle(resolve, reject, response) {
   const validateStatus4 = response.config.validateStatus;
   if (!response.status || !validateStatus4 || validateStatus4(response.status)) {
@@ -67579,17 +67580,17 @@ function settle(resolve, reject, response) {
 }
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/parseProtocol.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function parseProtocol(url) {
   const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
   return match && match[1] || "";
 }
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/progressEventReducer.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/speedometer.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function speedometer(samplesCount, min) {
   samplesCount = samplesCount || 10;
   const bytes2 = new Array(samplesCount);
@@ -67626,7 +67627,7 @@ function speedometer(samplesCount, min) {
 var speedometer_default = speedometer;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/throttle.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function throttle(fn, freq) {
   let timestamp = 0;
   let threshold = 1e3 / freq;
@@ -67697,10 +67698,10 @@ var progressEventDecorator = (total, throttled) => {
 var asyncDecorator = (fn) => (...args) => utils_default.asap(() => fn(...args));
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/resolveConfig.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/isURLSameOrigin.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var isURLSameOrigin_default = platform_default.hasStandardBrowserEnv ? /* @__PURE__ */ ((origin4, isMSIE) => (url) => {
   url = new URL(url, platform_default.origin);
   return origin4.protocol === url.protocol && origin4.host === url.host && (isMSIE || origin4.port === url.port);
@@ -67710,7 +67711,7 @@ var isURLSameOrigin_default = platform_default.hasStandardBrowserEnv ? /* @__PUR
 ) : () => true;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/cookies.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var cookies_default = platform_default.hasStandardBrowserEnv ? (
   // Standard browser envs support document.cookie
   {
@@ -67757,10 +67758,10 @@ var cookies_default = platform_default.hasStandardBrowserEnv ? (
 );
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/core/buildFullPath.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/isAbsoluteURL.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function isAbsoluteURL(url) {
   if (typeof url !== "string") {
     return false;
@@ -67769,7 +67770,7 @@ function isAbsoluteURL(url) {
 }
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/combineURLs.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function combineURLs(baseURL, relativeURL) {
   return relativeURL ? baseURL.replace(/\/?\/$/, "") + "/" + relativeURL.replace(/^\/+/, "") : baseURL;
 }
@@ -67784,7 +67785,7 @@ function buildFullPath(baseURL, requestedURL, allowAbsoluteUrls) {
 }
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/core/mergeConfig.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var headersToObject = (thing) => thing instanceof AxiosHeaders_default ? { ...thing } : thing;
 function mergeConfig(config1, config2) {
   config2 = config2 || {};
@@ -68037,10 +68038,10 @@ var xhr_default = isXHRAdapterSupported && function(config) {
 };
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/adapters/fetch.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/composeSignals.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var composeSignals = (signals, timeout) => {
   const { length } = signals = signals ? signals.filter(Boolean) : [];
   if (timeout || length) {
@@ -68077,7 +68078,7 @@ var composeSignals = (signals, timeout) => {
 var composeSignals_default = composeSignals;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/trackStream.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var streamChunk = function* (chunk, chunkSize) {
   let len = chunk.byteLength;
   if (!chunkSize || len < chunkSize) {
@@ -68474,10 +68475,10 @@ function dispatchRequest(config) {
 }
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/validator.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/env/data.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var VERSION = "1.13.5";
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/validator.js
@@ -68724,7 +68725,7 @@ utils_default.forEach(["post", "put", "patch"], function forEachMethodWithData(m
 var Axios_default = Axios;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/cancel/CancelToken.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var CancelToken = class _CancelToken {
   constructor(executor) {
     if (typeof executor !== "function") {
@@ -68823,7 +68824,7 @@ var CancelToken = class _CancelToken {
 var CancelToken_default = CancelToken;
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/spread.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function spread(callback) {
   return function wrap(arr) {
     return callback.apply(null, arr);
@@ -68831,13 +68832,13 @@ function spread(callback) {
 }
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/isAxiosError.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function isAxiosError(payload) {
   return utils_default.isObject(payload) && payload.isAxiosError === true;
 }
 
 // node_modules/@ledgerhq/evm-tools/node_modules/axios/lib/helpers/HttpStatusCode.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var HttpStatusCode = {
   Continue: 100,
   SwitchingProtocols: 101,
@@ -68971,39 +68972,39 @@ var {
 var import_sha224 = __toESM(require_sha224());
 
 // node_modules/@ledgerhq/live-env/lib-es/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/live-env/lib-es/env.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/live-env/lib-es/state.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/constants/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/constants/lib.esm/addresses.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var AddressZero = "0x0000000000000000000000000000000000000000";
 
 // node_modules/@ethersproject/constants/lib.esm/bignumbers.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/bignumber/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/bignumber/lib.esm/bignumber.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var import_bn2 = __toESM(require_bn());
 
 // node_modules/@ethersproject/bytes/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/logger/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/logger/lib.esm/_version.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var version3 = "logger/5.8.0";
 
 // node_modules/@ethersproject/logger/lib.esm/index.js
@@ -69295,7 +69296,7 @@ Logger.errors = ErrorCode;
 Logger.levels = LogLevel;
 
 // node_modules/@ethersproject/bytes/lib.esm/_version.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var version4 = "bytes/5.8.0";
 
 // node_modules/@ethersproject/bytes/lib.esm/index.js
@@ -69635,7 +69636,7 @@ function splitSignature(signature3) {
 }
 
 // node_modules/@ethersproject/bignumber/lib.esm/_version.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var version5 = "bignumber/5.8.0";
 
 // node_modules/@ethersproject/bignumber/lib.esm/bignumber.js
@@ -69905,26 +69906,26 @@ var One = /* @__PURE__ */ BigNumber2.from(1);
 var MaxUint2562 = /* @__PURE__ */ BigNumber2.from("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
 // node_modules/@ethersproject/hash/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/hash/lib.esm/id.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/keccak256/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var import_js_sha3 = __toESM(require_sha3());
 function keccak2562(data) {
   return "0x" + import_js_sha3.default.keccak_256(arrayify(data));
 }
 
 // node_modules/@ethersproject/strings/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/strings/lib.esm/utf8.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/strings/lib.esm/_version.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var version6 = "strings/5.8.0";
 
 // node_modules/@ethersproject/strings/lib.esm/utf8.js
@@ -70097,13 +70098,13 @@ function id3(text) {
 }
 
 // node_modules/@ethersproject/address/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/rlp/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/rlp/lib.esm/_version.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var version7 = "rlp/5.8.0";
 
 // node_modules/@ethersproject/rlp/lib.esm/index.js
@@ -70217,7 +70218,7 @@ function decode2(data) {
 }
 
 // node_modules/@ethersproject/address/lib.esm/_version.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var version8 = "address/5.8.0";
 
 // node_modules/@ethersproject/address/lib.esm/index.js
@@ -70303,10 +70304,10 @@ function getAddress2(address) {
 }
 
 // node_modules/@ethersproject/properties/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/properties/lib.esm/_version.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var version9 = "properties/5.8.0";
 
 // node_modules/@ethersproject/properties/lib.esm/index.js
@@ -70468,19 +70469,19 @@ var getValueFromPath = (path, eip721Message) => {
 };
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/services/ledger/erc20.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/axios.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/utils.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/bind.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function bind2(fn, thisArg) {
   return function wrap() {
     return fn.apply(thisArg, arguments);
@@ -70901,19 +70902,19 @@ var utils_default2 = {
 };
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/core/Axios.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/buildURL.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/AxiosURLSearchParams.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/toFormData.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/core/AxiosError.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var AxiosError3 = class _AxiosError extends Error {
   static from(error, code, config, request, response, customProps) {
     const axiosError = new _AxiosError(error.message, code || error.code, config, request, response);
@@ -70980,7 +70981,7 @@ AxiosError3.ERR_INVALID_URL = "ERR_INVALID_URL";
 var AxiosError_default2 = AxiosError3;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/null.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var null_default2 = null;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/toFormData.js
@@ -71036,7 +71037,7 @@ function toFormData3(obj, formData, options) {
       throw new AxiosError_default2("Blob is not supported. Use a Buffer instead.");
     }
     if (utils_default2.isArrayBuffer(value) || utils_default2.isTypedArray(value)) {
-      return useBlob && typeof Blob === "function" ? new Blob([value]) : import_buffer.Buffer.from(value);
+      return useBlob && typeof Blob === "function" ? new Blob([value]) : Buffer.from(value);
     }
     return value;
   }
@@ -71161,7 +71162,7 @@ function buildURL2(url, params, options) {
 }
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/core/InterceptorManager.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var InterceptorManager2 = class {
   constructor() {
     this.handlers = [];
@@ -71227,16 +71228,16 @@ var InterceptorManager2 = class {
 var InterceptorManager_default2 = InterceptorManager2;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/core/dispatchRequest.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/core/transformData.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/defaults/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/defaults/transitional.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var transitional_default2 = {
   silentJSONParsing: true,
   forcedJSONParsing: true,
@@ -71245,24 +71246,24 @@ var transitional_default2 = {
 };
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/toURLEncodedForm.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/platform/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/platform/browser/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/platform/browser/classes/URLSearchParams.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var URLSearchParams_default2 = typeof URLSearchParams !== "undefined" ? URLSearchParams : AxiosURLSearchParams_default2;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/platform/browser/classes/FormData.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var FormData_default2 = typeof FormData !== "undefined" ? FormData : null;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/platform/browser/classes/Blob.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var Blob_default2 = typeof Blob !== "undefined" ? Blob : null;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/platform/browser/index.js
@@ -71285,7 +71286,7 @@ __export(utils_exports3, {
   navigator: () => _navigator2,
   origin: () => origin2
 });
-init_buffer_inject();
+init_wallet_buffer_shim();
 var hasBrowserEnv2 = typeof window !== "undefined" && typeof document !== "undefined";
 var _navigator2 = typeof navigator === "object" && navigator || void 0;
 var hasStandardBrowserEnv2 = hasBrowserEnv2 && (!_navigator2 || ["ReactNative", "NativeScript", "NS"].indexOf(_navigator2.product) < 0);
@@ -71316,7 +71317,7 @@ function toURLEncodedForm2(data, options) {
 }
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/formDataToJSON.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function parsePropPath2(name) {
   return utils_default2.matchAll(/\w+|\[(\w*)]/g, name).map((match) => {
     return match[0] === "[]" ? "" : match[1] || match[0];
@@ -71479,10 +71480,10 @@ utils_default2.forEach(["delete", "get", "head", "post", "put", "patch"], (metho
 var defaults_default2 = defaults2;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/core/AxiosHeaders.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/parseHeaders.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var ignoreDuplicateOf2 = utils_default2.toObjectSet([
   "age",
   "authorization",
@@ -71770,13 +71771,13 @@ function transformData2(fns, response) {
 }
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/cancel/isCancel.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function isCancel3(value) {
   return !!(value && value.__CANCEL__);
 }
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/cancel/CanceledError.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var CanceledError3 = class extends AxiosError_default2 {
   /**
    * A `CanceledError` is an object that is thrown when an operation is canceled.
@@ -71796,13 +71797,13 @@ var CanceledError3 = class extends AxiosError_default2 {
 var CanceledError_default2 = CanceledError3;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/adapters/adapters.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/adapters/xhr.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/core/settle.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function settle2(resolve, reject, response) {
   const validateStatus4 = response.config.validateStatus;
   if (!response.status || !validateStatus4 || validateStatus4(response.status)) {
@@ -71819,17 +71820,17 @@ function settle2(resolve, reject, response) {
 }
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/parseProtocol.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function parseProtocol2(url) {
   const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
   return match && match[1] || "";
 }
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/progressEventReducer.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/speedometer.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function speedometer2(samplesCount, min) {
   samplesCount = samplesCount || 10;
   const bytes2 = new Array(samplesCount);
@@ -71866,7 +71867,7 @@ function speedometer2(samplesCount, min) {
 var speedometer_default2 = speedometer2;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/throttle.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function throttle2(fn, freq) {
   let timestamp = 0;
   let threshold = 1e3 / freq;
@@ -71937,10 +71938,10 @@ var progressEventDecorator2 = (total, throttled) => {
 var asyncDecorator2 = (fn) => (...args) => utils_default2.asap(() => fn(...args));
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/resolveConfig.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/isURLSameOrigin.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var isURLSameOrigin_default2 = platform_default2.hasStandardBrowserEnv ? /* @__PURE__ */ ((origin4, isMSIE) => (url) => {
   url = new URL(url, platform_default2.origin);
   return origin4.protocol === url.protocol && origin4.host === url.host && (isMSIE || origin4.port === url.port);
@@ -71950,7 +71951,7 @@ var isURLSameOrigin_default2 = platform_default2.hasStandardBrowserEnv ? /* @__P
 ) : () => true;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/cookies.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var cookies_default2 = platform_default2.hasStandardBrowserEnv ? (
   // Standard browser envs support document.cookie
   {
@@ -71997,10 +71998,10 @@ var cookies_default2 = platform_default2.hasStandardBrowserEnv ? (
 );
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/core/buildFullPath.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/isAbsoluteURL.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function isAbsoluteURL2(url) {
   if (typeof url !== "string") {
     return false;
@@ -72009,7 +72010,7 @@ function isAbsoluteURL2(url) {
 }
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/combineURLs.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function combineURLs2(baseURL, relativeURL) {
   return relativeURL ? baseURL.replace(/\/?\/$/, "") + "/" + relativeURL.replace(/^\/+/, "") : baseURL;
 }
@@ -72024,7 +72025,7 @@ function buildFullPath2(baseURL, requestedURL, allowAbsoluteUrls) {
 }
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/core/mergeConfig.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var headersToObject2 = (thing) => thing instanceof AxiosHeaders_default2 ? { ...thing } : thing;
 function mergeConfig3(config1, config2) {
   config2 = config2 || {};
@@ -72277,10 +72278,10 @@ var xhr_default2 = isXHRAdapterSupported2 && function(config) {
 };
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/adapters/fetch.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/composeSignals.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var composeSignals2 = (signals, timeout) => {
   const { length } = signals = signals ? signals.filter(Boolean) : [];
   if (timeout || length) {
@@ -72317,7 +72318,7 @@ var composeSignals2 = (signals, timeout) => {
 var composeSignals_default2 = composeSignals2;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/trackStream.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var streamChunk2 = function* (chunk, chunkSize) {
   let len = chunk.byteLength;
   if (!chunkSize || len < chunkSize) {
@@ -72714,10 +72715,10 @@ function dispatchRequest2(config) {
 }
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/validator.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/env/data.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var VERSION3 = "1.13.5";
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/validator.js
@@ -72964,7 +72965,7 @@ utils_default2.forEach(["post", "put", "patch"], function forEachMethodWithData2
 var Axios_default2 = Axios3;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/cancel/CancelToken.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var CancelToken3 = class _CancelToken {
   constructor(executor) {
     if (typeof executor !== "function") {
@@ -73063,7 +73064,7 @@ var CancelToken3 = class _CancelToken {
 var CancelToken_default2 = CancelToken3;
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/spread.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function spread3(callback) {
   return function wrap(arr) {
     return callback.apply(null, arr);
@@ -73071,13 +73072,13 @@ function spread3(callback) {
 }
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/isAxiosError.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function isAxiosError3(payload) {
   return utils_default2.isObject(payload) && payload.isAxiosError === true;
 }
 
 // node_modules/@ledgerhq/hw-app-eth/node_modules/axios/lib/helpers/HttpStatusCode.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var HttpStatusCode3 = {
   Continue: 100,
   SwitchingProtocols: 101,
@@ -73208,7 +73209,7 @@ var {
 } = axios_default2;
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/services/ledger/loadConfig.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var defaultLoadConfig = {
   nftExplorerBaseURL: "https://nft.api.live.ledger.com/v1/ethereum",
   pluginBaseURL: "https://cdn.live.ledger.com",
@@ -73265,7 +73266,7 @@ var byContractAddressAndChainId = (contract, chainId, erc20SignaturesBlob, userL
   return null;
 };
 var parse2 = (erc20SignaturesBlob) => {
-  const buf = import_buffer.Buffer.from(erc20SignaturesBlob, "base64");
+  const buf = Buffer.from(erc20SignaturesBlob, "base64");
   const map = {};
   const entries = [];
   let i = 0;
@@ -73304,13 +73305,13 @@ var parse2 = (erc20SignaturesBlob) => {
 };
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/utils.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/lib-es/selectors/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/lib-es/selectors/dappSelectors.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var ARBITRUM_CLEAR_SIGNED_SELECTORS;
 (function(ARBITRUM_CLEAR_SIGNED_SELECTORS2) {
   ARBITRUM_CLEAR_SIGNED_SELECTORS2["0x016cba5f"] = "execute";
@@ -74190,9 +74191,9 @@ function splitPath(path) {
 }
 function hexBuffer(str) {
   if (!str)
-    return import_buffer.Buffer.alloc(0);
+    return Buffer.alloc(0);
   const strWithoutPrefix = str.startsWith("0x") ? str.slice(2) : str;
-  return import_buffer.Buffer.from(padHexString(strWithoutPrefix), "hex");
+  return Buffer.from(padHexString(strWithoutPrefix), "hex");
 }
 function maybeHexBuffer(str) {
   if (!str)
@@ -74235,7 +74236,7 @@ var getParity = (vFromDevice, chainId, transactionType) => {
   throw new Error("Invalid v value");
 };
 var getChainIdAsUint32 = (chainId) => {
-  const chainIdBuff = import_buffer.Buffer.from(padHexString(new BigNumber(chainId).toString(16)), "hex");
+  const chainIdBuff = Buffer.from(padHexString(new BigNumber(chainId).toString(16)), "hex");
   const chainIdUint32 = chainIdBuff.subarray(0, 4);
   return parseInt(chainIdUint32.toString("hex"), 16);
 };
@@ -74258,7 +74259,7 @@ var getV = (vFromDevice, chainId, transactionType) => {
 };
 var safeChunkTransaction = (transactionRlp, derivationPath, transactionType) => {
   const maxChunkSize = 255;
-  const payload = import_buffer.Buffer.concat([derivationPath, transactionRlp]);
+  const payload = Buffer.concat([derivationPath, transactionRlp]);
   if (payload.length <= maxChunkSize)
     return [payload];
   if (transactionType) {
@@ -74286,10 +74287,10 @@ var safeChunkTransaction = (transactionRlp, derivationPath, transactionType) => 
 };
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/modules/EIP712/utils.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/evm-tools/lib-es/message/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/modules/EIP712/utils.js
 var EIP712_ARRAY_TYPE_VALUE;
@@ -74336,11 +74337,11 @@ var EIP712_TYPE_ENCODERS = {
     let valueAsBN = new bignumber_default(failSafeValue);
     if (valueAsBN.lt(0)) {
       const sizeInBytes = size / 8;
-      const maskAsBN = new bignumber_default(`0x${import_buffer.Buffer.alloc(sizeInBytes, 255).toString("hex")}`);
+      const maskAsBN = new bignumber_default(`0x${Buffer.alloc(sizeInBytes, 255).toString("hex")}`);
       valueAsBN = maskAsBN.plus(valueAsBN).plus(1);
     }
     const paddedHexString = valueAsBN.toString(16).length % 2 ? "0" + valueAsBN.toString(16) : valueAsBN.toString(16);
-    return import_buffer.Buffer.from(paddedHexString, "hex");
+    return Buffer.from(paddedHexString, "hex");
   },
   UINT(value) {
     return this.INT(value);
@@ -74352,7 +74353,7 @@ var EIP712_TYPE_ENCODERS = {
     return hexBuffer(value ?? "").slice(0, 20);
   },
   STRING(value) {
-    return import_buffer.Buffer.from(value ?? "", "utf-8");
+    return Buffer.from(value ?? "", "utf-8");
   },
   BYTES(value, size) {
     const failSafeValue = value ?? "";
@@ -74387,26 +74388,26 @@ var makeTypeEntryStructBuffer = ({ name, type: type2 }) => {
   const typeKey = typeProperties.key(typeDescription?.size);
   const typeSize = typeProperties.size(typeDescription?.size);
   const typeDescData = constructTypeDescByteString(isTypeAnArray, typeSize, typeKey);
-  const bufferArray = [import_buffer.Buffer.from(typeDescData, "hex")];
+  const bufferArray = [Buffer.from(typeDescData, "hex")];
   if (typeProperties === EIP712_TYPE_PROPERTIES.CUSTOM) {
-    bufferArray.push(import_buffer.Buffer.from(intAsHexBytes(typeDescription?.name?.length ?? 0, 1), "hex"));
-    bufferArray.push(import_buffer.Buffer.from(typeDescription?.name ?? "", "utf-8"));
+    bufferArray.push(Buffer.from(intAsHexBytes(typeDescription?.name?.length ?? 0, 1), "hex"));
+    bufferArray.push(Buffer.from(typeDescription?.name ?? "", "utf-8"));
   }
   if (typeof typeSize === "number") {
-    bufferArray.push(import_buffer.Buffer.from(intAsHexBytes(typeSize, 1), "hex"));
+    bufferArray.push(Buffer.from(intAsHexBytes(typeSize, 1), "hex"));
   }
   if (isTypeAnArray) {
-    bufferArray.push(import_buffer.Buffer.from(intAsHexBytes(arrSizes.length, 1), "hex"));
+    bufferArray.push(Buffer.from(intAsHexBytes(arrSizes.length, 1), "hex"));
     arrSizes.forEach((size) => {
       if (typeof size === "number") {
-        bufferArray.push(import_buffer.Buffer.from(intAsHexBytes(EIP712_ARRAY_TYPE_VALUE.FIXED, 1), "hex"), import_buffer.Buffer.from(intAsHexBytes(size, 1), "hex"));
+        bufferArray.push(Buffer.from(intAsHexBytes(EIP712_ARRAY_TYPE_VALUE.FIXED, 1), "hex"), Buffer.from(intAsHexBytes(size, 1), "hex"));
       } else {
-        bufferArray.push(import_buffer.Buffer.from(intAsHexBytes(EIP712_ARRAY_TYPE_VALUE.DYNAMIC, 1), "hex"));
+        bufferArray.push(Buffer.from(intAsHexBytes(EIP712_ARRAY_TYPE_VALUE.DYNAMIC, 1), "hex"));
       }
     });
   }
-  bufferArray.push(import_buffer.Buffer.from(intAsHexBytes(name.length, 1), "hex"), import_buffer.Buffer.from(name, "utf-8"));
-  return import_buffer.Buffer.concat(bufferArray);
+  bufferArray.push(Buffer.from(intAsHexBytes(name.length, 1), "hex"), Buffer.from(name, "utf-8"));
+  return Buffer.concat(bufferArray);
 };
 var getCoinRefTokensMap = (filters, shouldUseV1Filters, message) => {
   const coinRefsTokensMap = {};
@@ -74445,32 +74446,32 @@ var getAppAndVersion = async (transport) => {
   };
 };
 var getFilterDisplayNameAndSigBuffers = (displayName, sig) => {
-  const displayNameContentBuffer = import_buffer.Buffer.from(displayName);
-  const displayNameLengthBuffer = import_buffer.Buffer.from(intAsHexBytes(displayNameContentBuffer.length, 1), "hex");
-  const sigContentBuffer = import_buffer.Buffer.from(sig, "hex");
-  const sigLengthBuffer = import_buffer.Buffer.from(intAsHexBytes(sigContentBuffer.length, 1), "hex");
+  const displayNameContentBuffer = Buffer.from(displayName);
+  const displayNameLengthBuffer = Buffer.from(intAsHexBytes(displayNameContentBuffer.length, 1), "hex");
+  const sigContentBuffer = Buffer.from(sig, "hex");
+  const sigLengthBuffer = Buffer.from(intAsHexBytes(sigContentBuffer.length, 1), "hex");
   return {
-    displayNameBuffer: import_buffer.Buffer.concat([displayNameLengthBuffer, displayNameContentBuffer]),
-    sigBuffer: import_buffer.Buffer.concat([sigLengthBuffer, sigContentBuffer])
+    displayNameBuffer: Buffer.concat([displayNameLengthBuffer, displayNameContentBuffer]),
+    sigBuffer: Buffer.concat([sigLengthBuffer, sigContentBuffer])
   };
 };
 var getPayloadForFilterV2 = (format, coinRef, coinRefsTokensMap, displayNameBuffer, sigBuffer) => {
   switch (format) {
     case "raw":
     case "datetime":
-      return import_buffer.Buffer.concat([displayNameBuffer, sigBuffer]);
+      return Buffer.concat([displayNameBuffer, sigBuffer]);
     case "token": {
       const { deviceTokenIndex } = coinRefsTokensMap[coinRef];
-      return import_buffer.Buffer.concat([
-        import_buffer.Buffer.from(intAsHexBytes(deviceTokenIndex || coinRef || 0, 1), "hex"),
+      return Buffer.concat([
+        Buffer.from(intAsHexBytes(deviceTokenIndex || coinRef || 0, 1), "hex"),
         sigBuffer
       ]);
     }
     case "amount": {
       const { deviceTokenIndex } = coinRefsTokensMap[coinRef];
-      return import_buffer.Buffer.concat([
+      return Buffer.concat([
         displayNameBuffer,
-        import_buffer.Buffer.from(intAsHexBytes(deviceTokenIndex || coinRef || 0, 1), "hex"),
+        Buffer.from(intAsHexBytes(deviceTokenIndex || coinRef || 0, 1), "hex"),
         sigBuffer
       ]);
     }
@@ -74565,7 +74566,7 @@ var sendStructDef = (transport, structDef) => {
     APDU_FIELDS2[APDU_FIELDS2["P2_field"] = 255] = "P2_field";
   })(APDU_FIELDS || (APDU_FIELDS = {}));
   const { structType, value } = structDef;
-  const data = structType === "name" && typeof value === "string" ? import_buffer.Buffer.from(value, "utf-8") : value;
+  const data = structType === "name" && typeof value === "string" ? Buffer.from(value, "utf-8") : value;
   return transport.send(APDU_FIELDS.CLA, APDU_FIELDS.INS, APDU_FIELDS.P1_complete, structType === "name" ? APDU_FIELDS.P2_name : APDU_FIELDS.P2_field, data);
 };
 var sendStructImplem = async (transport, structImplem) => {
@@ -74581,10 +74582,10 @@ var sendStructImplem = async (transport, structImplem) => {
   })(APDU_FIELDS || (APDU_FIELDS = {}));
   const { structType, value } = structImplem;
   if (structType === "root") {
-    return transport.send(APDU_FIELDS.CLA, APDU_FIELDS.INS, APDU_FIELDS.P1_complete, APDU_FIELDS.P2_root, import_buffer.Buffer.from(value, "utf-8"));
+    return transport.send(APDU_FIELDS.CLA, APDU_FIELDS.INS, APDU_FIELDS.P1_complete, APDU_FIELDS.P2_root, Buffer.from(value, "utf-8"));
   }
   if (structType === "array") {
-    return transport.send(APDU_FIELDS.CLA, APDU_FIELDS.INS, APDU_FIELDS.P1_complete, APDU_FIELDS.P2_array, import_buffer.Buffer.from(intAsHexBytes(value, 1), "hex"));
+    return transport.send(APDU_FIELDS.CLA, APDU_FIELDS.INS, APDU_FIELDS.P1_complete, APDU_FIELDS.P2_array, Buffer.from(intAsHexBytes(value, 1), "hex"));
   }
   if (structType === "field") {
     const { data: rawData, type: type2, sizeInBits } = value;
@@ -74592,9 +74593,9 @@ var sendStructImplem = async (transport, structImplem) => {
     if (encodedData) {
       const dataLengthPer16Bits = Math.floor(encodedData.length / 256);
       const dataLengthModulo16Bits = encodedData.length % 256;
-      const data = import_buffer.Buffer.concat([
-        import_buffer.Buffer.from(intAsHexBytes(dataLengthPer16Bits, 1), "hex"),
-        import_buffer.Buffer.from(intAsHexBytes(dataLengthModulo16Bits, 1), "hex"),
+      const data = Buffer.concat([
+        Buffer.from(intAsHexBytes(dataLengthPer16Bits, 1), "hex"),
+        Buffer.from(intAsHexBytes(dataLengthModulo16Bits, 1), "hex"),
         encodedData
       ]);
       const bufferSlices = new Array(Math.ceil(data.length / 256)).fill(null).map((_, i) => data.subarray(i * 255, (i + 1) * 255));
@@ -74627,15 +74628,15 @@ async function sendFilteringInfo(transport, type2, loadConfig, data) {
     case "contractName": {
       const { displayName, filtersCount, sig } = data;
       const { displayNameBuffer, sigBuffer } = getFilterDisplayNameAndSigBuffers(displayName, sig);
-      const filtersCountBuffer = import_buffer.Buffer.from(intAsHexBytes(filtersCount, 1), "hex");
-      const payload = import_buffer.Buffer.concat([displayNameBuffer, filtersCountBuffer, sigBuffer]);
+      const filtersCountBuffer = Buffer.from(intAsHexBytes(filtersCount, 1), "hex");
+      const payload = Buffer.concat([displayNameBuffer, filtersCountBuffer, sigBuffer]);
       return transport.send(APDU_FIELDS.CLA, APDU_FIELDS.INS, APDU_FIELDS.P1_standard, APDU_FIELDS.P2_message_info, payload);
     }
     case "showField": {
       const { displayName, sig, format, coinRef, chainId, coinRefsTokensMap, shouldUseV1Filters, erc20SignaturesBlob, isDiscarded } = data;
       const { displayNameBuffer, sigBuffer } = getFilterDisplayNameAndSigBuffers(displayName, sig);
       if (shouldUseV1Filters) {
-        const payload2 = import_buffer.Buffer.concat([displayNameBuffer, sigBuffer]);
+        const payload2 = Buffer.concat([displayNameBuffer, sigBuffer]);
         return transport.send(APDU_FIELDS.CLA, APDU_FIELDS.INS, APDU_FIELDS.P1_standard, APDU_FIELDS.P2_show_field, payload2);
       }
       const isTokenAddress = format === "token";
@@ -74679,9 +74680,9 @@ async function sendFilteringInfo(transport, type2, loadConfig, data) {
     }
     case "discardField": {
       const { path } = data;
-      const pathBuffer = import_buffer.Buffer.from(path);
-      const pathLengthBuffer = import_buffer.Buffer.from(intAsHexBytes(pathBuffer.length, 1), "hex");
-      const payload = import_buffer.Buffer.concat([pathLengthBuffer, pathBuffer]);
+      const pathBuffer = Buffer.from(path);
+      const pathLengthBuffer = Buffer.from(intAsHexBytes(pathBuffer.length, 1), "hex");
+      const payload = Buffer.concat([pathLengthBuffer, pathBuffer]);
       return transport.send(APDU_FIELDS.CLA, APDU_FIELDS.INS, APDU_FIELDS.P1_standard, APDU_FIELDS.P2_discarded, payload);
     }
   }
@@ -74761,7 +74762,7 @@ var signEIP712Message = async (transport, path, typedMessage, fullImplem = false
     await recursiveFieldStructImplem(destructTypeFromString(type2), primaryTypeValue, name);
   }
   const paths = splitPath(path);
-  const signatureBuffer = import_buffer.Buffer.alloc(1 + paths.length * 4);
+  const signatureBuffer = Buffer.alloc(1 + paths.length * 4);
   signatureBuffer[0] = paths.length;
   paths.forEach((element, index) => {
     signatureBuffer.writeUInt32BE(element, 1 + 4 * index);
@@ -74781,7 +74782,7 @@ var signEIP712HashedMessage = (transport, path, domainSeparatorHex, hashStructMe
   const domainSeparator = hexBuffer(domainSeparatorHex);
   const hashStruct = hexBuffer(hashStructMessageHex);
   const paths = splitPath(path);
-  const buffer = import_buffer.Buffer.alloc(1 + paths.length * 4 + 32 + 32, 0);
+  const buffer = Buffer.alloc(1 + paths.length * 4 + 32 + 32, 0);
   let offset2 = 0;
   buffer[0] = paths.length;
   paths.forEach((element, index) => {
@@ -74804,19 +74805,19 @@ var signEIP712HashedMessage = (transport, path, domainSeparatorHex, hashStructMe
 };
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/modules/Domains/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/services/ledger/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/transactions/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/signing-key/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/signing-key/lib.esm/elliptic.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var import_bn3 = __toESM(require_bn());
 var import_hash10 = __toESM(require_hash());
 function createCommonjsModule(fn, basedir, module) {
@@ -76735,7 +76736,7 @@ var elliptic_1 = createCommonjsModule(function(module, exports) {
 var EC$1 = elliptic_1.ec;
 
 // node_modules/@ethersproject/signing-key/lib.esm/_version.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var version10 = "signing-key/5.8.0";
 
 // node_modules/@ethersproject/signing-key/lib.esm/index.js
@@ -76814,7 +76815,7 @@ function computePublicKey(key2, compressed) {
 }
 
 // node_modules/@ethersproject/transactions/lib.esm/_version.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var version11 = "transactions/5.8.0";
 
 // node_modules/@ethersproject/transactions/lib.esm/index.js
@@ -77074,13 +77075,13 @@ function parse3(rawTransaction) {
 }
 
 // node_modules/@ethersproject/abi/lib.esm/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/abi/lib.esm/fragments.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/abi/lib.esm/_version.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var version12 = "abi/5.8.0";
 
 // node_modules/@ethersproject/abi/lib.esm/fragments.js
@@ -77893,10 +77894,10 @@ function splitNesting(value) {
 }
 
 // node_modules/@ethersproject/abi/lib.esm/abi-coder.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/abi/lib.esm/coders/abstract-coder.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var logger10 = new Logger(version12);
 var Coder2 = class {
   constructor(name, type2, localName, dynamic) {
@@ -78021,7 +78022,7 @@ var Reader2 = class _Reader {
 };
 
 // node_modules/@ethersproject/abi/lib.esm/coders/address.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var AddressCoder2 = class extends Coder2 {
   constructor(localName) {
     super("address", "address", localName, false);
@@ -78043,10 +78044,10 @@ var AddressCoder2 = class extends Coder2 {
 };
 
 // node_modules/@ethersproject/abi/lib.esm/coders/array.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ethersproject/abi/lib.esm/coders/anonymous.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var AnonymousCoder2 = class extends Coder2 {
   constructor(coder) {
     super(coder.name, coder.type, void 0, coder.dynamic);
@@ -78253,7 +78254,7 @@ var ArrayCoder2 = class extends Coder2 {
 };
 
 // node_modules/@ethersproject/abi/lib.esm/coders/boolean.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var BooleanCoder2 = class extends Coder2 {
   constructor(localName) {
     super("bool", "bool", localName, false);
@@ -78270,7 +78271,7 @@ var BooleanCoder2 = class extends Coder2 {
 };
 
 // node_modules/@ethersproject/abi/lib.esm/coders/bytes.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var DynamicBytesCoder2 = class extends Coder2 {
   constructor(type2, localName) {
     super(type2, type2, localName, true);
@@ -78298,7 +78299,7 @@ var BytesCoder2 = class extends DynamicBytesCoder2 {
 };
 
 // node_modules/@ethersproject/abi/lib.esm/coders/fixed-bytes.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var FixedBytesCoder2 = class extends Coder2 {
   constructor(size, localName) {
     let name = "bytes" + String(size);
@@ -78321,7 +78322,7 @@ var FixedBytesCoder2 = class extends Coder2 {
 };
 
 // node_modules/@ethersproject/abi/lib.esm/coders/null.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var NullCoder2 = class extends Coder2 {
   constructor(localName) {
     super("null", "", localName, false);
@@ -78342,7 +78343,7 @@ var NullCoder2 = class extends Coder2 {
 };
 
 // node_modules/@ethersproject/abi/lib.esm/coders/number.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var NumberCoder2 = class extends Coder2 {
   constructor(size, signed2, localName) {
     const name = (signed2 ? "int" : "uint") + size * 8;
@@ -78380,7 +78381,7 @@ var NumberCoder2 = class extends Coder2 {
 };
 
 // node_modules/@ethersproject/abi/lib.esm/coders/string.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var StringCoder2 = class extends DynamicBytesCoder2 {
   constructor(localName) {
     super("string", localName);
@@ -78397,7 +78398,7 @@ var StringCoder2 = class extends DynamicBytesCoder2 {
 };
 
 // node_modules/@ethersproject/abi/lib.esm/coders/tuple.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var TupleCoder2 = class extends Coder2 {
   constructor(coders, localName) {
     let dynamic = false;
@@ -78531,7 +78532,7 @@ var AbiCoder2 = class {
 var defaultAbiCoder = new AbiCoder2();
 
 // node_modules/@ethersproject/abi/lib.esm/interface.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var logger13 = new Logger(version12);
 var LogDescription2 = class extends Description {
 };
@@ -79088,19 +79089,19 @@ var Interface2 = class {
 };
 
 // node_modules/@ledgerhq/domain-service/lib-es/signers/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/axios.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/utils.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/bind.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function bind3(fn, thisArg) {
   return function wrap() {
     return fn.apply(thisArg, arguments);
@@ -79521,19 +79522,19 @@ var utils_default3 = {
 };
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/core/Axios.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/buildURL.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/AxiosURLSearchParams.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/toFormData.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/core/AxiosError.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var AxiosError5 = class _AxiosError extends Error {
   static from(error, code, config, request, response, customProps) {
     const axiosError = new _AxiosError(error.message, code || error.code, config, request, response);
@@ -79600,7 +79601,7 @@ AxiosError5.ERR_INVALID_URL = "ERR_INVALID_URL";
 var AxiosError_default3 = AxiosError5;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/null.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var null_default3 = null;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/toFormData.js
@@ -79656,7 +79657,7 @@ function toFormData5(obj, formData, options) {
       throw new AxiosError_default3("Blob is not supported. Use a Buffer instead.");
     }
     if (utils_default3.isArrayBuffer(value) || utils_default3.isTypedArray(value)) {
-      return useBlob && typeof Blob === "function" ? new Blob([value]) : import_buffer.Buffer.from(value);
+      return useBlob && typeof Blob === "function" ? new Blob([value]) : Buffer.from(value);
     }
     return value;
   }
@@ -79781,7 +79782,7 @@ function buildURL3(url, params, options) {
 }
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/core/InterceptorManager.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var InterceptorManager3 = class {
   constructor() {
     this.handlers = [];
@@ -79847,16 +79848,16 @@ var InterceptorManager3 = class {
 var InterceptorManager_default3 = InterceptorManager3;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/core/dispatchRequest.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/core/transformData.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/defaults/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/defaults/transitional.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var transitional_default3 = {
   silentJSONParsing: true,
   forcedJSONParsing: true,
@@ -79865,24 +79866,24 @@ var transitional_default3 = {
 };
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/toURLEncodedForm.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/platform/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/platform/browser/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/platform/browser/classes/URLSearchParams.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var URLSearchParams_default3 = typeof URLSearchParams !== "undefined" ? URLSearchParams : AxiosURLSearchParams_default3;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/platform/browser/classes/FormData.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var FormData_default3 = typeof FormData !== "undefined" ? FormData : null;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/platform/browser/classes/Blob.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var Blob_default3 = typeof Blob !== "undefined" ? Blob : null;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/platform/browser/index.js
@@ -79905,7 +79906,7 @@ __export(utils_exports4, {
   navigator: () => _navigator3,
   origin: () => origin3
 });
-init_buffer_inject();
+init_wallet_buffer_shim();
 var hasBrowserEnv3 = typeof window !== "undefined" && typeof document !== "undefined";
 var _navigator3 = typeof navigator === "object" && navigator || void 0;
 var hasStandardBrowserEnv3 = hasBrowserEnv3 && (!_navigator3 || ["ReactNative", "NativeScript", "NS"].indexOf(_navigator3.product) < 0);
@@ -79936,7 +79937,7 @@ function toURLEncodedForm3(data, options) {
 }
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/formDataToJSON.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function parsePropPath3(name) {
   return utils_default3.matchAll(/\w+|\[(\w*)]/g, name).map((match) => {
     return match[0] === "[]" ? "" : match[1] || match[0];
@@ -80099,10 +80100,10 @@ utils_default3.forEach(["delete", "get", "head", "post", "put", "patch"], (metho
 var defaults_default3 = defaults3;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/core/AxiosHeaders.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/parseHeaders.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var ignoreDuplicateOf3 = utils_default3.toObjectSet([
   "age",
   "authorization",
@@ -80390,13 +80391,13 @@ function transformData3(fns, response) {
 }
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/cancel/isCancel.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function isCancel5(value) {
   return !!(value && value.__CANCEL__);
 }
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/cancel/CanceledError.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var CanceledError5 = class extends AxiosError_default3 {
   /**
    * A `CanceledError` is an object that is thrown when an operation is canceled.
@@ -80416,13 +80417,13 @@ var CanceledError5 = class extends AxiosError_default3 {
 var CanceledError_default3 = CanceledError5;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/adapters/adapters.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/adapters/xhr.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/core/settle.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function settle3(resolve, reject, response) {
   const validateStatus4 = response.config.validateStatus;
   if (!response.status || !validateStatus4 || validateStatus4(response.status)) {
@@ -80439,17 +80440,17 @@ function settle3(resolve, reject, response) {
 }
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/parseProtocol.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function parseProtocol3(url) {
   const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
   return match && match[1] || "";
 }
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/progressEventReducer.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/speedometer.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function speedometer3(samplesCount, min) {
   samplesCount = samplesCount || 10;
   const bytes2 = new Array(samplesCount);
@@ -80486,7 +80487,7 @@ function speedometer3(samplesCount, min) {
 var speedometer_default3 = speedometer3;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/throttle.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function throttle3(fn, freq) {
   let timestamp = 0;
   let threshold = 1e3 / freq;
@@ -80557,10 +80558,10 @@ var progressEventDecorator3 = (total, throttled) => {
 var asyncDecorator3 = (fn) => (...args) => utils_default3.asap(() => fn(...args));
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/resolveConfig.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/isURLSameOrigin.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var isURLSameOrigin_default3 = platform_default3.hasStandardBrowserEnv ? /* @__PURE__ */ ((origin4, isMSIE) => (url) => {
   url = new URL(url, platform_default3.origin);
   return origin4.protocol === url.protocol && origin4.host === url.host && (isMSIE || origin4.port === url.port);
@@ -80570,7 +80571,7 @@ var isURLSameOrigin_default3 = platform_default3.hasStandardBrowserEnv ? /* @__P
 ) : () => true;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/cookies.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var cookies_default3 = platform_default3.hasStandardBrowserEnv ? (
   // Standard browser envs support document.cookie
   {
@@ -80617,10 +80618,10 @@ var cookies_default3 = platform_default3.hasStandardBrowserEnv ? (
 );
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/core/buildFullPath.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/isAbsoluteURL.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function isAbsoluteURL3(url) {
   if (typeof url !== "string") {
     return false;
@@ -80629,7 +80630,7 @@ function isAbsoluteURL3(url) {
 }
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/combineURLs.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function combineURLs3(baseURL, relativeURL) {
   return relativeURL ? baseURL.replace(/\/?\/$/, "") + "/" + relativeURL.replace(/^\/+/, "") : baseURL;
 }
@@ -80644,7 +80645,7 @@ function buildFullPath3(baseURL, requestedURL, allowAbsoluteUrls) {
 }
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/core/mergeConfig.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var headersToObject3 = (thing) => thing instanceof AxiosHeaders_default3 ? { ...thing } : thing;
 function mergeConfig5(config1, config2) {
   config2 = config2 || {};
@@ -80897,10 +80898,10 @@ var xhr_default3 = isXHRAdapterSupported3 && function(config) {
 };
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/adapters/fetch.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/composeSignals.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var composeSignals3 = (signals, timeout) => {
   const { length } = signals = signals ? signals.filter(Boolean) : [];
   if (timeout || length) {
@@ -80937,7 +80938,7 @@ var composeSignals3 = (signals, timeout) => {
 var composeSignals_default3 = composeSignals3;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/trackStream.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var streamChunk3 = function* (chunk, chunkSize) {
   let len = chunk.byteLength;
   if (!chunkSize || len < chunkSize) {
@@ -81334,10 +81335,10 @@ function dispatchRequest3(config) {
 }
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/validator.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/env/data.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var VERSION5 = "1.13.5";
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/validator.js
@@ -81584,7 +81585,7 @@ utils_default3.forEach(["post", "put", "patch"], function forEachMethodWithData3
 var Axios_default3 = Axios5;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/cancel/CancelToken.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var CancelToken5 = class _CancelToken {
   constructor(executor) {
     if (typeof executor !== "function") {
@@ -81683,7 +81684,7 @@ var CancelToken5 = class _CancelToken {
 var CancelToken_default3 = CancelToken5;
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/spread.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function spread5(callback) {
   return function wrap(arr) {
     return callback.apply(null, arr);
@@ -81691,13 +81692,13 @@ function spread5(callback) {
 }
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/isAxiosError.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 function isAxiosError5(payload) {
   return utils_default3.isObject(payload) && payload.isAxiosError === true;
 }
 
 // node_modules/@ledgerhq/domain-service/node_modules/axios/lib/helpers/HttpStatusCode.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var HttpStatusCode5 = {
   Continue: 100,
   SwitchingProtocols: 101,
@@ -81828,7 +81829,7 @@ var {
 } = axios_default3;
 
 // node_modules/@ledgerhq/domain-service/lib-es/registries/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var REGISTRIES = [
   {
     name: "ens",
@@ -81850,7 +81851,7 @@ var REGISTRIES = [
 var getRegistries = async () => REGISTRIES;
 
 // node_modules/@ledgerhq/domain-service/lib-es/utils/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var validateDomain = (domain) => {
   if (typeof domain !== "string") {
     return false;
@@ -81904,7 +81905,7 @@ var signAddressResolution = async (address, registryName, challenge) => {
 };
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/modules/Uniswap/constants.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var UNISWAP_UNIVERSAL_ROUTER_ADDRESS = "0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad";
 var UNISWAP_EXECUTE_SELECTOR = "0x3593564c";
 var WETH_PER_CHAIN_ID = {
@@ -81963,17 +81964,17 @@ var SWAP_COMMANDS = [
 ];
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/modules/Uniswap/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/modules/Uniswap/decoders.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var swapV2Decoder = (input) => {
   const [, , , addresses] = defaultAbiCoder.decode(["address", "uint256", "uint256", "address[]", "bool"], input);
   return addresses.map((address) => address.toLowerCase());
 };
 var swapV3Decoder = (input) => {
   const [, , , path] = defaultAbiCoder.decode(["address", "uint256", "uint256", "bytes", "bool"], input);
-  const pathBuffer = import_buffer.Buffer.from(path.slice(2), "hex");
+  const pathBuffer = Buffer.from(path.slice(2), "hex");
   const tokens = [];
   let i = 0;
   while (i < pathBuffer.length) {
@@ -82040,7 +82041,7 @@ var getCommandsAndTokensFromUniswapCalldata = (calldata, chainId) => {
     const [commands, inputs] = new Interface2([
       "function execute(bytes calldata commands, bytes[] calldata inputs, uint256 deadline) external payable"
     ]).decodeFunctionData("execute", calldata);
-    const commandsBuffer = import_buffer.Buffer.from(commands.slice(2), "hex");
+    const commandsBuffer = Buffer.from(commands.slice(2), "hex");
     return commandsBuffer.reduce((acc, curr, i) => {
       const commandName = UNISWAP_COMMANDS[`0x${curr.toString(16).padStart(2, "0")}`];
       if (!commandName)
@@ -82066,17 +82067,17 @@ var loadInfosForUniswap = async (transaction, chainId, userConfig) => {
   }));
   const tokenDescriptors = await tokenDescriptorsPromises.then((descriptors) => descriptors.filter((descriptor) => !!descriptor));
   const pluginName = "Uniswap";
-  const lengthBuff = import_buffer.Buffer.alloc(1);
+  const lengthBuff = Buffer.alloc(1);
   lengthBuff.writeUIntBE(pluginName.length, 0, 1);
-  const pluginNameBuff = import_buffer.Buffer.from(pluginName);
-  const contractAddressBuff = import_buffer.Buffer.from(UNISWAP_UNIVERSAL_ROUTER_ADDRESS.slice(2), "hex");
-  const selectorBuff = import_buffer.Buffer.from(UNISWAP_EXECUTE_SELECTOR.slice(2), "hex");
-  const signature3 = import_buffer.Buffer.from(
+  const pluginNameBuff = Buffer.from(pluginName);
+  const contractAddressBuff = Buffer.from(UNISWAP_UNIVERSAL_ROUTER_ADDRESS.slice(2), "hex");
+  const selectorBuff = Buffer.from(UNISWAP_EXECUTE_SELECTOR.slice(2), "hex");
+  const signature3 = Buffer.from(
     // Signature is hardcoded as it would create issues by being in the CAL ethereum.json file
     "3044022014391e8f355867a57fe88f6a5a4dbcb8bf8f888a9db3ff3449caf72d120396bd02200c13d9c3f79400fe0aa0434ac54d59b79503c9964a4abc3e8cd22763e0242935",
     "hex"
   );
-  const pluginData = import_buffer.Buffer.concat([
+  const pluginData = Buffer.concat([
     lengthBuff,
     pluginNameBuff,
     contractAddressBuff,
@@ -82090,7 +82091,7 @@ var loadInfosForUniswap = async (transaction, chainId, userConfig) => {
 };
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/services/ledger/contracts.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var loadInfosForContractMethod = async (contractAddress, selector, chainId, userLoadConfig) => {
   const { pluginBaseURL, extraPlugins } = getLoadConfig(userLoadConfig);
   let data = {};
@@ -82123,7 +82124,7 @@ var loadInfosForContractMethod = async (contractAddress, selector, chainId, user
 };
 
 // node_modules/@ledgerhq/hw-app-eth/lib-es/services/ledger/nfts.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var getNFTInfo = async (contractAddress, chainId, userLoadConfig) => {
   const { nftExplorerBaseURL } = getLoadConfig(userLoadConfig);
   if (!nftExplorerBaseURL)
@@ -82248,7 +82249,7 @@ var loadNanoAppPlugins = async (contractAddress, selector, parsedTransaction, ch
   return resolution;
 };
 var resolveTransaction = async (rawTxHex, loadConfig, resolutionConfig, parseTx = parse3, additionalErc20SignaturesConfig = null) => {
-  const rawTx = import_buffer.Buffer.from(rawTxHex, "hex");
+  const rawTx = Buffer.from(rawTxHex, "hex");
   const parsedTransaction = parseTx(`0x${rawTx.toString("hex")}`);
   const chainIdUint32 = getChainIdAsUint32(parsedTransaction.chainId);
   const { domains } = resolutionConfig;
@@ -82379,16 +82380,16 @@ var Eth = class {
    */
   getAddress(path, boolDisplay, boolChaincode, chainId) {
     const paths = splitPath(path);
-    let buffer = import_buffer.Buffer.alloc(1 + paths.length * 4);
+    let buffer = Buffer.alloc(1 + paths.length * 4);
     buffer[0] = paths.length;
     paths.forEach((element, index) => {
       buffer.writeUInt32BE(element, 1 + 4 * index);
     });
     if (chainId) {
-      const chainIdBufferMask = import_buffer.Buffer.alloc(8, 0);
-      const chainIdBuffer = import_buffer.Buffer.from(padHexString(new BigNumber(chainId).toString(16)), "hex");
+      const chainIdBufferMask = Buffer.alloc(8, 0);
+      const chainIdBuffer = Buffer.from(padHexString(new BigNumber(chainId).toString(16)), "hex");
       chainIdBufferMask.write(chainIdBuffer.toString("hex"), chainIdBufferMask.length - chainIdBuffer.length, "hex");
-      buffer = import_buffer.Buffer.concat([buffer, chainIdBufferMask]);
+      buffer = Buffer.concat([buffer, chainIdBufferMask]);
     }
     return this.transport.send(224, 2, boolDisplay ? 1 : 0, boolChaincode ? 1 : 0, buffer).then((response) => {
       const publicKeyLength = response[0];
@@ -82455,11 +82456,11 @@ var Eth = class {
         await this.provideERC20TokenInformation(data);
       }
     }
-    const rawTx = import_buffer.Buffer.from(rawTxHex, "hex");
+    const rawTx = Buffer.from(rawTxHex, "hex");
     const parsedTransaction = this.ledgerService.parseTransaction(`0x${rawTx.toString("hex")}`);
     const chainId = new BigNumber(parsedTransaction.chainId);
     const paths = splitPath(path);
-    const derivationPathBuff = import_buffer.Buffer.alloc(1 + paths.length * 4);
+    const derivationPathBuff = Buffer.alloc(1 + paths.length * 4);
     derivationPathBuff[0] = paths.length;
     paths.forEach((element, index) => {
       derivationPathBuff.writeUInt32BE(element, 1 + 4 * index);
@@ -82527,12 +82528,12 @@ var Eth = class {
   async signPersonalMessage(path, messageHex) {
     const paths = splitPath(path);
     let offset2 = 0;
-    const message = import_buffer.Buffer.from(messageHex, "hex");
+    const message = Buffer.from(messageHex, "hex");
     let response;
     while (offset2 !== message.length) {
       const maxChunkSize = offset2 === 0 ? 150 - 1 - paths.length * 4 - 4 : 150;
       const chunkSize = offset2 + maxChunkSize > message.length ? message.length - offset2 : maxChunkSize;
-      const buffer = import_buffer.Buffer.alloc(offset2 === 0 ? 1 + paths.length * 4 + 4 + chunkSize : chunkSize);
+      const buffer = Buffer.alloc(offset2 === 0 ? 1 + paths.length * 4 + 4 + chunkSize : chunkSize);
       if (offset2 === 0) {
         buffer[0] = paths.length;
         paths.forEach((element, index) => {
@@ -82634,7 +82635,7 @@ var Eth = class {
    */
   starkGetPublicKey(path, boolDisplay) {
     const paths = splitPath(path);
-    const buffer = import_buffer.Buffer.alloc(1 + paths.length * 4);
+    const buffer = Buffer.alloc(1 + paths.length * 4);
     buffer[0] = paths.length;
     paths.forEach((element, index) => {
       buffer.writeUInt32BE(element, 1 + 4 * index);
@@ -82662,7 +82663,7 @@ var Eth = class {
     const sourceTokenAddressHex = maybeHexBuffer(sourceTokenAddress);
     const destinationTokenAddressHex = maybeHexBuffer(destinationTokenAddress);
     const paths = splitPath(path);
-    const buffer = import_buffer.Buffer.alloc(1 + paths.length * 4 + 20 + 32 + 20 + 32 + 4 + 4 + 8 + 8 + 4 + 4, 0);
+    const buffer = Buffer.alloc(1 + paths.length * 4 + 20 + 32 + 20 + 32 + 4 + 4 + 8 + 8 + 4 + 4, 0);
     let offset2 = 0;
     buffer[0] = paths.length;
     paths.forEach((element, index) => {
@@ -82673,21 +82674,21 @@ var Eth = class {
       sourceTokenAddressHex.copy(buffer, offset2);
     }
     offset2 += 20;
-    import_buffer.Buffer.from(sourceQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+    Buffer.from(sourceQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
     offset2 += 32;
     if (destinationTokenAddressHex) {
       destinationTokenAddressHex.copy(buffer, offset2);
     }
     offset2 += 20;
-    import_buffer.Buffer.from(destinationQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+    Buffer.from(destinationQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
     offset2 += 32;
     buffer.writeUInt32BE(sourceVault, offset2);
     offset2 += 4;
     buffer.writeUInt32BE(destinationVault, offset2);
     offset2 += 4;
-    import_buffer.Buffer.from(amountSell.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
+    Buffer.from(amountSell.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
     offset2 += 8;
-    import_buffer.Buffer.from(amountBuy.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
+    Buffer.from(amountBuy.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
     offset2 += 8;
     buffer.writeUInt32BE(nonce, offset2);
     offset2 += 4;
@@ -82730,7 +82731,7 @@ var Eth = class {
       throw new Error("eth.starkSignOrderv2 invalid destination quantization type=" + destinationQuantizationType);
     }
     const paths = splitPath(path);
-    const buffer = import_buffer.Buffer.alloc(1 + paths.length * 4 + 1 + 20 + 32 + 32 + 1 + 20 + 32 + 32 + 4 + 4 + 8 + 8 + 4 + 4, 0);
+    const buffer = Buffer.alloc(1 + paths.length * 4 + 1 + 20 + 32 + 32 + 1 + 20 + 32 + 32 + 4 + 4 + 8 + 8 + 4 + 4, 0);
     let offset2 = 0;
     buffer[0] = paths.length;
     paths.forEach((element, index) => {
@@ -82744,11 +82745,11 @@ var Eth = class {
     }
     offset2 += 20;
     if (sourceQuantization) {
-      import_buffer.Buffer.from(sourceQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+      Buffer.from(sourceQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
     }
     offset2 += 32;
     if (sourceMintableBlobOrTokenId) {
-      import_buffer.Buffer.from(sourceMintableBlobOrTokenId.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+      Buffer.from(sourceMintableBlobOrTokenId.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
     }
     offset2 += 32;
     buffer[offset2] = starkQuantizationTypeMap[destinationQuantizationType];
@@ -82758,20 +82759,20 @@ var Eth = class {
     }
     offset2 += 20;
     if (destinationQuantization) {
-      import_buffer.Buffer.from(destinationQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+      Buffer.from(destinationQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
     }
     offset2 += 32;
     if (destinationMintableBlobOrTokenId) {
-      import_buffer.Buffer.from(destinationMintableBlobOrTokenId.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+      Buffer.from(destinationMintableBlobOrTokenId.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
     }
     offset2 += 32;
     buffer.writeUInt32BE(sourceVault, offset2);
     offset2 += 4;
     buffer.writeUInt32BE(destinationVault, offset2);
     offset2 += 4;
-    import_buffer.Buffer.from(amountSell.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
+    Buffer.from(amountSell.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
     offset2 += 8;
-    import_buffer.Buffer.from(amountBuy.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
+    Buffer.from(amountBuy.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
     offset2 += 8;
     buffer.writeUInt32BE(nonce, offset2);
     offset2 += 4;
@@ -82802,7 +82803,7 @@ var Eth = class {
     const transferTokenAddressHex = maybeHexBuffer(transferTokenAddress);
     const targetPublicKeyHex = hexBuffer(targetPublicKey);
     const paths = splitPath(path);
-    const buffer = import_buffer.Buffer.alloc(1 + paths.length * 4 + 20 + 32 + 32 + 4 + 4 + 8 + 4 + 4, 0);
+    const buffer = Buffer.alloc(1 + paths.length * 4 + 20 + 32 + 32 + 4 + 4 + 8 + 4 + 4, 0);
     let offset2 = 0;
     buffer[0] = paths.length;
     paths.forEach((element, index) => {
@@ -82813,7 +82814,7 @@ var Eth = class {
       transferTokenAddressHex.copy(buffer, offset2);
     }
     offset2 += 20;
-    import_buffer.Buffer.from(transferQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+    Buffer.from(transferQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
     offset2 += 32;
     targetPublicKeyHex.copy(buffer, offset2);
     offset2 += 32;
@@ -82821,7 +82822,7 @@ var Eth = class {
     offset2 += 4;
     buffer.writeUInt32BE(destinationVault, offset2);
     offset2 += 4;
-    import_buffer.Buffer.from(amountTransfer.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
+    Buffer.from(amountTransfer.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
     offset2 += 8;
     buffer.writeUInt32BE(nonce, offset2);
     offset2 += 4;
@@ -82860,7 +82861,7 @@ var Eth = class {
       throw new Error("eth.starkSignTransferv2 invalid quantization type=" + transferQuantizationType);
     }
     const paths = splitPath(path);
-    const buffer = import_buffer.Buffer.alloc(1 + paths.length * 4 + 1 + 20 + 32 + 32 + 32 + 4 + 4 + 8 + 4 + 4 + (conditionalTransferAddressHex ? 32 + 20 : 0), 0);
+    const buffer = Buffer.alloc(1 + paths.length * 4 + 1 + 20 + 32 + 32 + 32 + 4 + 4 + 8 + 4 + 4 + (conditionalTransferAddressHex ? 32 + 20 : 0), 0);
     let offset2 = 0;
     buffer[0] = paths.length;
     paths.forEach((element, index) => {
@@ -82874,11 +82875,11 @@ var Eth = class {
     }
     offset2 += 20;
     if (transferQuantization) {
-      import_buffer.Buffer.from(transferQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+      Buffer.from(transferQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
     }
     offset2 += 32;
     if (transferMintableBlobOrTokenId) {
-      import_buffer.Buffer.from(transferMintableBlobOrTokenId.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+      Buffer.from(transferMintableBlobOrTokenId.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
     }
     offset2 += 32;
     targetPublicKeyHex.copy(buffer, offset2);
@@ -82887,14 +82888,14 @@ var Eth = class {
     offset2 += 4;
     buffer.writeUInt32BE(destinationVault, offset2);
     offset2 += 4;
-    import_buffer.Buffer.from(amountTransfer.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
+    Buffer.from(amountTransfer.toString(16).padStart(16, "0"), "hex").copy(buffer, offset2);
     offset2 += 8;
     buffer.writeUInt32BE(nonce, offset2);
     offset2 += 4;
     buffer.writeUInt32BE(timestamp, offset2);
     if (conditionalTransferAddressHex && conditionalTransferFact) {
       offset2 += 4;
-      import_buffer.Buffer.from(conditionalTransferFact.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+      Buffer.from(conditionalTransferFact.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
       offset2 += 32;
       conditionalTransferAddressHex.copy(buffer, offset2);
     }
@@ -82917,11 +82918,11 @@ var Eth = class {
    */
   starkProvideQuantum(operationContract, operationQuantization) {
     const operationContractHex = maybeHexBuffer(operationContract);
-    const buffer = import_buffer.Buffer.alloc(20 + 32, 0);
+    const buffer = Buffer.alloc(20 + 32, 0);
     if (operationContractHex) {
       operationContractHex.copy(buffer, 0);
     }
-    import_buffer.Buffer.from(operationQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, 20);
+    Buffer.from(operationQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, 20);
     return this.transport.send(240, 8, 0, 0, buffer).then(() => true, (e) => {
       if (e && e.statusCode === 27904) {
         return false;
@@ -82944,18 +82945,18 @@ var Eth = class {
     if (!(operationQuantizationType in starkQuantizationTypeMap)) {
       throw new Error("eth.starkProvideQuantumV2 invalid quantization type=" + operationQuantizationType);
     }
-    const buffer = import_buffer.Buffer.alloc(20 + 32 + 32, 0);
+    const buffer = Buffer.alloc(20 + 32 + 32, 0);
     let offset2 = 0;
     if (operationContractHex) {
       operationContractHex.copy(buffer, offset2);
     }
     offset2 += 20;
     if (operationQuantization) {
-      import_buffer.Buffer.from(operationQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+      Buffer.from(operationQuantization.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
     }
     offset2 += 32;
     if (operationMintableBlobOrTokenId) {
-      import_buffer.Buffer.from(operationMintableBlobOrTokenId.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
+      Buffer.from(operationMintableBlobOrTokenId.toString(16).padStart(64, "0"), "hex").copy(buffer, offset2);
     }
     return this.transport.send(240, 8, starkQuantizationTypeMap[operationQuantizationType], 0, buffer).then(() => true, (e) => {
       if (e && e.statusCode === 27904) {
@@ -82974,7 +82975,7 @@ var Eth = class {
   starkUnsafeSign(path, hash3) {
     const hashHex = hexBuffer(hash3);
     const paths = splitPath(path);
-    const buffer = import_buffer.Buffer.alloc(1 + paths.length * 4 + 32);
+    const buffer = Buffer.alloc(1 + paths.length * 4 + 32);
     let offset2 = 0;
     buffer[0] = paths.length;
     paths.forEach((element, index) => {
@@ -83001,7 +83002,7 @@ var Eth = class {
    */
   eth2GetPublicKey(path, boolDisplay) {
     const paths = splitPath(path);
-    const buffer = import_buffer.Buffer.alloc(1 + paths.length * 4);
+    const buffer = Buffer.alloc(1 + paths.length * 4);
     buffer[0] = paths.length;
     paths.forEach((element, index) => {
       buffer.writeUInt32BE(element, 1 + 4 * index);
@@ -83021,7 +83022,7 @@ var Eth = class {
    * @return True if the method was executed successfully
    */
   eth2SetWithdrawalIndex(withdrawalIndex) {
-    const buffer = import_buffer.Buffer.alloc(4, 0);
+    const buffer = Buffer.alloc(4, 0);
     buffer.writeUInt32BE(withdrawalIndex, 0);
     return this.transport.send(224, 16, 0, 0, buffer).then(() => true, (e) => {
       if (e && e.statusCode === 27904) {
@@ -83040,7 +83041,7 @@ var Eth = class {
    */
   getEIP1024PublicEncryptionKey(path, boolDisplay) {
     const paths = splitPath(path);
-    const buffer = import_buffer.Buffer.alloc(1 + paths.length * 4);
+    const buffer = Buffer.alloc(1 + paths.length * 4);
     buffer[0] = paths.length;
     paths.forEach((element, index) => {
       buffer.writeUInt32BE(element, 1 + 4 * index);
@@ -83063,7 +83064,7 @@ var Eth = class {
   getEIP1024SharedSecret(path, remotePublicKeyHex, boolDisplay) {
     const paths = splitPath(path);
     const remotePublicKey = hexBuffer(remotePublicKeyHex);
-    const buffer = import_buffer.Buffer.alloc(1 + paths.length * 4 + 32);
+    const buffer = Buffer.alloc(1 + paths.length * 4 + 32);
     let offset2 = 0;
     buffer[0] = paths.length;
     paths.forEach((element, index) => {
@@ -83084,7 +83085,7 @@ var Eth = class {
    * @returns a boolean
    */
   provideERC20TokenInformation(data) {
-    const buffer = import_buffer.Buffer.from(data, "hex");
+    const buffer = Buffer.from(data, "hex");
     return this.transport.send(224, 10, 0, 0, buffer).then(() => true, (e) => {
       if (e && e.statusCode === 27904) {
         return false;
@@ -83100,9 +83101,9 @@ var Eth = class {
    * @returns a boolean
    */
   setExternalPlugin(payload, signature3) {
-    const payloadBuffer = import_buffer.Buffer.from(payload, "hex");
-    const signatureBuffer = import_buffer.Buffer.from(signature3 ?? "", "hex");
-    const buffer = import_buffer.Buffer.concat([payloadBuffer, signatureBuffer]);
+    const payloadBuffer = Buffer.from(payload, "hex");
+    const signatureBuffer = Buffer.from(signature3 ?? "", "hex");
+    const buffer = Buffer.concat([payloadBuffer, signatureBuffer]);
     return this.transport.send(224, 18, 0, 0, buffer).then(() => true, (e) => {
       if (e && e.statusCode === 27264) {
         return false;
@@ -83121,7 +83122,7 @@ var Eth = class {
    * @returns a boolean
    */
   setPlugin(data) {
-    const buffer = import_buffer.Buffer.from(data, "hex");
+    const buffer = Buffer.from(data, "hex");
     return this.transport.send(224, 22, 0, 0, buffer).then(() => true, (e) => {
       if (e && e.statusCode === 27264) {
         return false;
@@ -83140,7 +83141,7 @@ var Eth = class {
    * @returns a boolean
    */
   provideNFTInformation(data) {
-    const buffer = import_buffer.Buffer.from(data, "hex");
+    const buffer = Buffer.from(data, "hex");
     return this.transport.send(224, 20, 0, 0, buffer).then(() => true, (e) => {
       if (e && e.statusCode === 27904) {
         throw new EthAppNftNotSupported();
@@ -83163,8 +83164,8 @@ var Eth = class {
       APDU_FIELDS2[APDU_FIELDS2["P1_FOLLOWING_CHUNK"] = 0] = "P1_FOLLOWING_CHUNK";
       APDU_FIELDS2[APDU_FIELDS2["P2"] = 0] = "P2";
     })(APDU_FIELDS || (APDU_FIELDS = {}));
-    const buffer = import_buffer.Buffer.from(data, "hex");
-    const payload = import_buffer.Buffer.concat([import_buffer.Buffer.from(intAsHexBytes(buffer.length, 2), "hex"), buffer]);
+    const buffer = Buffer.from(data, "hex");
+    const payload = Buffer.concat([Buffer.from(intAsHexBytes(buffer.length, 2), "hex"), buffer]);
     const bufferChunks = new Array(Math.ceil(payload.length / 256)).fill(null).map((_, i) => payload.slice(i * 255, (i + 1) * 255));
     for (const chunk of bufferChunks) {
       const isFirstChunk = chunk === bufferChunks[0];
@@ -83175,17 +83176,17 @@ var Eth = class {
 };
 
 // node_modules/@ledgerhq/hw-transport-webhid/lib-es/TransportWebHID.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/hw-transport-webhid/node_modules/@ledgerhq/hw-transport/lib-es/Transport.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var import_events2 = __toESM(require_events());
 
 // node_modules/@ledgerhq/errors/lib-es/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 
 // node_modules/@ledgerhq/errors/lib-es/helpers.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var errorClasses = {};
 var deserializers = {};
 var addCustomErrorDeserializer = (name, deserializer) => {
@@ -83671,7 +83672,7 @@ var Transport = class {
    *    to detect unresponsive device (see `unresponsiveTimeout`). This timeout aborts the exchange.
    * @returns {Promise<Buffer>} A promise that resolves with the response data from the device.
    */
-  send = async (cla, ins, p1, p2, data = import_buffer.Buffer.alloc(0), statusList = [StatusCodes.OK], { abortTimeoutMs } = {}) => {
+  send = async (cla, ins, p1, p2, data = Buffer.alloc(0), statusList = [StatusCodes.OK], { abortTimeoutMs } = {}) => {
     const tracer = this.tracer.withUpdatedContext({ function: "send" });
     if (data.length >= 256) {
       tracer.trace("data.length exceeded 256 bytes limit", { dataLength: data.length });
@@ -83679,7 +83680,7 @@ var Transport = class {
     }
     const response = await this.exchange(
       // The size of the data is added in 1 byte just before `data`
-      import_buffer.Buffer.concat([import_buffer.Buffer.from([cla, ins, p1, p2]), import_buffer.Buffer.from([data.length]), data]),
+      Buffer.concat([Buffer.from([cla, ins, p1, p2]), Buffer.from([data.length]), data]),
       { abortTimeoutMs }
     );
     const sw = response.readUInt16BE(response.length - 2);
@@ -83826,15 +83827,15 @@ var Transport = class {
 };
 
 // node_modules/@ledgerhq/hw-transport-webhid/lib-es/hid-framing.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var Tag = 5;
 function asUInt16BE(value) {
-  const b2 = import_buffer.Buffer.alloc(2);
+  const b2 = Buffer.alloc(2);
   b2.writeUInt16BE(value, 0);
   return b2;
 }
 var initialAcc = {
-  data: import_buffer.Buffer.alloc(0),
+  data: Buffer.alloc(0),
   dataLength: 0,
   sequence: 0
 };
@@ -83847,18 +83848,18 @@ var createHIDframing = (channel, packetSize) => {
      * @returns an array of HID USB frames ready to be sent
      */
     makeBlocks(apdu) {
-      let data = import_buffer.Buffer.concat([asUInt16BE(apdu.length), apdu]);
+      let data = Buffer.concat([asUInt16BE(apdu.length), apdu]);
       const blockSize = packetSize - 5;
       const nbBlocks = Math.ceil(data.length / blockSize);
-      data = import_buffer.Buffer.concat([data, import_buffer.Buffer.alloc(nbBlocks * blockSize - data.length + 1).fill(0)]);
+      data = Buffer.concat([data, Buffer.alloc(nbBlocks * blockSize - data.length + 1).fill(0)]);
       const blocks = [];
       for (let i = 0; i < nbBlocks; i++) {
-        const head = import_buffer.Buffer.alloc(5);
+        const head = Buffer.alloc(5);
         head.writeUInt16BE(channel, 0);
         head.writeUInt8(Tag, 2);
         head.writeUInt16BE(i, 3);
         const chunk = data.slice(i * blockSize, (i + 1) * blockSize);
-        blocks.push(new Uint8Array(import_buffer.Buffer.concat([head, chunk])));
+        blocks.push(new Uint8Array(Buffer.concat([head, chunk])));
       }
       return blocks;
     },
@@ -83886,7 +83887,7 @@ var createHIDframing = (channel, packetSize) => {
       }
       sequence++;
       const chunkData = chunk.slice(acc ? 5 : 7);
-      data = import_buffer.Buffer.concat([data, chunkData]);
+      data = Buffer.concat([data, chunkData]);
       if (data.length > dataLength2) {
         data = data.slice(0, dataLength2);
       }
@@ -83913,7 +83914,7 @@ var createHIDframing = (channel, packetSize) => {
 var hid_framing_default = createHIDframing;
 
 // node_modules/@ledgerhq/hw-transport-webhid/node_modules/@ledgerhq/devices/lib-es/index.js
-init_buffer_inject();
+init_wallet_buffer_shim();
 var import_semver2 = __toESM(require_semver4());
 var DeviceModelId;
 (function(DeviceModelId2) {
@@ -84121,7 +84122,7 @@ var TransportWebHID = class _TransportWebHID extends Transport {
     });
   };
   onInputReport = (e) => {
-    const buffer = import_buffer.Buffer.from(e.data.buffer);
+    const buffer = Buffer.from(e.data.buffer);
     if (this.inputCallback) {
       this.inputCallback(buffer);
       this.inputCallback = null;
@@ -84306,6 +84307,13 @@ var NETWORKS = {
     priceId: "solana"
   }
 };
+var NETWORK_LOGOS = {
+  bitcoin: '<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#f7931a"/><text x="20" y="28" fill="#fff" font-size="25" font-weight="700" text-anchor="middle">\u20BF</text></svg>',
+  ethereum: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 1 8 21l12 7 12-7L20 1Zm0 39 12-17-12 7-12-7 12 17Z" fill="#627eea"/></svg>',
+  bsc: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="m20 1 7 7-7 7-7-7 7-7Zm11 11 7 7-7 7-7-7 7-7ZM9 12l7 7-7 7-7-7 7-7Zm11 11 7 7-7 7-7-7 7-7Zm0-12 9 9-9 9-9-9 9-9Z" fill="#f0b90b"/></svg>',
+  polygon: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M12 6 22 1l10 5v11l-10 6-10-6V6Zm2 2v8l8 5 8-5V8l-8-5-8 5Zm-2 14v7l10 6 10-6v-7l-2 1v5l-8 5-8-5v-5l-2-1Z" fill="#8247e5"/><path d="m22 9 6 3.5v7L22 23l-6-3.5v-7L22 9Z" fill="#8247e5"/></svg>',
+  solana: '<svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="solanaGradient" x1="0" x2="1" y1="1" y2="0"><stop stop-color="#9945ff"/><stop offset="1" stop-color="#14f195"/></linearGradient></defs><path d="M9 8h25l-4 5H5l4-5Zm-3 9h25l-4 5H2l4-5Zm3 9h25l-4 5H5l4-5Z" fill="url(#solanaGradient)"/></svg>'
+};
 var walletRoot = document.getElementById("cryptoWallet");
 if (walletRoot) {
   let getSavedWallet = function() {
@@ -84384,11 +84392,25 @@ if (walletRoot) {
     Object.entries(NETWORKS).filter(([network]) => walletAddresses[network]).forEach(([network, config]) => {
       const card = document.createElement("article");
       card.className = "wallet-address-card";
+      const heading = document.createElement("div");
+      heading.className = "wallet-address-heading";
+      const logo = document.createElement("span");
+      logo.className = `wallet-network-logo wallet-network-logo-${network}`;
+      logo.setAttribute("aria-label", `${config.name} logo`);
+      logo.innerHTML = NETWORK_LOGOS[network];
       const title = document.createElement("strong");
       title.textContent = `${config.name} (${config.symbol})`;
+      heading.append(logo, title);
       const address = document.createElement("code");
       address.textContent = walletAddresses[network] || "Deriving address...";
       address.title = walletAddresses[network] || "";
+      const qr = document.createElement("canvas");
+      qr.className = "wallet-address-qr";
+      qr.setAttribute("aria-label", `Receive ${config.symbol} QR code`);
+      import_qrcode.default.toCanvas(qr, walletAddresses[network], { width: 160, margin: 1 }).catch((error) => {
+        console.error(`Could not generate ${config.name} address QR code:`, error);
+        setMessage(`The ${config.name} address is available, but its QR code could not be generated.`, true);
+      });
       const balance = document.createElement("span");
       balance.id = `walletBalance-${network}`;
       balance.textContent = "Balance pending";
@@ -84405,7 +84427,7 @@ if (walletRoot) {
           setMessage("Could not copy address. Select and copy it manually.", true);
         }
       });
-      card.append(title, address, balance, copy4);
+      card.append(heading, address, qr, balance, copy4);
       addressList.appendChild(card);
     });
     clearPaymentRequest();
@@ -84656,7 +84678,8 @@ if (walletRoot) {
     dashboard.hidden = !hasExternalEvmAccount;
     byId("walletBackupButton").hidden = true;
     byId("walletLockButton").hidden = true;
-    byId("walletRefreshButton").hidden = !hasExternalEvmAccount;
+    const refreshButton = byId("walletRefreshButton");
+    if (refreshButton) refreshButton.hidden = true;
     byId("walletUnlockButton").hidden = !getSavedWallet();
     byId("walletCreateButton").hidden = Boolean(getSavedWallet());
     byId("walletRestoreButton").hidden = Boolean(getSavedWallet());
@@ -84679,7 +84702,7 @@ if (walletRoot) {
       if (balanceInterval) clearInterval(balanceInterval);
       balanceInterval = setInterval(() => {
         refreshBalances();
-      }, 3e4);
+      }, 1e3);
     }
     if (showMessage) setMessage(hasExternalEvmAccount ? "Recovery-phrase wallet locked. Your connected EVM account remains available." : "Wallet locked. The encrypted backup remains in this browser.");
   }, renderPhrase = function(phrase, isBackup) {
@@ -84748,6 +84771,20 @@ if (walletRoot) {
     canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
   };
   const byId = (id4) => document.getElementById(id4);
+  const setProviderButtonsHidden = () => {
+    const buttons = [
+      byId("walletConnectLedgerButton"),
+      byId("walletConnectHardwareButton"),
+      byId("walletRefreshButton")
+    ];
+    buttons.forEach((button) => {
+      if (button) {
+        button.hidden = true;
+        button.disabled = true;
+      }
+    });
+  };
+  setProviderButtonsHidden();
   const state = byId("cryptoWalletState");
   const message = byId("cryptoWalletMessage");
   const dashboard = byId("walletDashboard");
@@ -85232,10 +85269,15 @@ if (walletRoot) {
     dashboard.hidden = false;
     byId("walletBackupButton").hidden = false;
     byId("walletLockButton").hidden = false;
-    byId("walletRefreshButton").hidden = false;
+    const refreshButton = byId("walletRefreshButton");
+    if (refreshButton) refreshButton.hidden = true;
     creationControls.forEach((button) => {
       button.hidden = true;
     });
+    if (balanceInterval) clearInterval(balanceInterval);
+    balanceInterval = setInterval(() => {
+      refreshBalances();
+    }, 1e3);
     forms.forEach((form) => {
       form.hidden = true;
     });
@@ -85554,7 +85596,8 @@ This transaction cannot be reversed.`);
         if (!canSendEvm) byId("walletUseLedger").checked = false;
         status.classList.remove("is-error");
         status.textContent = `MetaMask account connected: ${ledgerAddress}. If this is Ledger-backed, approve transactions on your device; this site cannot verify hardware.`;
-        byId("walletConnectLedgerButton").textContent = "Disconnect MetaMask";
+        const connectMetaMaskButton = byId("walletConnectLedgerButton");
+        if (connectMetaMaskButton) connectMetaMaskButton.textContent = "Disconnect MetaMask";
         if (onboardingStatus) {
           onboardingStatus.classList.remove("is-error");
           onboardingStatus.textContent = `MetaMask connected: ${ledgerAddress}`;
@@ -85564,14 +85607,15 @@ This transaction cannot be reversed.`);
           byId("wallet").classList.remove("wallet-onboarding-active");
           state.textContent = "MetaMask account connected";
           dashboard.hidden = false;
-          byId("walletRefreshButton").hidden = false;
+          const refreshButton = byId("walletRefreshButton");
+          if (refreshButton) refreshButton.hidden = true;
           renderAddresses();
           await refreshBalances();
           autoDiscoverWalletNfts();
           if (balanceInterval) clearInterval(balanceInterval);
           balanceInterval = setInterval(() => {
             refreshBalances();
-          }, 3e4);
+          }, 1e3);
         }
         return true;
       } catch (error) {
@@ -85597,13 +85641,14 @@ This transaction cannot be reversed.`);
       metaMaskConnectionRequestsAccess = false;
     }
   }
-  byId("walletConnectLedgerButton").addEventListener("click", async () => {
+  byId("walletConnectLedgerButton")?.addEventListener("click", async () => {
     if (ledgerAddress) {
       ledgerAddress = null;
       ledgerProvider = null;
       byId("walletUseLedger").checked = false;
       byId("walletUseLedger").disabled = true;
-      byId("walletConnectLedgerButton").textContent = "Connect MetaMask";
+      const connectMetaMaskButton = byId("walletConnectLedgerButton");
+      if (connectMetaMaskButton) connectMetaMaskButton.textContent = "Connect MetaMask";
       byId("walletLedgerStatus").textContent = "MetaMask account disconnected from this page.";
       byId("walletLedgerStatus").classList.remove("is-error");
       if (byId("walletOnboardingMetaStatus")) {
@@ -85622,7 +85667,8 @@ This transaction cannot be reversed.`);
     hardwareLedgerAddress = null;
     byId("walletUseHardwareLedger").checked = false;
     byId("walletUseHardwareLedger").disabled = true;
-    byId("walletConnectHardwareButton").textContent = "Connect Ledger (USB)";
+    const hardwareButton = byId("walletConnectHardwareButton");
+    if (hardwareButton) hardwareButton.textContent = "Connect Ledger (USB)";
     if (transport) {
       try {
         await transport.close();
@@ -85637,7 +85683,7 @@ This transaction cannot be reversed.`);
       byId("walletHardwareStatus").textContent = "Ledger device disconnected.";
     }
   }
-  byId("walletConnectHardwareButton").addEventListener("click", async () => {
+  byId("walletConnectHardwareButton")?.addEventListener("click", async () => {
     if (hardwareLedgerTransport) {
       await disconnectHardwareLedger();
       return;
@@ -85649,7 +85695,7 @@ This transaction cannot be reversed.`);
       return;
     }
     const button = byId("walletConnectHardwareButton");
-    button.disabled = true;
+    if (button) button.disabled = true;
     status.classList.remove("is-error");
     status.textContent = "Connect your Ledger, unlock it, and open the Ethereum app. Approve the displayed address on the device.";
     let transport;
@@ -85754,11 +85800,6 @@ This transaction cannot be reversed.`);
   byId("walletOnboardingNext").addEventListener("click", () => {
     byId("walletOnboardingWelcome").hidden = true;
     byId("walletOnboardingOptions").hidden = false;
-    if (window.ethereum) {
-      void connectMetaMask(true, false);
-    } else {
-      void connectMetaMask(false, false);
-    }
   });
   byId("walletOnboardingBack").addEventListener("click", () => {
     byId("walletOnboardingOptions").hidden = true;
@@ -86138,7 +86179,6 @@ This transaction cannot be reversed.`);
       byId("walletUnlockButton").hidden = false;
       state.textContent = "Wallet locked in this browser";
     }
-    if (window.ethereum && !savedWallet) void connectMetaMask(false);
   } catch (error) {
     setVaultLockScreen(true);
     byId("walletCreateButton").hidden = true;
@@ -86146,3 +86186,163 @@ This transaction cannot be reversed.`);
     setMessage(error.message, true);
   }
 }
+/*! Bundled license information:
+
+ieee754/index.js:
+  (*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> *)
+
+buffer/index.js:
+  (*!
+   * The buffer module from node.js, for the browser.
+   *
+   * @author   Feross Aboukhadijeh <https://feross.org>
+   * @license  MIT
+   *)
+
+@noble/hashes/utils.js:
+@noble/hashes/esm/utils.js:
+@noble/hashes/esm/utils.js:
+  (*! noble-hashes - MIT License (c) 2022 Paul Miller (paulmillr.com) *)
+
+safe-buffer/index.js:
+  (*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> *)
+
+@solana/buffer-layout/lib/Layout.js:
+  (**
+   * Support for translating between Uint8Array instances and JavaScript
+   * native types.
+   *
+   * {@link module:Layout~Layout|Layout} is the basis of a class
+   * hierarchy that associates property names with sequences of encoded
+   * bytes.
+   *
+   * Layouts are supported for these scalar (numeric) types:
+   * * {@link module:Layout~UInt|Unsigned integers in little-endian
+   *   format} with {@link module:Layout.u8|8-bit}, {@link
+   *   module:Layout.u16|16-bit}, {@link module:Layout.u24|24-bit},
+   *   {@link module:Layout.u32|32-bit}, {@link
+   *   module:Layout.u40|40-bit}, and {@link module:Layout.u48|48-bit}
+   *   representation ranges;
+   * * {@link module:Layout~UIntBE|Unsigned integers in big-endian
+   *   format} with {@link module:Layout.u16be|16-bit}, {@link
+   *   module:Layout.u24be|24-bit}, {@link module:Layout.u32be|32-bit},
+   *   {@link module:Layout.u40be|40-bit}, and {@link
+   *   module:Layout.u48be|48-bit} representation ranges;
+   * * {@link module:Layout~Int|Signed integers in little-endian
+   *   format} with {@link module:Layout.s8|8-bit}, {@link
+   *   module:Layout.s16|16-bit}, {@link module:Layout.s24|24-bit},
+   *   {@link module:Layout.s32|32-bit}, {@link
+   *   module:Layout.s40|40-bit}, and {@link module:Layout.s48|48-bit}
+   *   representation ranges;
+   * * {@link module:Layout~IntBE|Signed integers in big-endian format}
+   *   with {@link module:Layout.s16be|16-bit}, {@link
+   *   module:Layout.s24be|24-bit}, {@link module:Layout.s32be|32-bit},
+   *   {@link module:Layout.s40be|40-bit}, and {@link
+   *   module:Layout.s48be|48-bit} representation ranges;
+   * * 64-bit integral values that decode to an exact (if magnitude is
+   *   less than 2^53) or nearby integral Number in {@link
+   *   module:Layout.nu64|unsigned little-endian}, {@link
+   *   module:Layout.nu64be|unsigned big-endian}, {@link
+   *   module:Layout.ns64|signed little-endian}, and {@link
+   *   module:Layout.ns64be|unsigned big-endian} encodings;
+   * * 32-bit floating point values with {@link
+   *   module:Layout.f32|little-endian} and {@link
+   *   module:Layout.f32be|big-endian} representations;
+   * * 64-bit floating point values with {@link
+   *   module:Layout.f64|little-endian} and {@link
+   *   module:Layout.f64be|big-endian} representations;
+   * * {@link module:Layout.const|Constants} that take no space in the
+   *   encoded expression.
+   *
+   * and for these aggregate types:
+   * * {@link module:Layout.seq|Sequence}s of instances of a {@link
+   *   module:Layout~Layout|Layout}, with JavaScript representation as
+   *   an Array and constant or data-dependent {@link
+   *   module:Layout~Sequence#count|length};
+   * * {@link module:Layout.struct|Structure}s that aggregate a
+   *   heterogeneous sequence of {@link module:Layout~Layout|Layout}
+   *   instances, with JavaScript representation as an Object;
+   * * {@link module:Layout.union|Union}s that support multiple {@link
+   *   module:Layout~VariantLayout|variant layouts} over a fixed
+   *   (padded) or variable (not padded) span of bytes, using an
+   *   unsigned integer at the start of the data or a separate {@link
+   *   module:Layout.unionLayoutDiscriminator|layout element} to
+   *   determine which layout to use when interpreting the buffer
+   *   contents;
+   * * {@link module:Layout.bits|BitStructure}s that contain a sequence
+   *   of individual {@link
+   *   module:Layout~BitStructure#addField|BitField}s packed into an 8,
+   *   16, 24, or 32-bit unsigned integer starting at the least- or
+   *   most-significant bit;
+   * * {@link module:Layout.cstr|C strings} of varying length;
+   * * {@link module:Layout.blob|Blobs} of fixed- or variable-{@link
+   *   module:Layout~Blob#length|length} raw data.
+   *
+   * All {@link module:Layout~Layout|Layout} instances are immutable
+   * after construction, to prevent internal state from becoming
+   * inconsistent.
+   *
+   * @local Layout
+   * @local ExternalLayout
+   * @local GreedyCount
+   * @local OffsetLayout
+   * @local UInt
+   * @local UIntBE
+   * @local Int
+   * @local IntBE
+   * @local NearUInt64
+   * @local NearUInt64BE
+   * @local NearInt64
+   * @local NearInt64BE
+   * @local Float
+   * @local FloatBE
+   * @local Double
+   * @local DoubleBE
+   * @local Sequence
+   * @local Structure
+   * @local UnionDiscriminator
+   * @local UnionLayoutDiscriminator
+   * @local Union
+   * @local VariantLayout
+   * @local BitStructure
+   * @local BitField
+   * @local Boolean
+   * @local Blob
+   * @local CString
+   * @local Constant
+   * @local bindConstructorLayout
+   * @module Layout
+   * @license MIT
+   * @author Peter A. Bigot
+   * @see {@link https://github.com/pabigot/buffer-layout|buffer-layout on GitHub}
+   *)
+
+js-sha3/src/sha3.js:
+  (**
+   * [js-sha3]{@link https://github.com/emn178/js-sha3}
+   *
+   * @version 0.8.0
+   * @author Chen, Yi-Cyuan [emn178@gmail.com]
+   * @copyright Chen, Yi-Cyuan 2015-2018
+   * @license MIT
+   *)
+
+@noble/curves/esm/abstract/utils.js:
+@noble/curves/esm/abstract/modular.js:
+@noble/curves/esm/abstract/curve.js:
+@noble/curves/esm/abstract/weierstrass.js:
+@noble/curves/esm/_shortw_utils.js:
+@noble/curves/esm/secp256k1.js:
+@noble/curves/esm/utils.js:
+@noble/curves/esm/abstract/modular.js:
+@noble/curves/esm/abstract/curve.js:
+@noble/curves/esm/abstract/edwards.js:
+@noble/curves/esm/ed25519.js:
+@noble/curves/esm/abstract/weierstrass.js:
+@noble/curves/esm/_shortw_utils.js:
+@noble/curves/esm/secp256k1.js:
+  (*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) *)
+
+aes-js/lib.esm/aes.js:
+  (*! MIT License. Copyright 2015-2022 Richard Moore <me@ricmoo.com>. See LICENSE.txt. *)
+*/

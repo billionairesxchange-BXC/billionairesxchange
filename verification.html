@@ -25,8 +25,7 @@
         margin: 0;
         min-height: 100%;
         font-family: Arial, Helvetica, sans-serif;
-        background: radial-gradient(circle at top, rgba(38, 38, 38, 0.12), transparent 35%),
-          linear-gradient(180deg, #050505 0%, #101010 100%);
+        background: #050505;
         color: var(--white);
       }
 
@@ -189,6 +188,46 @@
         display: flex;
         gap: 12px;
         margin-bottom: 22px;
+      }
+
+      .social-auth {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .social-auth button {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        background: rgba(255,255,255,0.03);
+        color: var(--white);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .social-auth button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+
+      .auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .auth-divider::before,
+      .auth-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
       }
 
       .auth-tabs button {
@@ -441,6 +480,7 @@
 
       @media (max-width: 640px) {
         .form-grid, .upload-options { grid-template-columns: 1fr; }
+        .social-auth { grid-template-columns: 1fr; }
         .topbar { flex-direction: column; align-items: flex-start; }
       }
     </style>
@@ -481,6 +521,11 @@
         </aside>
 
         <section class="form-panel" id="authPanel" hidden>
+          <div class="social-auth" aria-label="Other sign-in options">
+            <button type="button" id="googleSignInBtn">Continue with Google</button>
+            <button type="button" id="appleSignInBtn">Continue with Apple</button>
+          </div>
+          <div class="auth-divider" aria-hidden="true">or use email</div>
           <div class="auth-tabs">
             <button id="loginTab" type="button">Login</button>
             <button id="signupTab" class="active" type="button">Sign Up</button>
@@ -859,7 +904,7 @@
     <div id="toast" class="toast" aria-live="polite">Saved successfully.</div>
     <script type="module">
       import { app, auth, db } from './firebase-client.js';
-      import { createUserWithEmailAndPassword, deleteUser, getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { createUserWithEmailAndPassword, deleteUser, getAuth, GoogleAuthProvider, OAuthProvider, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
       import { doc, getDoc, getFirestore, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
       auth.languageCode = 'en';
 
@@ -897,6 +942,11 @@
       const identityBackLabel = document.getElementById('identityBackLabel');
       const identityFrontUpload = document.getElementById('identityFrontUpload');
       const identityBackUpload = document.getElementById('identityBackUpload');
+      const signupForm = document.getElementById('signupForm');
+      const signupEmailInput = signupForm.elements.email;
+      const passwordInput = signupForm.elements.password;
+      const confirmPasswordInput = signupForm.elements.confirmPassword;
+      let socialSignup = false;
       let currentStep = 0;
 
       function renderSignupStep(stepIndex) {
@@ -974,6 +1024,88 @@
         showToast.timer = setTimeout(() => toast.classList.remove('show'), 5000);
       }
 
+      function prepareSocialSignup(user) {
+        socialSignup = true;
+        showAuthForm();
+        signupTab.click();
+        signupEmailInput.value = user.email || '';
+        signupEmailInput.readOnly = true;
+        passwordInput.required = false;
+        confirmPasswordInput.required = false;
+        passwordInput.closest('label').hidden = true;
+        confirmPasswordInput.closest('label').hidden = true;
+        const nameParts = (user.displayName || '').trim().split(/\s+/);
+        signupForm.elements.firstName.value = nameParts.shift() || '';
+        signupForm.elements.lastName.value = nameParts.join(' ');
+        renderSignupStep(0);
+        showToast('Complete the remaining profile and verification steps to finish setting up your account.');
+      }
+
+      function resetSocialSignup() {
+        socialSignup = false;
+        signupEmailInput.readOnly = false;
+        passwordInput.required = true;
+        confirmPasswordInput.required = true;
+        passwordInput.closest('label').hidden = false;
+        confirmPasswordInput.closest('label').hidden = false;
+      }
+
+      async function signInWithProvider(provider, providerName) {
+        const providerButtons = [
+          document.getElementById('googleSignInBtn'),
+          document.getElementById('appleSignInBtn')
+        ];
+        providerButtons.forEach((button) => { button.disabled = true; });
+        try {
+          const credential = await signInWithPopup(auth, provider);
+          const signedInUser = credential.user;
+          const profileSnapshot = await getDoc(doc(db, 'users', signedInUser.uid));
+          if (profileSnapshot.exists()) {
+            const profile = profileSnapshot.data();
+            if (typeof profile.username !== 'string' || !profile.username) {
+              await signOut(auth);
+              showToast('Your sign-in worked, but your account profile is incomplete. Contact support for help restoring access.');
+              return;
+            }
+            localStorage.setItem('makingsCurrentUser', profile.username);
+            localStorage.setItem('makingsAuthUid', signedInUser.uid);
+            showToast('Login successful. Welcome back.');
+            setTimeout(() => { window.location.href = 'index.html#trade'; }, 1500);
+            return;
+          }
+
+          if (!signedInUser.email) {
+            await signOut(auth);
+            showToast(`${providerName} did not provide an email address. Enable email access for this provider and try again.`);
+            return;
+          }
+          prepareSocialSignup(signedInUser);
+        } catch (error) {
+          if (isSuspendedApiKeyError(error) || error.code === 'auth/invalid-api-key') {
+            showToast('Firebase rejected this app API key. Check the Firebase project configuration.');
+          } else if (error.code === 'auth/operation-not-allowed') {
+            showToast(`${providerName} sign-in is not enabled in Firebase Authentication. Enable this provider in Firebase Console.`);
+          } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+            showToast(`${providerName} sign-in was cancelled.`);
+          } else if (error.code === 'auth/popup-blocked') {
+            showToast(`Allow pop-ups for this site to continue with ${providerName}.`);
+          } else if (error.code === 'auth/account-exists-with-different-credential') {
+            showToast('An account already exists with this email using another sign-in method. Sign in with that method first.');
+          } else if (error.code === 'auth/network-request-failed') {
+            showToast('Could not reach Firebase. Check your connection and try again.');
+          } else if (error.code === 'permission-denied' || error.code === 'firestore/permission-denied') {
+            console.error('Unable to check the provider account profile:', error);
+            showToast('Firebase sign-in succeeded, but Firestore blocked the profile lookup. Check the deployed Firestore rules.');
+            await signOut(auth);
+          } else {
+            console.error(`${providerName} sign-in failed:`, error);
+            showToast(`${providerName} sign-in could not be completed (${error.code || 'unknown error'}). Check provider settings and try again.`);
+          }
+        } finally {
+          providerButtons.forEach((button) => { button.disabled = false; });
+        }
+      }
+
       function isSuspendedApiKeyError(error) {
         return /api-key.*suspend/i.test(`${error.code || ''} ${error.message || ''}`);
       }
@@ -991,6 +1123,16 @@
         signupBox.classList.add('active');
         loginBox.classList.remove('active');
         renderSignupStep(0);
+      });
+
+      document.getElementById('googleSignInBtn').addEventListener('click', () => {
+        void signInWithProvider(new GoogleAuthProvider(), 'Google');
+      });
+
+      document.getElementById('appleSignInBtn').addEventListener('click', () => {
+        const provider = new OAuthProvider('apple.com');
+        provider.addScope('email');
+        void signInWithProvider(provider, 'Apple');
       });
 
       function showAuthForm() {
@@ -1047,13 +1189,13 @@
       preferredCurrencySelect.addEventListener('change', updateTradingAmountOptions);
       updateTradingAmountOptions();
 
-      document.getElementById('signupForm').addEventListener('submit', async (event) => {
+      signupForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(event.target);
         const password = formData.get('password');
         const confirmPassword = formData.get('confirmPassword');
 
-        if (password !== confirmPassword) {
+        if (!socialSignup && password !== confirmPassword) {
           showToast('Passwords do not match. Please check again.');
           return;
         }
@@ -1077,14 +1219,23 @@
 
         let createdAuthUser = null;
         try {
-          const credential = await createUserWithEmailAndPassword(auth, user.email, password);
-          createdAuthUser = credential.user;
-          const userRef = doc(db, 'users', credential.user.uid);
+          let accountUser = auth.currentUser;
+          if (socialSignup) {
+            if (!accountUser || accountUser.email?.toLowerCase() !== user.email) {
+              showToast('Your provider session expired. Sign in with Google or Apple again to continue.');
+              return;
+            }
+          } else {
+            const credential = await createUserWithEmailAndPassword(auth, user.email, password);
+            accountUser = credential.user;
+            createdAuthUser = accountUser;
+          }
+          const userRef = doc(db, 'users', accountUser.uid);
           const usernameRef = doc(db, 'usernames', usernameKey);
           const privateProfile = {
             firstName: user.firstName,
             lastName: user.lastName,
-            email: credential.user.email,
+            email: accountUser.email,
             phone: user.phone,
             username: usernameKey,
             age: user.age,
@@ -1098,25 +1249,33 @@
             riskLevel: user.riskLevel,
             dob: user.dob,
             countryBirth: user.countryBirth,
-            emailVerified: credential.user.emailVerified,
+            emailVerified: accountUser.emailVerified,
             phoneVerified: false,
             createdAt: serverTimestamp()
           };
 
           await runTransaction(db, async (transaction) => {
-            const usernameSnapshot = await transaction.get(usernameRef);
+            const [usernameSnapshot, profileSnapshot] = await Promise.all([
+              transaction.get(usernameRef),
+              transaction.get(userRef)
+            ]);
+            if (profileSnapshot.exists()) {
+              const profileError = new Error('This account already has a profile. Sign in instead.');
+              profileError.code = 'profile-already-exists';
+              throw profileError;
+            }
             if (usernameSnapshot.exists()) {
               const usernameError = new Error('That username is already registered.');
               usernameError.code = 'username-already-in-use';
               throw usernameError;
             }
-            transaction.set(usernameRef, { uid: credential.user.uid });
+            transaction.set(usernameRef, { uid: accountUser.uid });
             transaction.set(userRef, privateProfile);
-            transaction.set(doc(db, 'userDirectory', credential.user.uid), { username: usernameKey });
+            transaction.set(doc(db, 'userDirectory', accountUser.uid), { username: usernameKey });
           });
 
           localStorage.setItem('makingsCurrentUser', usernameKey);
-          localStorage.setItem('makingsAuthUid', credential.user.uid);
+          localStorage.setItem('makingsAuthUid', accountUser.uid);
           showToast('Account created successfully. Your private profile is saved.');
 
           setTimeout(() => {
@@ -1124,6 +1283,7 @@
           }, 1500);
 
           event.target.reset();
+          resetSocialSignup();
         } catch (error) {
           if (createdAuthUser) {
             try {
@@ -1136,6 +1296,8 @@
           if (isSuspendedApiKeyError(error)) {
             showToast('Firebase rejected the app API key because its Google Cloud consumer is suspended. Check the project status and API key in Google Cloud Console.');
           } else if (error.code === 'username-already-in-use') {
+            showToast(error.message);
+          } else if (error.code === 'profile-already-exists') {
             showToast(error.message);
           } else if (error.code === 'auth/email-already-in-use') {
             showToast('An account already exists for this email address.');

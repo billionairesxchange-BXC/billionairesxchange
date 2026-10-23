@@ -56,10 +56,31 @@ const NETWORKS = {
     priceId: 'solana'
   }
 };
+const NETWORK_LOGOS = {
+  bitcoin: '<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#f7931a"/><text x="20" y="28" fill="#fff" font-size="25" font-weight="700" text-anchor="middle">₿</text></svg>',
+  ethereum: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 1 8 21l12 7 12-7L20 1Zm0 39 12-17-12 7-12-7 12 17Z" fill="#627eea"/></svg>',
+  bsc: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="m20 1 7 7-7 7-7-7 7-7Zm11 11 7 7-7 7-7-7 7-7ZM9 12l7 7-7 7-7-7 7-7Zm11 11 7 7-7 7-7-7 7-7Zm0-12 9 9-9 9-9-9 9-9Z" fill="#f0b90b"/></svg>',
+  polygon: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M12 6 22 1l10 5v11l-10 6-10-6V6Zm2 2v8l8 5 8-5V8l-8-5-8 5Zm-2 14v7l10 6 10-6v-7l-2 1v5l-8 5-8-5v-5l-2-1Z" fill="#8247e5"/><path d="m22 9 6 3.5v7L22 23l-6-3.5v-7L22 9Z" fill="#8247e5"/></svg>',
+  solana: '<svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="solanaGradient" x1="0" x2="1" y1="1" y2="0"><stop stop-color="#9945ff"/><stop offset="1" stop-color="#14f195"/></linearGradient></defs><path d="M9 8h25l-4 5H5l4-5Zm-3 9h25l-4 5H2l4-5Zm3 9h25l-4 5H5l4-5Z" fill="url(#solanaGradient)"/></svg>'
+};
 const walletRoot = document.getElementById('cryptoWallet');
 
 if (walletRoot) {
   const byId = (id) => document.getElementById(id);
+const setProviderButtonsHidden = () => {
+  const buttons = [
+    byId('walletConnectLedgerButton'),
+    byId('walletConnectHardwareButton'),
+    byId('walletRefreshButton')
+  ];
+  buttons.forEach((button) => {
+    if (button) {
+      button.hidden = true;
+      button.disabled = true;
+    }
+  });
+};
+setProviderButtonsHidden();
   const state = byId('cryptoWalletState');
   const message = byId('cryptoWalletMessage');
   const dashboard = byId('walletDashboard');
@@ -330,11 +351,26 @@ if (walletRoot) {
     Object.entries(NETWORKS).filter(([network]) => walletAddresses[network]).forEach(([network, config]) => {
       const card = document.createElement('article');
       card.className = 'wallet-address-card';
+      const heading = document.createElement('div');
+      heading.className = 'wallet-address-heading';
+      const logo = document.createElement('span');
+      logo.className = `wallet-network-logo wallet-network-logo-${network}`;
+      logo.setAttribute('aria-label', `${config.name} logo`);
+      logo.innerHTML = NETWORK_LOGOS[network];
       const title = document.createElement('strong');
       title.textContent = `${config.name} (${config.symbol})`;
+      heading.append(logo, title);
       const address = document.createElement('code');
       address.textContent = walletAddresses[network] || 'Deriving address...';
       address.title = walletAddresses[network] || '';
+      const qr = document.createElement('canvas');
+      qr.className = 'wallet-address-qr';
+      qr.setAttribute('aria-label', `Receive ${config.symbol} QR code`);
+      QRCode.toCanvas(qr, walletAddresses[network], { width: 160, margin: 1 })
+        .catch((error) => {
+          console.error(`Could not generate ${config.name} address QR code:`, error);
+          setMessage(`The ${config.name} address is available, but its QR code could not be generated.`, true);
+        });
       const balance = document.createElement('span');
       balance.id = `walletBalance-${network}`;
       balance.textContent = 'Balance pending';
@@ -351,7 +387,7 @@ if (walletRoot) {
           setMessage('Could not copy address. Select and copy it manually.', true);
         }
       });
-      card.append(title, address, balance, copy);
+      card.append(heading, address, qr, balance, copy);
       addressList.appendChild(card);
     });
     clearPaymentRequest();
@@ -987,8 +1023,11 @@ if (walletRoot) {
     dashboard.hidden = false;
     byId('walletBackupButton').hidden = false;
     byId('walletLockButton').hidden = false;
-    byId('walletRefreshButton').hidden = false;
+    const refreshButton = byId('walletRefreshButton');
+    if (refreshButton) refreshButton.hidden = true;
     creationControls.forEach((button) => { button.hidden = true; });
+    if (balanceInterval) clearInterval(balanceInterval);
+    balanceInterval = setInterval(() => { refreshBalances(); }, 1000);
     forms.forEach((form) => { form.hidden = true; });
     byId('walletPhrasePanel').hidden = true;
     setMessage('Deriving addresses. On-chain balances will be queried from public network services.');
@@ -1026,7 +1065,8 @@ if (walletRoot) {
     dashboard.hidden = !hasExternalEvmAccount;
     byId('walletBackupButton').hidden = true;
     byId('walletLockButton').hidden = true;
-    byId('walletRefreshButton').hidden = !hasExternalEvmAccount;
+    const refreshButton = byId('walletRefreshButton');
+    if (refreshButton) refreshButton.hidden = true;
     byId('walletUnlockButton').hidden = !getSavedWallet();
     byId('walletCreateButton').hidden = Boolean(getSavedWallet());
     byId('walletRestoreButton').hidden = Boolean(getSavedWallet());
@@ -1055,7 +1095,7 @@ if (walletRoot) {
       renderTrackedNfts();
       autoDiscoverWalletNfts();
       if (balanceInterval) clearInterval(balanceInterval);
-      balanceInterval = setInterval(() => { refreshBalances(); }, 30000);
+      balanceInterval = setInterval(() => { refreshBalances(); }, 1000);
     }
     if (showMessage) setMessage(hasExternalEvmAccount
       ? 'Recovery-phrase wallet locked. Your connected EVM account remains available.'
@@ -1405,7 +1445,8 @@ if (walletRoot) {
         if (!canSendEvm) byId('walletUseLedger').checked = false;
         status.classList.remove('is-error');
         status.textContent = `MetaMask account connected: ${ledgerAddress}. If this is Ledger-backed, approve transactions on your device; this site cannot verify hardware.`;
-        byId('walletConnectLedgerButton').textContent = 'Disconnect MetaMask';
+        const connectMetaMaskButton = byId('walletConnectLedgerButton');
+        if (connectMetaMaskButton) connectMetaMaskButton.textContent = 'Disconnect MetaMask';
         if (onboardingStatus) {
           onboardingStatus.classList.remove('is-error');
           onboardingStatus.textContent = `MetaMask connected: ${ledgerAddress}`;
@@ -1415,12 +1456,13 @@ if (walletRoot) {
           byId('wallet').classList.remove('wallet-onboarding-active');
           state.textContent = 'MetaMask account connected';
           dashboard.hidden = false;
-          byId('walletRefreshButton').hidden = false;
+          const refreshButton = byId('walletRefreshButton');
+          if (refreshButton) refreshButton.hidden = true;
           renderAddresses();
           await refreshBalances();
           autoDiscoverWalletNfts();
           if (balanceInterval) clearInterval(balanceInterval);
-          balanceInterval = setInterval(() => { refreshBalances(); }, 30000);
+          balanceInterval = setInterval(() => { refreshBalances(); }, 1000);
         }
         return true;
       } catch (error) {
@@ -1450,13 +1492,14 @@ if (walletRoot) {
     }
   }
 
-  byId('walletConnectLedgerButton').addEventListener('click', async () => {
+  byId('walletConnectLedgerButton')?.addEventListener('click', async () => {
     if (ledgerAddress) {
       ledgerAddress = null;
       ledgerProvider = null;
       byId('walletUseLedger').checked = false;
       byId('walletUseLedger').disabled = true;
-      byId('walletConnectLedgerButton').textContent = 'Connect MetaMask';
+      const connectMetaMaskButton = byId('walletConnectLedgerButton');
+      if (connectMetaMaskButton) connectMetaMaskButton.textContent = 'Connect MetaMask';
       byId('walletLedgerStatus').textContent = 'MetaMask account disconnected from this page.';
       byId('walletLedgerStatus').classList.remove('is-error');
       if (byId('walletOnboardingMetaStatus')) {
@@ -1476,7 +1519,8 @@ if (walletRoot) {
     hardwareLedgerAddress = null;
     byId('walletUseHardwareLedger').checked = false;
     byId('walletUseHardwareLedger').disabled = true;
-    byId('walletConnectHardwareButton').textContent = 'Connect Ledger (USB)';
+    const hardwareButton = byId('walletConnectHardwareButton');
+    if (hardwareButton) hardwareButton.textContent = 'Connect Ledger (USB)';
     if (transport) {
       try {
         await transport.close();
@@ -1492,7 +1536,7 @@ if (walletRoot) {
     }
   }
 
-  byId('walletConnectHardwareButton').addEventListener('click', async () => {
+  byId('walletConnectHardwareButton')?.addEventListener('click', async () => {
     if (hardwareLedgerTransport) {
       await disconnectHardwareLedger();
       return;
@@ -1504,7 +1548,7 @@ if (walletRoot) {
       return;
     }
     const button = byId('walletConnectHardwareButton');
-    button.disabled = true;
+    if (button) button.disabled = true;
     status.classList.remove('is-error');
     status.textContent = 'Connect your Ledger, unlock it, and open the Ethereum app. Approve the displayed address on the device.';
     let transport;
@@ -1607,11 +1651,6 @@ if (walletRoot) {
   byId('walletOnboardingNext').addEventListener('click', () => {
     byId('walletOnboardingWelcome').hidden = true;
     byId('walletOnboardingOptions').hidden = false;
-    if (window.ethereum) {
-      void connectMetaMask(true, false);
-    } else {
-      void connectMetaMask(false, false);
-    }
   });
   byId('walletOnboardingBack').addEventListener('click', () => {
     byId('walletOnboardingOptions').hidden = true;
@@ -2043,7 +2082,6 @@ if (walletRoot) {
       byId('walletUnlockButton').hidden = false;
       state.textContent = 'Wallet locked in this browser';
     }
-    if (window.ethereum && !savedWallet) void connectMetaMask(false);
   } catch (error) {
     setVaultLockScreen(true);
     byId('walletCreateButton').hidden = true;
