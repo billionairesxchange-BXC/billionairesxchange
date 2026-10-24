@@ -1,6 +1,7 @@
 import {
   fetchCountryStockListings,
   fetchStockCountries,
+  getFeaturedStockCountries,
   getStockCountryFlag,
   getStockCountryName,
   sortStockCountries
@@ -347,43 +348,50 @@ async function loadStockCountry(countryCode) {
   }
 }
 
+function renderStockCountryChoices() {
+  stockCountryChoices.replaceChildren();
+  stockCountries.forEach((country) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'investment-stock-country';
+    button.dataset.countryCode = country.code;
+    button.setAttribute('aria-pressed', 'false');
+    const flag = document.createElement('span');
+    flag.className = 'investment-stock-country-flag';
+    flag.setAttribute('aria-hidden', 'true');
+    flag.textContent = getStockCountryFlag(country) || getStockCountryName(country).slice(0, 2).toUpperCase();
+    const details = document.createElement('span');
+    details.className = 'investment-stock-country-details';
+    const name = document.createElement('strong');
+    name.textContent = getStockCountryName(country);
+    const exchanges = document.createElement('small');
+    exchanges.textContent = country.market || `${country.exchanges.length} supported exchange${country.exchanges.length === 1 ? '' : 's'}`;
+    details.append(name, exchanges);
+    button.append(flag, details);
+    button.addEventListener('click', () => {
+      selectedStockCountry = country;
+      loadStockCountry(country.code);
+    });
+    stockCountryChoices.appendChild(button);
+  });
+}
+
 async function loadStockCatalog() {
   catalogStatus.textContent = 'Loading countries with supported stock listings...';
   try {
     stockCountries = sortStockCountries(await fetchStockCountries());
-    stockCountryChoices.replaceChildren();
-    stockCountries.forEach((country) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'investment-stock-country';
-      button.dataset.countryCode = country.code;
-      button.setAttribute('aria-pressed', 'false');
-      const flag = document.createElement('span');
-      flag.className = 'investment-stock-country-flag';
-      flag.setAttribute('aria-hidden', 'true');
-      flag.textContent = getStockCountryFlag(country) || getStockCountryName(country).slice(0, 2).toUpperCase();
-      const details = document.createElement('span');
-      details.className = 'investment-stock-country-details';
-      const name = document.createElement('strong');
-      name.textContent = getStockCountryName(country);
-      const exchanges = document.createElement('small');
-      exchanges.textContent = country.market || `${country.exchanges.length} supported exchange${country.exchanges.length === 1 ? '' : 's'}`;
-      details.append(name, exchanges);
-      button.append(flag, details);
-      button.addEventListener('click', () => {
-        selectedStockCountry = country;
-        loadStockCountry(country.code);
-      });
-      stockCountryChoices.appendChild(button);
-    });
-    if (!stockCountries.length) {
-      catalogStatus.textContent = 'No countries with supported stock listings were returned by the provider.';
-      return;
-    }
-    catalogStatus.textContent = `${stockCountries.length} country markets available. Choose a country to check its stock listings.`;
   } catch (error) {
-    catalogStatus.textContent = `Countries could not be loaded. ${error.message}${storageWarning}`;
+    stockCountries = sortStockCountries(getFeaturedStockCountries());
+    renderStockCountryChoices();
+    catalogStatus.textContent = `Showing featured country markets. The stock service is unavailable: ${error.message}`;
+    return;
   }
+  renderStockCountryChoices();
+  if (!stockCountries.length) {
+    catalogStatus.textContent = 'No countries with supported stock listings were returned by the provider.';
+    return;
+  }
+  catalogStatus.textContent = `${stockCountries.length} country markets available. Choose a country to check its stock listings.`;
 }
 
 function renderProducts(filter = '') {
@@ -417,6 +425,8 @@ function renderProducts(filter = '') {
     empty.className = 'investment-demo-stock-empty';
     empty.textContent = query
       ? 'No stock listings match this search.'
+      : !selectedStockCountry
+        ? 'Choose a country to see its available stock listings.'
       : stockLoadError || stockCatalogWarnings.join(' ') || 'No stock listings were returned for this country.';
     productsContainer.appendChild(empty);
   }
@@ -424,7 +434,9 @@ function renderProducts(filter = '') {
   catalogStatus.textContent = pageType === 'Stocks'
     ? matching.length
       ? `${visible.length} of ${matching.length} matching stock listings shown. No live quotes are provided.${stockCatalogWarnings.length ? ` Some exchanges could not be loaded: ${stockCatalogWarnings.join('; ')}` : ''}${storageWarning}`
-      : `${getStockCountryName(selectedStockCountry)} stock listings unavailable. ${stockLoadError || stockCatalogWarnings.join(' ') || 'The provider returned no listings.'}${storageWarning}`
+      : selectedStockCountry
+        ? `${getStockCountryName(selectedStockCountry)} stock listings unavailable. ${stockLoadError || stockCatalogWarnings.join(' ') || 'The provider returned no listings.'}${storageWarning}`
+        : `Choose a country to see its available stock listings.${stockLoadError ? ` ${stockLoadError}` : ''}${storageWarning}`
     : `${visible.length} example listing${visible.length === 1 ? '' : 's'} shown. No live quotes are provided.${catalogWarning}${storageWarning}`;
 }
 

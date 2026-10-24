@@ -10,6 +10,18 @@ const countryDisplayNames = {
   GBR: 'UK',
 };
 
+export function getFeaturedStockCountries() {
+  return [
+    { code: 'USA', iso2: 'US', name: 'United States', market: 'NYSE / Nasdaq', exchanges: [] },
+    { code: 'BRB', iso2: 'BB', name: 'Barbados', market: 'Barbados Stock Exchange', exchanges: [] },
+    { code: 'CYM', iso2: 'KY', name: 'Cayman Islands', market: 'Cayman Islands Stock Exchange', exchanges: [] },
+    { code: 'CUB', iso2: 'CU', name: 'Cuba', market: 'No public stock exchange listings', exchanges: [] },
+    { code: 'PRI', iso2: 'PR', name: 'Puerto Rico', market: 'U.S. exchanges; no separate Puerto Rico exchange', exchanges: [] },
+    { code: 'JAM', iso2: 'JM', name: 'Jamaica', market: 'Jamaica Stock Exchange', exchanges: [] },
+    { code: 'GBR', iso2: 'GB', name: 'United Kingdom', market: 'London Stock Exchange', exchanges: [] }
+  ];
+}
+
 export function getStockCountryName(country) {
   return countryDisplayNames[country.code] || country.name;
 }

@@ -4,6 +4,7 @@ import { addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/fir
 import {
   fetchCountryStockListings,
   fetchStockCountries,
+  getFeaturedStockCountries,
   getStockCountryFlag,
   getStockCountryName,
   sortStockCountries
@@ -31,6 +32,7 @@ const stockCompanySearch = document.getElementById('stockCompanySearch');
 const stockLoadMoreButton = document.getElementById('stockLoadMoreButton');
 let stockCountries = [];
 let stockCountriesLoading = null;
+let stockCountryLoadError = '';
 let selectedStockListings = [];
 let selectedStockWarnings = [];
 let selectedStockCountry = null;
@@ -959,6 +961,7 @@ async function loadStockExchanges() {
   stockCountryChoices.replaceChildren();
   stockCompanySection.hidden = true;
   stockInvestmentStatus.textContent = 'Loading countries with supported stock listings...';
+  stockCountryLoadError = '';
   try {
     if (!stockCountries.length) {
       if (!stockCountriesLoading) {
@@ -974,8 +977,8 @@ async function loadStockExchanges() {
       await stockCountriesLoading;
     }
   } catch (error) {
-    stockInvestmentStatus.textContent = `Countries could not be loaded. ${error.message}`;
-    return;
+    stockCountries = sortStockCountries(getFeaturedStockCountries());
+    stockCountryLoadError = error.message;
   }
   if (!stockCountries.length) {
     stockInvestmentStatus.textContent = 'No countries with supported stock listings were returned by the provider.';
@@ -1010,7 +1013,9 @@ async function loadStockExchanges() {
     stockCountryChoices.appendChild(button);
   });
 
-  stockInvestmentStatus.textContent = `${stockCountries.length} country markets available. Stock listings depend on provider exchange coverage.`;
+  stockInvestmentStatus.textContent = stockCountryLoadError
+    ? `Showing featured country markets. The stock service is unavailable: ${stockCountryLoadError}`
+    : `${stockCountries.length} country markets available. Stock listings depend on provider exchange coverage.`;
 }
 
 function renderStockListings() {
