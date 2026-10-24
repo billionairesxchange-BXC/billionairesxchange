@@ -16,216 +16,61 @@ document.addEventListener('DOMContentLoaded', () => {
   const positionsChartPrice = document.getElementById('positionsChartPrice');
   const positionsChartStatus = document.getElementById('positionsChartStatus');
   const positionsChartWrap = document.querySelector('.positions-chart-wrap');
-  const positionsRiskControls = document.querySelector('.positions-risk-controls');
   const positionsChartResizer = document.getElementById('positionsChartResizer');
   const positionsMarketSelect = document.getElementById('positionsMarketSelect');
-  const positionsMarketPickerButton = document.getElementById('positionsMarketPickerButton');
-  let positionsMarketPickerLogo = document.getElementById('positionsMarketPickerLogo');
-  const positionsMarketPickerText = document.getElementById('positionsMarketPickerText');
-  const positionsMarketOptions = document.getElementById('positionsMarketOptions');
-  const positionsMarketSearch = document.getElementById('positionsMarketSearch');
-  const positionsMarketOptionList = document.getElementById('positionsMarketOptionList');
-  const marketCoinLoadingStatus = document.getElementById('marketCoinLoadingStatus');
   const positionsTimeSelect = document.getElementById('positionsTimeSelect');
   const positionsToolsButton = document.getElementById('positionsToolsButton');
   const positionsToolsOptions = document.getElementById('positionsToolsOptions');
-  const positionsToolDialog = document.getElementById('positionsToolDialog');
-  const positionsToolForm = document.getElementById('positionsToolForm');
-  const positionsToolDialogTitle = document.getElementById('positionsToolDialogTitle');
-  const positionsToolDialogStatus = document.getElementById('positionsToolDialogStatus');
-  const positionsChartMode = document.getElementById('positionsChartMode');
   const positionsBuyButton = document.getElementById('positionsBuyButton');
   const positionsSellButton = document.getElementById('positionsSellButton');
-  const positionsChartBuyButton = document.getElementById('positionsChartBuyButton');
-  const positionsChartSellButton = document.getElementById('positionsChartSellButton');
-  const positionsSaveRiskSetup = document.getElementById('positionsSaveRiskSetup');
-  const positionsTakeProfitInput = document.getElementById('positionsTakeProfitInput');
-  const positionsStopLossInput = document.getElementById('positionsStopLossInput');
-  const tradeToast = document.getElementById('toast');
-  let tradeToastTimer = null;
   const positionsOrderQuantity = document.getElementById('positionsOrderQuantity');
   const positionsOrderEstimate = document.getElementById('positionsOrderEstimate');
   const positionsList = document.getElementById('positionsList');
   const ordersList = document.getElementById('ordersList');
   const paperBalance = document.getElementById('paperBalance');
-  const paperBalanceSummary = document.getElementById('paperBalanceSummary');
-  const tradeAccountBalanceElement = document.getElementById('tradeAccountBalance');
-  const tradeDepositButton = document.getElementById('tradeDepositButton');
-  const tradeTransferButton = document.getElementById('tradeTransferButton');
-  const tradeBalanceDialog = document.getElementById('tradeBalanceDialog');
-  const tradeBalanceForm = document.getElementById('tradeBalanceForm');
-  const tradeBalanceAmount = document.getElementById('tradeBalanceAmount');
-  const tradeBalanceDialogTitle = document.getElementById('tradeBalanceDialogTitle');
-  const tradeBalanceDialogDescription = document.getElementById('tradeBalanceDialogDescription');
-  const tradeBalanceSubmit = document.getElementById('tradeBalanceSubmit');
-  const tradeBalanceCancel = document.getElementById('tradeBalanceCancel');
 
   if (!assetGrid && !marketTableBody && !chartCanvas) {
     return;
   }
 
-  function showTradeNotification(type, message) {
-    if (!tradeToast) return;
-    tradeToast.textContent = message;
-    tradeToast.className = `toast show ${type}`;
-    if (tradeToastTimer) window.clearTimeout(tradeToastTimer);
-    tradeToastTimer = window.setTimeout(() => {
-      tradeToast.classList.remove('show');
-    }, 4500);
-  }
-
-  const readStoredJSON = (key, fallback) => {
-    try {
-      const rawValue = localStorage.getItem(key);
-      if (rawValue === null) return fallback;
-      const parsedValue = JSON.parse(rawValue);
-      return parsedValue === undefined ? fallback : parsedValue;
-    } catch (error) {
-      return fallback;
-    }
-  };
-
-  const readStoredArray = (key, fallback) => {
-    const value = readStoredJSON(key, fallback);
-    return Array.isArray(value) ? value : fallback;
-  };
-
-  const tradeQuery = new URLSearchParams(window.location.search);
-  const requestedMarketSymbol = (tradeQuery.get('market') || '').toUpperCase();
-  const requestedCoinId = tradeQuery.get('coinId') || '';
-  const hasRequestedMarket = /^[A-Z0-9._-]{2,16}$/.test(requestedMarketSymbol);
   const marketConfig = {
+    ids: [
+      'bitcoin',
+      'ethereum',
+      'ripple',
+      'solana',
+      'dogecoin',
+      'cardano',
+      'binancecoin',
+      'tron',
+      'tether',
+      'usd-coin'
+    ],
     currency: 'usd',
     refreshMs: 30000,
-    selectedSymbol: hasRequestedMarket ? requestedMarketSymbol : 'BTC',
-    selectedCoinId: requestedCoinId,
+    selectedSymbol: 'XRP',
     selectedFilter: 'all',
-    searchText: '',
-    nextPage: 2,
-    hasMoreCoins: true,
-    firstPageLoaded: false,
-    initialMarketSelectionResolved: false,
-    loadingCoinPage: null,
-    lastCoinPageRequestAt: 0,
-    retryCoinPageAfter: 0
+    searchText: ''
   };
 
   let assets = [];
   const marketPositionsKey = 'makingsPositionMarketPositions';
   const marketOrdersKey = 'makingsPaperOrders';
   const marketBalanceKey = 'makingsPositionMarketBalance';
-  const marketAccountBalanceKey = 'makingsTradePaperAccountBalance';
-  const realizedProfitKey = 'makingsTradeRealizedProfit';
-  const chartPreferencesKey = 'makingsTradeChartPreferences';
-  const validChartIntervals = ['1s', '1m', '5m', '15m', '1h', '4h'];
-  const availableChartMarkets = new Set(
-    Array.from(positionsMarketSelect?.options || [], (option) => option.value.toUpperCase())
-  );
-  const chartPreferences = (() => {
-    try {
-      const saved = readStoredJSON(chartPreferencesKey, {});
-      const oldTools = readStoredJSON('positionsChartTools', {});
-      const margins = saved.margins || {};
-      const candleStyle = saved.candleStyle || oldTools.candleStyle || {};
-      return {
-        indicators: Array.isArray(saved.indicators) ? saved.indicators : Array.isArray(oldTools.indicators) ? oldTools.indicators : [],
-        candleStyle: {
-          bodyWidth: Number(candleStyle.bodyWidth) === 58 ? 64 : Number(candleStyle.bodyWidth) >= 10 && Number(candleStyle.bodyWidth) <= 90 ? Number(candleStyle.bodyWidth) : 64,
-          wickWidth: Number(candleStyle.wickWidth) >= 1 && Number(candleStyle.wickWidth) <= 5 ? Number(candleStyle.wickWidth) : 1
-        },
-        margins: {
-          top: Number.isFinite(Number(margins.top)) ? Math.min(80, Math.max(0, Number(margins.top))) : 18,
-          right: Number.isFinite(Number(margins.right)) ? Math.min(180, Math.max(40, Number(margins.right))) : 72,
-          bottom: Number.isFinite(Number(margins.bottom)) ? Math.min(100, Math.max(20, Number(margins.bottom))) : 38,
-          left: Number.isFinite(Number(margins.left)) ? Math.min(100, Math.max(0, Number(margins.left))) : 12
-        },
-        mode: ['crosshair', 'ruler', 'entry'].includes(saved.mode) ? saved.mode : 'crosshair',
-        height: Number(saved.height) >= 260 && Number(saved.height) <= 720 ? Number(saved.height) : 320,
-        width: Number(saved.width) >= 320 && Number(saved.width) <= 4000 ? Number(saved.width) : null,
-        selectedPrice: Number(saved.selectedPrice) > 0 ? Number(saved.selectedPrice) : null,
-        stopLoss: Number(saved.stopLoss) > 0 ? Number(saved.stopLoss) : '',
-        takeProfit: Number(saved.takeProfit) > 0 ? Number(saved.takeProfit) : '',
-        riskSetupVisible: typeof saved.riskSetupVisible === 'boolean' ? saved.riskSetupVisible : true,
-        ruler: saved.ruler?.start && saved.ruler?.end
-          && Number.isFinite(saved.ruler.start.x) && Number.isFinite(saved.ruler.start.price)
-          && Number.isFinite(saved.ruler.end.x) && Number.isFinite(saved.ruler.end.price)
-          ? saved.ruler
-          : null,
-        market: hasRequestedMarket
-          ? requestedMarketSymbol
-          : typeof saved.market === 'string' && /^[A-Z0-9._-]{2,16}$/.test(saved.market.toUpperCase())
-          ? saved.market.toUpperCase()
-          : 'BTC',
-        coinId: requestedCoinId || (!hasRequestedMarket && typeof saved.coinId === 'string' ? saved.coinId : ''),
-        interval: validChartIntervals.includes(saved.interval) ? saved.interval : '1m'
-      };
-    } catch (error) {
-      return {
-        indicators: [],
-        candleStyle: { bodyWidth: 64, wickWidth: 1 },
-        margins: { top: 18, right: 72, bottom: 38, left: 12 },
-        mode: 'crosshair',
-        height: 320,
-        width: null,
-        selectedPrice: null,
-        stopLoss: '',
-        takeProfit: '',
-        riskSetupVisible: true,
-        ruler: null,
-        market: hasRequestedMarket ? requestedMarketSymbol : 'BTC',
-        coinId: requestedCoinId,
-        interval: '1m'
-      };
-    }
-  })();
-  let marketPositions = readStoredArray(marketPositionsKey, []);
-  let marketOrders = readStoredArray(marketOrdersKey, []);
+  let marketPositions = JSON.parse(localStorage.getItem(marketPositionsKey) || '[]');
+  let marketOrders = JSON.parse(localStorage.getItem(marketOrdersKey) || '[]');
   const savedMarketBalance = localStorage.getItem(marketBalanceKey);
   let marketBalance = savedMarketBalance === null ? 10000 : Number(savedMarketBalance);
   if (!Number.isFinite(marketBalance) || marketBalance < 0) marketBalance = 10000;
-  let tradeAccountBalance = Number(localStorage.getItem(marketAccountBalanceKey));
-  if (!Number.isFinite(tradeAccountBalance) || tradeAccountBalance < 0) tradeAccountBalance = 0;
-  let realizedProfitAvailable = Number(localStorage.getItem(realizedProfitKey));
-  if (!Number.isFinite(realizedProfitAvailable)) realizedProfitAvailable = 0;
-  let tradeBalanceAction = null;
-  const positionsChartTools = chartPreferences;
+  const positionsChartTools = JSON.parse(localStorage.getItem('positionsChartTools') || '{"indicators":[],"candleStyle":{"bodyWidth":58,"wickWidth":1}}');
   const tickerPairs = { BTC: 'btcusdt', ETH: 'ethusdt', XRP: 'xrpusdt', SOL: 'solusdt', DOGE: 'dogeusdt', ADA: 'adausdt', BNB: 'bnbusdt', TRX: 'trxusdt', USDC: 'usdcusdt' };
   let tickerSocket = null;
   let tickerSymbol = '';
   let tickerRetryTimer = null;
-  let tickerSnapshotTimer = null;
   const binanceApiBases = ['https://data-api.binance.vision', 'https://api.binance.com'];
   const binanceSocketBases = ['wss://data-stream.binance.vision', 'wss://stream.binance.com:9443'];
-  let chartInterval = chartPreferences.interval;
-  let positionsSelectedPrice = chartPreferences.selectedPrice;
-  let positionsSelectedCandleTime = null;
-  let chartPointer = null;
-  let chartRiskDragging = null;
-  let chartRiskDragRange = null;
-  let chartRiskDraft = null;
-  let chartRiskVisible = chartPreferences.riskSetupVisible;
-  let rulerAnchor = null;
-  let rulerDraft = null;
-  const chartGeometry = { padding: chartPreferences.margins, min: 0, max: 0, plotWidth: 0, plotHeight: 0, candles: [] };
-  if (positionsMarketSelect && chartPreferences.market) {
-    marketConfig.selectedSymbol = chartPreferences.market;
-    marketConfig.selectedCoinId = chartPreferences.coinId || '';
-    const savedOption = positionsMarketSelect.querySelector(`option[value="${chartPreferences.market}"]`);
-    if (savedOption) positionsMarketSelect.value = chartPreferences.market;
-  }
-  if (positionsTimeSelect) positionsTimeSelect.value = chartInterval;
-  if (positionsChartMode) positionsChartMode.value = chartPreferences.mode;
-  if (positionsTakeProfitInput) positionsTakeProfitInput.value = chartPreferences.takeProfit || '';
-  if (positionsStopLossInput) positionsStopLossInput.value = chartPreferences.stopLoss || '';
-  if (positionsChartWrap) {
-    positionsChartWrap.style.height = `${chartPreferences.height}px`;
-    positionsChartWrap.style.minHeight = `${chartPreferences.height}px`;
-    if (chartPreferences.width) {
-      positionsChartWrap.style.width = `${Math.min(chartPreferences.width, positionsChartWrap.parentElement.clientWidth)}px`;
-    }
-  }
+  let chartInterval = '1m';
   let positionCandles = [];
-  let positionCandlesSource = '';
   let candleSocket = null;
   let candleRetryTimer = null;
   let candleRequestVersion = 0;
@@ -233,17 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let candleLoading = false;
 
   function getSelectedAsset() {
-    return assets.find((asset) => asset.id === marketConfig.selectedCoinId)
-      || assets.find((asset) => asset.symbol.toUpperCase() === marketConfig.selectedSymbol);
-  }
-
-  function getChartRiskLevels() {
-    const position = marketPositions.find((item) => item.symbol === marketConfig.selectedSymbol);
-    return {
-      stopLoss: Number(chartRiskDraft?.stopLoss) || Number(positionsChartTools.stopLoss) || Number(position?.stopLoss) || 0,
-      takeProfit: Number(chartRiskDraft?.takeProfit) || Number(positionsChartTools.takeProfit) || Number(position?.takeProfit) || 0,
-      side: chartRiskDraft?.side || position?.side || 'BUY'
-    };
+    return assets.find((asset) => asset.symbol.toUpperCase() === marketConfig.selectedSymbol);
   }
 
   async function fetchBinanceData(path) {
@@ -261,53 +96,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function connectLiveTicker(symbol, hostIndex = 0) {
-    const selectedAsset = getSelectedAsset();
-    const matchingAssets = assets.filter((asset) => asset.symbol.toUpperCase() === symbol);
-    const pair = matchingAssets.length > 1 ? '' : tickerPairs[symbol];
-    const tickerKey = `${symbol}:${selectedAsset?.id || ''}`;
-    if (tickerSocket && tickerSymbol === tickerKey && tickerSocket.readyState <= WebSocket.OPEN) return;
+    const pair = tickerPairs[symbol];
+    if (tickerSocket && tickerSymbol === symbol && tickerSocket.readyState <= WebSocket.OPEN) return;
     if (tickerRetryTimer) window.clearTimeout(tickerRetryTimer);
     if (tickerSocket) {
       tickerSocket.onclose = null;
       tickerSocket.close();
       tickerSocket = null;
     }
-    if (tickerSnapshotTimer) {
-      window.clearInterval(tickerSnapshotTimer);
-      tickerSnapshotTimer = null;
-    }
-    tickerSymbol = tickerKey;
+    tickerSymbol = symbol;
     if (!pair) {
-      const asset = selectedAsset;
-      if (!asset || asset.isCustom) {
-        if (positionsChartStatus) positionsChartStatus.textContent = `Live streaming is unavailable for ${symbol}; showing the latest market snapshot.`;
-        return;
-      }
-      const refreshSnapshot = async () => {
-        if (marketConfig.selectedSymbol !== symbol || getSelectedAsset()?.id !== asset.id) return;
-        try {
-          const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${encodeURIComponent(asset.id)}&sparkline=false`);
-          if (!response.ok) throw new Error(`Market request failed (${response.status})`);
-          const data = await response.json();
-          const price = Number(data[0]?.current_price);
-          if (!Number.isFinite(price) || price <= 0
-            || marketConfig.selectedSymbol !== symbol || getSelectedAsset()?.id !== asset.id) return;
-          asset.current_price = price;
-          if (priceLabel) priceLabel.textContent = `${symbol}/USD ${formatCurrency(price)} · CoinGecko snapshot`;
-          if (positionsChartPrice) positionsChartPrice.textContent = formatCurrency(price);
-          if (positionsChartStatus) positionsChartStatus.textContent = `${symbol} has no supported Binance candle stream; price snapshots refresh every 30 seconds.`;
-          renderAssetGrid();
-          renderMarketTable();
-          renderPaperPositions();
-          renderMarketOrderControls();
-        } catch (error) {
-          if (marketConfig.selectedSymbol === symbol && getSelectedAsset()?.id === asset.id && positionsChartStatus) {
-            positionsChartStatus.textContent = `Unable to refresh ${symbol} market price: ${error.message}`;
-          }
-        }
-      };
-      refreshSnapshot();
-      tickerSnapshotTimer = window.setInterval(refreshSnapshot, 30000);
+      if (positionsChartStatus) positionsChartStatus.textContent = `Live streaming is unavailable for ${symbol}; showing the latest market snapshot.`;
       return;
     }
 
@@ -348,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (priceLabel) priceLabel.textContent = `${symbol}/USD ${formatCurrency(price)} · Live`;
       if (positionsChartPrice) positionsChartPrice.textContent = formatCurrency(price);
       if (positionsChartStatus && !tickerPairs[symbol]) positionsChartStatus.textContent = `${symbol} live price stream connected.`;
-      checkPositionProtection(symbol, price);
       renderPaperPositions();
     });
     socket.addEventListener('error', () => {
@@ -359,12 +157,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tickerSocket !== socket) return;
       tickerSocket = null;
       if (positionsChartStatus) positionsChartStatus.textContent = `${symbol} live feed disconnected; reconnecting...`;
-      tickerRetryTimer = window.setTimeout(() => {
-        if (marketConfig.selectedSymbol === symbol) {
-          connectLiveTicker(symbol, (hostIndex + 1) % binanceSocketBases.length);
-        }
-      }, 5000);
+      tickerRetryTimer = window.setTimeout(() => connectLiveTicker(symbol, (hostIndex + 1) % binanceSocketBases.length), 5000);
     });
+  }
+
+  function getHeldQuantity(symbol) {
+    return marketPositions.find((position) => position.symbol === symbol)?.quantity || 0;
   }
 
   function renderMarketOrderControls() {
@@ -373,20 +171,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const quantity = Number(positionsOrderQuantity?.value) || 0;
     if (positionsOrderEstimate) {
       positionsOrderEstimate.textContent = price && quantity > 0
-        ? `Estimated total: ${formatCurrency((positionsSelectedPrice || price) * quantity)}${positionsSelectedPrice ? ' · chart price' : ''}`
+        ? `Estimated total: ${formatCurrency(price * quantity)}`
         : 'Estimated total: --';
     }
-    const position = marketPositions.find((item) => item.symbol === marketConfig.selectedSymbol);
-    const canPlace = (side, orderPrice) => {
-      if (!orderPrice || quantity <= 0) return false;
-      const positionSide = position?.side || 'BUY';
-      if (position && positionSide !== side) return quantity <= position.quantity;
-      return orderPrice * quantity <= marketBalance;
-    };
-    if (positionsBuyButton) positionsBuyButton.disabled = !canPlace('BUY', price);
-    if (positionsSellButton) positionsSellButton.disabled = !canPlace('SELL', price);
-    if (positionsChartBuyButton) positionsChartBuyButton.disabled = !canPlace('BUY', positionsSelectedPrice);
-    if (positionsChartSellButton) positionsChartSellButton.disabled = !canPlace('SELL', positionsSelectedPrice);
+    if (positionsBuyButton) positionsBuyButton.disabled = !price || quantity <= 0;
+    if (positionsSellButton) positionsSellButton.disabled = !price || quantity <= 0 || getHeldQuantity(marketConfig.selectedSymbol) < quantity;
   }
 
   function renderPaperPositions() {
@@ -404,15 +193,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const symbol = document.createElement('strong');
           symbol.textContent = position.symbol;
           const quantity = document.createElement('small');
-          const positionSide = position.side || 'BUY';
-          quantity.textContent = `${positionSide === 'BUY' ? 'Long' : 'Short'} · ${position.quantity.toLocaleString('en-US', { maximumFractionDigits: 8 })} units`;
+          quantity.textContent = `${position.quantity.toLocaleString('en-US', { maximumFractionDigits: 8 })} units`;
           identity.append(symbol, quantity);
           const value = document.createElement('div');
           const mark = assets.find((asset) => asset.symbol.toUpperCase() === position.symbol)?.current_price || position.averagePrice;
           const marketValue = document.createElement('strong');
           marketValue.textContent = formatCurrency(position.quantity * mark);
           const entry = document.createElement('small');
-          entry.textContent = `Average entry ${formatCurrency(position.averagePrice)} · SL ${position.stopLoss ? formatCurrency(position.stopLoss) : '--'} · TP ${position.takeProfit ? formatCurrency(position.takeProfit) : '--'}`;
+          entry.textContent = `Average entry ${formatCurrency(position.averagePrice)}`;
           value.append(marketValue, entry);
           row.append(identity, value);
           positionsList.appendChild(row);
@@ -420,57 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     if (paperBalance) paperBalance.textContent = `${formatCurrency(marketBalance)} USDT`;
-    renderTradeBalances();
     renderMarketOrderControls();
-  }
-
-  function renderTradeBalances() {
-    if (paperBalanceSummary) paperBalanceSummary.textContent = `${formatCurrency(marketBalance)} USDT`;
-    if (tradeAccountBalanceElement) tradeAccountBalanceElement.textContent = `${formatCurrency(tradeAccountBalance)} USDT`;
-    if (positionsSaveRiskSetup) {
-      const { stopLoss, takeProfit } = getChartRiskLevels();
-      const hasRiskLevels = Boolean(stopLoss || takeProfit);
-      positionsSaveRiskSetup.disabled = !chartRiskDraft && !hasRiskLevels;
-      positionsSaveRiskSetup.textContent = chartRiskDraft ? 'Save risk setup' : chartRiskVisible ? 'Hide levels' : 'Show levels';
-      positionsSaveRiskSetup.setAttribute('aria-pressed', String(chartRiskVisible));
-    }
-    if (tradeTransferButton) {
-      tradeTransferButton.disabled = realizedProfitAvailable <= 0;
-      tradeTransferButton.title = realizedProfitAvailable > 0
-        ? `${formatCurrency(realizedProfitAvailable)} realized profit available to transfer`
-        : 'Realized paper profits will be available here after profitable trades close';
-    }
-  }
-
-  window.addEventListener('storage', (event) => {
-    if (event.key === marketBalanceKey) {
-      const balance = Number(event.newValue);
-      if (Number.isFinite(balance) && balance >= 0) marketBalance = balance;
-    } else if (event.key === marketAccountBalanceKey) {
-      const balance = Number(event.newValue);
-      if (Number.isFinite(balance) && balance >= 0) tradeAccountBalance = balance;
-    } else if (event.key === realizedProfitKey) {
-      const profit = Number(event.newValue);
-      if (Number.isFinite(profit)) realizedProfitAvailable = profit;
-    } else {
-      return;
-    }
-    renderPaperPositions();
-  });
-
-  function openTradeBalanceDialog(action) {
-    if (!tradeBalanceDialog || !tradeBalanceAmount) return;
-    tradeBalanceAction = action;
-    const isDeposit = action === 'deposit';
-    tradeBalanceDialogTitle.textContent = isDeposit ? 'Deposit paper funds' : 'Transfer realized profits';
-    tradeBalanceDialogDescription.textContent = isDeposit
-      ? 'Simulation only: enter an amount to add to your Trade paper balance. No bank is contacted and no real money moves.'
-      : `Transfer realized paper profits into your local Account balance. Up to ${formatCurrency(Math.max(0, realizedProfitAvailable))} is available. This is not a real bank transfer.`;
-    tradeBalanceSubmit.textContent = isDeposit ? 'Add paper funds' : 'Transfer profits';
-    tradeBalanceAmount.max = isDeposit ? '' : String(Math.max(0, realizedProfitAvailable));
-    tradeBalanceAmount.value = '';
-    tradeBalanceDialog.showModal();
-    tradeBalanceAmount.focus();
   }
 
   function renderPaperOrders() {
@@ -500,180 +238,54 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function placePositionMarketOrder(side, chartPrice = null) {
+  function placePositionMarketOrder(side) {
     const asset = getSelectedAsset();
-    const price = Number(chartPrice) > 0 ? Number(chartPrice) : Number(asset?.current_price) || 0;
+    const price = Number(asset?.current_price) || 0;
     const quantity = Number(positionsOrderQuantity?.value);
     if (!price || !Number.isFinite(quantity) || quantity <= 0) {
       positionsChartStatus.textContent = 'Wait for a live market price and enter a valid quantity.';
       return;
     }
-    const symbol = asset?.symbol.toUpperCase() || marketConfig.selectedSymbol;
+
+    const symbol = asset.symbol.toUpperCase();
+    const total = price * quantity;
     const positionIndex = marketPositions.findIndex((position) => position.symbol === symbol);
     const position = marketPositions[positionIndex];
-    const positionSide = position?.side || 'BUY';
-    const isClosingPosition = Boolean(position && positionSide !== side);
-    if (isClosingPosition && quantity > position.quantity) {
-      positionsChartStatus.textContent = `Trade quantity exceeds the ${positionSide === 'BUY' ? 'long' : 'short'} position available to close.`;
-      return;
-    }
-
-    const nextAveragePrice = position && !isClosingPosition
-      ? ((position.averagePrice * position.quantity) + (price * quantity)) / (position.quantity + quantity)
-      : price;
-    const total = price * quantity;
-    let stopLoss = 0;
-    let takeProfit = 0;
-    let realizedPnl = 0;
-
-    if (isClosingPosition) {
-      if (positionSide === 'BUY') {
-        marketBalance += total;
-        realizedPnl = (price - Number(position.averagePrice)) * quantity;
-      } else {
-        const margin = Number(position.margin) || Number(position.averagePrice) * position.quantity;
-        const releasedMargin = margin * (quantity / position.quantity);
-        realizedPnl = (Number(position.averagePrice) - price) * quantity;
-        marketBalance += Math.max(0, releasedMargin + realizedPnl);
-        position.margin = Math.max(0, margin - releasedMargin);
-      }
-      realizedProfitAvailable += realizedPnl;
-      localStorage.setItem(realizedProfitKey, String(realizedProfitAvailable));
-      position.quantity -= quantity;
-      if (position.quantity < 0.000000005) {
-        marketPositions.splice(positionIndex, 1);
-        positionsChartTools.stopLoss = '';
-        positionsChartTools.takeProfit = '';
-        if (positionsStopLossInput) positionsStopLossInput.value = '';
-        if (positionsTakeProfitInput) positionsTakeProfitInput.value = '';
-        chartRiskDraft = null;
-      }
-    } else {
-      const savedStopLoss = Number(position?.stopLoss) || Number(positionsChartTools.stopLoss);
-      const savedTakeProfit = Number(position?.takeProfit) || Number(positionsChartTools.takeProfit);
-      stopLoss = savedStopLoss || (side === 'BUY' ? nextAveragePrice * .99 : nextAveragePrice * 1.01);
-      takeProfit = savedTakeProfit || (side === 'BUY' ? nextAveragePrice * 1.02 : nextAveragePrice * .98);
-      const validRiskLevels = side === 'BUY'
-        ? stopLoss < nextAveragePrice && takeProfit > nextAveragePrice && stopLoss < takeProfit
-        : stopLoss > nextAveragePrice && takeProfit < nextAveragePrice && takeProfit < stopLoss;
-      if (!validRiskLevels) {
-        positionsChartStatus.textContent = side === 'BUY'
-          ? 'For a buy/long, Stop Loss must be below entry and Take Profit above it.'
-          : 'For a sell/short, Stop Loss must be above entry and Take Profit below it.';
-        return;
-      }
+    if (side === 'BUY') {
       if (total > marketBalance) {
-        positionsChartStatus.textContent = 'Insufficient Trade paper balance for this order.';
+        positionsChartStatus.textContent = 'Insufficient paper balance for this order.';
         return;
       }
       marketBalance -= total;
       if (position) {
-        position.averagePrice = nextAveragePrice;
+        position.averagePrice = ((position.averagePrice * position.quantity) + total) / (position.quantity + quantity);
         position.quantity += quantity;
-        position.side = side;
-        if (side === 'SELL') position.margin = (Number(position.margin) || (position.averagePrice * (position.quantity - quantity))) + total;
-        position.stopLoss = stopLoss;
-        position.takeProfit = takeProfit;
       } else {
-        marketPositions.push({ symbol, side, quantity, averagePrice: price, margin: side === 'SELL' ? total : undefined, stopLoss, takeProfit });
+        marketPositions.push({ symbol, quantity, averagePrice: price });
       }
-      positionsChartTools.stopLoss = stopLoss;
-      positionsChartTools.takeProfit = takeProfit;
-      if (positionsStopLossInput) positionsStopLossInput.value = stopLoss || '';
-      if (positionsTakeProfitInput) positionsTakeProfitInput.value = takeProfit || '';
-      chartRiskDraft = null;
-      chartRiskVisible = true;
+    } else {
+      if (!position || quantity > position.quantity) {
+        positionsChartStatus.textContent = 'Sell quantity exceeds your available position.';
+        return;
+      }
+      marketBalance += total;
+      position.quantity -= quantity;
+      if (position.quantity < 0.000000005) marketPositions.splice(positionIndex, 1);
     }
 
-    const order = { symbol, side, mode: 'spot', type: 'PAPER', quantity, price, stopLoss: isClosingPosition ? null : stopLoss, takeProfit: isClosingPosition ? null : takeProfit, time: Date.now() };
+    const order = { symbol, side, mode: 'spot', type: 'MARKET', quantity, price, time: Date.now() };
     marketOrders.unshift(order);
     marketOrders = marketOrders.slice(0, 100);
     localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
     localStorage.setItem(marketOrdersKey, JSON.stringify(marketOrders));
     localStorage.setItem(marketBalanceKey, String(marketBalance));
-    positionsSelectedPrice = price;
-    savePositionsChartTools();
-    renderTradeBalances();
-    positionsChartStatus.textContent = isClosingPosition
-      ? `Paper ${side.toLowerCase()} closed ${quantity} ${symbol} at ${formatCurrency(price)}. Realized P/L: ${realizedPnl >= 0 ? '+' : ''}${formatCurrency(realizedPnl)}.`
-      : `Paper ${side === 'BUY' ? 'long buy' : 'short sell'} placed: ${quantity} ${symbol} at ${formatCurrency(price)} with Stop Loss ${formatCurrency(stopLoss)} and Take Profit ${formatCurrency(takeProfit)}.`;
-    showTradeNotification(
-      isClosingPosition && realizedPnl < 0 ? 'loss' : 'success',
-      isClosingPosition
-        ? `Trade closed: ${realizedPnl < 0 ? 'loss' : 'success'} of ${formatCurrency(Math.abs(realizedPnl))} on ${symbol}.`
-        : `Trade successful: ${side} ${quantity} ${symbol} at ${formatCurrency(price)}.`
-    );
-    drawPositionsChart();
-    renderPaperPositions();
-    renderPaperOrders();
-  }
-
-  function checkPositionProtection(symbol, price) {
-    const index = marketPositions.findIndex((position) => position.symbol === symbol && position.quantity > 0);
-    if (index < 0) return;
-    const position = marketPositions[index];
-    const isShort = position.side === 'SELL';
-    const stopHit = Number(position.stopLoss) > 0 && (isShort ? price >= Number(position.stopLoss) : price <= Number(position.stopLoss));
-    const targetHit = Number(position.takeProfit) > 0 && (isShort ? price <= Number(position.takeProfit) : price >= Number(position.takeProfit));
-    if (!stopHit && !targetHit) return;
-    const quantity = position.quantity;
-    const exitPrice = stopHit ? Number(position.stopLoss) : Number(position.takeProfit);
-    const realizedPnl = (isShort ? Number(position.averagePrice) - exitPrice : exitPrice - Number(position.averagePrice)) * quantity;
-    const margin = Number(position.margin) || Number(position.averagePrice) * quantity;
-    const proceeds = isShort ? Math.max(0, margin + realizedPnl) : quantity * exitPrice;
-    marketBalance += proceeds;
-    realizedProfitAvailable += realizedPnl;
-    localStorage.setItem(realizedProfitKey, String(realizedProfitAvailable));
-    marketOrders.unshift({
-      symbol,
-      side: isShort ? 'BUY' : 'SELL',
-      mode: 'spot',
-      positionSide: isShort ? 'SHORT' : 'LONG',
-      type: stopHit ? 'STOP_LOSS' : 'TAKE_PROFIT',
-      quantity,
-      price: exitPrice,
-      time: Date.now()
-    });
-    marketPositions.splice(index, 1);
-    if (marketConfig.selectedSymbol === symbol) {
-      positionsChartTools.stopLoss = '';
-      positionsChartTools.takeProfit = '';
-      if (positionsStopLossInput) positionsStopLossInput.value = '';
-      if (positionsTakeProfitInput) positionsTakeProfitInput.value = '';
-      chartRiskDraft = null;
-      savePositionsChartTools();
-    }
-    marketOrders = marketOrders.slice(0, 100);
-    localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
-    localStorage.setItem(marketOrdersKey, JSON.stringify(marketOrders));
-    localStorage.setItem(marketBalanceKey, String(marketBalance));
-    renderTradeBalances();
-    if (positionsChartStatus) {
-      positionsChartStatus.textContent = `Paper ${isShort ? 'short ' : ''}${stopHit ? 'stop loss' : 'take profit'} triggered at ${formatCurrency(exitPrice)}. ${formatCurrency(proceeds)} proceeds (P/L ${realizedPnl >= 0 ? '+' : ''}${formatCurrency(realizedPnl)}) credited to your Trade paper balance.`;
-    }
-    showTradeNotification(
-      realizedPnl < 0 ? 'loss' : 'success',
-      `${stopHit ? 'Stop loss' : 'Take profit'} closed ${symbol}: ${realizedPnl < 0 ? 'loss' : 'profit'} of ${formatCurrency(Math.abs(realizedPnl))}.`
-    );
-    drawPositionsChart();
+    positionsChartStatus.textContent = `Paper ${side.toLowerCase()} placed: ${quantity} ${symbol} at ${formatCurrency(price)}.`;
     renderPaperPositions();
     renderPaperOrders();
   }
 
   function savePositionsChartTools() {
-    positionsChartTools.mode = positionsChartMode?.value || positionsChartTools.mode;
-    positionsChartTools.height = positionsChartWrap?.getBoundingClientRect().height || positionsChartTools.height;
-    positionsChartTools.width = positionsChartWrap?.getBoundingClientRect().width || positionsChartTools.width;
-    positionsChartTools.selectedPrice = positionsSelectedPrice;
-    positionsChartTools.riskSetupVisible = chartRiskVisible;
-    positionsChartTools.market = marketConfig.selectedSymbol;
-    positionsChartTools.coinId = marketConfig.selectedCoinId;
-    positionsChartTools.interval = chartInterval;
-    localStorage.setItem(chartPreferencesKey, JSON.stringify(positionsChartTools));
-    localStorage.setItem('positionsChartTools', JSON.stringify({
-      indicators: positionsChartTools.indicators,
-      candleStyle: positionsChartTools.candleStyle
-    }));
+    localStorage.setItem('positionsChartTools', JSON.stringify(positionsChartTools));
   }
 
   function calculateIndicator(values, type, period) {
@@ -698,8 +310,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getCustomCoins() {
-    const savedCoins = readStoredArray('customCoins', []);
-    const legacyCoin = readStoredJSON('createdCoin', null);
+    const savedCoins = JSON.parse(localStorage.getItem('customCoins') || '[]');
+    const legacyCoin = JSON.parse(localStorage.getItem('createdCoin') || 'null');
     const coins = legacyCoin && !savedCoins.some((coin) => coin.symbol === legacyCoin.symbol)
       ? [...savedCoins, legacyCoin]
       : savedCoins;
@@ -724,7 +336,6 @@ document.addEventListener('DOMContentLoaded', () => {
       market_cap_rank: null,
       price_change_percentage_24h: change,
       sparkline_in_7d: { price: sparkline },
-      logo: coin.logo,
       isCustom: true
     };
   }
@@ -736,261 +347,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function addCustomMarketOptions(customAssets) {
     if (!positionsMarketSelect) return;
     customAssets.forEach((asset) => {
-      if (Array.from(positionsMarketSelect.options).some((option) => option.dataset.coinId === asset.id)) return;
+      if (positionsMarketSelect.querySelector(`option[value="${asset.symbol}"]`)) return;
       const option = document.createElement('option');
       option.value = asset.symbol;
-      option.dataset.coinId = asset.id || '';
       option.textContent = `${asset.symbol} / USD`;
       positionsMarketSelect.appendChild(option);
-      availableChartMarkets.add(asset.symbol.toUpperCase());
     });
-    renderPositionsMarketPicker();
-  }
-
-  function addMarketOptions(marketAssets) {
-    if (!positionsMarketSelect) return;
-    marketAssets.forEach((asset) => {
-      const symbol = asset.symbol.toUpperCase();
-      const options = Array.from(positionsMarketSelect.options);
-      if (options.some((option) => asset.id && option.dataset.coinId === asset.id)) return;
-      const existingSymbolOption = options.find((option) => option.value === symbol && !option.dataset.coinId);
-      if (existingSymbolOption && asset.id) {
-        existingSymbolOption.dataset.coinId = asset.id;
-        existingSymbolOption.textContent = `${asset.name} (${symbol})`;
-        availableChartMarkets.add(symbol);
-        return;
-      }
-      if (!asset.id && options.some((option) => option.value === symbol)) return;
-      const option = document.createElement('option');
-      option.value = symbol;
-      option.dataset.coinId = asset.id || '';
-      option.textContent = `${asset.name} (${symbol})`;
-      positionsMarketSelect.appendChild(option);
-      availableChartMarkets.add(symbol);
-    });
-    renderPositionsMarketPicker();
-  }
-
-  function marketLogoSource(asset) {
-    const logo = asset?.image || asset?.logo;
-    return typeof logo === 'string'
-      && (/^https:\/\//i.test(logo) || /^data:image\/(?:png|webp|jpeg|gif);base64,/i.test(logo))
-      ? logo
-      : '';
-  }
-
-  function createMarketLogo(symbol, asset, className = 'positions-market-logo') {
-    const logo = document.createElement('span');
-    logo.className = className;
-    logo.setAttribute('aria-hidden', 'true');
-    const source = marketLogoSource(asset);
-    if (source) {
-      const image = document.createElement('img');
-      image.src = source;
-      image.alt = '';
-      image.loading = 'lazy';
-      image.addEventListener('error', () => {
-        logo.replaceChildren(document.createTextNode(symbol.slice(0, 1)));
-        logo.classList.add('is-fallback');
-      }, { once: true });
-      logo.appendChild(image);
-    } else {
-      logo.textContent = symbol.slice(0, 4);
-      logo.classList.add('is-fallback');
-    }
-    return logo;
-  }
-
-  function renderPositionsMarketPicker() {
-    if (!positionsMarketSelect || !positionsMarketPickerButton || !positionsMarketOptions) return;
-    const selectedOption = positionsMarketSelect.selectedOptions[0];
-    const selectedSymbol = selectedOption?.value || marketConfig.selectedSymbol;
-    const selectedAsset = (selectedOption?.dataset.coinId && assets.find((asset) => asset.id === selectedOption.dataset.coinId))
-      || assets.find((asset) => asset.symbol.toUpperCase() === selectedSymbol);
-    const selectedLogo = createMarketLogo(selectedSymbol, selectedAsset);
-    selectedLogo.id = 'positionsMarketPickerLogo';
-    positionsMarketPickerLogo.replaceWith(selectedLogo);
-    positionsMarketPickerLogo = selectedLogo;
-    positionsMarketPickerText.textContent = selectedAsset?.name
-      ? `${selectedAsset.name} (${selectedSymbol}) / USD`
-      : `${selectedSymbol} / USD`;
-    positionsMarketPickerButton.setAttribute('aria-label', `Choose market, ${positionsMarketPickerText.textContent}`);
-    const query = positionsMarketSearch?.value.trim().toLowerCase() || '';
-    const matchingOptions = Array.from(positionsMarketSelect.options).filter((option) => {
-      const symbol = option.value.toUpperCase();
-      const asset = (option.dataset.coinId && assets.find((item) => item.id === option.dataset.coinId))
-        || assets.find((item) => item.symbol.toUpperCase() === symbol);
-      return !query || symbol.toLowerCase().includes(query) || (asset?.name || '').toLowerCase().includes(query);
-    });
-    const visibleOptions = matchingOptions.slice(0, 100);
-    positionsMarketOptionList.replaceChildren();
-    visibleOptions.forEach((option) => {
-      const symbol = option.value.toUpperCase();
-      const asset = (option.dataset.coinId && assets.find((item) => item.id === option.dataset.coinId))
-        || assets.find((item) => item.symbol.toUpperCase() === symbol);
-      const choice = document.createElement('button');
-      choice.type = 'button';
-      choice.className = 'positions-market-option';
-      choice.dataset.marketSymbol = symbol;
-      choice.dataset.coinId = option.dataset.coinId || '';
-      choice.setAttribute('aria-pressed', String(symbol === selectedSymbol && choice.dataset.coinId === (selectedOption?.dataset.coinId || '')));
-      choice.appendChild(createMarketLogo(symbol, asset, 'positions-market-option-logo'));
-      const details = document.createElement('span');
-      details.className = 'positions-market-option-details';
-      const name = document.createElement('strong');
-      name.textContent = asset?.name || symbol;
-      const pair = document.createElement('small');
-      pair.textContent = `${symbol} / USD`;
-      details.append(name, pair);
-      choice.appendChild(details);
-      positionsMarketOptionList.appendChild(choice);
-    });
-    if (matchingOptions.length > visibleOptions.length) {
-      const hint = document.createElement('p');
-      hint.className = 'positions-market-search-hint';
-      hint.textContent = `${matchingOptions.length} matches. Refine your search to show more.`;
-      positionsMarketOptionList.appendChild(hint);
-    } else if (!visibleOptions.length) {
-      const hint = document.createElement('p');
-      hint.className = 'positions-market-search-hint';
-      hint.textContent = 'No supported market matches that search.';
-      positionsMarketOptionList.appendChild(hint);
-    }
-  }
-
-  async function loadAllChartMarkets() {
-    if (!positionsMarketSelect) return;
-    if (positionsChartStatus) positionsChartStatus.textContent = 'Loading all currently tradeable Binance USDT spot markets...';
-    try {
-      const exchangeInfo = await fetchBinanceData('/api/v3/exchangeInfo');
-      const symbols = Array.isArray(exchangeInfo.symbols) ? exchangeInfo.symbols : [];
-      const supportedMarkets = symbols.filter((market) =>
-        market.quoteAsset === 'USDT'
-        && market.status === 'TRADING'
-        && market.isSpotTradingAllowed !== false
-        && /^[A-Z0-9]{2,16}$/.test(market.baseAsset)
-      );
-      if (!supportedMarkets.length) throw new Error('The exchange returned no active USDT spot markets.');
-
-      supportedMarkets.forEach((market) => {
-        const symbol = market.baseAsset.toUpperCase();
-        tickerPairs[symbol] = market.symbol.toLowerCase();
-        if (!positionsMarketSelect.querySelector(`option[value="${symbol}"]`)) {
-          const option = document.createElement('option');
-          option.value = symbol;
-          option.textContent = `${symbol} / USD`;
-          positionsMarketSelect.appendChild(option);
-          availableChartMarkets.add(symbol);
-        }
-      });
-      renderPositionsMarketPicker();
-      if (positionsChartStatus) {
-        positionsChartStatus.textContent = `${supportedMarkets.length.toLocaleString()} active USDT spot markets loaded. Choose a market to receive its live price feed and chart candles.`;
-      }
-    } catch (error) {
-      console.error('Could not load all supported chart markets:', error);
-      if (positionsChartStatus) positionsChartStatus.textContent = `Could not load all supported markets: ${error.message}`;
-    }
-  }
-
-  async function loadMoreMarketCoins() {
-    if (marketConfig.loadingCoinPage) return marketConfig.loadingCoinPage;
-    if (!marketConfig.firstPageLoaded || !marketConfig.hasMoreCoins) return false;
-    if (Date.now() < marketConfig.retryCoinPageAfter) return false;
-    const page = marketConfig.nextPage;
-    if (marketCoinLoadingStatus) marketCoinLoadingStatus.textContent = `Loading CoinGecko market page ${page}...`;
-    marketConfig.loadingCoinPage = (async () => {
-      try {
-        const delay = Math.max(0, marketConfig.lastCoinPageRequestAt + 2200 - Date.now());
-        if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
-        marketConfig.lastCoinPageRequestAt = Date.now();
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=${marketConfig.currency}&order=market_cap_desc&per_page=250&page=${page}&sparkline=true&price_change_percentage=24h`);
-        if (!response.ok) throw new Error(`Market request failed (${response.status})`);
-        const data = await response.json();
-        if (!Array.isArray(data)) throw new Error('CoinGecko returned an invalid market list.');
-        const existingCoinIds = new Set(assets.map((asset) => asset.id).filter(Boolean));
-        const newAssets = data.map((coin) => ({
-          ...coin,
-          symbol: coin.symbol.toUpperCase(),
-          sparkline_in_7d: coin.sparkline_in_7d || { price: [coin.current_price] }
-        })).filter((coin) => {
-          if (coin.id && existingCoinIds.has(coin.id)) return false;
-          if (coin.id) existingCoinIds.add(coin.id);
-          return true;
-        });
-        assets = [...assets, ...newAssets];
-        marketConfig.nextPage += 1;
-        marketConfig.hasMoreCoins = data.length === 250;
-        addMarketOptions(newAssets);
-        renderAssetGrid();
-        renderMarketTable();
-        if (marketCoinLoadingStatus) {
-          marketCoinLoadingStatus.textContent = marketConfig.hasMoreCoins
-            ? `${assets.length.toLocaleString()} CoinGecko markets loaded. Scroll for more.`
-            : `All ${assets.length.toLocaleString()} available CoinGecko markets loaded.`;
-        }
-        return true;
-      } catch (error) {
-        console.error('Unable to load more CoinGecko markets:', error);
-        marketConfig.retryCoinPageAfter = Date.now() + 10000;
-        if (marketCoinLoadingStatus) {
-          marketCoinLoadingStatus.textContent = `More CoinGecko markets could not be loaded: ${error.message}. Retrying shortly.`;
-        }
-        if (positionsChartStatus) positionsChartStatus.textContent = `More markets could not be loaded: ${error.message}`;
-        window.setTimeout(() => {
-          if (marketConfig.hasMoreCoins) loadMoreMarketCoins();
-        }, 10000);
-        return false;
-      } finally {
-        marketConfig.loadingCoinPage = null;
-      }
-    })();
-    return marketConfig.loadingCoinPage;
-  }
-
-  if (marketCoinLoadingStatus && 'IntersectionObserver' in window) {
-    const marketLoadingObserver = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) loadMoreMarketCoins();
-    }, { rootMargin: '400px 0px' });
-    marketLoadingObserver.observe(marketCoinLoadingStatus);
-  } else if (marketCoinLoadingStatus) {
-    const loadMarketsNearPageEnd = () => {
-      if (marketCoinLoadingStatus.getBoundingClientRect().top <= window.innerHeight + 400) loadMoreMarketCoins();
-    };
-    window.addEventListener('scroll', loadMarketsNearPageEnd, { passive: true });
-    window.addEventListener('resize', loadMarketsNearPageEnd);
-  }
-
-  let chartMarketSearchTimer = null;
-  async function loadMarketsForChartSearch() {
-    const query = positionsMarketSearch?.value.trim().toLowerCase() || '';
-    if (!query || !marketConfig.firstPageLoaded || !marketConfig.hasMoreCoins) return;
-    while (marketConfig.hasMoreCoins) {
-      const loadedMatch = Array.from(positionsMarketSelect.options).some((option) => {
-        const symbol = option.value.toLowerCase();
-        const asset = (option.dataset.coinId && assets.find((item) => item.id === option.dataset.coinId))
-          || assets.find((item) => item.symbol.toUpperCase() === option.value.toUpperCase());
-        return symbol.includes(query) || (asset?.name || '').toLowerCase().includes(query);
-      });
-      if (loadedMatch) return;
-      if (!await loadMoreMarketCoins()) return;
-      if ((positionsMarketSearch?.value.trim().toLowerCase() || '') !== query) return;
-      renderPositionsMarketPicker();
-    }
-  }
-
-  let marketSearchLoadTimer = null;
-  async function loadMarketsForMarketSearch() {
-    const query = marketConfig.searchText.trim().toLowerCase();
-    if (!query || !marketConfig.firstPageLoaded || !marketConfig.hasMoreCoins) return;
-    while (marketConfig.hasMoreCoins) {
-      const loadedMatch = assets.some((asset) =>
-        asset.symbol.toLowerCase().includes(query) || asset.name.toLowerCase().includes(query)
-      );
-      if (loadedMatch) return;
-      if (!await loadMoreMarketCoins()) return;
-      if (marketConfig.searchText.trim().toLowerCase() !== query) return;
-    }
   }
 
   function drawPositionsChart() {
@@ -1009,20 +371,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!positionCandles.length) return;
     const candles = positionCandles.slice(-36);
     const source = candles.map((candle) => candle.close);
-    const padding = positionsChartTools.margins;
-    const { stopLoss: stopLevel, takeProfit: targetLevel } = getChartRiskLevels();
-    const heldRiskPosition = marketPositions.find((position) => position.symbol === marketConfig.selectedSymbol);
-    const riskReferencePrice = Number(heldRiskPosition?.averagePrice) || Number(positionsSelectedPrice) || Number(candles[candles.length - 1]?.close);
+    const padding = { top: 18, right: 72, bottom: 38, left: 12 };
     const values = candles.flatMap((candle) => [candle.high, candle.low]);
-    if (positionsSelectedPrice) values.push(positionsSelectedPrice);
-    if (riskReferencePrice > 0) values.push(riskReferencePrice);
-    if (stopLevel > 0) values.push(stopLevel);
-    if (targetLevel > 0) values.push(targetLevel);
-    const min = chartRiskDragRange?.min ?? Math.min(...values) * .997;
-    const max = chartRiskDragRange?.max ?? Math.max(...values) * 1.003;
+    const min = Math.min(...values) * .997;
+    const max = Math.max(...values) * 1.003;
     const xStep = (width - padding.left - padding.right) / Math.max(candles.length - 1, 1);
-    const plotWidth = width - padding.left - padding.right;
-    const plotHeight = height - padding.top - padding.bottom;
     const y = (value) => padding.top + ((max - value) / (max - min || 1)) * (height - padding.top - padding.bottom);
     const formatPrice = (value) => '$' + value.toLocaleString('en-US', { maximumFractionDigits: value < 1 ? 6 : 2 });
     const formatTime = (time) => new Date(time).toLocaleTimeString([], {
@@ -1031,8 +384,8 @@ document.addEventListener('DOMContentLoaded', () => {
       ...(chartInterval === '1s' ? { second: '2-digit' } : {})
     });
     context.font = '11px Inter, sans-serif';
-    context.strokeStyle = 'rgba(255, 255, 255, .12)';
-    context.fillStyle = '#fff';
+    context.strokeStyle = 'rgba(212, 175, 55, .12)';
+    context.fillStyle = '#cfc5a2';
     for (let row = 0; row < 5; row += 1) {
       const value = min + (max - min) * row / 4;
       const lineY = y(value);
@@ -1042,26 +395,10 @@ document.addEventListener('DOMContentLoaded', () => {
       context.stroke();
       context.fillText(formatPrice(value), width - padding.right + 8, lineY + 4);
     }
-    chartGeometry.min = min;
-    chartGeometry.max = max;
-    chartGeometry.plotWidth = plotWidth;
-    chartGeometry.plotHeight = plotHeight;
-    chartGeometry.candles = candles;
-    chartGeometry.padding = padding;
     const candleWidth = Math.max(4, xStep * (positionsChartTools.candleStyle.bodyWidth / 100));
     candles.forEach((candle, index) => {
       const pointX = padding.left + index * xStep;
       const color = candle.close >= candle.open ? '#31d598' : '#ff6b7a';
-      const isSelected = candle.time === positionsSelectedCandleTime;
-      if (isSelected) {
-        context.save();
-        context.fillStyle = 'rgba(255, 255, 255, .16)';
-        context.strokeStyle = '#ffffff';
-        context.lineWidth = 2;
-        context.fillRect(pointX - candleWidth, padding.top, candleWidth * 2, plotHeight);
-        context.strokeRect(pointX - candleWidth / 2 - 2, Math.min(y(candle.open), y(candle.close), y(candle.high)), candleWidth + 4, Math.max(4, Math.max(y(candle.open), y(candle.close), y(candle.low)) - Math.min(y(candle.open), y(candle.close), y(candle.high))));
-        context.restore();
-      }
       context.strokeStyle = color;
       context.fillStyle = color;
       context.beginPath();
@@ -1092,103 +429,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (started) context.stroke();
     });
-    const drawPriceLevel = (value, color, label) => {
-      if (!Number.isFinite(value) || value < min || value > max) return;
-      const lineY = y(value);
-      context.save();
-      context.setLineDash([6, 4]);
-      context.strokeStyle = color;
-      context.fillStyle = color;
-      context.beginPath();
-      context.moveTo(padding.left, lineY);
-      context.lineTo(width - padding.right, lineY);
-      context.stroke();
-      context.setLineDash([]);
-      context.fillText(`${label} ${formatPrice(value)}`, Math.max(padding.left + 4, width - padding.right + 6), Math.max(12, lineY - 5));
-      context.restore();
-    };
-    if (positionsSelectedPrice) drawPriceLevel(positionsSelectedPrice, '#ffffff', 'Order');
-    if (chartRiskVisible && riskReferencePrice > 0) {
-      const drawRiskPanel = (level, fill) => {
-        if (!(level > 0) || level < min || level > max) return;
-        const referenceY = y(riskReferencePrice);
-        const levelY = y(level);
-        context.save();
-        context.fillStyle = fill;
-        context.fillRect(padding.left, Math.min(referenceY, levelY), plotWidth, Math.abs(levelY - referenceY));
-        context.restore();
-      };
-      drawRiskPanel(stopLevel, 'rgba(255, 107, 122, 0.5)');
-      drawRiskPanel(targetLevel, 'rgba(49, 213, 152, 0.5)');
-    }
-    const drawRiskLevel = (value, color, label) => {
-      if (!Number.isFinite(value) || value < min || value > max) return;
-      const lineY = y(value);
-      const tag = `${label} ${formatPrice(value)}`;
-      context.save();
-      context.setLineDash([5, 4]);
-      context.strokeStyle = color;
-      context.fillStyle = color;
-      context.lineWidth = 1.5;
-      context.beginPath();
-      context.moveTo(padding.left, lineY);
-      context.lineTo(width - padding.right, lineY);
-      context.stroke();
-      context.setLineDash([]);
-      context.font = '600 10px Inter, sans-serif';
-      const tagWidth = context.measureText(tag).width + 12;
-      const tagX = Math.max(padding.left + 4, width - padding.right - tagWidth);
-      const tagY = Math.max(padding.top, Math.min(height - padding.bottom - 19, lineY - 19));
-      context.fillRect(tagX, tagY, tagWidth, 17);
-      context.fillStyle = '#080808';
-      context.fillText(tag, tagX + 6, tagY + 12);
-      context.restore();
-    };
-    if (chartRiskVisible) {
-      if (stopLevel > 0) drawRiskLevel(stopLevel, '#ff6b7a', 'Stop Loss');
-      if (targetLevel > 0) drawRiskLevel(targetLevel, '#31d598', 'Take Profit');
-    }
-    const drawRuler = (start, end) => {
-      if (!start || !end) return;
-      const startX = padding.left + start.x * plotWidth;
-      const endX = padding.left + end.x * plotWidth;
-      const startY = y(start.price);
-      const endY = y(end.price);
-      context.save();
-      context.strokeStyle = '#ffffff';
-      context.fillStyle = '#fff';
-      context.setLineDash([5, 4]);
-      context.beginPath();
-      context.moveTo(startX, startY);
-      context.lineTo(endX, endY);
-      context.stroke();
-      context.setLineDash([]);
-      const change = end.price - start.price;
-      const percent = start.price ? change / start.price * 100 : 0;
-      context.fillText(`${formatPrice(change)} (${percent.toFixed(2)}%)`, Math.min(startX, endX) + 8, Math.max(16, Math.min(startY, endY) - 8));
-      context.restore();
-    };
-    if (positionsChartTools.ruler || rulerAnchor) {
-      drawRuler(rulerAnchor || positionsChartTools.ruler?.start, rulerDraft || positionsChartTools.ruler?.end || rulerAnchor);
-    }
-    if (chartPointer && ['crosshair', 'ruler'].includes(positionsChartTools.mode)) {
-      const { x: pointerX, y: pointerY, price } = chartPointer;
-      context.save();
-      context.strokeStyle = 'rgba(255, 255, 255, .7)';
-      context.fillStyle = '#ffffff';
-      context.setLineDash([3, 4]);
-      context.beginPath();
-      context.moveTo(pointerX, padding.top);
-      context.lineTo(pointerX, height - padding.bottom);
-      context.moveTo(padding.left, pointerY);
-      context.lineTo(width - padding.right, pointerY);
-      context.stroke();
-      context.setLineDash([]);
-      context.fillText(formatPrice(price), Math.max(padding.left + 4, width - padding.right + 6), Math.max(12, Math.min(height - padding.bottom, pointerY - 5)));
-      context.restore();
-    }
     const asset = getSelectedAsset();
-    if (asset) positionsChartTitle.textContent = `${asset.symbol.toUpperCase()} / USD · ${positionCandlesSource || chartInterval}`;
+    if (asset) positionsChartTitle.textContent = `${asset.symbol.toUpperCase()} / USD · ${chartInterval}`;
     positionsChartPrice.textContent = formatPrice(candles[candles.length - 1].close);
   }
 
@@ -1196,18 +438,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (requestVersion !== candleRequestVersion) return;
     const pair = tickerPairs[symbol];
     if (!pair) return;
-    const streamKey = `${symbol}:${marketConfig.selectedCoinId}:${interval}`;
+    const streamKey = `${symbol}:${interval}`;
     const socketBase = binanceSocketBases[hostIndex % binanceSocketBases.length];
     const socket = new WebSocket(`${socketBase}/ws/${pair}@kline_${interval}`);
     candleSocket = socket;
     socket.addEventListener('open', () => {
-      if (candleSocket !== socket) return;
-      if (positionCandlesSource.startsWith('CoinGecko')) {
-        positionCandles = [];
-        drawPositionsChart();
-      }
-      positionCandlesSource = `Binance ${interval}`;
-      if (positionsChartStatus) positionsChartStatus.textContent = `Live ${symbol} ${interval} chart connected.`;
+      if (candleSocket === socket && positionsChartStatus) positionsChartStatus.textContent = `Live ${symbol} ${interval} chart connected.`;
     });
     socket.addEventListener('message', (event) => {
       if (candleSocket !== socket || requestVersion !== candleRequestVersion) return;
@@ -1244,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadPositionCandles(symbol, interval) {
-    const streamKey = `${symbol}:${marketConfig.selectedCoinId}:${interval}`;
+    const streamKey = `${symbol}:${interval}`;
     if (candleStreamKey === streamKey && (candleSocket || candleRetryTimer || candleLoading)) return;
     candleStreamKey = streamKey;
     const requestVersion = ++candleRequestVersion;
@@ -1256,95 +492,12 @@ document.addEventListener('DOMContentLoaded', () => {
       candleSocket = null;
     }
     positionCandles = [];
-    positionCandlesSource = '';
     drawPositionsChart();
 
-    const asset = getSelectedAsset();
-    const matchingCoins = assets.filter((item) => item.symbol.toUpperCase() === symbol);
-    let pair = matchingCoins.length > 1 ? '' : tickerPairs[symbol];
-    if (!pair && matchingCoins.length < 2 && !asset?.isCustom && /^[A-Z0-9]{2,12}$/.test(symbol)) {
-      const candidatePair = `${symbol}USDT`;
-      try {
-        const exchangeInfo = await fetchBinanceData(`/api/v3/exchangeInfo?symbol=${candidatePair}`);
-        if (requestVersion !== candleRequestVersion) return;
-        if (exchangeInfo.symbol === candidatePair && exchangeInfo.status === 'TRADING') {
-          pair = candidatePair.toLowerCase();
-          tickerPairs[symbol] = pair;
-          connectLiveTicker(symbol);
-        }
-      } catch (error) {
-        if (requestVersion !== candleRequestVersion) return;
-      }
-    }
-    const loadCoinGeckoCandles = async () => {
-      if (!asset?.id || asset.isCustom) return false;
-      let candles = [];
-      let candleSource = 'CoinGecko OHLC';
-      let ohlcError = null;
-      try {
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(asset.id)}/ohlc?vs_currency=${marketConfig.currency}&days=1`);
-        if (!response.ok) throw new Error(`CoinGecko candle request failed (${response.status}).`);
-        const data = await response.json();
-        if (!Array.isArray(data)) throw new Error('CoinGecko returned invalid candle data.');
-        candles = data.map((item) => ({
-          time: Number(item[0]),
-          open: Number(item[1]),
-          high: Number(item[2]),
-          low: Number(item[3]),
-          close: Number(item[4])
-        })).filter((candle) => Number.isFinite(candle.time)
-          && [candle.open, candle.high, candle.low, candle.close].every((price) => Number.isFinite(price) && price > 0));
-      } catch (error) {
-        ohlcError = error;
-      }
-      if (!candles.length) {
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(asset.id)}/market_chart?vs_currency=${marketConfig.currency}&days=1`);
-        if (!response.ok) throw new Error(`CoinGecko OHLC and price-history requests failed (${response.status}); ${ohlcError?.message || 'no OHLC candles were returned'}.`);
-        const data = await response.json();
-        if (!Array.isArray(data.prices)) throw new Error('CoinGecko returned invalid price history.');
-        const intervalMs = 30 * 60 * 1000;
-        const buckets = new Map();
-        data.prices
-          .map((point) => Array.isArray(point) ? [Number(point[0]), Number(point[1])] : [NaN, NaN])
-          .filter(([time, price]) => Number.isFinite(time) && Number.isFinite(price) && price > 0)
-          .sort((first, second) => first[0] - second[0])
-          .forEach(([time, price]) => {
-            const bucketTime = Math.floor(time / intervalMs) * intervalMs;
-            const candle = buckets.get(bucketTime);
-            if (candle) {
-              candle.high = Math.max(candle.high, price);
-              candle.low = Math.min(candle.low, price);
-              candle.close = price;
-            } else {
-              buckets.set(bucketTime, { time: bucketTime, open: price, high: price, low: price, close: price });
-            }
-          });
-        candles = Array.from(buckets.values());
-        candleSource = 'CoinGecko sampled OHLC';
-      }
-      if (!candles.length) throw new Error(`No CoinGecko candles or price history are available for ${asset.name}.`);
-      if (requestVersion !== candleRequestVersion) return false;
-      positionCandles = candles.slice(-36);
-      positionCandlesSource = candleSource;
-      drawPositionsChart();
-      if (positionsChartStatus) {
-        const sourceMessage = candleSource === 'CoinGecko sampled OHLC'
-          ? 'Candles are aggregated from CoinGecko price-history samples.'
-          : 'Showing CoinGecko OHLC history.';
-        positionsChartStatus.textContent = `${pair ? 'Binance candle history is unavailable. ' : ''}${sourceMessage} This data for ${asset.name} does not stream at the selected chart interval.`;
-      }
-      return true;
-    };
+    const pair = tickerPairs[symbol];
     if (!pair) {
-      try {
-        if (await loadCoinGeckoCandles()) return;
-        if (positionsChartStatus) positionsChartStatus.textContent = `No exchange or CoinGecko candles are available for ${symbol}.`;
-      } catch (error) {
-        console.error(`Could not load CoinGecko candles for ${symbol}:`, error);
-        if (positionsChartStatus) positionsChartStatus.textContent = `Could not load CoinGecko candles for ${symbol}: ${error.message}`;
-      } finally {
-        if (requestVersion === candleRequestVersion) candleLoading = false;
-      }
+      candleLoading = false;
+      if (positionsChartStatus) positionsChartStatus.textContent = `Candlestick intervals are unavailable for ${symbol}.`;
       return;
     }
     if (positionsChartStatus) positionsChartStatus.textContent = `Loading ${symbol} ${interval} candles...`;
@@ -1358,21 +511,10 @@ document.addEventListener('DOMContentLoaded', () => {
         low: Number(item[3]),
         close: Number(item[4])
       }));
-      positionCandlesSource = `Binance ${interval}`;
       drawPositionsChart();
     } catch (error) {
       if (requestVersion !== candleRequestVersion) return;
-      try {
-        const loadedCoinGeckoCandles = await loadCoinGeckoCandles();
-        if (!loadedCoinGeckoCandles && positionsChartStatus) {
-          positionsChartStatus.textContent = `Candle history unavailable; building the ${interval} chart from live candles...`;
-        }
-      } catch (coinGeckoError) {
-        console.error(`Could not load fallback CoinGecko candles for ${symbol}:`, coinGeckoError);
-        if (positionsChartStatus) {
-          positionsChartStatus.textContent = `Candle history unavailable: ${error.message}. CoinGecko fallback failed: ${coinGeckoError.message}`;
-        }
-      }
+      if (positionsChartStatus) positionsChartStatus.textContent = `Candle history unavailable; building the ${interval} chart from live candles...`;
     }
     if (requestVersion !== candleRequestVersion) return;
     candleLoading = false;
@@ -1426,49 +568,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!assetGrid) return;
 
     const filteredAssets = getFilteredAssets();
-    const cards = document.createDocumentFragment();
 
-    filteredAssets.forEach((asset) => {
-      const symbol = asset.symbol.toUpperCase();
-      const change = asset.price_change_percentage_24h ?? 0;
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = `asset-card ${asset.id === marketConfig.selectedCoinId || (!asset.id && symbol === marketConfig.selectedSymbol) ? 'is-selected' : ''}`;
-      card.dataset.symbol = symbol;
-      card.dataset.coinId = asset.id || '';
-
-      const rank = document.createElement('span');
-      rank.className = 'coin-rank';
-      rank.textContent = `#${asset.market_cap_rank || '--'}`;
-
-      const heading = document.createElement('span');
-      heading.className = 'asset-card-heading';
-      heading.appendChild(createMarketLogo(symbol, asset, 'asset-card-logo'));
-      const symbolLabel = document.createElement('h4');
-      symbolLabel.textContent = symbol;
-      heading.appendChild(symbolLabel);
-
-      const name = document.createElement('p');
-      name.textContent = asset.name;
-      const price = document.createElement('strong');
-      price.textContent = formatCurrency(asset.current_price);
-      const changeLabel = document.createElement('small');
-      changeLabel.className = getPriceChangeClass(change);
-      changeLabel.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
-
-      card.append(rank, heading, name, price, changeLabel);
-      card.addEventListener('click', () => setSelectedSymbol(symbol, asset.id || ''));
-      cards.appendChild(card);
-    });
+    assetGrid.innerHTML = filteredAssets
+      .slice(0, 6)
+      .map((asset) => {
+        const change = asset.price_change_percentage_24h ?? 0;
+        return `
+          <button class="asset-card ${asset.symbol.toUpperCase() === marketConfig.selectedSymbol ? 'is-selected' : ''}" type="button" data-symbol="${asset.symbol.toUpperCase()}">
+            <span class="coin-rank">#${asset.market_cap_rank || '--'}</span>
+            <h4>${asset.symbol.toUpperCase()}</h4>
+            <p>${asset.name}</p>
+            <strong>${formatCurrency(asset.current_price)}</strong>
+            <small class="${getPriceChangeClass(change)}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</small>
+          </button>
+        `;
+      })
+      .join('');
 
     if (!filteredAssets.length) {
-      const fallback = document.createElement('div');
-      fallback.className = 'asset-card asset-card-fallback';
-      fallback.innerHTML = '<h4>No matches</h4><p>Try another market filter or symbol.</p>';
-      cards.appendChild(fallback);
+      assetGrid.innerHTML = `
+        <div class="asset-card asset-card-fallback">
+          <h4>No matches</h4>
+          <p>Try another market filter or symbol.</p>
+        </div>
+      `;
     }
 
-    assetGrid.replaceChildren(cards);
+    assetGrid.querySelectorAll('.asset-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const symbol = card.dataset.symbol;
+        setSelectedSymbol(symbol);
+      });
+    });
   }
 
   function renderWatchlist() {
@@ -1528,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderChart() {
     if (!chartCanvas || !assets.length) return;
 
-    const asset = getSelectedAsset() || assets[0];
+    const asset = assets.find((item) => item.symbol.toUpperCase() === marketConfig.selectedSymbol) || assets[0];
     const ctx = chartCanvas.getContext('2d');
     const values = asset?.sparkline_in_7d?.price || Array.from({ length: 30 }, (_, index) => Math.sin(index / 3) * 120 + 25000 + index * 55);
 
@@ -1541,15 +672,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ctx.clearRect(0, 0, width, height);
     const background = ctx.createLinearGradient(0, 0, width, height);
-    background.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+    background.addColorStop(0, 'rgba(212, 175, 55, 0.10)');
     background.addColorStop(1, 'rgba(0, 0, 0, 0.20)');
     ctx.fillStyle = background;
     ctx.fillRect(0, 0, width, height);
 
     ctx.beginPath();
     ctx.lineWidth = 3;
-    ctx.strokeStyle = '#ffffff';
-    ctx.shadowColor = 'rgba(255, 255, 255, 0.35)';
+    ctx.strokeStyle = '#d4af37';
+    ctx.shadowColor = 'rgba(212, 175, 55, 0.35)';
     ctx.shadowBlur = 12;
 
     values.forEach((value, index) => {
@@ -1569,7 +700,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const lastY = height - padding - ((values[values.length - 1] - min) / range) * (height - padding * 2);
 
     ctx.beginPath();
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#d4af37';
     ctx.arc(lastX, lastY, 5, 0, Math.PI * 2);
     ctx.fill();
 
@@ -1578,42 +709,13 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.fillText(`${asset.symbol.toUpperCase()} ${formatCurrency(asset.current_price)}`, padding, 24);
   }
 
-  function setSelectedSymbol(symbol, coinId) {
-    const selectedCoinId = marketConfig.selectedSymbol === symbol
-      && assets.some((asset) => asset.id === marketConfig.selectedCoinId)
-      ? marketConfig.selectedCoinId
-      : '';
-    const matchingCoinId = assets.find((asset) => asset.symbol.toUpperCase() === symbol)?.id || '';
-    const nextCoinId = coinId || selectedCoinId || matchingCoinId;
-    const marketChanged = marketConfig.selectedSymbol !== symbol || marketConfig.selectedCoinId !== nextCoinId;
+  function setSelectedSymbol(symbol) {
     marketConfig.selectedSymbol = symbol;
-    marketConfig.selectedCoinId = nextCoinId;
-    if (marketChanged) {
-      positionsSelectedPrice = null;
-      positionsSelectedCandleTime = null;
-      chartPointer = null;
-      chartRiskDraft = null;
-      const heldPosition = marketPositions.find((position) => position.symbol === symbol);
-      positionsChartTools.stopLoss = heldPosition?.stopLoss || '';
-      positionsChartTools.takeProfit = heldPosition?.takeProfit || '';
-      if (positionsStopLossInput) positionsStopLossInput.value = positionsChartTools.stopLoss || '';
-      if (positionsTakeProfitInput) positionsTakeProfitInput.value = positionsChartTools.takeProfit || '';
-      chartRiskVisible = Boolean(positionsChartTools.stopLoss || positionsChartTools.takeProfit);
+    if (positionsMarketSelect && positionsMarketSelect.querySelector(`option[value="${symbol}"]`)) {
+      positionsMarketSelect.value = symbol;
     }
-    if (positionsMarketSelect) {
-      const options = Array.from(positionsMarketSelect.options);
-      const selectedOption = options.find((option) =>
-        option.value === symbol && (option.dataset.coinId || '') === nextCoinId
-      );
-      if (selectedOption) {
-        positionsMarketSelect.selectedIndex = selectedOption.index;
-      } else if (positionsMarketSelect.value !== symbol) {
-        positionsMarketSelect.value = symbol;
-      }
-    }
-    renderPositionsMarketPicker();
     if (chartTitle) {
-      const asset = getSelectedAsset() || assets[0];
+      const asset = assets.find((item) => item.symbol.toUpperCase() === symbol) || assets[0];
       chartTitle.textContent = asset ? `${asset.symbol.toUpperCase()} / USD live market` : `${symbol} / USD live market`;
     }
 
@@ -1631,13 +733,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (priceLabel && selectedAsset) priceLabel.textContent = `${symbol}/USD ${formatCurrency(selectedAsset.current_price)} · Connecting live feed`;
     connectLiveTicker(symbol);
     loadPositionCandles(symbol, chartInterval);
-    savePositionsChartTools();
   }
 
   async function fetchLiveMarketData() {
     try {
       const response = await fetch(
-        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${marketConfig.currency}&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h`
+        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${marketConfig.currency}&ids=${marketConfig.ids.join(',')}&order=market_cap_desc&per_page=12&page=1&sparkline=true&price_change_percentage=24h`
       );
 
       if (!response.ok) {
@@ -1645,72 +746,26 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await response.json();
-      const firstPageAssets = data.map((coin) => ({
+      assets = data.map((coin) => ({
         ...coin,
         symbol: coin.symbol.toUpperCase(),
         sparkline_in_7d: coin.sparkline_in_7d || { price: Array.from({ length: 30 }, (_, index) => Math.sin(index / 2) * 0.02 + coin.current_price) }
       }));
-      const chartCoinIdToLoad = hasRequestedMarket ? requestedCoinId : marketConfig.selectedCoinId;
-      if (chartCoinIdToLoad && !chartCoinIdToLoad.startsWith('custom-')
-        && !firstPageAssets.some((asset) => asset.id === chartCoinIdToLoad)) {
-        try {
-          const requestedResponse = await fetch(
-            `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${marketConfig.currency}&ids=${encodeURIComponent(chartCoinIdToLoad)}&sparkline=true&price_change_percentage=24h`
-          );
-          if (!requestedResponse.ok) throw new Error(`Requested coin lookup failed (${requestedResponse.status}).`);
-          const requestedAssets = await requestedResponse.json();
-          if (Array.isArray(requestedAssets)) {
-            firstPageAssets.push(...requestedAssets.map((coin) => ({
-              ...coin,
-              symbol: coin.symbol.toUpperCase(),
-              sparkline_in_7d: coin.sparkline_in_7d || { price: [coin.current_price] }
-            })));
-          }
-        } catch (error) {
-          console.error('Could not load the coin requested from the home market:', error);
-          if (positionsChartStatus) positionsChartStatus.textContent = `Could not load the selected coin: ${error.message}`;
-        }
-      }
       const customAssets = getCustomAssets();
-      const previouslyLoaded = assets.filter((asset) =>
-        !customAssets.some((customAsset) => customAsset.id === asset.id)
-        && !firstPageAssets.some((coin) => coin.id === asset.id)
-      );
-      assets = [...customAssets, ...firstPageAssets.filter((asset) => !customAssets.some((customAsset) => customAsset.symbol === asset.symbol)), ...previouslyLoaded];
-      addMarketOptions(firstPageAssets);
-      marketConfig.hasMoreCoins = data.length === 250;
-      marketConfig.firstPageLoaded = true;
-      if (marketCoinLoadingStatus) {
-        marketCoinLoadingStatus.textContent = marketConfig.hasMoreCoins
-          ? `${assets.length.toLocaleString()} CoinGecko markets loaded. Scroll for more.`
-          : `All ${assets.length.toLocaleString()} available CoinGecko markets loaded.`;
-      }
-      if (marketCoinLoadingStatus && marketCoinLoadingStatus.getBoundingClientRect().top <= window.innerHeight + 400) {
-        loadMoreMarketCoins();
-      }
+      assets = [...customAssets, ...assets.filter((asset) => !customAssets.some((customAsset) => customAsset.symbol === asset.symbol))];
       addCustomMarketOptions(customAssets);
 
-      if (!hasRequestedMarket && customAssets.length && marketConfig.selectedSymbol === 'XRP') {
+      if (customAssets.length && marketConfig.selectedSymbol === 'XRP') {
         marketConfig.selectedSymbol = customAssets[customAssets.length - 1].symbol;
-        marketConfig.selectedCoinId = customAssets[customAssets.length - 1].id;
       }
 
       if (!assets.length) {
         return;
       }
 
-      const requestedAsset = !marketConfig.initialMarketSelectionResolved
-        ? assets.find((asset) => (marketConfig.selectedCoinId && asset.id === marketConfig.selectedCoinId)
-          || (hasRequestedMarket && asset.symbol.toUpperCase() === requestedMarketSymbol))
-        : null;
-      if (requestedAsset) {
-        marketConfig.selectedSymbol = requestedAsset.symbol.toUpperCase();
-        marketConfig.selectedCoinId = requestedAsset.id || '';
-      } else if (!assets.some((item) => item.symbol.toUpperCase() === marketConfig.selectedSymbol)) {
+      if (!assets.some((item) => item.symbol === marketConfig.selectedSymbol)) {
         marketConfig.selectedSymbol = assets[0].symbol;
-        marketConfig.selectedCoinId = assets[0].id || '';
       }
-      marketConfig.initialMarketSelectionResolved = true;
 
       const totalMarketCap = assets.reduce((sum, asset) => sum + (asset.market_cap || 0), 0);
       const totalVolume = assets.reduce((sum, asset) => sum + (asset.total_volume || 0), 0);
@@ -1724,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderWatchlist();
       renderAssetGrid();
       renderMarketTable();
-      setSelectedSymbol(marketConfig.selectedSymbol, marketConfig.selectedCoinId);
+      setSelectedSymbol(marketConfig.selectedSymbol);
     } catch (error) {
       console.error('Market data error:', error);
       try {
@@ -1748,14 +803,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }).filter((asset) => Number.isFinite(asset.current_price) && asset.current_price > 0);
         const customAssets = getCustomAssets();
         assets = [...customAssets, ...fallbackAssets.filter((asset) => !customAssets.some((customAsset) => customAsset.symbol === asset.symbol))];
-        addMarketOptions(fallbackAssets);
         addCustomMarketOptions(customAssets);
         if (assets.length) {
           if (!assets.some((asset) => asset.symbol === marketConfig.selectedSymbol)) marketConfig.selectedSymbol = assets[0].symbol;
           renderWatchlist();
           renderAssetGrid();
           renderMarketTable();
-          setSelectedSymbol(marketConfig.selectedSymbol, marketConfig.selectedCoinId);
+          setSelectedSymbol(marketConfig.selectedSymbol);
           return;
         }
       } catch (fallbackError) {
@@ -1769,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderWatchlist();
         renderAssetGrid();
         renderMarketTable();
-        setSelectedSymbol(marketConfig.selectedSymbol, marketConfig.selectedCoinId);
+        setSelectedSymbol(marketConfig.selectedSymbol);
         return;
       }
       if (tickerSocket?.readyState === WebSocket.OPEN && assets.length) {
@@ -1816,68 +870,18 @@ document.addEventListener('DOMContentLoaded', () => {
       marketConfig.searchText = event.target.value;
       renderAssetGrid();
       renderMarketTable();
-      window.clearTimeout(marketSearchLoadTimer);
-      marketSearchLoadTimer = window.setTimeout(loadMarketsForMarketSearch, 300);
     });
   }
 
   if (positionsMarketSelect) {
     positionsMarketSelect.addEventListener('change', (event) => {
-      setSelectedSymbol(event.target.value, event.target.selectedOptions[0]?.dataset.coinId || '');
-      positionsSelectedPrice = null;
-      savePositionsChartTools();
+      setSelectedSymbol(event.target.value);
       renderMarketOrderControls();
-      drawPositionsChart();
     });
-  }
-  if (positionsMarketPickerButton && positionsMarketOptions) {
-    positionsMarketPickerButton.addEventListener('click', () => {
-      const expanded = positionsMarketPickerButton.getAttribute('aria-expanded') === 'true';
-      positionsMarketPickerButton.setAttribute('aria-expanded', String(!expanded));
-      positionsMarketOptions.hidden = expanded;
-      if (!expanded && positionsMarketSearch) {
-        positionsMarketSearch.value = '';
-        renderPositionsMarketPicker();
-        positionsMarketSearch.focus();
-      }
-    });
-    positionsMarketOptions.addEventListener('click', (event) => {
-      const choice = event.target.closest('[data-market-symbol]');
-      if (!choice || !positionsMarketSelect) return;
-      const option = Array.from(positionsMarketSelect.options).find((item) =>
-        item.value === choice.dataset.marketSymbol && (item.dataset.coinId || '') === (choice.dataset.coinId || '')
-      );
-      if (!option) return;
-      positionsMarketSelect.selectedIndex = option.index;
-      positionsMarketSelect.dispatchEvent(new Event('change', { bubbles: true }));
-      positionsMarketPickerButton.setAttribute('aria-expanded', 'false');
-      positionsMarketOptions.hidden = true;
-      positionsMarketPickerButton.focus();
-    });
-    document.addEventListener('click', (event) => {
-      if (event.target.closest('.positions-market-picker')) return;
-      positionsMarketPickerButton.setAttribute('aria-expanded', 'false');
-      positionsMarketOptions.hidden = true;
-    });
-    document.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape' || positionsMarketOptions.hidden) return;
-      positionsMarketPickerButton.setAttribute('aria-expanded', 'false');
-      positionsMarketOptions.hidden = true;
-      positionsMarketPickerButton.focus();
-    });
-    if (positionsMarketSearch) {
-      positionsMarketSearch.addEventListener('input', () => {
-        renderPositionsMarketPicker();
-        window.clearTimeout(chartMarketSearchTimer);
-        chartMarketSearchTimer = window.setTimeout(loadMarketsForChartSearch, 300);
-      });
-    }
-    renderPositionsMarketPicker();
   }
   if (positionsTimeSelect) {
     positionsTimeSelect.addEventListener('change', (event) => {
       chartInterval = event.target.value;
-      savePositionsChartTools();
       loadPositionCandles(marketConfig.selectedSymbol, chartInterval);
     });
   }
@@ -1885,57 +889,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   [
     [positionsBuyButton, 'BUY'],
-    [positionsSellButton, 'SELL'],
-    [positionsChartBuyButton, 'BUY'],
-    [positionsChartSellButton, 'SELL']
+    [positionsSellButton, 'SELL']
   ].forEach(([button, side]) => {
     if (!button) return;
     button.addEventListener('click', () => {
-      placePositionMarketOrder(side, positionsSelectedPrice);
+      placePositionMarketOrder(side);
     });
   });
-
-  if (tradeDepositButton) {
-    tradeDepositButton.addEventListener('click', () => openTradeBalanceDialog('deposit'));
-  }
-  if (tradeTransferButton) {
-    tradeTransferButton.addEventListener('click', () => openTradeBalanceDialog('transfer'));
-  }
-  if (tradeBalanceCancel && tradeBalanceDialog) {
-    tradeBalanceCancel.addEventListener('click', () => tradeBalanceDialog.close());
-  }
-  if (tradeBalanceForm && tradeBalanceDialog && tradeBalanceAmount) {
-    tradeBalanceForm.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const amount = Number(tradeBalanceAmount.value);
-      if (!Number.isFinite(amount) || amount <= 0) {
-        tradeBalanceAmount.setCustomValidity('Enter an amount greater than zero.');
-        tradeBalanceAmount.reportValidity();
-        return;
-      }
-      tradeBalanceAmount.setCustomValidity('');
-      if (tradeBalanceAction === 'deposit') {
-        marketBalance += amount;
-        localStorage.setItem(marketBalanceKey, String(marketBalance));
-        if (positionsChartStatus) positionsChartStatus.textContent = `${formatCurrency(amount)} added to the Trade paper balance. Simulation only; no bank transfer occurred.`;
-      } else if (tradeBalanceAction === 'transfer') {
-        if (amount > realizedProfitAvailable || realizedProfitAvailable <= 0) {
-          tradeBalanceAmount.setCustomValidity(`Transfer cannot exceed available realized profits (${formatCurrency(Math.max(0, realizedProfitAvailable))}).`);
-          tradeBalanceAmount.reportValidity();
-          return;
-        }
-        realizedProfitAvailable -= amount;
-        tradeAccountBalance += amount;
-        localStorage.setItem(realizedProfitKey, String(realizedProfitAvailable));
-        localStorage.setItem(marketAccountBalanceKey, String(tradeAccountBalance));
-        if (positionsChartStatus) positionsChartStatus.textContent = `${formatCurrency(amount)} transferred to your local Account balance. Paper simulation only; no bank transfer occurred.`;
-      } else {
-        return;
-      }
-      tradeBalanceDialog.close();
-      renderPaperPositions();
-    });
-  }
 
   if (positionsToolsButton) {
     positionsToolsButton.addEventListener('click', () => {
@@ -1960,7 +920,6 @@ document.addEventListener('DOMContentLoaded', () => {
         positionsChartWrap.style.width = `${nextWidth}px`;
         positionsChartWrap.style.height = `${nextHeight}px`;
         positionsChartWrap.style.minHeight = `${nextHeight}px`;
-        savePositionsChartTools();
         drawPositionsChart();
       };
       const stopResize = () => {
@@ -1974,385 +933,61 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (positionsChartMode) {
-    positionsChartMode.addEventListener('change', () => {
-      positionsChartTools.mode = positionsChartMode.value;
-      positionsToolsOptions.hidden = true;
-      positionsToolsButton.setAttribute('aria-expanded', 'false');
-      rulerAnchor = null;
-      rulerDraft = null;
-      const modeText = {
-        crosshair: 'Crosshair pointer selected.',
-        ruler: 'Click twice on the chart to measure a price and time move.',
-        entry: 'Click the chart to choose a paper order price, then Buy or Sell.'
-      };
-      if (positionsChartStatus) positionsChartStatus.textContent = modeText[positionsChartMode.value];
-      if (positionsCandleChart) positionsCandleChart.style.cursor = 'crosshair';
-      savePositionsChartTools();
-      drawPositionsChart();
-    });
-  }
-  if (positionsSaveRiskSetup) {
-    positionsSaveRiskSetup.addEventListener('click', () => {
-      if (!chartRiskDraft) {
-        const { stopLoss, takeProfit } = getChartRiskLevels();
-        if (!stopLoss && !takeProfit) return;
-        chartRiskVisible = !chartRiskVisible;
-        savePositionsChartTools();
-        renderTradeBalances();
-        drawPositionsChart();
-        if (positionsChartStatus) positionsChartStatus.textContent = chartRiskVisible
-          ? 'Saved risk setup displayed on the chart.'
-          : 'Saved risk setup hidden for a cleaner chart. The protective levels remain active.';
-        return;
-      }
-      const { stopLoss, takeProfit, side } = getChartRiskLevels();
-      const position = marketPositions.find((item) => item.symbol === marketConfig.selectedSymbol);
-      const referencePrice = Number(position?.averagePrice) || Number(positionsSelectedPrice) || Number(getSelectedAsset()?.current_price);
-      const validRiskLevels = side === 'SELL'
-        ? stopLoss > referencePrice && takeProfit < referencePrice && takeProfit < stopLoss
-        : stopLoss < referencePrice && takeProfit > referencePrice && stopLoss < takeProfit;
-      if (!referencePrice || !stopLoss || !takeProfit || !validRiskLevels) {
-        if (positionsChartStatus) positionsChartStatus.textContent = side === 'SELL'
-          ? 'Risk setup not saved: for a short position, Stop Loss must be above entry and Take Profit below entry.'
-          : 'Risk setup not saved: for a long position, Stop Loss must be below entry and Take Profit above entry.';
-        return;
-      }
-      positionsChartTools.stopLoss = stopLoss;
-      positionsChartTools.takeProfit = takeProfit;
-      if (position) {
-        position.stopLoss = stopLoss;
-        position.takeProfit = takeProfit;
-        localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
-      }
-      chartRiskDraft = null;
-      chartRiskVisible = true;
-      savePositionsChartTools();
-      renderTradeBalances();
-      renderPaperPositions();
-      drawPositionsChart();
-      if (positionsChartStatus) positionsChartStatus.textContent = `Risk levels saved. Take Profit: ${formatCurrency(takeProfit)} · Stop Loss: ${formatCurrency(stopLoss)}.`;
-    });
-  }
-  [
-    [positionsTakeProfitInput, 'takeProfit'],
-    [positionsStopLossInput, 'stopLoss']
-  ].forEach(([input, levelName]) => {
-    if (!input) return;
-    input.addEventListener('change', () => {
-      const level = input.value === '' ? 0 : Number(input.value);
-      if (!Number.isFinite(level) || level < 0) {
-        input.setCustomValidity('Enter a valid price, or clear the field.');
-        input.reportValidity();
-        return;
-      }
-      input.setCustomValidity('');
-      const position = marketPositions.find((item) => item.symbol === marketConfig.selectedSymbol);
-      const nextLevels = {
-        stopLoss: Number(position?.stopLoss) || Number(positionsChartTools.stopLoss),
-        takeProfit: Number(position?.takeProfit) || Number(positionsChartTools.takeProfit)
-      };
-      nextLevels[levelName] = level;
-      if (position && level > 0) {
-        const isShort = position.side === 'SELL';
-        const isStopValid = !nextLevels.stopLoss || (isShort
-          ? nextLevels.stopLoss > position.averagePrice
-          : nextLevels.stopLoss < position.averagePrice);
-        const isTargetValid = !nextLevels.takeProfit || (isShort
-          ? nextLevels.takeProfit < position.averagePrice
-          : nextLevels.takeProfit > position.averagePrice);
-        const levelsOrdered = !nextLevels.stopLoss || !nextLevels.takeProfit || (isShort
-          ? nextLevels.takeProfit < nextLevels.stopLoss
-          : nextLevels.stopLoss < nextLevels.takeProfit);
-        if (!isStopValid || !isTargetValid || !levelsOrdered) {
-          positionsChartStatus.textContent = isShort
-            ? 'For a short position, Stop Loss must be above entry and Take Profit below entry.'
-            : 'For a long position, Stop Loss must be below entry and Take Profit above entry.';
-          input.value = positionsChartTools[levelName] || position[levelName] || '';
-          return;
-        }
-      }
-      positionsChartTools[levelName] = level || '';
-      if (position) {
-        position[levelName] = level || 0;
-        localStorage.setItem(marketPositionsKey, JSON.stringify(marketPositions));
-      }
-      chartRiskDraft = null;
-      chartRiskVisible = Boolean(nextLevels.stopLoss || nextLevels.takeProfit);
-      savePositionsChartTools();
-      renderTradeBalances();
-      drawPositionsChart();
-      if (positionsChartStatus) {
-        positionsChartStatus.textContent = level
-          ? `${levelName === 'takeProfit' ? 'Take Profit' : 'Stop Loss'} level updated to ${formatCurrency(level)}.`
-          : `${levelName === 'takeProfit' ? 'Take Profit' : 'Stop Loss'} level cleared.`;
-      }
-    });
-  });
-  if (positionsCandleChart) {
-    let draggedRiskLevel = false;
-    const chartPoint = (event) => {
-      const bounds = positionsCandleChart.getBoundingClientRect();
-      const x = event.clientX - bounds.left;
-      const y = event.clientY - bounds.top;
-      const { padding, min, max, plotWidth, plotHeight, candles } = chartGeometry;
-      if (!candles.length || !plotWidth || x < padding.left || x > bounds.width - padding.right || y < padding.top || y > bounds.height - padding.bottom) return null;
-      const normalizedX = Math.max(0, Math.min(1, (x - padding.left) / plotWidth));
-      const price = max - ((y - padding.top) / plotHeight) * (max - min);
-      const candleIndex = Math.min(candles.length - 1, Math.max(0, Math.round(normalizedX * (candles.length - 1))));
-      return { x, y, normalizedX, price, candle: candles[candleIndex], candleIndex };
-    };
-    const riskLevelAtPoint = (point) => {
-      const { stopLoss, takeProfit } = getChartRiskLevels();
-      const levels = [
-        ['stopLoss', stopLoss],
-        ['takeProfit', takeProfit]
-      ];
-      for (const [key, level] of levels) {
-        if (!level || !chartGeometry.max || chartGeometry.max === chartGeometry.min) continue;
-        const levelY = chartGeometry.padding.top + ((chartGeometry.max - level) / (chartGeometry.max - chartGeometry.min)) * chartGeometry.plotHeight;
-        if (Math.abs(point.y - levelY) <= 10) return key;
-      }
-      return null;
-    };
-    positionsCandleChart.addEventListener('pointermove', (event) => {
-      const point = chartPoint(event);
-      if (!point) {
-        chartPointer = null;
-        if (!chartRiskDragging && positionsChartTools.mode === 'crosshair') drawPositionsChart();
-        return;
-      }
-      chartPointer = point;
-      if (chartRiskDragging) {
-        const { side } = getChartRiskLevels();
-        const isShort = side === 'SELL';
-        const isStopLoss = chartRiskDragging === 'stopLoss';
-        const heldPosition = marketPositions.find((position) => position.symbol === marketConfig.selectedSymbol);
-        const referencePrice = heldPosition?.averagePrice || positionsSelectedPrice || Number(getSelectedAsset()?.current_price) || Number(positionCandles[positionCandles.length - 1]?.close);
-        const currentLevels = getChartRiskLevels();
-        const proposed = { ...currentLevels, [chartRiskDragging]: point.price };
-        const validRiskLevels = isShort
-          ? proposed.stopLoss > referencePrice && proposed.takeProfit < referencePrice && proposed.takeProfit < proposed.stopLoss
-          : proposed.stopLoss < referencePrice && proposed.takeProfit > referencePrice && proposed.stopLoss < proposed.takeProfit;
-        if (referencePrice && validRiskLevels) {
-          chartRiskDraft = proposed;
-          chartRiskVisible = true;
-          renderTradeBalances();
-          drawPositionsChart();
-        }
-        return;
-      }
-      positionsCandleChart.style.cursor = riskLevelAtPoint(point) ? 'ns-resize' : 'crosshair';
-      if (positionsChartTools.mode === 'ruler' && rulerAnchor) {
-        rulerDraft = { x: point.normalizedX, price: point.price };
-      }
-      drawPositionsChart();
-    });
-    positionsCandleChart.addEventListener('pointerdown', (event) => {
-      const point = chartPoint(event);
-      if (!point) return;
-      const key = riskLevelAtPoint(point);
-      if (!key) return;
-      chartRiskDragging = key;
-      chartRiskDragRange = { min: chartGeometry.min, max: chartGeometry.max };
-      draggedRiskLevel = true;
-      positionsCandleChart.setPointerCapture(event.pointerId);
-      event.preventDefault();
-    });
-    const finishRiskDrag = () => {
-      if (!chartRiskDragging) return;
-      chartRiskDragging = null;
-      chartRiskDragRange = null;
-      if (chartRiskDraft && positionsChartStatus) {
-        const zoneColor = getChartRiskLevels().side === 'SELL' ? 'red' : 'green';
-        positionsChartStatus.textContent = `Review the ${zoneColor} risk zone, then choose Save risk setup to apply the adjusted levels.`;
-      }
-      drawPositionsChart();
-    };
-    positionsCandleChart.addEventListener('pointerup', finishRiskDrag);
-    positionsCandleChart.addEventListener('pointercancel', () => {
-      finishRiskDrag();
-      draggedRiskLevel = false;
-    });
-    positionsCandleChart.addEventListener('pointerleave', () => {
-      chartPointer = null;
-      if (!chartRiskDragging && positionsChartTools.mode === 'crosshair') drawPositionsChart();
-    });
-    positionsCandleChart.addEventListener('click', (event) => {
-      if (draggedRiskLevel) {
-        draggedRiskLevel = false;
-        return;
-      }
-      const point = chartPoint(event);
-      if (!point) return;
-      const mode = positionsChartTools.mode;
-      if (mode === 'ruler') {
-        if (!rulerAnchor) {
-          rulerAnchor = { x: point.normalizedX, price: point.price };
-          rulerDraft = null;
-          positionsChartStatus.textContent = 'Ruler start set. Click another point to finish the measurement.';
-        } else {
-          positionsChartTools.ruler = {
-            start: { ...rulerAnchor },
-            end: { x: point.normalizedX, price: point.price }
-          };
-          rulerAnchor = null;
-          rulerDraft = null;
-          savePositionsChartTools();
-          positionsChartStatus.textContent = `Ruler: ${formatCurrency(point.price - positionsChartTools.ruler.start.price)} price change across the chart.`;
-        }
-      } else {
-        positionsSelectedCandleTime = point.candle.time;
-        positionsSelectedPrice = Number(point.candle.close);
-        if (positionsRiskControls) positionsRiskControls.hidden = false;
-        positionsChartStatus.textContent = `${point.candle.time ? new Date(point.candle.time).toLocaleString() : 'Selected'} candle selected at its close of ${formatCurrency(positionsSelectedPrice)}. Set quantity, then choose Buy at chart price or Sell at chart price. Paper trading only.`;
-        savePositionsChartTools();
-      }
-      drawPositionsChart();
-      renderMarketOrderControls();
-    });
-    positionsCandleChart.addEventListener('dblclick', () => {
-      if (!positionsSelectedCandleTime && !positionsSelectedPrice) return;
-      positionsSelectedCandleTime = null;
-      positionsSelectedPrice = null;
-      chartPointer = null;
-      if (positionsRiskControls) positionsRiskControls.hidden = true;
-      savePositionsChartTools();
-      drawPositionsChart();
-      renderMarketOrderControls();
-      if (positionsChartStatus) {
-        positionsChartStatus.textContent = 'Chart candle selection cleared. Saved Stop Loss and Take Profit levels remain active.';
-      }
-    });
-  }
-
   document.querySelectorAll('[data-chart-tool]').forEach((tool) => {
     tool.addEventListener('click', () => {
       positionsToolsOptions.hidden = true;
       positionsToolsButton.setAttribute('aria-expanded', 'false');
-      const toolName = tool.dataset.chartTool;
-      const panel = positionsToolForm.querySelector(`[data-chart-tool-panel="${toolName}"]`);
-      if (!panel) return;
-      const titles = {
-        import: 'Import indicator',
-        create: 'Create indicator',
-        'custom-candles': 'Custom candlesticks',
-        layout: 'Chart margins'
-      };
-      positionsToolForm.querySelectorAll('[data-chart-tool-panel]').forEach((item) => {
-        item.hidden = item !== panel;
-        item.disabled = item !== panel;
-      });
-      positionsToolForm.dataset.activeTool = toolName;
-      positionsToolDialogTitle.textContent = titles[toolName];
-      positionsToolDialogStatus.textContent = '';
-      positionsToolForm.reset();
-      positionsToolForm.elements.candleBodyWidth.value = positionsChartTools.candleStyle.bodyWidth;
-      positionsToolForm.elements.candleWickWidth.value = positionsChartTools.candleStyle.wickWidth;
-      positionsToolForm.elements.marginTop.value = positionsChartTools.margins.top;
-      positionsToolForm.elements.marginRight.value = positionsChartTools.margins.right;
-      positionsToolForm.elements.marginBottom.value = positionsChartTools.margins.bottom;
-      positionsToolForm.elements.marginLeft.value = positionsChartTools.margins.left;
-      positionsToolDialog.showModal();
-    });
-  });
-
-  positionsToolForm.querySelectorAll('[data-chart-tool-close]').forEach((button) => {
-    button.addEventListener('click', () => positionsToolDialog.close());
-  });
-
-  positionsToolForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const toolName = positionsToolForm.dataset.activeTool;
-    const formData = new FormData(positionsToolForm);
-    try {
-      if (toolName === 'import') {
-        const file = formData.get('indicatorFile');
-        const jsonText = file instanceof File && file.size
-          ? await file.text()
-          : String(formData.get('indicatorJson') || '').trim();
-        if (!jsonText || jsonText.length > 64000) throw new Error('Choose a JSON file or paste indicator JSON under 64 KB.');
-        const imported = JSON.parse(jsonText);
-        const indicators = Array.isArray(imported) ? imported : [imported];
-        if (!indicators.length || indicators.length > 10) {
-          throw new Error('Import between 1 and 10 indicators at a time.');
+      if (tool.dataset.chartTool === 'import') {
+        const imported = window.prompt('Paste indicator JSON');
+        if (!imported) {
+          positionsChartStatus.textContent = 'Indicator import cancelled.';
+          return;
         }
-        const validatedIndicators = indicators.map((indicator) => {
-          const name = typeof indicator?.name === 'string' ? indicator.name.trim() : '';
-          const type = typeof indicator?.type === 'string' ? indicator.type.toLowerCase() : '';
-          const period = Number(indicator?.period);
-          const color = indicator?.color || '#ffffff';
-          if (!name || name.length > 40 || !['sma', 'ema'].includes(type)
-            || !Number.isInteger(period) || period < 2 || period > 100
-            || typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color)) {
-            throw new Error('Each indicator needs a name, type (sma or ema), period (2–100), and valid hex color.');
-          }
-          return { name, type, period, color };
-        });
-        positionsChartTools.indicators.push(...validatedIndicators);
+        try {
+          const indicator = JSON.parse(imported);
+          if (!indicator.name || !['sma', 'ema'].includes(indicator.type)) throw new Error('Unsupported indicator');
+          const period = Number(indicator.period);
+          if (!Number.isInteger(period) || period < 2 || period > 100) throw new Error('Invalid period');
+          positionsChartTools.indicators.push({ name: indicator.name, type: indicator.type, period, color: indicator.color || '#f3c969' });
+          savePositionsChartTools();
+          drawPositionsChart();
+          positionsChartStatus.textContent = `${indicator.name} imported and drawn on the selected market.`;
+        } catch (error) {
+          positionsChartStatus.textContent = 'Import failed. Use JSON with name, type (sma or ema), period, and optional color.';
+        }
+      }
+      if (tool.dataset.chartTool === 'create') {
+        const name = window.prompt('Indicator name');
+        const type = (window.prompt('Indicator type: sma or ema', 'sma') || '').toLowerCase();
+        const period = Number(window.prompt('Period (2-100)', '20'));
+        if (!name || !['sma', 'ema'].includes(type) || !Number.isInteger(period) || period < 2 || period > 100) {
+          positionsChartStatus.textContent = 'Indicator creation cancelled or invalid.';
+          return;
+        }
+        positionsChartTools.indicators.push({ name, type, period, color: '#ffb86b' });
         savePositionsChartTools();
         drawPositionsChart();
-        positionsChartStatus.textContent = `${validatedIndicators.length} indicator${validatedIndicators.length === 1 ? '' : 's'} imported and drawn.`;
-      } else if (toolName === 'create') {
-        const name = String(formData.get('indicatorName') || '').trim();
-        const type = String(formData.get('indicatorType') || '');
-        const period = Number(formData.get('indicatorPeriod'));
-        const color = String(formData.get('indicatorColor') || '');
-        if (!name || name.length > 40 || !['sma', 'ema'].includes(type)
-          || !Number.isInteger(period) || period < 2 || period > 100
-          || !/^#[0-9a-f]{6}$/i.test(color)) {
-          throw new Error('Enter a name, choose SMA or EMA, and set a period from 2 to 100.');
-        }
-        positionsChartTools.indicators.push({ name, type, period, color });
-        savePositionsChartTools();
-        drawPositionsChart();
-        positionsChartStatus.textContent = `${name} ${type.toUpperCase()} (${period}) is drawn on the chart.`;
-      } else if (toolName === 'custom-candles') {
-        const bodyWidth = Number(formData.get('candleBodyWidth'));
-        const wickWidth = Number(formData.get('candleWickWidth'));
-        if (!Number.isInteger(bodyWidth) || bodyWidth < 10 || bodyWidth > 90
-          || !Number.isInteger(wickWidth) || wickWidth < 1 || wickWidth > 5) {
-          throw new Error('Set candle body width to 10–90% and wick width to 1–5 px.');
+        positionsChartStatus.textContent = `${name} ${type.toUpperCase()} (${period}) is now drawn on the selected market.`;
+      }
+      if (tool.dataset.chartTool === 'custom-candles') {
+        const bodyWidth = Number(window.prompt('Candle body width (10-90%)', String(positionsChartTools.candleStyle.bodyWidth)));
+        const wickWidth = Number(window.prompt('Candle wick width (1-5px)', String(positionsChartTools.candleStyle.wickWidth)));
+        if (!Number.isFinite(bodyWidth) || !Number.isFinite(wickWidth) || bodyWidth < 10 || bodyWidth > 90 || wickWidth < 1 || wickWidth > 5) {
+          positionsChartStatus.textContent = 'Custom candlestick settings cancelled or invalid.';
+          return;
         }
         positionsChartTools.candleStyle = { bodyWidth, wickWidth };
         savePositionsChartTools();
         drawPositionsChart();
         positionsChartStatus.textContent = `Custom candlesticks applied: ${bodyWidth}% body width and ${wickWidth}px wick width.`;
-      } else if (toolName === 'layout') {
-        const margins = {
-          top: Number(formData.get('marginTop')),
-          right: Number(formData.get('marginRight')),
-          bottom: Number(formData.get('marginBottom')),
-          left: Number(formData.get('marginLeft'))
-        };
-        const chartWidth = positionsChartWrap.clientWidth;
-        const chartHeight = positionsChartWrap.clientHeight;
-        if (!Number.isInteger(margins.top) || margins.top < 0 || margins.top > 80
-          || !Number.isInteger(margins.right) || margins.right < 40 || margins.right > 180
-          || !Number.isInteger(margins.bottom) || margins.bottom < 20 || margins.bottom > 100
-          || !Number.isInteger(margins.left) || margins.left < 0 || margins.left > 100
-          || margins.left + margins.right > chartWidth - 80
-          || margins.top + margins.bottom > chartHeight - 80) {
-          throw new Error('Margins are outside their limits or leave too little chart area.');
-        }
-        positionsChartTools.margins = margins;
-        savePositionsChartTools();
-        drawPositionsChart();
-        positionsChartStatus.textContent = 'Chart margins saved.';
       }
-      positionsToolDialog.close();
-    } catch (error) {
-      positionsToolDialogStatus.textContent = error instanceof SyntaxError
-        ? 'Invalid JSON. Check the indicator format and try again.'
-        : error.message;
-    }
+    });
   });
 
   renderPaperPositions();
   renderPaperOrders();
   connectLiveTicker(marketConfig.selectedSymbol);
   loadPositionCandles(marketConfig.selectedSymbol, chartInterval);
-  loadAllChartMarkets();
   fetchLiveMarketData();
   window.setInterval(fetchLiveMarketData, marketConfig.refreshMs);
   window.addEventListener('resize', drawPositionsChart);
@@ -2392,7 +1027,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeIndicatorPanel: document.getElementById('closeIndicatorPanel'),
     indicatorSearch: document.getElementById('indicatorSearch')
   };
-  const chartOptions = { layout: { background: { type: 'solid', color: '#101010' }, textColor: '#bdbdbd' }, grid: { vertLines: { color: 'rgba(255,255,255,.08)' }, horzLines: { color: 'rgba(255,255,255,.08)' } }, rightPriceScale: { borderColor: 'rgba(255,255,255,.18)' }, timeScale: { borderColor: 'rgba(255,255,255,.18)', timeVisible: true, secondsVisible: false }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal } };
+  const chartOptions = { layout: { background: { type: 'solid', color: '#101010' }, textColor: '#9b927a' }, grid: { vertLines: { color: 'rgba(212,175,55,.08)' }, horzLines: { color: 'rgba(212,175,55,.08)' } }, rightPriceScale: { borderColor: 'rgba(212,175,55,.18)' }, timeScale: { borderColor: 'rgba(212,175,55,.18)', timeVisible: true, secondsVisible: false }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal } };
   const chart = LightweightCharts.createChart(terminal, chartOptions);
   const rsiChart = LightweightCharts.createChart(document.getElementById('terminalRsiChart'), chartOptions);
   const candleSeries = chart.addCandlestickSeries({ upColor: '#31d598', downColor: '#ff6b7a', borderVisible: false, wickUpColor: '#31d598', wickDownColor: '#ff6b7a' });
@@ -2401,16 +1036,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const overlaySeries = new Map();
   const resizeCharts = () => { chart.applyOptions({ width: terminal.clientWidth }); const rsiContainer = document.getElementById('terminalRsiChart'); rsiChart.applyOptions({ width: rsiContainer.clientWidth }); };
   window.addEventListener('resize', resizeCharts);
-  const state = { symbol: ui.symbol.value, interval: '1m', mode: 'spot', side: 'BUY', price: 0, change: 0, connected: false, candles: [], trades: [], socket: null, tradeSocket: null, tickerRetryTimer: null, tradeRetryTimer: null, tickerRetryCount: 0, tradeRetryCount: 0, connectionVersion: 0, positions: readStoredArray('makingsPaperPositions', []), orders: readStoredArray('makingsPaperOrders', []), indicators: readStoredArray('makingsIndicators', []), settings: readStoredJSON('makingsIndicatorSettings', {}), active: ['SMA 20', 'EMA 50'] };
-  const indicatorCatalog = [{ name: 'SMA 20', type: 'sma', period: 20, color: '#ffffff' }, { name: 'EMA 50', type: 'ema', period: 50, color: '#69d2ff' }, { name: 'Bollinger Bands', type: 'bollinger', period: 20, color: '#d59cff' }, { name: 'RSI 14', type: 'rsi', period: 14, color: '#ff8b6a' }, { name: 'MACD', type: 'macd', period: 12, color: '#7ee2a8' }, { name: 'Community Trend Pack', type: 'ema', period: 21, color: '#ffb86b', price: '4.99' }];
+  const state = { symbol: ui.symbol.value, interval: '1m', mode: 'spot', side: 'BUY', price: 0, change: 0, connected: false, candles: [], trades: [], socket: null, tradeSocket: null, positions: JSON.parse(localStorage.getItem('makingsPaperPositions') || '[]'), orders: JSON.parse(localStorage.getItem('makingsPaperOrders') || '[]'), indicators: JSON.parse(localStorage.getItem('makingsIndicators') || '[]'), settings: JSON.parse(localStorage.getItem('makingsIndicatorSettings') || '{}'), active: ['SMA 20', 'EMA 50'] };
+  const indicatorCatalog = [{ name: 'SMA 20', type: 'sma', period: 20, color: '#f3c969' }, { name: 'EMA 50', type: 'ema', period: 50, color: '#69d2ff' }, { name: 'Bollinger Bands', type: 'bollinger', period: 20, color: '#d59cff' }, { name: 'RSI 14', type: 'rsi', period: 14, color: '#ff8b6a' }, { name: 'MACD', type: 'macd', period: 12, color: '#7ee2a8' }, { name: 'Community Trend Pack', type: 'ema', period: 21, color: '#ffb86b', price: '4.99' }];
 
   const formatPrice = (value) => Number(value).toLocaleString('en-US', { minimumFractionDigits: value < 1 ? 5 : 2, maximumFractionDigits: value < 1 ? 5 : 2 });
   const saveState = () => { localStorage.setItem('makingsPaperPositions', JSON.stringify(state.positions)); localStorage.setItem('makingsPaperOrders', JSON.stringify(state.orders)); localStorage.setItem('makingsIndicators', JSON.stringify(state.indicators)); localStorage.setItem('makingsIndicatorSettings', JSON.stringify(state.settings)); };
   const getIndicator = (name) => { const base = [...indicatorCatalog, ...state.indicators].find((indicator) => indicator.name === name); return base ? { ...base, ...state.settings[name] } : null; };
-  const spotApiBases = ['https://data-api.binance.vision', 'https://api.binance.com'];
-  const spotSocketBases = ['wss://data-stream.binance.vision/ws/', 'wss://stream.binance.com:9443/ws/'];
-  const futuresApiBases = ['https://fapi.binance.com'];
-  const futuresSocketBases = ['wss://fstream.binance.com/ws/'];
+  const endpoint = () => state.mode === 'futures' ? 'https://fapi.binance.com' : 'https://api.binance.com';
+  const socketHost = () => state.mode === 'futures' ? 'wss://fstream.binance.com/ws/' : 'wss://stream.binance.com:9443/ws/';
 
   function average(values) { return values.reduce((sum, value) => sum + value, 0) / values.length; }
   function sma(values, period) { return values.map((value, index) => index + 1 < period ? null : average(values.slice(index + 1 - period, index + 1))); }
@@ -2426,182 +1059,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderOrders() { ui.orders.innerHTML = state.orders.length ? state.orders.slice(0, 8).map((order) => `<div class="order-row"><span><strong class="${order.side === 'BUY' ? 'trend-up' : 'trend-down'}">${order.side}</strong> ${order.symbol.toUpperCase()} <small>${order.mode}</small></span><span>${order.quantity} @ ${formatPrice(order.price)}</span><time>${new Date(order.time).toLocaleTimeString()}</time></div>`).join('') : '<div class="empty-state">Your paper orders will appear here.</div>'; }
   function renderPositions() { ui.positions.innerHTML = state.positions.length ? state.positions.map((position) => `<div class="position-row"><div><strong>${position.symbol.toUpperCase()}</strong><small>${position.side} ${position.mode} · ${position.quantity}</small></div><div><strong>${formatPrice(state.price)}</strong><small>SL ${position.stopLoss ? formatPrice(position.stopLoss) : '--'} · TP ${position.takeProfit ? formatPrice(position.takeProfit) : '--'}</small></div></div>`).join('') : 'No open paper positions.'; ui.balance.textContent = '10,000.00 USDT'; }
 
-  async function loadCandles(connectionVersion = state.connectionVersion) {
-    ui.chartStatus.hidden = false;
-    const isFutures = state.mode === 'futures';
-    const path = isFutures ? '/fapi/v1/klines' : '/api/v3/klines';
-    const apiBases = isFutures ? futuresApiBases : spotApiBases;
-    let lastError;
-
-    for (const base of apiBases) {
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 10000);
-      try {
-        const response = await fetch(
-          `${base}${path}?symbol=${state.symbol.toUpperCase()}&interval=${state.interval}&limit=120`,
-          { signal: controller.signal }
-        );
-        if (!response.ok) throw new Error(`Market data request failed (${response.status}).`);
-        const data = await response.json();
-        if (connectionVersion !== state.connectionVersion) return;
-        state.candles = data.map((item) => ({
-          time: item[0],
-          open: Number(item[1]),
-          high: Number(item[2]),
-          low: Number(item[3]),
-          close: Number(item[4]),
-          volume: Number(item[5])
-        }));
-        ui.chartStatus.hidden = true;
-        drawChart();
-        return;
-      } catch (error) {
-        lastError = error;
-      } finally {
-        window.clearTimeout(timeout);
-      }
-    }
-
-    if (connectionVersion === state.connectionVersion) {
-      ui.chartStatus.textContent = `Live chart unavailable. ${lastError?.name === 'AbortError' ? 'The market-data service timed out.' : 'Check your connection and retry.'}`;
-    }
-  }
-
-  function scheduleTickerReconnect(connectionVersion, hostIndex) {
-    if (connectionVersion !== state.connectionVersion) return;
-    if (state.tickerRetryTimer) window.clearTimeout(state.tickerRetryTimer);
-    ui.status.textContent = 'Market connection interrupted; reconnecting...';
-    const delay = Math.min(1000 * (2 ** state.tickerRetryCount), 30000);
-    state.tickerRetryCount += 1;
-    state.tickerRetryTimer = window.setTimeout(() => {
-      state.tickerRetryTimer = null;
-      connectTicker(connectionVersion, (hostIndex + 1) % (state.mode === 'futures' ? futuresSocketBases.length : spotSocketBases.length));
-    }, delay);
-  }
-
-  function connectTicker(connectionVersion = state.connectionVersion, hostIndex = 0) {
-    const socketBases = state.mode === 'futures' ? futuresSocketBases : spotSocketBases;
-    try {
-      const socket = new WebSocket(`${socketBases[hostIndex]}${state.symbol.toLowerCase()}@ticker`);
-      state.socket = socket;
-      socket.onopen = () => {
-        if (state.socket !== socket || connectionVersion !== state.connectionVersion) return;
-        state.tickerRetryCount = 0;
-        ui.status.textContent = `BillionairesXchange ${state.mode} live`;
-      };
-      socket.onmessage = (event) => {
-        if (state.socket !== socket || connectionVersion !== state.connectionVersion) return;
-        try {
-          const ticker = JSON.parse(event.data);
-          const price = Number(ticker.c);
-          const change = Number(ticker.P);
-          if (!Number.isFinite(price) || !Number.isFinite(change)) return;
-          state.price = price;
-          state.change = change;
-          ui.price.textContent = `$${formatPrice(price)}`;
-          ui.change.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
-          ui.change.className = change >= 0 ? 'trend-up' : 'trend-down';
-          ui.orderPrice.placeholder = formatPrice(price);
-          ui.estimate.textContent = `$${(price * (Number(ui.quantity.value) || 0)).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
-          renderPositions();
-        } catch (error) {
-          console.error('Unable to read the live ticker update:', error);
-        }
-      };
-      socket.onerror = () => {
-        if (state.socket === socket && connectionVersion === state.connectionVersion) {
-          ui.status.textContent = 'Market connection interrupted; reconnecting...';
-          socket.close();
-        }
-      };
-      socket.onclose = () => {
-        if (state.socket === socket && connectionVersion === state.connectionVersion) {
-          state.socket = null;
-          scheduleTickerReconnect(connectionVersion, hostIndex);
-        }
-      };
-    } catch (error) {
-      console.error('Unable to open the live ticker connection:', error);
-      scheduleTickerReconnect(connectionVersion, hostIndex);
-    }
-  }
-
-  function scheduleTradeReconnect(connectionVersion, hostIndex) {
-    if (connectionVersion !== state.connectionVersion) return;
-    if (state.tradeRetryTimer) window.clearTimeout(state.tradeRetryTimer);
-    ui.chartStatus.hidden = false;
-    ui.chartStatus.textContent = 'Live candle stream interrupted; reconnecting...';
-    const delay = Math.min(1000 * (2 ** state.tradeRetryCount), 30000);
-    state.tradeRetryCount += 1;
-    state.tradeRetryTimer = window.setTimeout(() => {
-      state.tradeRetryTimer = null;
-      connectTradeStream(connectionVersion, (hostIndex + 1) % (state.mode === 'futures' ? futuresSocketBases.length : spotSocketBases.length));
-    }, delay);
-  }
-
-  function connectTradeStream(connectionVersion = state.connectionVersion, hostIndex = 0) {
-    const socketBases = state.mode === 'futures' ? futuresSocketBases : spotSocketBases;
-    try {
-      const socket = new WebSocket(`${socketBases[hostIndex]}${state.symbol.toLowerCase()}@kline_${state.interval}`);
-      state.tradeSocket = socket;
-      socket.onopen = () => {
-        if (state.tradeSocket !== socket || connectionVersion !== state.connectionVersion) return;
-        state.tradeRetryCount = 0;
-        ui.chartStatus.hidden = true;
-      };
-      socket.onmessage = (event) => {
-        if (state.tradeSocket !== socket || connectionVersion !== state.connectionVersion) return;
-        try {
-          const candle = JSON.parse(event.data).k;
-          if (!candle) return;
-          const nextCandle = {
-            time: Number(candle.t),
-            open: Number(candle.o),
-            high: Number(candle.h),
-            low: Number(candle.l),
-            close: Number(candle.c),
-            volume: Number(candle.v)
-          };
-          if (!Object.values(nextCandle).every(Number.isFinite)) return;
-          const lastCandle = state.candles[state.candles.length - 1];
-          if (lastCandle?.time === nextCandle.time) state.candles[state.candles.length - 1] = nextCandle;
-          else state.candles.push(nextCandle);
-          drawChart();
-        } catch (error) {
-          console.error('Unable to read the live candle update:', error);
-        }
-      };
-      socket.onerror = () => {
-        if (state.tradeSocket === socket && connectionVersion === state.connectionVersion) socket.close();
-      };
-      socket.onclose = () => {
-        if (state.tradeSocket === socket && connectionVersion === state.connectionVersion) {
-          state.tradeSocket = null;
-          scheduleTradeReconnect(connectionVersion, hostIndex);
-        }
-      };
-    } catch (error) {
-      console.error('Unable to open the live candle connection:', error);
-      scheduleTradeReconnect(connectionVersion, hostIndex);
-    }
-  }
-
-  function refreshMarket() {
-    state.connectionVersion += 1;
-    state.tickerRetryCount = 0;
-    state.tradeRetryCount = 0;
-    window.clearTimeout(state.tickerRetryTimer);
-    window.clearTimeout(state.tradeRetryTimer);
-    state.tickerRetryTimer = null;
-    state.tradeRetryTimer = null;
-    state.socket?.close();
-    state.tradeSocket?.close();
-    state.socket = null;
-    state.tradeSocket = null;
-    loadCandles(state.connectionVersion);
-    connectTicker(state.connectionVersion);
-    connectTradeStream(state.connectionVersion);
-  }
+  async function loadCandles() { ui.chartStatus.hidden = false; try { const path = state.mode === 'futures' ? '/fapi/v1/klines' : '/api/v3/klines'; const response = await fetch(`${endpoint()}${path}?symbol=${state.symbol.toUpperCase()}&interval=${state.interval}&limit=120`); if (!response.ok) throw new Error('Binance candles unavailable'); const data = await response.json(); state.candles = data.map((item) => ({ time: item[0], open: Number(item[1]), high: Number(item[2]), low: Number(item[3]), close: Number(item[4]), volume: Number(item[5]) })); ui.chartStatus.hidden = true; drawChart(); } catch (error) { ui.chartStatus.textContent = 'Live chart unavailable. Check your connection.'; } }
+  function connectTicker() { if (state.socket) state.socket.close(); state.socket = new WebSocket(`${socketHost()}${state.symbol}@ticker`); state.socket.onopen = () => { ui.status.textContent = `BillionairesXchange ${state.mode} live`; }; state.socket.onmessage = (event) => { const ticker = JSON.parse(event.data); state.price = Number(ticker.c); state.change = Number(ticker.P); ui.price.textContent = `$${formatPrice(state.price)}`; ui.change.textContent = `${state.change >= 0 ? '+' : ''}${state.change.toFixed(2)}%`; ui.change.className = state.change >= 0 ? 'trend-up' : 'trend-down'; ui.orderPrice.placeholder = formatPrice(state.price); ui.estimate.textContent = `$${(state.price * (Number(ui.quantity.value) || 0)).toLocaleString('en-US', { maximumFractionDigits: 2 })}`; renderPositions(); }; state.socket.onerror = () => { ui.status.textContent = 'BillionairesXchange connection unavailable'; }; }
+  function connectTradeStream() { if (state.tradeSocket) state.tradeSocket.close(); state.tradeSocket = new WebSocket(`${socketHost()}${state.symbol}@kline_${state.interval}`); state.tradeSocket.onmessage = (event) => { const candle = JSON.parse(event.data).k; if (!candle) return; const nextCandle = { time: Number(candle.t), open: Number(candle.o), high: Number(candle.h), low: Number(candle.l), close: Number(candle.c), volume: Number(candle.v) }; const lastCandle = state.candles[state.candles.length - 1]; if (lastCandle?.time === nextCandle.time) state.candles[state.candles.length - 1] = nextCandle; else state.candles.push(nextCandle); drawChart(); }; }
+  function refreshMarket() { loadCandles(); connectTicker(); connectTradeStream(); }
 
   function setExecutionMode() {
     const live = state.connected;
@@ -2611,8 +1072,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.orderForm.querySelector('.order-submit').textContent = live ? 'Place live order' : 'Place paper order';
   }
 
-  ui.symbol.addEventListener('change', () => { state.symbol = ui.symbol.value; refreshMarket(); }); ui.timeframe.forEach((button) => button.addEventListener('click', () => { state.interval = button.dataset.timeframe; ui.timeframe.forEach((item) => item.classList.toggle('is-active', item === button)); refreshMarket(); })); document.querySelectorAll('[data-trade-mode]').forEach((button) => button.addEventListener('click', () => { state.mode = button.dataset.tradeMode; document.querySelectorAll('[data-trade-mode]').forEach((item) => item.classList.toggle('is-active', item === button)); refreshMarket(); })); document.querySelectorAll('[data-order-side]').forEach((button) => button.addEventListener('click', () => { state.side = button.dataset.orderSide; document.querySelectorAll('[data-order-side]').forEach((item) => item.classList.toggle('is-active', item === button)); })); ui.quantity.addEventListener('input', () => { ui.estimate.textContent = `$${(state.price * (Number(ui.quantity.value) || 0)).toLocaleString('en-US', { maximumFractionDigits: 2 })}`; }); ui.orderType.addEventListener('change', () => { ui.orderPrice.disabled = ui.orderType.value === 'MARKET'; });
-  ui.orderForm.addEventListener('submit', async (event) => { event.preventDefault(); const price = ui.orderType.value === 'MARKET' ? state.price : Number(ui.orderPrice.value); const quantity = Number(ui.quantity.value); const stopLoss = Number(ui.stopLoss.value) || 0; const takeProfit = Number(ui.takeProfit.value) || 0; if (!price || !quantity || (stopLoss && takeProfit && ((state.side === 'BUY' && (stopLoss >= price || takeProfit <= price)) || (state.side === 'SELL' && (stopLoss <= price || takeProfit >= price))))) { ui.chartStatus.textContent = 'Check price, quantity, and protective exit levels.'; ui.chartStatus.hidden = false; return; } if (state.connected) { if (stopLoss || takeProfit) { ui.chartStatus.textContent = 'Remove protective exits before placing a live order.'; ui.chartStatus.hidden = false; return; } try { const idToken = await window.makingsGetIdToken?.(); if (!idToken) throw new Error('Sign in to place a live Binance order.'); const apiBaseUrl = window.MAKINGS_API_BASE_URL || window.location.origin; const response = await fetch(`${apiBaseUrl}/api/order`, { method: 'POST', headers: { 'content-type': 'application/json', Authorization: `Bearer ${idToken}` }, body: JSON.stringify({ symbol: state.symbol, side: state.side, type: ui.orderType.value, quantity, price }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Live order failed.'); ui.chartStatus.textContent = `Live order accepted: ${result.orderId}`; ui.chartStatus.hidden = false; } catch (error) { ui.chartStatus.textContent = error.message; ui.chartStatus.hidden = false; } return; } const order = { symbol: state.symbol, side: state.side, mode: state.mode, quantity, price, stopLoss, takeProfit, time: Date.now() }; state.orders.unshift(order); state.positions.unshift(order); saveState(); renderOrders(); renderPositions(); ui.chartStatus.textContent = 'Paper order placed with risk controls.'; ui.chartStatus.hidden = false; }); ui.clearOrders.addEventListener('click', () => { state.orders = []; saveState(); renderOrders(); });
+  ui.symbol.addEventListener('change', () => { state.symbol = ui.symbol.value; refreshMarket(); }); ui.timeframe.forEach((button) => button.addEventListener('click', () => { state.interval = button.dataset.timeframe; ui.timeframe.forEach((item) => item.classList.toggle('is-active', item === button)); loadCandles(); })); document.querySelectorAll('[data-trade-mode]').forEach((button) => button.addEventListener('click', () => { state.mode = button.dataset.tradeMode; document.querySelectorAll('[data-trade-mode]').forEach((item) => item.classList.toggle('is-active', item === button)); refreshMarket(); })); document.querySelectorAll('[data-order-side]').forEach((button) => button.addEventListener('click', () => { state.side = button.dataset.orderSide; document.querySelectorAll('[data-order-side]').forEach((item) => item.classList.toggle('is-active', item === button)); })); ui.quantity.addEventListener('input', () => { ui.estimate.textContent = `$${(state.price * (Number(ui.quantity.value) || 0)).toLocaleString('en-US', { maximumFractionDigits: 2 })}`; }); ui.orderType.addEventListener('change', () => { ui.orderPrice.disabled = ui.orderType.value === 'MARKET'; });
+  ui.orderForm.addEventListener('submit', async (event) => { event.preventDefault(); const price = ui.orderType.value === 'MARKET' ? state.price : Number(ui.orderPrice.value); const quantity = Number(ui.quantity.value); const stopLoss = Number(ui.stopLoss.value) || 0; const takeProfit = Number(ui.takeProfit.value) || 0; if (!price || !quantity || (stopLoss && takeProfit && ((state.side === 'BUY' && (stopLoss >= price || takeProfit <= price)) || (state.side === 'SELL' && (stopLoss <= price || takeProfit >= price))))) { ui.chartStatus.textContent = 'Check price, quantity, and protective exit levels.'; ui.chartStatus.hidden = false; return; } if (state.connected) { if (stopLoss || takeProfit) { ui.chartStatus.textContent = 'Remove protective exits before placing a live order.'; ui.chartStatus.hidden = false; return; } try { const response = await fetch('/api/binance/order', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ symbol: state.symbol, side: state.side, mode: state.mode, type: ui.orderType.value, quantity, price }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Live order failed.'); ui.chartStatus.textContent = `Live order accepted: ${result.order.orderId}`; ui.chartStatus.hidden = false; } catch (error) { ui.chartStatus.textContent = error.message; ui.chartStatus.hidden = false; } return; } const order = { symbol: state.symbol, side: state.side, mode: state.mode, quantity, price, stopLoss, takeProfit, time: Date.now() }; state.orders.unshift(order); state.positions.unshift(order); saveState(); renderOrders(); renderPositions(); ui.chartStatus.textContent = 'Paper order placed with risk controls.'; ui.chartStatus.hidden = false; }); ui.clearOrders.addEventListener('click', () => { state.orders = []; saveState(); renderOrders(); });
   setExecutionMode();
   const openIndicatorWorkspace = () => { ui.indicatorPanel.hidden = false; ui.indicatorSearch.focus(); ui.indicatorPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
   ui.indicatorButton.addEventListener('click', () => { if (ui.indicatorPanel.hidden) openIndicatorWorkspace(); else ui.indicatorPanel.hidden = true; }); ui.marketCreateIndicator.addEventListener('click', openIndicatorWorkspace); ui.closeIndicatorPanel.addEventListener('click', () => { ui.indicatorPanel.hidden = true; }); ui.indicatorSearch.addEventListener('input', renderIndicators);
@@ -2699,26 +1160,49 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    const depositBtn = document.getElementById('depositBtn');
+    const withdrawBtn = document.getElementById('withdrawBtn');
+    const transferBtn = document.getElementById('transferBtn');
+    const sendBtn = document.getElementById('sendBtn');
     const billsBtn = document.getElementById('billsBtn');
-    const insuranceBtn = document.getElementById('insuranceBtn');
 
     const transactionMessages = {
-      bills: 'Opening Bill Payment form...\n\nPay:\n- Utility Bills\n- Electricity\n- Data Services\n- Other Services',
-      insurance: 'Opening Insurance payments...\n\nManage car, home, and other protected payments.',
+      deposit: 'Opening Deposit form...\n\nYou can add funds from:\n- Bank Transfer\n- Credit/Debit Card\n- Crypto Transfer',
+      withdraw: 'Opening Withdrawal form...\n\nSelect destination:\n- Bank Account\n- Credit/Debit Card\n- Crypto Wallet',
+      transfer: 'Opening Transfer form...\n\nTransfer between:\n- Your Wallets\n- Trading Accounts\n- Vault Storage',
+      send: 'Opening Send form...\n\nSend funds to:\n- Contacts\n- Beneficiaries\n- Email Address',
+      bills: 'Opening Bill Payment form...\n\nPay:\n- Utility Bills\n- Electricity\n- Data Services\n- Other Services'
     };
+
+    if (depositBtn) {
+      depositBtn.addEventListener('click', () => {
+        alert(transactionMessages.deposit);
+      });
+    }
+
+    if (withdrawBtn) {
+      withdrawBtn.addEventListener('click', () => {
+        alert(transactionMessages.withdraw);
+      });
+    }
+
+    if (transferBtn) {
+      transferBtn.addEventListener('click', () => {
+        alert(transactionMessages.transfer);
+      });
+    }
+
+    if (sendBtn) {
+      sendBtn.addEventListener('click', () => {
+        alert(transactionMessages.send);
+      });
+    }
 
     if (billsBtn) {
       billsBtn.addEventListener('click', () => {
         alert(transactionMessages.bills);
       });
     }
-
-    if (insuranceBtn) {
-      insuranceBtn.addEventListener('click', () => {
-        alert(transactionMessages.insurance);
-      });
-    }
-
   });
 
   // Holdings Management and Currency Conversion
@@ -2731,17 +1215,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const currencyLabel = document.getElementById('currencyLabel');
 
     if (!holdingsTableBody || !preferredCurrencySelect) {
-      return;
-    }
-
-    if (document.getElementById('cryptoWallet')) {
-      holdingsTableBody.replaceChildren();
-      const row = document.createElement('tr');
-      const cell = document.createElement('td');
-      cell.colSpan = 5;
-      cell.textContent = 'Create or unlock your encrypted wallet to load live on-chain balances.';
-      row.appendChild(cell);
-      holdingsTableBody.appendChild(row);
       return;
     }
 
