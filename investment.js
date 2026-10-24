@@ -1,8 +1,13 @@
 import { auth, db } from './firebase-client.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 import { addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
-import { STOCK_EXCHANGES, COUNTRY_ORDER } from './stocks-data.js';
-
+import {
+  fetchCountryStockListings,
+  fetchStockCountries,
+  getStockCountryFlag,
+  getStockCountryName,
+  sortStockCountries
+} from './stock-market-api.js';
 let signedInAccount = auth.currentUser;
 
 const investmentSelection = document.getElementById('investmentSelection');
@@ -22,6 +27,15 @@ const stockCompanyChoices = document.getElementById('stockCompanyChoices');
 const stockCompanyLabel = document.getElementById('stockCompanyLabel');
 const stockInvestmentStatus = document.getElementById('stockInvestmentStatus');
 const stockBackButton = document.getElementById('stockBackButton');
+const stockCompanySearch = document.getElementById('stockCompanySearch');
+const stockLoadMoreButton = document.getElementById('stockLoadMoreButton');
+let stockCountries = [];
+let stockCountriesLoading = null;
+let selectedStockListings = [];
+let selectedStockWarnings = [];
+let selectedStockCountry = null;
+let visibleStockCount = 100;
+const stockListingsByCountry = new Map();
 const selectedCompanyDetails = document.getElementById('selectedCompanyDetails');
 const selectedCompanyLogo = document.getElementById('selectedCompanyLogo');
 const selectedCompanyContractStatus = document.getElementById('selectedCompanyContractStatus');
@@ -941,13 +955,34 @@ if (window.location.hash === '#coins') {
   coinsInvestmentSetup.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-function loadStockExchanges() {
+async function loadStockExchanges() {
   stockCountryChoices.replaceChildren();
   stockCompanySection.hidden = true;
-  stockInvestmentStatus.textContent = 'Loading stock exchanges...';
+  stockInvestmentStatus.textContent = 'Loading countries with supported stock listings...';
+  try {
+    if (!stockCountries.length) {
+      if (!stockCountriesLoading) {
+        stockCountriesLoading = fetchStockCountries()
+          .then((countries) => {
+            stockCountries = sortStockCountries(countries);
+            return stockCountries;
+          })
+          .finally(() => {
+            stockCountriesLoading = null;
+          });
+      }
+      await stockCountriesLoading;
+    }
+  } catch (error) {
+    stockInvestmentStatus.textContent = `Countries could not be loaded. ${error.message}`;
+    return;
+  }
+  if (!stockCountries.length) {
+    stockInvestmentStatus.textContent = 'No countries with supported stock listings were returned by the provider.';
+    return;
+  }
 
-  COUNTRY_ORDER.forEach((country) => {
-    const exchangeData = STOCK_EXCHANGES[country];
+  stockCountries.forEach((country) => {
     const button = document.createElement('button');
     button.className = 'company-option';
     button.type = 'button';
@@ -955,36 +990,38 @@ function loadStockExchanges() {
 
     const logo = document.createElement('span');
     logo.className = 'company-option-logo';
+    logo.classList.add('stock-country-flag');
     logo.setAttribute('aria-hidden', 'true');
-    logo.textContent = country.substring(0, 2).toUpperCase();
+    logo.textContent = getStockCountryFlag(country) || getStockCountryName(country).substring(0, 2).toUpperCase();
 
     const details = document.createElement('span');
     details.className = 'company-option-details';
     const countryName = document.createElement('strong');
-    countryName.textContent = country;
+    countryName.textContent = getStockCountryName(country);
     const exchangeName = document.createElement('small');
-    exchangeName.textContent = exchangeData.exchange;
+    exchangeName.textContent = country.market || country.exchanges.map((exchange) => exchange.name).join(', ');
     details.append(countryName, exchangeName);
     button.append(logo, details);
 
     button.addEventListener('click', () => {
-      showStocksByCountry(country, exchangeData);
+      showStocksByCountry(country);
     });
 
     stockCountryChoices.appendChild(button);
   });
 
-  stockInvestmentStatus.textContent = `${COUNTRY_ORDER.length} stock exchange${COUNTRY_ORDER.length === 1 ? '' : 's'} available.`;
+  stockInvestmentStatus.textContent = `${stockCountries.length} country markets available. Stock listings depend on provider exchange coverage.`;
 }
 
-function showStocksByCountry(country, exchangeData) {
-  stockCountryChoices.hidden = true;
-  stockCompanySection.hidden = false;
-  stockCompanyLabel.textContent = `${country} - ${exchangeData.exchange}`;
+function renderStockListings() {
+  const query = stockCompanySearch.value.trim().toLocaleLowerCase();
+  const matchingListings = selectedStockListings.filter((listing) =>
+    `${listing.name} ${listing.symbol} ${listing.exchange} ${listing.sector}`.toLocaleLowerCase().includes(query)
+  );
+  const visibleListings = matchingListings.slice(0, visibleStockCount);
   stockCompanyChoices.replaceChildren();
 
-  const companies = exchangeData.companies || [];
-  companies.forEach((company) => {
+  visibleListings.forEach((company) => {
     const option = document.createElement('button');
     option.className = 'company-option';
     option.type = 'button';
@@ -1007,7 +1044,7 @@ function showStocksByCountry(country, exchangeData) {
     const companyName = document.createElement('strong');
     companyName.textContent = company.name;
     const companySector = document.createElement('small');
-    companySector.textContent = company.sector || 'General';
+    companySector.textContent = `${company.symbol}.${company.exchange} · ${company.sector}${company.currency ? ` · ${company.currency}` : ''}`;
     details.append(companyName, companySector);
     option.append(logo, details);
 
@@ -1017,17 +1054,67 @@ function showStocksByCountry(country, exchangeData) {
         item.classList.toggle('is-selected', isSelected);
         item.setAttribute('aria-pressed', String(isSelected));
       });
-      investmentSelection.textContent = `${company.name} (${company.symbol}) on ${exchangeData.exchange} selected.`;
+      investmentSelection.textContent = `${company.name} (${company.symbol}.${company.exchange}) selected. Demo allocation only; no brokerage order is sent.`;
     });
 
     stockCompanyChoices.appendChild(option);
   });
 
-  stockInvestmentStatus.textContent = `${companies.length} compan${companies.length === 1 ? 'y' : 'ies'} listed.`;
+  if (!matchingListings.length) {
+    const empty = document.createElement('p');
+    empty.className = 'coin-investment-empty';
+    empty.textContent = query
+      ? 'No stocks match this search.'
+      : selectedStockWarnings.join(' ') || 'The stock provider returned no listings for this country.';
+    stockCompanyChoices.appendChild(empty);
+  }
+  stockLoadMoreButton.hidden = visibleListings.length >= matchingListings.length;
+  const warnings = selectedStockWarnings.length
+    ? ` Some exchanges could not be loaded: ${selectedStockWarnings.join('; ')}`
+    : '';
+  stockInvestmentStatus.textContent = matchingListings.length
+    ? `${visibleListings.length} of ${matchingListings.length} matching stocks shown; ${selectedStockListings.length} listings loaded.${warnings}`
+    : `${selectedStockCountry ? getStockCountryName(selectedStockCountry) : 'Country'} stock listings unavailable.${warnings}`;
+}
+
+async function showStocksByCountry(country) {
+  selectedStockCountry = country;
+  stockCountryChoices.hidden = true;
+  stockCompanySection.hidden = false;
+  stockCompanyLabel.textContent = `${getStockCountryName(country)} · ${country.market || `${country.exchanges.length} supported exchange${country.exchanges.length === 1 ? '' : 's'}`}`;
+  stockCompanySearch.value = '';
+  stockLoadMoreButton.hidden = true;
+  stockCompanyChoices.replaceChildren();
+  stockInvestmentStatus.textContent = country.exchanges.length
+    ? `Loading available stocks from ${country.exchanges.length} exchange${country.exchanges.length === 1 ? '' : 's'}...`
+    : `Checking provider coverage for ${getStockCountryName(country)}...`;
+  try {
+    let cached = stockListingsByCountry.get(country.code);
+    if (!cached) {
+      cached = await fetchCountryStockListings(country.code);
+      stockListingsByCountry.set(country.code, cached);
+    }
+    selectedStockListings = cached.listings;
+    selectedStockWarnings = cached.warnings;
+    visibleStockCount = 100;
+    renderStockListings();
+  } catch (error) {
+    selectedStockListings = [];
+    selectedStockWarnings = [error.message];
+    renderStockListings();
+  }
 }
 
 stockBackButton.addEventListener('click', () => {
   stockCountryChoices.hidden = false;
   stockCompanySection.hidden = true;
-  investmentSelection.textContent = 'Stocks selected. Choose an exchange.';
+  investmentSelection.textContent = 'Stocks selected. Choose a country.';
+});
+stockCompanySearch.addEventListener('input', () => {
+  visibleStockCount = 100;
+  renderStockListings();
+});
+stockLoadMoreButton.addEventListener('click', () => {
+  visibleStockCount += 100;
+  renderStockListings();
 });

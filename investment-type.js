@@ -1,4 +1,10 @@
-import { COUNTRY_ORDER, STOCK_EXCHANGES } from './stocks-data.js';
+import {
+  fetchCountryStockListings,
+  fetchStockCountries,
+  getStockCountryFlag,
+  getStockCountryName,
+  sortStockCountries
+} from './stock-market-api.js';
 
 const pageType = document.body.dataset.investmentType;
 const pageTitle = document.querySelector('[data-page-title]');
@@ -6,6 +12,13 @@ const catalogTitle = document.querySelector('[data-catalog-title]');
 const productsContainer = document.getElementById('investmentDemoProducts');
 const catalogStatus = document.getElementById('investmentDemoCatalogStatus');
 const searchInput = document.getElementById('investmentDemoSearch');
+let stockCountryChoices = null;
+let stockLoadMoreButton = null;
+let stockVisibleCount = 100;
+let stockCatalogWarnings = [];
+let stockCountries = [];
+let selectedStockCountry = null;
+let stockLoadError = '';
 const selectedTitle = document.getElementById('investmentDemoSelectedTitle');
 const selectedDescription = document.getElementById('investmentDemoDescription');
 const factsList = document.getElementById('investmentDemoFacts');
@@ -44,6 +57,23 @@ const companyManagementLink = document.getElementById('companyManagementLink');
 const storageKey = 'makingsInvestmentDemoState';
 const contractDetails = {};
 let catalogWarning = '';
+
+if (pageType === 'Stocks') {
+  stockCountryChoices = document.createElement('div');
+  stockCountryChoices.id = 'investmentStockCountries';
+  stockCountryChoices.className = 'investment-stock-countries';
+  stockCountryChoices.setAttribute('role', 'group');
+  stockCountryChoices.setAttribute('aria-label', 'Choose a country for stock listings');
+  searchInput.parentElement.before(stockCountryChoices);
+  stockLoadMoreButton = document.createElement('button');
+  stockLoadMoreButton.type = 'button';
+  stockLoadMoreButton.className = 'btn btn-secondary';
+  stockLoadMoreButton.textContent = 'Load more stocks';
+  stockLoadMoreButton.hidden = true;
+  productsContainer.insertAdjacentElement('afterend', stockLoadMoreButton);
+  const disclaimer = document.querySelector('.investment-demo-disclaimer');
+  if (disclaimer) disclaimer.textContent = 'Stock listings are sourced from EOD Historical Data. Quotes are not provided, and allocations and charts remain illustrative demos; no real securities or brokerage orders are involved.';
+}
 
 const marketList = (rows) => rows.map(([name, symbol, detail]) => ({ name, symbol, detail }));
 const demoMarkets = {
@@ -181,18 +211,6 @@ function getProducts() {
     }))];
     return all.map((product) => ({ ...product, id: product.id || `coin:${product.symbol}` }));
   }
-  if (pageType === 'Stocks') {
-    return COUNTRY_ORDER.flatMap((country) => {
-      const exchange = STOCK_EXCHANGES[country];
-      return (exchange.companies || []).map((company) => ({
-        id: `stock:${country}:${company.symbol}:${company.name}`,
-        name: company.name,
-        symbol: company.symbol,
-        detail: `${company.sector || 'Listed company'} · ${exchange.exchange}`,
-        exchange: exchange.exchange
-      }));
-    });
-  }
   if (demoMarkets[pageType]) return demoMarkets[pageType].map((market) => ({ ...market, id: `${pageType}:${market.symbol}` }));
   return (staticProducts[pageType] || []).map((product) => ({ ...product, id: `${pageType}:${product.symbol}` }));
 }
@@ -266,7 +284,7 @@ if (!titles[pageType]) {
   }
 }
 
-let products = getProducts();
+let products = pageType === 'Stocks' ? [] : getProducts();
 let selectedProduct = null;
 let chartProduct = null;
 let state = { cash: 10000, entries: [] };
@@ -300,9 +318,78 @@ function formatMoney(value) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 }
 
+async function loadStockCountry(countryCode) {
+  const country = getStockCountryName(selectedStockCountry) || countryCode;
+  stockCountryChoices.querySelectorAll('.investment-stock-country').forEach((button) => {
+    const selected = button.dataset.countryCode === countryCode;
+    button.classList.toggle('is-selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  catalogStatus.textContent = `Loading stock listings for ${country}...`;
+  stockCatalogWarnings = [];
+  stockLoadError = '';
+  try {
+    const result = await fetchCountryStockListings(countryCode);
+    products = result.listings.map((listing) => ({
+      id: `stock:${countryCode}:${listing.exchange}:${listing.symbol}`,
+      name: listing.name,
+      symbol: listing.symbol,
+      detail: `${country} · ${listing.symbol}.${listing.exchange} · ${listing.sector || 'Stock'}${listing.currency ? ` · ${listing.currency}` : ''}`
+    }));
+    stockCatalogWarnings = result.warnings;
+    stockVisibleCount = countryCode === 'JAM' ? products.length : 100;
+    renderProducts(searchInput.value);
+  } catch (error) {
+    products = [];
+    stockCatalogWarnings = [];
+    stockLoadError = error.message;
+    renderProducts(searchInput.value);
+  }
+}
+
+async function loadStockCatalog() {
+  catalogStatus.textContent = 'Loading countries with supported stock listings...';
+  try {
+    stockCountries = sortStockCountries(await fetchStockCountries());
+    stockCountryChoices.replaceChildren();
+    stockCountries.forEach((country) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'investment-stock-country';
+      button.dataset.countryCode = country.code;
+      button.setAttribute('aria-pressed', 'false');
+      const flag = document.createElement('span');
+      flag.className = 'investment-stock-country-flag';
+      flag.setAttribute('aria-hidden', 'true');
+      flag.textContent = getStockCountryFlag(country) || getStockCountryName(country).slice(0, 2).toUpperCase();
+      const details = document.createElement('span');
+      details.className = 'investment-stock-country-details';
+      const name = document.createElement('strong');
+      name.textContent = getStockCountryName(country);
+      const exchanges = document.createElement('small');
+      exchanges.textContent = country.market || `${country.exchanges.length} supported exchange${country.exchanges.length === 1 ? '' : 's'}`;
+      details.append(name, exchanges);
+      button.append(flag, details);
+      button.addEventListener('click', () => {
+        selectedStockCountry = country;
+        loadStockCountry(country.code);
+      });
+      stockCountryChoices.appendChild(button);
+    });
+    if (!stockCountries.length) {
+      catalogStatus.textContent = 'No countries with supported stock listings were returned by the provider.';
+      return;
+    }
+    catalogStatus.textContent = `${stockCountries.length} country markets available. Choose a country to check its stock listings.`;
+  } catch (error) {
+    catalogStatus.textContent = `Countries could not be loaded. ${error.message}${storageWarning}`;
+  }
+}
+
 function renderProducts(filter = '') {
   const query = filter.trim().toLocaleLowerCase();
-  const visible = products.filter((product) => `${product.name} ${product.symbol} ${product.detail || ''}`.toLocaleLowerCase().includes(query));
+  const matching = products.filter((product) => `${product.name} ${product.symbol} ${product.detail || ''}`.toLocaleLowerCase().includes(query));
+  const visible = pageType === 'Stocks' ? matching.slice(0, stockVisibleCount) : matching;
   productsContainer.replaceChildren();
   visible.forEach((product) => {
     const button = document.createElement('button');
@@ -325,7 +412,20 @@ function renderProducts(filter = '') {
     button.addEventListener('click', () => selectProduct(product));
     productsContainer.appendChild(button);
   });
-  catalogStatus.textContent = `${visible.length} example listing${visible.length === 1 ? '' : 's'} shown. No live quotes are provided.${catalogWarning}${storageWarning}`;
+  if (pageType === 'Stocks' && !matching.length) {
+    const empty = document.createElement('p');
+    empty.className = 'investment-demo-stock-empty';
+    empty.textContent = query
+      ? 'No stock listings match this search.'
+      : stockLoadError || stockCatalogWarnings.join(' ') || 'No stock listings were returned for this country.';
+    productsContainer.appendChild(empty);
+  }
+  if (stockLoadMoreButton) stockLoadMoreButton.hidden = visible.length >= matching.length;
+  catalogStatus.textContent = pageType === 'Stocks'
+    ? matching.length
+      ? `${visible.length} of ${matching.length} matching stock listings shown. No live quotes are provided.${stockCatalogWarnings.length ? ` Some exchanges could not be loaded: ${stockCatalogWarnings.join('; ')}` : ''}${storageWarning}`
+      : `${getStockCountryName(selectedStockCountry)} stock listings unavailable. ${stockLoadError || stockCatalogWarnings.join(' ') || 'The provider returned no listings.'}${storageWarning}`
+    : `${visible.length} example listing${visible.length === 1 ? '' : 's'} shown. No live quotes are provided.${catalogWarning}${storageWarning}`;
 }
 
 function renderFacts(product) {
@@ -499,7 +599,17 @@ function renderPortfolio() {
   });
 }
 
-searchInput.addEventListener('input', () => renderProducts(searchInput.value));
+searchInput.addEventListener('input', () => {
+  stockVisibleCount = 100;
+  renderProducts(searchInput.value);
+});
+
+if (stockLoadMoreButton) {
+  stockLoadMoreButton.addEventListener('click', () => {
+    stockVisibleCount += 100;
+    renderProducts(searchInput.value);
+  });
+}
 
 allocationForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -591,7 +701,9 @@ watchButton.addEventListener('click', () => {
 renderProducts();
 renderPortfolio();
 const requestedSymbol = new URLSearchParams(window.location.search).get('market');
-if (requestedSymbol) {
+if (pageType === 'Stocks') {
+  loadStockCatalog();
+} else if (requestedSymbol) {
   const linkedProduct = products.find((product) => product.symbol === requestedSymbol);
   if (linkedProduct) selectProduct(linkedProduct);
   else actionStatus.textContent = `The linked market (${requestedSymbol}) is not in this page's demo catalog.`;

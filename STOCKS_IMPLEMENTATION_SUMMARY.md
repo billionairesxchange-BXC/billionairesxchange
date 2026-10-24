@@ -1,137 +1,24 @@
-# Stock Exchange System - Implementation Summary
+# Investment Center stock listings
 
-## Overview
-Successfully implemented a complete stock exchange browsing system in the Investment Center, allowing users to explore stocks from 7 countries organized by their respective stock exchanges.
+The Investment Center retrieves supported stock exchanges, countries, and active stock listings from EOD Historical Data through the server API. Exchange listings are grouped by provider-reported country; the country list reflects the provider's coverage and does not imply that every country has a supported exchange.
 
-## Features Implemented
+## Configuration
 
-### 1. Stock Data Structure (`stocks-data.js`)
-- **7 Stock Exchanges** with complete company listings:
-  - 🇬🇧 **United Kingdom** - London Stock Exchange (LSE)
-  - 🇯🇲 **Jamaica** - Jamaica Stock Exchange (JSE)
-  - 🇺🇸 **United States** - NASDAQ / NYSE
-  - 🇰🇾 **Cayman Islands** - Cayman Islands Stock Exchange (CSX)
-  - 🇧🇧 **Barbados** - Barbados Stock Exchange (BSE)
-  - 🇵🇷 **Puerto Rico** - PR Stock Exchange (PRSX)
-  - 🇨🇺 **Cuba** - Bolsa de Valores de La Habana (BVH)
+Set `EODHD_API_TOKEN` as a server-side environment variable. Do not expose the token in browser code or commit a real token. The variable is documented in `.env.example`.
 
-- **10 Companies per Exchange** with:
-  - Stock symbol
-  - Company name
-  - Sector classification
+Without the token, the country cards remain visible and listing requests show an explicit configuration error with instructions to set `EODHD_API_TOKEN` in the server environment and restart or redeploy the API. Provider rate limits and exchange-level errors are surfaced in the Investment Center.
 
-### 2. User Interface (`investment.html`)
-- Stock investment section with two-level navigation:
-  - **Level 1**: Country/Exchange Selection Grid
-  - **Level 2**: Company Listing Grid (when country selected)
-- Back button to return to country selection
-- Status indicators showing number of exchanges and companies
+## API routes
 
-### 3. Interactive Functionality (`investment.js`)
-- **loadStockExchanges()**: Populates country/exchange buttons in alphabetical order
-- **showStocksByCountry()**: Dynamically loads and displays companies for selected country
-- **Stock Selection Handler**: Updates investment status when company is selected
-- **Back Button Handler**: Returns to country selection view
+- `GET /api/stocks/countries` returns supported countries and their exchanges.
+- `GET /api/stocks/listings?country=USA` returns stock listings for the selected ISO 3166-1 alpha-3 country code.
 
-## User Flow
+Exchange and country responses are cached in server memory. Complete country listings are cached for six hours; partial results with unavailable exchanges are retried after one minute. The browser displays up to 100 listings at a time and supports filtering and loading additional listings.
 
-1. **Click "Stocks" button** → Investment center shows Stocks option selected
-2. **View Countries** → All 7 countries displayed in alphabetical order with exchange names
-3. **Click Country** → View all 10 companies listed on that exchange (by sector)
-4. **Click Company** → Company selected with confirmation message showing:
-   - Company name
-   - Stock symbol
-   - Exchange name
-5. **Click "Back to exchanges"** → Return to country selection to choose different exchange
+The main Investment Center and the Stock Investments catalog use the same API. Listing data is not a quote feed, and the portfolio, allocations, and charts remain illustrative demo features; no brokerage orders are sent.
 
-## Technical Implementation
+Country choices on both stock browsing pages show a regional flag icon and sort alphabetically by their displayed names. The dedicated Stocks page uses selectable country cards. For familiarity, the United States, Cayman Islands, and United Kingdom are displayed as America, Cayman, and UK.
 
-### Data Organization
-```javascript
-STOCK_EXCHANGES = {
-  country_name: {
-    exchange: "Full Exchange Name",
-    companies: [
-      { symbol: "SYM", name: "Company Name", sector: "Sector" },
-      ...
-    ]
-  }
-}
-```
+For Jamaica (`JAM`), the listing endpoint aggregates common and preferred stocks from every Jamaica exchange returned by the provider, including the Jamaica Stock Exchange when covered. The dedicated Stocks page displays the full Jamaica result set without the 100-listing page limit. Provider coverage and the server-side EODHD token are required for these listings to load.
 
-### DOM Structure
-```html
-<div class="stock-investment-setup" id="stockInvestmentSetup">
-  <div class="stock-country-grid" id="stockCountryChoices">
-    <!-- Country buttons generated dynamically -->
-  </div>
-  <div class="stock-company-section" id="stockCompanySection">
-    <div class="company-option-grid" id="stockCompanyChoices">
-      <!-- Company buttons generated dynamically -->
-    </div>
-    <button id="stockBackButton">← Back to exchanges</button>
-  </div>
-</div>
-```
-
-## Files Modified
-
-### 1. **stocks-data.js** (New File)
-- Exports `STOCK_EXCHANGES` object containing all exchange and company data
-- Exports `COUNTRY_ORDER` array for alphabetical sorting
-
-### 2. **investment.html**
-- Added stock-investment-setup section (lines 236-248)
-- Integrated with existing investment-choice pattern
-- Maintains consistent styling with Company and Coins sections
-
-### 3. **investment.js**
-- Added import: `import { STOCK_EXCHANGES, COUNTRY_ORDER } from './stocks-data.js'` (line 4)
-- Added DOM references for stock UI elements (lines 27-33)
-- Updated investment choice handler to call `loadStockExchanges()` (line 569)
-- Implemented `loadStockExchanges()` function (lines ~897-920)
-- Implemented `showStocksByCountry()` function (lines ~922-960)
-- Implemented `stockBackButton` click handler (lines ~962-966)
-
-## Testing Completed ✅
-
-- ✅ Stocks button displays all 7 countries in alphabetical order
-- ✅ Each country shows correct exchange name
-- ✅ Clicking a country displays all 10 companies
-- ✅ Companies display with symbol, name, and sector
-- ✅ Clicking a company selects it and shows confirmation message
-- ✅ Back button returns to country selection
-- ✅ Selection state persists and updates status text
-- ✅ Multiple different countries can be browsed in same session
-- ✅ UI styling matches existing investment section theme
-
-## Companies by Exchange
-
-### United Kingdom (LSE)
-HSBC Holdings, Shell, Unilever, AstraZeneca, Prudential, Diageo, GSK, Barclays, Lloyds Banking, Rio Tinto
-
-### Jamaica (JSE)
-NCB Financial Group, JMMB Group, Scotia Group Jamaica, FirstCaribbean International Bank, Wisynco Group, Barita Investments, Purity Bakery, Caribbean Assurance Holdings, National Commercial Bank Jamaica, Jamaica Broilers Group
-
-### United States (NASDAQ / NYSE)
-Apple, Microsoft, Alphabet (Google), Amazon, NVIDIA, Tesla, JPMorgan Chase, Visa, Walmart, Johnson & Johnson
-
-### Cayman Islands (CSX)
-Cayman Investment Bank, Cayman Islands Bank, Bank of the Cayman Islands, Cayman Capital Investment Fund, Caribbean Insurance & Surety Ltd, Cayman Commercial & Investment Bank, Secure Holdings Ltd, Cayman Financial Services Inc, Cayman Airways, Caribbean Offshore Insurance Ltd
-
-### Barbados (BSE)
-Caribbean Maritime & Merchant Bank, Scotia Group Barbados, FirstCaribbean International Bank, Barbados Investment & Development Bank, Republic Bank Barbados, Dunn & Company, Gone Fishing, Barbados Agricultural Industrial Bank, Assure Insurance Agents, Caribbean Development Bank
-
-### Puerto Rico (PRSX)
-Bank of Puerto Rico, Oriental Financial Group, PR Communications, Altus Energy, Equity Commonwealth PR, PR Gas & Power, PR Sugar Company, PR Health Industries, PR Retail Trade, PR Financial Inc
-
-### Cuba (BVH)
-Banco de Crédito y Comercio, Banco Metropolitano, Cuban Tourism Board, Cuban Energy Company, Cuban International Trading, Cuban Sugar Industry, Cuban Manufactured Goods, Cuban Telecommunications, Cuban Pharmaceuticals, Cuban Mining
-
-## Future Enhancements (Optional)
-- Real-time stock price data integration
-- More companies per exchange
-- Search/filter functionality
-- Stock comparison tools
-- Performance charts
-- Watchlist feature
+America (NYSE/Nasdaq), Barbados, Cayman, Cuba, Puerto Rico, Jamaica, and UK are always shown as country choices, even before the provider token is configured. Their cards identify the relevant exchange or market context. Stock listings are shown only when returned by the configured provider; countries with no provider exchange coverage display an explicit no-listings message rather than fabricated stocks. Cuba has no public stock exchange listings, and Puerto Rico does not have a separate stock exchange.

@@ -4,16 +4,19 @@ const themes = ['black-yellow', 'white-yellow', 'live-pixel'];
 
 if (!document.querySelector('.site-background-video')) {
   document.body.classList.add('has-site-background');
+  const backgroundVideos = Array.from({ length: 7 }, (_, index) => `Background${index + 1}.mp4`);
+  let backgroundVideoIndex = 0;
+  let failedBackgroundVideos = 0;
   const backgroundVideo = document.createElement('video');
   backgroundVideo.className = 'site-background-video';
   const compatibleVideoSource = document.createElement('source');
-  compatibleVideoSource.src = 'starry-night-background.mp4';
+  compatibleVideoSource.src = backgroundVideos[backgroundVideoIndex];
   compatibleVideoSource.type = 'video/mp4';
   backgroundVideo.append(compatibleVideoSource);
   backgroundVideo.poster = 'Starry%20Night-poster.jpg';
   backgroundVideo.autoplay = true;
   backgroundVideo.muted = true;
-  backgroundVideo.loop = true;
+  backgroundVideo.loop = false;
   backgroundVideo.playsInline = true;
   backgroundVideo.preload = 'metadata';
   backgroundVideo.setAttribute('aria-hidden', 'true');
@@ -21,16 +24,31 @@ if (!document.querySelector('.site-background-video')) {
   backgroundVideo.tabIndex = -1;
   document.body.prepend(backgroundVideo);
   const playBackgroundVideo = () => {
-    if (document.visibilityState === 'hidden' || !backgroundVideo.paused) return;
+    if (document.visibilityState === 'hidden' || failedBackgroundVideos >= backgroundVideos.length || !backgroundVideo.paused) return;
     backgroundVideo.play().catch((error) => {
       if (error.name !== 'AbortError') {
-        console.warn('The Starry Night background video could not autoplay:', error);
+        console.warn('The site background video could not autoplay:', error);
       }
     });
   };
+  const advanceBackgroundVideo = () => {
+    backgroundVideoIndex = (backgroundVideoIndex + 1) % backgroundVideos.length;
+    compatibleVideoSource.src = backgroundVideos[backgroundVideoIndex];
+    backgroundVideo.load();
+    playBackgroundVideo();
+  };
+  backgroundVideo.addEventListener('ended', advanceBackgroundVideo);
+  backgroundVideo.addEventListener('error', () => {
+    failedBackgroundVideos += 1;
+    if (failedBackgroundVideos >= backgroundVideos.length) {
+      console.error('None of the site background videos could be loaded.');
+      return;
+    }
+    advanceBackgroundVideo();
+  });
   document.addEventListener('visibilitychange', playBackgroundVideo);
   window.addEventListener('pageshow', playBackgroundVideo);
-  backgroundVideo.addEventListener('loadeddata', playBackgroundVideo, { once: true });
+  backgroundVideo.addEventListener('loadeddata', playBackgroundVideo);
   playBackgroundVideo();
 } else {
   document.body.classList.add('has-site-background');

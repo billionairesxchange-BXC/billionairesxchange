@@ -37,6 +37,7 @@ if (process.env.NODE_ENV !== 'production') app.use(express.static(__dirname));
 const FIREBASE_WEB_API_KEY = process.env.FIREBASE_WEB_API_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
+const EODHD_API_TOKEN = process.env.EODHD_API_TOKEN;
 const BINANCE_API_KEY = process.env.BINANCE_API_KEY;
 const BINANCE_API_SECRET = process.env.BINANCE_API_SECRET;
 const BINANCE_ALLOWED_UIDS = new Set(
@@ -303,6 +304,207 @@ app.get('/api/price/:symbol', async (req, res) => {
     res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch price' });
+  }
+});
+
+const eodhdCache = new Map();
+const EODHD_EXCHANGES_CACHE_TTL = 24 * 60 * 60 * 1000;
+const EODHD_STOCKS_CACHE_TTL = 6 * 60 * 60 * 1000;
+const FEATURED_STOCK_MARKETS = {
+  USA: { iso2: 'US', name: 'United States', displayName: 'America', market: 'NYSE / Nasdaq' },
+  BRB: { iso2: 'BB', name: 'Barbados', market: 'Barbados Stock Exchange' },
+  CYM: { iso2: 'KY', name: 'Cayman Islands', displayName: 'Cayman', market: 'Cayman Islands Stock Exchange' },
+  CUB: { iso2: 'CU', name: 'Cuba', market: 'No public stock exchange listings' },
+  PRI: { iso2: 'PR', name: 'Puerto Rico', market: 'U.S. exchanges; no separate Puerto Rico exchange' },
+  JAM: { iso2: 'JM', name: 'Jamaica', market: 'Jamaica Stock Exchange' },
+  GBR: { iso2: 'GB', name: 'United Kingdom', displayName: 'UK', market: 'London Stock Exchange' }
+};
+
+async function getCachedEodhdValue(key, ttl, load) {
+  const cached = eodhdCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.promise;
+  const entry = { expiresAt: Date.now() + ttl };
+  entry.promise = Promise.resolve().then(load).then((value) => {
+    if (Array.isArray(value?.warnings) && value.warnings.length) {
+      entry.expiresAt = Date.now() + 60 * 1000;
+    }
+    return value;
+  }).catch((error) => {
+    if (eodhdCache.get(key) === entry) eodhdCache.delete(key);
+    throw error;
+  });
+  eodhdCache.set(key, entry);
+  return entry.promise;
+}
+
+async function fetchEodhd(path, params = {}) {
+  if (!EODHD_API_TOKEN) {
+    const error = new Error('Global stock listings are not configured. Set EODHD_API_TOKEN on the server.');
+    error.statusCode = 503;
+    throw error;
+  }
+  try {
+    const response = await axios.get(`https://eodhd.com/api/${path}`, {
+      params: { ...params, api_token: EODHD_API_TOKEN, fmt: 'json' },
+      timeout: 30000,
+      maxContentLength: 20 * 1024 * 1024
+    });
+    return response.data;
+  } catch (error) {
+    const status = error.response?.status;
+    console.error('EODHD stock data request failed:', status || error.message);
+    const requestError = new Error(status === 429
+      ? 'The stock-data provider rate limit was reached. Try again later.'
+      : `The stock-data provider request failed${status ? ` (${status})` : ''}.`);
+    requestError.statusCode = status === 429 ? 429 : 502;
+    throw requestError;
+  }
+}
+
+async function getEodhdCountries() {
+  return getCachedEodhdValue('eodhd-countries', EODHD_EXCHANGES_CACHE_TTL, async () => {
+    if (!EODHD_API_TOKEN) {
+      return Object.entries(FEATURED_STOCK_MARKETS)
+        .map(([code, featured]) => ({
+          code,
+          iso2: featured.iso2,
+          name: featured.name,
+          displayName: featured.displayName || featured.name,
+          market: featured.market,
+          exchanges: []
+        }))
+        .sort((left, right) => left.displayName.localeCompare(right.displayName));
+    }
+    const data = await fetchEodhd('exchanges-list/');
+    if (!Array.isArray(data)) throw new Error('The stock-data provider returned an invalid exchange list.');
+    const countries = new Map();
+    const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+    data.forEach((exchange) => {
+      const code = String(exchange.Code || '').trim();
+      const countryCode = String(exchange.CountryISO3 || '').trim().toUpperCase();
+      const countryIso2 = String(exchange.CountryISO2 || '').trim().toUpperCase();
+      const providerCountryName = String(exchange.Country || '').trim();
+      const localizedCountryName = /^[A-Z]{2}$/.test(countryIso2) ? regionNames.of(countryIso2) : '';
+      const name = localizedCountryName && localizedCountryName !== countryIso2
+        ? localizedCountryName
+        : providerCountryName;
+      if (!code || !/^[A-Z0-9._-]{1,16}$/i.test(code) || !/^[A-Z]{3}$/.test(countryCode) || !name || name === 'Unknown') return;
+      if (!countries.has(countryCode)) {
+        countries.set(countryCode, { code: countryCode, iso2: countryIso2, name, exchanges: [] });
+      }
+      countries.get(countryCode).exchanges.push({
+        code,
+        name: String(exchange.Name || code),
+        operatingMic: String(exchange.OperatingMIC || '')
+      });
+    });
+    Object.entries(FEATURED_STOCK_MARKETS).forEach(([code, featured]) => {
+      const country = countries.get(code) || {
+        code,
+        iso2: featured.iso2,
+        name: featured.name,
+        exchanges: []
+      };
+      country.iso2 = country.iso2 || featured.iso2;
+      country.name = featured.name;
+      country.displayName = featured.displayName || featured.name;
+      country.market = featured.market;
+      countries.set(code, country);
+    });
+    return Array.from(countries.values())
+      .map((country) => ({
+        ...country,
+        exchanges: country.exchanges.sort((left, right) => left.name.localeCompare(right.name))
+      }))
+      .sort((left, right) => (left.displayName || left.name).localeCompare(right.displayName || right.name));
+  });
+}
+
+app.get('/api/stocks/countries', async (_req, res) => {
+  try {
+    const countries = await getEodhdCountries();
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.json({ countries });
+  } catch (error) {
+    res.status(error.statusCode || 502).json({ error: error.message || 'Stock exchange data is unavailable.' });
+  }
+});
+
+app.get('/api/stocks/listings', async (req, res) => {
+  const countryCode = String(req.query.country || '').toUpperCase();
+  if (!/^[A-Z]{3}$/.test(countryCode)) {
+    return res.status(400).json({ error: 'Choose a valid country code.' });
+  }
+  if (!EODHD_API_TOKEN) {
+    return res.status(503).json({
+      error: 'Stock listings are not configured. Set EODHD_API_TOKEN in the server environment, then restart or redeploy the API.'
+    });
+  }
+  try {
+    const countries = await getEodhdCountries();
+    const country = countries.find((item) => item.code === countryCode);
+    if (!country) return res.status(404).json({ error: 'No supported stock exchanges were found for this country.' });
+    if (!country.exchanges.length) {
+      return res.status(200).json({
+        country: { code: country.code, name: country.name, market: country.market },
+        listings: [],
+        warnings: [`No stock listings are available from the configured provider for this country. ${country.market}.`]
+      });
+    }
+
+    const listings = await getCachedEodhdValue(`eodhd-stocks:${countryCode}`, EODHD_STOCKS_CACHE_TTL, async () => {
+      const queue = [...country.exchanges];
+      const results = [];
+      const failures = [];
+      const worker = async () => {
+        while (queue.length) {
+          const exchange = queue.shift();
+          for (const instrumentType of ['stock', 'preferred_stock']) {
+            try {
+              const data = await fetchEodhd(`exchange-symbol-list/${encodeURIComponent(exchange.code)}`, { type: instrumentType });
+              if (!Array.isArray(data)) throw new Error('Invalid stock listing response.');
+              data.forEach((listing) => {
+                const symbol = String(listing.Code || '').trim();
+                const name = String(listing.Name || '').trim();
+                if (!symbol || !name) return;
+                results.push({
+                  symbol,
+                  name,
+                  sector: String(listing.Type || 'Stock'),
+                  exchange: String(listing.Exchange || exchange.code),
+                  currency: String(listing.Currency || '')
+                });
+              });
+            } catch (error) {
+              failures.push(`${exchange.name} (${instrumentType}): ${error.message}`);
+            }
+          }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(4, queue.length) }, worker));
+      if (!results.length && failures.length) {
+        const error = new Error(`No stock listings could be loaded. ${failures.join(' ')}`);
+        error.statusCode = 502;
+        throw error;
+      }
+      const uniqueListings = new Map();
+      results.forEach((listing) => {
+        const key = `${listing.exchange}:${listing.symbol}`;
+        if (!uniqueListings.has(key)) uniqueListings.set(key, listing);
+      });
+      const response = {
+        country: { code: country.code, name: country.name },
+        listings: Array.from(uniqueListings.values()).sort((left, right) =>
+          left.name.localeCompare(right.name) || left.symbol.localeCompare(right.symbol)
+        ),
+        warnings: failures
+      };
+      return response;
+    });
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.json(listings);
+  } catch (error) {
+    res.status(error.statusCode || 502).json({ error: error.message || 'Country stock listings are unavailable.' });
   }
 });
 

@@ -1213,6 +1213,7 @@ header.topbar .nav-actions .btn:hover {
   .company-option:hover, .company-option.is-selected { border-color: var(--primary-gold); background: rgba(38, 38, 38, .12); }
   .company-option:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
   .company-option-logo { display: grid; place-items: center; width: 48px; aspect-ratio: 1; border-radius: 50%; background: #262626; color: var(--white); font-weight: 800; }
+  .company-option-logo.stock-country-flag { border-radius: 6px; background: transparent; font-size: 1.8rem; line-height: 1; }
   .company-option-details { display: grid; min-width: 0; gap: .1rem; }
   .company-option-details strong { overflow-wrap: anywhere; color: var(--white); font-size: .85rem; }
   .company-option-details small { color: #9b927a; font-size: .7rem; }
@@ -2793,6 +2794,17 @@ canvas {
   margin-top: .8rem;
 }
 
+.positions-chart-price-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: .8rem;
+}
+
+.positions-chart-price-actions .btn {
+  min-width: 150px;
+}
+
 .positions-risk-control {
   display: grid;
   gap: .35rem;
@@ -3098,6 +3110,17 @@ canvas {
 
   .trade-page .positions-risk-controls {
     grid-template-columns: 1fr;
+  }
+
+  .trade-page .positions-chart-price-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .6rem;
+  }
+
+  .trade-page .positions-chart-price-actions .btn {
+    min-width: 0;
+    width: 100%;
   }
 
   .trade-page .positions-chart-actions {
@@ -6543,6 +6566,79 @@ body.treasury-welcome-active {
   font: inherit;
 }
 
+.stock-country-grid,
+.stock-company-section .company-option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+  gap: .65rem;
+}
+
+.investment-stock-countries {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: .65rem;
+  max-height: 340px;
+  margin-bottom: .85rem;
+  overflow-y: auto;
+}
+
+.investment-stock-country {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: .7rem;
+  min-height: 66px;
+  padding: .6rem .7rem;
+  border: 1px solid rgba(212, 175, 55, .25);
+  border-radius: 5px;
+  background: rgba(38, 38, 38, .04);
+  color: var(--white);
+  text-align: left;
+  cursor: pointer;
+}
+
+.investment-stock-country:hover,
+.investment-stock-country.is-selected {
+  border-color: var(--primary-gold);
+  background: rgba(38, 38, 38, .12);
+}
+
+.investment-stock-country:focus-visible {
+  outline: 2px solid var(--gold-soft);
+  outline-offset: 2px;
+}
+
+.investment-stock-country-flag {
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.investment-stock-country-details {
+  display: grid;
+  min-width: 0;
+  gap: .15rem;
+}
+
+.investment-stock-country-details strong {
+  color: var(--primary-gold);
+  font-size: .85rem;
+}
+
+.investment-stock-country-details small {
+  color: #9b927a;
+  font-size: .7rem;
+}
+
+.stock-company-search {
+  margin: .75rem 0;
+}
+
+#stockLoadMoreButton {
+  margin-top: .75rem;
+}
+
 .investment-demo-status,
 .investment-demo-action-status {
   min-height: 1.4em;
@@ -6557,6 +6653,16 @@ body.treasury-welcome-active {
   gap: .6rem;
   max-height: 580px;
   overflow: auto;
+}
+
+.investment-demo-stock-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: .85rem;
+  border: 1px solid rgba(212, 175, 55, .25);
+  border-radius: 5px;
+  color: var(--light-gold);
+  font-size: .8rem;
 }
 
 .investment-demo-product {

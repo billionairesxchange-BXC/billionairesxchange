@@ -175,6 +175,10 @@
             <p id="positionsChartStatus">Loading market candles...</p>
             <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
           </div>
+          <div class="positions-chart-price-actions" role="group" aria-label="Place paper trade at the selected chart price">
+            <button class="btn positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy at chart price</button>
+            <button class="btn positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell at chart price</button>
+          </div>
           <div class="positions-risk-controls" role="group" aria-label="Set take profit and stop loss chart levels">
             <label class="positions-risk-control positions-risk-control-take-profit" for="positionsTakeProfitInput">
               <span>Take Profit</span>
@@ -238,12 +242,10 @@
               </div>
             </form>
           </dialog>
-          <div class="positions-chart-actions" role="group" aria-label="Place paper trade at the selected chart price">
+          <div class="positions-chart-actions" role="group" aria-label="Set trade quantity">
             <label for="positionsOrderQuantity">Quantity</label>
             <input id="positionsOrderQuantity" type="number" min="0.00000001" step="any" value="0.01" inputmode="decimal" />
             <span id="positionsOrderEstimate">Estimated total: --</span>
-            <button class="btn positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy at chart price</button>
-            <button class="btn positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell at chart price</button>
           </div>
         </div>
         <div class="trade-balances card-glass" aria-label="Trade account balances">

@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const positionsChartPrice = document.getElementById('positionsChartPrice');
   const positionsChartStatus = document.getElementById('positionsChartStatus');
   const positionsChartWrap = document.querySelector('.positions-chart-wrap');
+  const positionsRiskControls = document.querySelector('.positions-risk-controls');
   const positionsChartResizer = document.getElementById('positionsChartResizer');
   const positionsMarketSelect = document.getElementById('positionsMarketSelect');
   const positionsMarketPickerButton = document.getElementById('positionsMarketPickerButton');
@@ -2203,11 +2204,25 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         positionsSelectedCandleTime = point.candle.time;
         positionsSelectedPrice = Number(point.candle.close);
+        if (positionsRiskControls) positionsRiskControls.hidden = false;
         positionsChartStatus.textContent = `${point.candle.time ? new Date(point.candle.time).toLocaleString() : 'Selected'} candle selected at its close of ${formatCurrency(positionsSelectedPrice)}. Set quantity, then choose Buy at chart price or Sell at chart price. Paper trading only.`;
         savePositionsChartTools();
       }
       drawPositionsChart();
       renderMarketOrderControls();
+    });
+    positionsCandleChart.addEventListener('dblclick', () => {
+      if (!positionsSelectedCandleTime && !positionsSelectedPrice) return;
+      positionsSelectedCandleTime = null;
+      positionsSelectedPrice = null;
+      chartPointer = null;
+      if (positionsRiskControls) positionsRiskControls.hidden = true;
+      savePositionsChartTools();
+      drawPositionsChart();
+      renderMarketOrderControls();
+      if (positionsChartStatus) {
+        positionsChartStatus.textContent = 'Chart candle selection cleared. Saved Stop Loss and Take Profit levels remain active.';
+      }
     });
   }
 
