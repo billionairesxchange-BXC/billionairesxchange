@@ -31,8 +31,13 @@ if (tickerTrack && tickerStatus) {
   }
 
   function createCoinCard(coin) {
-    const card = document.createElement('article');
+    const card = document.createElement('a');
     card.className = 'home-coin-ticker-card';
+    card.href = `trade.html?${new URLSearchParams({
+      market: String(coin.symbol || '').toUpperCase(),
+      ...(coin.id ? { coinId: coin.id } : {})
+    })}#trade`;
+    card.setAttribute('aria-label', `Trade ${coin.name || 'coin'} (${String(coin.symbol || '').toUpperCase()})`);
 
     const identity = document.createElement('div');
     identity.className = 'home-coin-ticker-identity';

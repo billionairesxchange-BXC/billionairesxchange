@@ -50,9 +50,6 @@
             <span class="eyebrow">Live assets</span>
             <h2>Crypto, stocks, commodities, and brand markets</h2>
           </div>
-          <div class="market-header-actions">
-            <button class="btn btn-primary" id="openAutoPilotSettings" type="button" aria-controls="autopilotSettings" aria-expanded="false">Auto Pilot</button>
-          </div>
         </div>
 
         <div class="market-overview">
@@ -94,7 +91,7 @@
             </div>
 
             <div class="asset-grid" id="assetGrid"></div>
-            <button class="btn btn-ghost" id="loadMoreMarketCoins" type="button">Load more market coins</button>
+            <p class="market-coin-loading-status" id="marketCoinLoadingStatus" role="status" aria-live="polite">Scroll to load more CoinGecko markets.</p>
           </div>
 
           <aside class="watch-panel card-glass">
@@ -107,78 +104,6 @@
         </div>
 
       </section>
-
-      <details class="autopilot-settings-disclosure" id="autopilotSettings">
-        <summary class="btn btn-primary">Auto Pilot Bot Settings</summary>
-        <section class="autopilot-section card-glass" id="autopilot" aria-labelledby="autopilotTitle">
-          <div class="autopilot-heading">
-            <div>
-              <span class="eyebrow">Multi-market paper trading</span>
-              <h3 id="autopilotTitle">Auto Pilot Bots</h3>
-              <p>Each bot scans supported crypto markets, ranks positive momentum and liquidity, then selects a market and paper-trade settings. Signals are heuristic, not predictions or guarantees.</p>
-            </div>
-            <div class="autopilot-account-summary" aria-live="polite">
-              <span>Net paper P/L<strong id="autoPilotNetPnl">$0.00</strong></span>
-              <span>Total losses<strong id="autoPilotTotalLosses">$0.00</strong></span>
-              <span>Active bots<strong id="autoPilotActiveCount">0 / 4</strong></span>
-            </div>
-          </div>
-          <p class="autopilot-disclaimer">Simulation only. These bots never access your wallet or place real exchange orders. They run only while this page is open. Market quotes are provided by Binance public data. Paper results do not predict future performance.</p>
-          <form class="autopilot-create-form" id="autoPilotCreateForm">
-            <label>Bot name
-              <input id="autoPilotBotName" type="text" maxlength="32" autocomplete="off" placeholder="e.g. Momentum Scout" required />
-            </label>
-            <label>Virtual paper balance (USD)
-              <input id="autoPilotBudget" type="number" min="20" max="1000000" step="1" value="1000" required />
-            </label>
-            <label>Maximum per trade (USD)
-              <input id="autoPilotTradeCap" type="number" min="20" max="1000000" step="1" value="100" required />
-            </label>
-            <label>How long to run
-              <select id="autoPilotDuration" required>
-                <option value="1h">1 hour</option>
-                <option value="4h">4 hours</option>
-                <option value="12h">12 hours</option>
-                <option value="24h" selected>24 hours</option>
-                <option value="7d">7 days</option>
-              </select>
-            </label>
-            <label>Realized profit goal (USD)
-              <input id="autoPilotGoal" type="number" min="1" max="1000000" step="1" value="100" required />
-            </label>
-            <label class="autopilot-consent">
-              <input id="autoPilotConsent" type="checkbox" required />
-              <span>I authorize this bot to place automatic simulated paper buys and sells. Every buy must be at least USD $20 and is capped by my maximum-per-trade setting and available virtual balance. No real funds will be used.</span>
-            </label>
-            <label class="autopilot-notification-option">
-              <input id="autoPilotBrowserNotifications" type="checkbox" />
-              <span>Also request browser notifications for completed paper trades</span>
-            </label>
-            <button class="btn btn-primary" type="submit">Create bot</button>
-          </form>
-          <p class="autopilot-status" id="autoPilotStatus" role="status" aria-live="polite">Create a bot and approve its paper-trading consent before starting it. A maximum of four bots can run at once.</p>
-          <ul class="autopilot-alerts" id="autoPilotAlerts" aria-live="polite" aria-label="Recent autopilot trade notifications"></ul>
-          <div class="autopilot-bot-list" id="autoPilotBotList" aria-live="polite"></div>
-          <section class="autopilot-history" aria-labelledby="autoPilotHistoryTitle">
-            <div class="autopilot-history-heading">
-              <div>
-                <span class="eyebrow">Closed paper trades</span>
-                <h4 id="autoPilotHistoryTitle">Profit and loss history</h4>
-              </div>
-            </div>
-            <div class="autopilot-history-table-wrap">
-              <table class="autopilot-history-table">
-                <thead>
-                  <tr><th>Bot</th><th>Coin</th><th>Trade size</th><th>Entry</th><th>Exit</th><th>Result</th><th>Closed</th></tr>
-                </thead>
-                <tbody id="autoPilotTradeHistory">
-                  <tr><td colspan="7">No autopilot trades have closed yet.</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </section>
-      </details>
 
       <section class="trade-section section-shell" id="trade">
         <div class="card-glass positions-chart-panel">
@@ -222,19 +147,17 @@
                     </optgroup>
                   </select>
                 </label>
-                <a class="btn btn-secondary" href="wallet-connect.html">Connect BXC Wallet</a>
-                <label class="positions-market-selector">
-                  <span>Pointer</span>
-                  <select id="positionsChartMode" aria-label="Choose chart pointer tool">
-                    <option value="crosshair">Crosshair</option>
-                    <option value="ruler">Ruler</option>
-                    <option value="entry">Chart trade price</option>
-                  </select>
-                </label>
-                <button class="btn btn-ghost positions-load-all-markets" id="loadAllChartMarkets" type="button">Load all supported coins</button>
                 <div class="positions-tools-menu">
                   <button class="positions-tools-button" id="positionsToolsButton" type="button" aria-expanded="false" aria-controls="positionsToolsOptions">Tools</button>
                   <div class="positions-tools-options" id="positionsToolsOptions" hidden>
+                    <label class="positions-tools-mode">
+                      Pointer
+                      <select id="positionsChartMode" aria-label="Choose chart pointer tool">
+                        <option value="crosshair">Crosshair</option>
+                        <option value="ruler">Ruler</option>
+                        <option value="entry">Chart trade price</option>
+                      </select>
+                    </label>
                     <button type="button" data-chart-tool="import">Import Indicator</button>
                     <button type="button" data-chart-tool="create">Create Indicator</button>
                     <button type="button" data-chart-tool="custom-candles">Custom Candlesticks</button>
@@ -248,10 +171,6 @@
           <div id="price">Waiting for live data...</div>
           <div class="positions-chart-wrap">
             <canvas id="positionsCandleChart" aria-label="Candlestick chart with timestamps for the selected market"></canvas>
-            <div class="positions-chart-quick-trades" role="group" aria-label="Place paper trade at the selected chart price">
-              <button class="positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy at chart price</button>
-              <button class="positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell at chart price</button>
-            </div>
             <button class="positions-save-risk-button" id="positionsSaveRiskSetup" type="button" disabled>Show levels</button>
             <p id="positionsChartStatus">Loading market candles...</p>
             <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
@@ -319,12 +238,12 @@
               </div>
             </form>
           </dialog>
-          <div class="positions-chart-actions" role="group" aria-label="Trade actions">
+          <div class="positions-chart-actions" role="group" aria-label="Place paper trade at the selected chart price">
             <label for="positionsOrderQuantity">Quantity</label>
             <input id="positionsOrderQuantity" type="number" min="0.00000001" step="any" value="0.01" inputmode="decimal" />
             <span id="positionsOrderEstimate">Estimated total: --</span>
-            <button class="btn positions-buy-button" id="positionsBuyButton" type="button" disabled>Buy</button>
-            <button class="btn positions-sell-button" id="positionsSellButton" type="button" disabled>Sell</button>
+            <button class="btn positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy at chart price</button>
+            <button class="btn positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell at chart price</button>
           </div>
         </div>
         <div class="trade-balances card-glass" aria-label="Trade account balances">
@@ -401,7 +320,6 @@
 
     <script src="api-config.js"></script>
     <script src="script.js"></script>
-    <script src="bot-autopilot.js"></script>
     <script type="module" src="auth.js"></script>
     <script src="site-header.js"></script>
 </body>

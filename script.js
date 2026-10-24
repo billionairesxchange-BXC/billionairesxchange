@@ -24,8 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const positionsMarketOptions = document.getElementById('positionsMarketOptions');
   const positionsMarketSearch = document.getElementById('positionsMarketSearch');
   const positionsMarketOptionList = document.getElementById('positionsMarketOptionList');
-  const loadAllChartMarketsButton = document.getElementById('loadAllChartMarkets');
-  const loadMoreMarketCoinsButton = document.getElementById('loadMoreMarketCoins');
+  const marketCoinLoadingStatus = document.getElementById('marketCoinLoadingStatus');
   const positionsTimeSelect = document.getElementById('positionsTimeSelect');
   const positionsToolsButton = document.getElementById('positionsToolsButton');
   const positionsToolsOptions = document.getElementById('positionsToolsOptions');
@@ -98,9 +97,16 @@ document.addEventListener('DOMContentLoaded', () => {
     currency: 'usd',
     refreshMs: 30000,
     selectedSymbol: hasRequestedMarket ? requestedMarketSymbol : 'BTC',
+    selectedCoinId: requestedCoinId,
     selectedFilter: 'all',
     searchText: '',
-    nextPage: 2
+    nextPage: 2,
+    hasMoreCoins: true,
+    firstPageLoaded: false,
+    initialMarketSelectionResolved: false,
+    loadingCoinPage: null,
+    lastCoinPageRequestAt: 0,
+    retryCoinPageAfter: 0
   };
 
   let assets = [];
@@ -146,9 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
           : null,
         market: hasRequestedMarket
           ? requestedMarketSymbol
-          : typeof saved.market === 'string' && availableChartMarkets.has(saved.market.toUpperCase())
+          : typeof saved.market === 'string' && /^[A-Z0-9._-]{2,16}$/.test(saved.market.toUpperCase())
           ? saved.market.toUpperCase()
           : 'BTC',
+        coinId: requestedCoinId || (!hasRequestedMarket && typeof saved.coinId === 'string' ? saved.coinId : ''),
         interval: validChartIntervals.includes(saved.interval) ? saved.interval : '1m'
       };
     } catch (error) {
@@ -165,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         riskSetupVisible: true,
         ruler: null,
         market: hasRequestedMarket ? requestedMarketSymbol : 'BTC',
+        coinId: requestedCoinId,
         interval: '1m'
       };
     }
@@ -200,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const chartGeometry = { padding: chartPreferences.margins, min: 0, max: 0, plotWidth: 0, plotHeight: 0, candles: [] };
   if (positionsMarketSelect && chartPreferences.market) {
     marketConfig.selectedSymbol = chartPreferences.market;
+    marketConfig.selectedCoinId = chartPreferences.coinId || '';
     const savedOption = positionsMarketSelect.querySelector(`option[value="${chartPreferences.market}"]`);
     if (savedOption) positionsMarketSelect.value = chartPreferences.market;
   }
@@ -215,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   let positionCandles = [];
+  let positionCandlesSource = '';
   let candleSocket = null;
   let candleRetryTimer = null;
   let candleRequestVersion = 0;
@@ -222,7 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let candleLoading = false;
 
   function getSelectedAsset() {
-    return assets.find((asset) => asset.symbol.toUpperCase() === marketConfig.selectedSymbol);
+    return assets.find((asset) => asset.id === marketConfig.selectedCoinId)
+      || assets.find((asset) => asset.symbol.toUpperCase() === marketConfig.selectedSymbol);
   }
 
   function getChartRiskLevels() {
@@ -249,8 +260,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function connectLiveTicker(symbol, hostIndex = 0) {
-    const pair = tickerPairs[symbol];
-    if (tickerSocket && tickerSymbol === symbol && tickerSocket.readyState <= WebSocket.OPEN) return;
+    const selectedAsset = getSelectedAsset();
+    const matchingAssets = assets.filter((asset) => asset.symbol.toUpperCase() === symbol);
+    const pair = matchingAssets.length > 1 ? '' : tickerPairs[symbol];
+    const tickerKey = `${symbol}:${selectedAsset?.id || ''}`;
+    if (tickerSocket && tickerSymbol === tickerKey && tickerSocket.readyState <= WebSocket.OPEN) return;
     if (tickerRetryTimer) window.clearTimeout(tickerRetryTimer);
     if (tickerSocket) {
       tickerSocket.onclose = null;
@@ -261,21 +275,22 @@ document.addEventListener('DOMContentLoaded', () => {
       window.clearInterval(tickerSnapshotTimer);
       tickerSnapshotTimer = null;
     }
-    tickerSymbol = symbol;
+    tickerSymbol = tickerKey;
     if (!pair) {
-      const asset = getSelectedAsset();
+      const asset = selectedAsset;
       if (!asset || asset.isCustom) {
         if (positionsChartStatus) positionsChartStatus.textContent = `Live streaming is unavailable for ${symbol}; showing the latest market snapshot.`;
         return;
       }
       const refreshSnapshot = async () => {
-        if (marketConfig.selectedSymbol !== symbol) return;
+        if (marketConfig.selectedSymbol !== symbol || getSelectedAsset()?.id !== asset.id) return;
         try {
           const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${encodeURIComponent(asset.id)}&sparkline=false`);
           if (!response.ok) throw new Error(`Market request failed (${response.status})`);
           const data = await response.json();
           const price = Number(data[0]?.current_price);
-          if (!Number.isFinite(price) || price <= 0 || marketConfig.selectedSymbol !== symbol) return;
+          if (!Number.isFinite(price) || price <= 0
+            || marketConfig.selectedSymbol !== symbol || getSelectedAsset()?.id !== asset.id) return;
           asset.current_price = price;
           if (priceLabel) priceLabel.textContent = `${symbol}/USD ${formatCurrency(price)} · CoinGecko snapshot`;
           if (positionsChartPrice) positionsChartPrice.textContent = formatCurrency(price);
@@ -285,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
           renderPaperPositions();
           renderMarketOrderControls();
         } catch (error) {
-          if (marketConfig.selectedSymbol === symbol && positionsChartStatus) {
+          if (marketConfig.selectedSymbol === symbol && getSelectedAsset()?.id === asset.id && positionsChartStatus) {
             positionsChartStatus.textContent = `Unable to refresh ${symbol} market price: ${error.message}`;
           }
         }
@@ -343,7 +358,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tickerSocket !== socket) return;
       tickerSocket = null;
       if (positionsChartStatus) positionsChartStatus.textContent = `${symbol} live feed disconnected; reconnecting...`;
-      tickerRetryTimer = window.setTimeout(() => connectLiveTicker(symbol, (hostIndex + 1) % binanceSocketBases.length), 5000);
+      tickerRetryTimer = window.setTimeout(() => {
+        if (marketConfig.selectedSymbol === symbol) {
+          connectLiveTicker(symbol, (hostIndex + 1) % binanceSocketBases.length);
+        }
+      }, 5000);
     });
   }
 
@@ -647,6 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
     positionsChartTools.selectedPrice = positionsSelectedPrice;
     positionsChartTools.riskSetupVisible = chartRiskVisible;
     positionsChartTools.market = marketConfig.selectedSymbol;
+    positionsChartTools.coinId = marketConfig.selectedCoinId;
     positionsChartTools.interval = chartInterval;
     localStorage.setItem(chartPreferencesKey, JSON.stringify(positionsChartTools));
     localStorage.setItem('positionsChartTools', JSON.stringify({
@@ -715,9 +735,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function addCustomMarketOptions(customAssets) {
     if (!positionsMarketSelect) return;
     customAssets.forEach((asset) => {
-      if (positionsMarketSelect.querySelector(`option[value="${asset.symbol}"]`)) return;
+      if (Array.from(positionsMarketSelect.options).some((option) => option.dataset.coinId === asset.id)) return;
       const option = document.createElement('option');
       option.value = asset.symbol;
+      option.dataset.coinId = asset.id || '';
       option.textContent = `${asset.symbol} / USD`;
       positionsMarketSelect.appendChild(option);
       availableChartMarkets.add(asset.symbol.toUpperCase());
@@ -729,9 +750,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!positionsMarketSelect) return;
     marketAssets.forEach((asset) => {
       const symbol = asset.symbol.toUpperCase();
-      if (positionsMarketSelect.querySelector(`option[value="${symbol}"]`)) return;
+      const options = Array.from(positionsMarketSelect.options);
+      if (options.some((option) => asset.id && option.dataset.coinId === asset.id)) return;
+      const existingSymbolOption = options.find((option) => option.value === symbol && !option.dataset.coinId);
+      if (existingSymbolOption && asset.id) {
+        existingSymbolOption.dataset.coinId = asset.id;
+        existingSymbolOption.textContent = `${asset.name} (${symbol})`;
+        availableChartMarkets.add(symbol);
+        return;
+      }
+      if (!asset.id && options.some((option) => option.value === symbol)) return;
       const option = document.createElement('option');
       option.value = symbol;
+      option.dataset.coinId = asset.id || '';
       option.textContent = `${asset.name} (${symbol})`;
       positionsMarketSelect.appendChild(option);
       availableChartMarkets.add(symbol);
@@ -771,30 +802,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderPositionsMarketPicker() {
     if (!positionsMarketSelect || !positionsMarketPickerButton || !positionsMarketOptions) return;
-    const selectedSymbol = positionsMarketSelect.value || marketConfig.selectedSymbol;
-    const selectedAsset = assets.find((asset) => asset.symbol.toUpperCase() === selectedSymbol);
+    const selectedOption = positionsMarketSelect.selectedOptions[0];
+    const selectedSymbol = selectedOption?.value || marketConfig.selectedSymbol;
+    const selectedAsset = (selectedOption?.dataset.coinId && assets.find((asset) => asset.id === selectedOption.dataset.coinId))
+      || assets.find((asset) => asset.symbol.toUpperCase() === selectedSymbol);
     const selectedLogo = createMarketLogo(selectedSymbol, selectedAsset);
     selectedLogo.id = 'positionsMarketPickerLogo';
     positionsMarketPickerLogo.replaceWith(selectedLogo);
     positionsMarketPickerLogo = selectedLogo;
-    positionsMarketPickerText.textContent = `${selectedSymbol} / USD`;
-    positionsMarketPickerButton.setAttribute('aria-label', `Choose market, ${selectedSymbol} / USD`);
+    positionsMarketPickerText.textContent = selectedAsset?.name
+      ? `${selectedAsset.name} (${selectedSymbol}) / USD`
+      : `${selectedSymbol} / USD`;
+    positionsMarketPickerButton.setAttribute('aria-label', `Choose market, ${positionsMarketPickerText.textContent}`);
     const query = positionsMarketSearch?.value.trim().toLowerCase() || '';
     const matchingOptions = Array.from(positionsMarketSelect.options).filter((option) => {
       const symbol = option.value.toUpperCase();
-      const asset = assets.find((item) => item.symbol.toUpperCase() === symbol);
+      const asset = (option.dataset.coinId && assets.find((item) => item.id === option.dataset.coinId))
+        || assets.find((item) => item.symbol.toUpperCase() === symbol);
       return !query || symbol.toLowerCase().includes(query) || (asset?.name || '').toLowerCase().includes(query);
     });
     const visibleOptions = matchingOptions.slice(0, 100);
     positionsMarketOptionList.replaceChildren();
     visibleOptions.forEach((option) => {
       const symbol = option.value.toUpperCase();
-      const asset = assets.find((item) => item.symbol.toUpperCase() === symbol);
+      const asset = (option.dataset.coinId && assets.find((item) => item.id === option.dataset.coinId))
+        || assets.find((item) => item.symbol.toUpperCase() === symbol);
       const choice = document.createElement('button');
       choice.type = 'button';
       choice.className = 'positions-market-option';
       choice.dataset.marketSymbol = symbol;
-      choice.setAttribute('aria-pressed', String(symbol === selectedSymbol));
+      choice.dataset.coinId = option.dataset.coinId || '';
+      choice.setAttribute('aria-pressed', String(symbol === selectedSymbol && choice.dataset.coinId === (selectedOption?.dataset.coinId || '')));
       choice.appendChild(createMarketLogo(symbol, asset, 'positions-market-option-logo'));
       const details = document.createElement('span');
       details.className = 'positions-market-option-details';
@@ -820,9 +858,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadAllChartMarkets() {
-    if (!loadAllChartMarketsButton || loadAllChartMarketsButton.disabled) return;
-    loadAllChartMarketsButton.disabled = true;
-    loadAllChartMarketsButton.textContent = 'Loading supported coins...';
+    if (!positionsMarketSelect) return;
     if (positionsChartStatus) positionsChartStatus.textContent = 'Loading all currently tradeable Binance USDT spot markets...';
     try {
       const exchangeInfo = await fetchBinanceData('/api/v3/exchangeInfo');
@@ -835,7 +871,6 @@ document.addEventListener('DOMContentLoaded', () => {
       );
       if (!supportedMarkets.length) throw new Error('The exchange returned no active USDT spot markets.');
 
-      const newAssets = [];
       supportedMarkets.forEach((market) => {
         const symbol = market.baseAsset.toUpperCase();
         tickerPairs[symbol] = market.symbol.toLowerCase();
@@ -846,65 +881,114 @@ document.addEventListener('DOMContentLoaded', () => {
           positionsMarketSelect.appendChild(option);
           availableChartMarkets.add(symbol);
         }
-        if (!assets.some((asset) => asset.symbol.toUpperCase() === symbol)) {
-          newAssets.push({
-            id: `binance-${symbol.toLowerCase()}`,
-            name: symbol,
-            symbol,
-            current_price: 0,
-            market_cap: 0,
-            total_volume: 0,
-            market_cap_rank: null,
-            price_change_percentage_24h: 0,
-            sparkline_in_7d: { price: [] }
-          });
-        }
       });
-      assets = [...assets, ...newAssets];
       renderPositionsMarketPicker();
       if (positionsChartStatus) {
-        positionsChartStatus.textContent = `${supportedMarkets.length.toLocaleString()} active USDT spot markets are available in the chart picker. Search by coin symbol, then click a candle to set its closing price for a paper trade.`;
+        positionsChartStatus.textContent = `${supportedMarkets.length.toLocaleString()} active USDT spot markets loaded. Choose a market to receive its live price feed and chart candles.`;
       }
     } catch (error) {
       console.error('Could not load all supported chart markets:', error);
       if (positionsChartStatus) positionsChartStatus.textContent = `Could not load all supported markets: ${error.message}`;
-    } finally {
-      loadAllChartMarketsButton.disabled = false;
-      loadAllChartMarketsButton.textContent = 'Load all supported coins';
     }
   }
 
   async function loadMoreMarketCoins() {
-    if (!loadMoreMarketCoinsButton || loadMoreMarketCoinsButton.disabled) return;
+    if (marketConfig.loadingCoinPage) return marketConfig.loadingCoinPage;
+    if (!marketConfig.firstPageLoaded || !marketConfig.hasMoreCoins) return false;
+    if (Date.now() < marketConfig.retryCoinPageAfter) return false;
     const page = marketConfig.nextPage;
-    loadMoreMarketCoinsButton.disabled = true;
-    loadMoreMarketCoinsButton.textContent = 'Loading...';
-    try {
-      const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=${marketConfig.currency}&order=market_cap_desc&per_page=250&page=${page}&sparkline=true&price_change_percentage=24h`);
-      if (!response.ok) throw new Error(`Market request failed (${response.status})`);
-      const data = await response.json();
-      const existingSymbols = new Set(assets.map((asset) => asset.symbol.toUpperCase()));
-      const newAssets = data.map((coin) => ({
-        ...coin,
-        symbol: coin.symbol.toUpperCase(),
-        sparkline_in_7d: coin.sparkline_in_7d || { price: [coin.current_price] }
-      })).filter((coin) => {
-        if (existingSymbols.has(coin.symbol)) return false;
-        existingSymbols.add(coin.symbol);
+    if (marketCoinLoadingStatus) marketCoinLoadingStatus.textContent = `Loading CoinGecko market page ${page}...`;
+    marketConfig.loadingCoinPage = (async () => {
+      try {
+        const delay = Math.max(0, marketConfig.lastCoinPageRequestAt + 2200 - Date.now());
+        if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
+        marketConfig.lastCoinPageRequestAt = Date.now();
+        const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=${marketConfig.currency}&order=market_cap_desc&per_page=250&page=${page}&sparkline=true&price_change_percentage=24h`);
+        if (!response.ok) throw new Error(`Market request failed (${response.status})`);
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error('CoinGecko returned an invalid market list.');
+        const existingCoinIds = new Set(assets.map((asset) => asset.id).filter(Boolean));
+        const newAssets = data.map((coin) => ({
+          ...coin,
+          symbol: coin.symbol.toUpperCase(),
+          sparkline_in_7d: coin.sparkline_in_7d || { price: [coin.current_price] }
+        })).filter((coin) => {
+          if (coin.id && existingCoinIds.has(coin.id)) return false;
+          if (coin.id) existingCoinIds.add(coin.id);
+          return true;
+        });
+        assets = [...assets, ...newAssets];
+        marketConfig.nextPage += 1;
+        marketConfig.hasMoreCoins = data.length === 250;
+        addMarketOptions(newAssets);
+        renderAssetGrid();
+        renderMarketTable();
+        if (marketCoinLoadingStatus) {
+          marketCoinLoadingStatus.textContent = marketConfig.hasMoreCoins
+            ? `${assets.length.toLocaleString()} CoinGecko markets loaded. Scroll for more.`
+            : `All ${assets.length.toLocaleString()} available CoinGecko markets loaded.`;
+        }
         return true;
+      } catch (error) {
+        console.error('Unable to load more CoinGecko markets:', error);
+        marketConfig.retryCoinPageAfter = Date.now() + 10000;
+        if (marketCoinLoadingStatus) {
+          marketCoinLoadingStatus.textContent = `More CoinGecko markets could not be loaded: ${error.message}. Retrying shortly.`;
+        }
+        if (positionsChartStatus) positionsChartStatus.textContent = `More markets could not be loaded: ${error.message}`;
+        window.setTimeout(() => {
+          if (marketConfig.hasMoreCoins) loadMoreMarketCoins();
+        }, 10000);
+        return false;
+      } finally {
+        marketConfig.loadingCoinPage = null;
+      }
+    })();
+    return marketConfig.loadingCoinPage;
+  }
+
+  if (marketCoinLoadingStatus && 'IntersectionObserver' in window) {
+    const marketLoadingObserver = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) loadMoreMarketCoins();
+    }, { rootMargin: '400px 0px' });
+    marketLoadingObserver.observe(marketCoinLoadingStatus);
+  } else if (marketCoinLoadingStatus) {
+    const loadMarketsNearPageEnd = () => {
+      if (marketCoinLoadingStatus.getBoundingClientRect().top <= window.innerHeight + 400) loadMoreMarketCoins();
+    };
+    window.addEventListener('scroll', loadMarketsNearPageEnd, { passive: true });
+    window.addEventListener('resize', loadMarketsNearPageEnd);
+  }
+
+  let chartMarketSearchTimer = null;
+  async function loadMarketsForChartSearch() {
+    const query = positionsMarketSearch?.value.trim().toLowerCase() || '';
+    if (!query || !marketConfig.firstPageLoaded || !marketConfig.hasMoreCoins) return;
+    while (marketConfig.hasMoreCoins) {
+      const loadedMatch = Array.from(positionsMarketSelect.options).some((option) => {
+        const symbol = option.value.toLowerCase();
+        const asset = (option.dataset.coinId && assets.find((item) => item.id === option.dataset.coinId))
+          || assets.find((item) => item.symbol.toUpperCase() === option.value.toUpperCase());
+        return symbol.includes(query) || (asset?.name || '').toLowerCase().includes(query);
       });
-      assets = [...assets, ...newAssets];
-      marketConfig.nextPage += 1;
-      addMarketOptions(newAssets);
-      renderAssetGrid();
-      renderMarketTable();
-      loadMoreMarketCoinsButton.hidden = data.length < 250;
-    } catch (error) {
-      console.error('Unable to load more market coins:', error);
-      if (positionsChartStatus) positionsChartStatus.textContent = `More markets could not be loaded: ${error.message}`;
-    } finally {
-      loadMoreMarketCoinsButton.disabled = false;
-      loadMoreMarketCoinsButton.textContent = 'Load more market coins';
+      if (loadedMatch) return;
+      if (!await loadMoreMarketCoins()) return;
+      if ((positionsMarketSearch?.value.trim().toLowerCase() || '') !== query) return;
+      renderPositionsMarketPicker();
+    }
+  }
+
+  let marketSearchLoadTimer = null;
+  async function loadMarketsForMarketSearch() {
+    const query = marketConfig.searchText.trim().toLowerCase();
+    if (!query || !marketConfig.firstPageLoaded || !marketConfig.hasMoreCoins) return;
+    while (marketConfig.hasMoreCoins) {
+      const loadedMatch = assets.some((asset) =>
+        asset.symbol.toLowerCase().includes(query) || asset.name.toLowerCase().includes(query)
+      );
+      if (loadedMatch) return;
+      if (!await loadMoreMarketCoins()) return;
+      if (marketConfig.searchText.trim().toLowerCase() !== query) return;
     }
   }
 
@@ -1103,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', () => {
       context.restore();
     }
     const asset = getSelectedAsset();
-    if (asset) positionsChartTitle.textContent = `${asset.symbol.toUpperCase()} / USD · ${chartInterval}`;
+    if (asset) positionsChartTitle.textContent = `${asset.symbol.toUpperCase()} / USD · ${positionCandlesSource || chartInterval}`;
     positionsChartPrice.textContent = formatPrice(candles[candles.length - 1].close);
   }
 
@@ -1111,12 +1195,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (requestVersion !== candleRequestVersion) return;
     const pair = tickerPairs[symbol];
     if (!pair) return;
-    const streamKey = `${symbol}:${interval}`;
+    const streamKey = `${symbol}:${marketConfig.selectedCoinId}:${interval}`;
     const socketBase = binanceSocketBases[hostIndex % binanceSocketBases.length];
     const socket = new WebSocket(`${socketBase}/ws/${pair}@kline_${interval}`);
     candleSocket = socket;
     socket.addEventListener('open', () => {
-      if (candleSocket === socket && positionsChartStatus) positionsChartStatus.textContent = `Live ${symbol} ${interval} chart connected.`;
+      if (candleSocket !== socket) return;
+      if (positionCandlesSource.startsWith('CoinGecko')) {
+        positionCandles = [];
+        drawPositionsChart();
+      }
+      positionCandlesSource = `Binance ${interval}`;
+      if (positionsChartStatus) positionsChartStatus.textContent = `Live ${symbol} ${interval} chart connected.`;
     });
     socket.addEventListener('message', (event) => {
       if (candleSocket !== socket || requestVersion !== candleRequestVersion) return;
@@ -1153,7 +1243,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadPositionCandles(symbol, interval) {
-    const streamKey = `${symbol}:${interval}`;
+    const streamKey = `${symbol}:${marketConfig.selectedCoinId}:${interval}`;
     if (candleStreamKey === streamKey && (candleSocket || candleRetryTimer || candleLoading)) return;
     candleStreamKey = streamKey;
     const requestVersion = ++candleRequestVersion;
@@ -1165,10 +1255,13 @@ document.addEventListener('DOMContentLoaded', () => {
       candleSocket = null;
     }
     positionCandles = [];
+    positionCandlesSource = '';
     drawPositionsChart();
 
-    let pair = tickerPairs[symbol];
-    if (!pair && !getSelectedAsset()?.isCustom && /^[A-Z0-9]{2,12}$/.test(symbol)) {
+    const asset = getSelectedAsset();
+    const matchingCoins = assets.filter((item) => item.symbol.toUpperCase() === symbol);
+    let pair = matchingCoins.length > 1 ? '' : tickerPairs[symbol];
+    if (!pair && matchingCoins.length < 2 && !asset?.isCustom && /^[A-Z0-9]{2,12}$/.test(symbol)) {
       const candidatePair = `${symbol}USDT`;
       try {
         const exchangeInfo = await fetchBinanceData(`/api/v3/exchangeInfo?symbol=${candidatePair}`);
@@ -1182,9 +1275,75 @@ document.addEventListener('DOMContentLoaded', () => {
         if (requestVersion !== candleRequestVersion) return;
       }
     }
+    const loadCoinGeckoCandles = async () => {
+      if (!asset?.id || asset.isCustom) return false;
+      let candles = [];
+      let candleSource = 'CoinGecko OHLC';
+      let ohlcError = null;
+      try {
+        const response = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(asset.id)}/ohlc?vs_currency=${marketConfig.currency}&days=1`);
+        if (!response.ok) throw new Error(`CoinGecko candle request failed (${response.status}).`);
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error('CoinGecko returned invalid candle data.');
+        candles = data.map((item) => ({
+          time: Number(item[0]),
+          open: Number(item[1]),
+          high: Number(item[2]),
+          low: Number(item[3]),
+          close: Number(item[4])
+        })).filter((candle) => Number.isFinite(candle.time)
+          && [candle.open, candle.high, candle.low, candle.close].every((price) => Number.isFinite(price) && price > 0));
+      } catch (error) {
+        ohlcError = error;
+      }
+      if (!candles.length) {
+        const response = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(asset.id)}/market_chart?vs_currency=${marketConfig.currency}&days=1`);
+        if (!response.ok) throw new Error(`CoinGecko OHLC and price-history requests failed (${response.status}); ${ohlcError?.message || 'no OHLC candles were returned'}.`);
+        const data = await response.json();
+        if (!Array.isArray(data.prices)) throw new Error('CoinGecko returned invalid price history.');
+        const intervalMs = 30 * 60 * 1000;
+        const buckets = new Map();
+        data.prices
+          .map((point) => Array.isArray(point) ? [Number(point[0]), Number(point[1])] : [NaN, NaN])
+          .filter(([time, price]) => Number.isFinite(time) && Number.isFinite(price) && price > 0)
+          .sort((first, second) => first[0] - second[0])
+          .forEach(([time, price]) => {
+            const bucketTime = Math.floor(time / intervalMs) * intervalMs;
+            const candle = buckets.get(bucketTime);
+            if (candle) {
+              candle.high = Math.max(candle.high, price);
+              candle.low = Math.min(candle.low, price);
+              candle.close = price;
+            } else {
+              buckets.set(bucketTime, { time: bucketTime, open: price, high: price, low: price, close: price });
+            }
+          });
+        candles = Array.from(buckets.values());
+        candleSource = 'CoinGecko sampled OHLC';
+      }
+      if (!candles.length) throw new Error(`No CoinGecko candles or price history are available for ${asset.name}.`);
+      if (requestVersion !== candleRequestVersion) return false;
+      positionCandles = candles.slice(-36);
+      positionCandlesSource = candleSource;
+      drawPositionsChart();
+      if (positionsChartStatus) {
+        const sourceMessage = candleSource === 'CoinGecko sampled OHLC'
+          ? 'Candles are aggregated from CoinGecko price-history samples.'
+          : 'Showing CoinGecko OHLC history.';
+        positionsChartStatus.textContent = `${pair ? 'Binance candle history is unavailable. ' : ''}${sourceMessage} This data for ${asset.name} does not stream at the selected chart interval.`;
+      }
+      return true;
+    };
     if (!pair) {
-      candleLoading = false;
-      if (positionsChartStatus) positionsChartStatus.textContent = `Live candles are unavailable for ${symbol}; current price updates are still shown when available.`;
+      try {
+        if (await loadCoinGeckoCandles()) return;
+        if (positionsChartStatus) positionsChartStatus.textContent = `No exchange or CoinGecko candles are available for ${symbol}.`;
+      } catch (error) {
+        console.error(`Could not load CoinGecko candles for ${symbol}:`, error);
+        if (positionsChartStatus) positionsChartStatus.textContent = `Could not load CoinGecko candles for ${symbol}: ${error.message}`;
+      } finally {
+        if (requestVersion === candleRequestVersion) candleLoading = false;
+      }
       return;
     }
     if (positionsChartStatus) positionsChartStatus.textContent = `Loading ${symbol} ${interval} candles...`;
@@ -1198,10 +1357,21 @@ document.addEventListener('DOMContentLoaded', () => {
         low: Number(item[3]),
         close: Number(item[4])
       }));
+      positionCandlesSource = `Binance ${interval}`;
       drawPositionsChart();
     } catch (error) {
       if (requestVersion !== candleRequestVersion) return;
-      if (positionsChartStatus) positionsChartStatus.textContent = `Candle history unavailable; building the ${interval} chart from live candles...`;
+      try {
+        const loadedCoinGeckoCandles = await loadCoinGeckoCandles();
+        if (!loadedCoinGeckoCandles && positionsChartStatus) {
+          positionsChartStatus.textContent = `Candle history unavailable; building the ${interval} chart from live candles...`;
+        }
+      } catch (coinGeckoError) {
+        console.error(`Could not load fallback CoinGecko candles for ${symbol}:`, coinGeckoError);
+        if (positionsChartStatus) {
+          positionsChartStatus.textContent = `Candle history unavailable: ${error.message}. CoinGecko fallback failed: ${coinGeckoError.message}`;
+        }
+      }
     }
     if (requestVersion !== candleRequestVersion) return;
     candleLoading = false;
@@ -1255,37 +1425,49 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!assetGrid) return;
 
     const filteredAssets = getFilteredAssets();
+    const cards = document.createDocumentFragment();
 
-    assetGrid.innerHTML = filteredAssets
-      .map((asset) => {
-        const change = asset.price_change_percentage_24h ?? 0;
-        return `
-          <button class="asset-card ${asset.symbol.toUpperCase() === marketConfig.selectedSymbol ? 'is-selected' : ''}" type="button" data-symbol="${asset.symbol.toUpperCase()}">
-            <span class="coin-rank">#${asset.market_cap_rank || '--'}</span>
-            <h4>${asset.symbol.toUpperCase()}</h4>
-            <p>${asset.name}</p>
-            <strong>${formatCurrency(asset.current_price)}</strong>
-            <small class="${getPriceChangeClass(change)}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</small>
-          </button>
-        `;
-      })
-      .join('');
+    filteredAssets.forEach((asset) => {
+      const symbol = asset.symbol.toUpperCase();
+      const change = asset.price_change_percentage_24h ?? 0;
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = `asset-card ${asset.id === marketConfig.selectedCoinId || (!asset.id && symbol === marketConfig.selectedSymbol) ? 'is-selected' : ''}`;
+      card.dataset.symbol = symbol;
+      card.dataset.coinId = asset.id || '';
+
+      const rank = document.createElement('span');
+      rank.className = 'coin-rank';
+      rank.textContent = `#${asset.market_cap_rank || '--'}`;
+
+      const heading = document.createElement('span');
+      heading.className = 'asset-card-heading';
+      heading.appendChild(createMarketLogo(symbol, asset, 'asset-card-logo'));
+      const symbolLabel = document.createElement('h4');
+      symbolLabel.textContent = symbol;
+      heading.appendChild(symbolLabel);
+
+      const name = document.createElement('p');
+      name.textContent = asset.name;
+      const price = document.createElement('strong');
+      price.textContent = formatCurrency(asset.current_price);
+      const changeLabel = document.createElement('small');
+      changeLabel.className = getPriceChangeClass(change);
+      changeLabel.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+
+      card.append(rank, heading, name, price, changeLabel);
+      card.addEventListener('click', () => setSelectedSymbol(symbol, asset.id || ''));
+      cards.appendChild(card);
+    });
 
     if (!filteredAssets.length) {
-      assetGrid.innerHTML = `
-        <div class="asset-card asset-card-fallback">
-          <h4>No matches</h4>
-          <p>Try another market filter or symbol.</p>
-        </div>
-      `;
+      const fallback = document.createElement('div');
+      fallback.className = 'asset-card asset-card-fallback';
+      fallback.innerHTML = '<h4>No matches</h4><p>Try another market filter or symbol.</p>';
+      cards.appendChild(fallback);
     }
 
-    assetGrid.querySelectorAll('.asset-card').forEach((card) => {
-      card.addEventListener('click', () => {
-        const symbol = card.dataset.symbol;
-        setSelectedSymbol(symbol);
-      });
-    });
+    assetGrid.replaceChildren(cards);
   }
 
   function renderWatchlist() {
@@ -1345,7 +1527,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderChart() {
     if (!chartCanvas || !assets.length) return;
 
-    const asset = assets.find((item) => item.symbol.toUpperCase() === marketConfig.selectedSymbol) || assets[0];
+    const asset = getSelectedAsset() || assets[0];
     const ctx = chartCanvas.getContext('2d');
     const values = asset?.sparkline_in_7d?.price || Array.from({ length: 30 }, (_, index) => Math.sin(index / 3) * 120 + 25000 + index * 55);
 
@@ -1395,12 +1577,20 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.fillText(`${asset.symbol.toUpperCase()} ${formatCurrency(asset.current_price)}`, padding, 24);
   }
 
-  function setSelectedSymbol(symbol) {
-    const marketChanged = marketConfig.selectedSymbol !== symbol;
+  function setSelectedSymbol(symbol, coinId) {
+    const selectedCoinId = marketConfig.selectedSymbol === symbol
+      && assets.some((asset) => asset.id === marketConfig.selectedCoinId)
+      ? marketConfig.selectedCoinId
+      : '';
+    const matchingCoinId = assets.find((asset) => asset.symbol.toUpperCase() === symbol)?.id || '';
+    const nextCoinId = coinId || selectedCoinId || matchingCoinId;
+    const marketChanged = marketConfig.selectedSymbol !== symbol || marketConfig.selectedCoinId !== nextCoinId;
     marketConfig.selectedSymbol = symbol;
+    marketConfig.selectedCoinId = nextCoinId;
     if (marketChanged) {
       positionsSelectedPrice = null;
       positionsSelectedCandleTime = null;
+      chartPointer = null;
       chartRiskDraft = null;
       const heldPosition = marketPositions.find((position) => position.symbol === symbol);
       positionsChartTools.stopLoss = heldPosition?.stopLoss || '';
@@ -1409,12 +1599,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (positionsTakeProfitInput) positionsTakeProfitInput.value = positionsChartTools.takeProfit || '';
       chartRiskVisible = Boolean(positionsChartTools.stopLoss || positionsChartTools.takeProfit);
     }
-    if (positionsMarketSelect && positionsMarketSelect.querySelector(`option[value="${symbol}"]`)) {
-      positionsMarketSelect.value = symbol;
+    if (positionsMarketSelect) {
+      const options = Array.from(positionsMarketSelect.options);
+      const selectedOption = options.find((option) =>
+        option.value === symbol && (option.dataset.coinId || '') === nextCoinId
+      );
+      if (selectedOption) {
+        positionsMarketSelect.selectedIndex = selectedOption.index;
+      } else if (positionsMarketSelect.value !== symbol) {
+        positionsMarketSelect.value = symbol;
+      }
     }
     renderPositionsMarketPicker();
     if (chartTitle) {
-      const asset = assets.find((item) => item.symbol.toUpperCase() === symbol) || assets[0];
+      const asset = getSelectedAsset() || assets[0];
       chartTitle.textContent = asset ? `${asset.symbol.toUpperCase()} / USD live market` : `${symbol} / USD live market`;
     }
 
@@ -1451,10 +1649,12 @@ document.addEventListener('DOMContentLoaded', () => {
         symbol: coin.symbol.toUpperCase(),
         sparkline_in_7d: coin.sparkline_in_7d || { price: Array.from({ length: 30 }, (_, index) => Math.sin(index / 2) * 0.02 + coin.current_price) }
       }));
-      if (requestedCoinId && !firstPageAssets.some((asset) => asset.id === requestedCoinId)) {
+      const chartCoinIdToLoad = hasRequestedMarket ? requestedCoinId : marketConfig.selectedCoinId;
+      if (chartCoinIdToLoad && !chartCoinIdToLoad.startsWith('custom-')
+        && !firstPageAssets.some((asset) => asset.id === chartCoinIdToLoad)) {
         try {
           const requestedResponse = await fetch(
-            `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${marketConfig.currency}&ids=${encodeURIComponent(requestedCoinId)}&sparkline=true&price_change_percentage=24h`
+            `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${marketConfig.currency}&ids=${encodeURIComponent(chartCoinIdToLoad)}&sparkline=true&price_change_percentage=24h`
           );
           if (!requestedResponse.ok) throw new Error(`Requested coin lookup failed (${requestedResponse.status}).`);
           const requestedAssets = await requestedResponse.json();
@@ -1471,29 +1671,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       const customAssets = getCustomAssets();
-      const previouslyLoaded = assets.filter((asset) => !firstPageAssets.some((coin) => coin.symbol === asset.symbol));
+      const previouslyLoaded = assets.filter((asset) =>
+        !customAssets.some((customAsset) => customAsset.id === asset.id)
+        && !firstPageAssets.some((coin) => coin.id === asset.id)
+      );
       assets = [...customAssets, ...firstPageAssets.filter((asset) => !customAssets.some((customAsset) => customAsset.symbol === asset.symbol)), ...previouslyLoaded];
       addMarketOptions(firstPageAssets);
-      if (loadMoreMarketCoinsButton) loadMoreMarketCoinsButton.hidden = data.length < 250;
+      marketConfig.hasMoreCoins = data.length === 250;
+      marketConfig.firstPageLoaded = true;
+      if (marketCoinLoadingStatus) {
+        marketCoinLoadingStatus.textContent = marketConfig.hasMoreCoins
+          ? `${assets.length.toLocaleString()} CoinGecko markets loaded. Scroll for more.`
+          : `All ${assets.length.toLocaleString()} available CoinGecko markets loaded.`;
+      }
+      if (marketCoinLoadingStatus && marketCoinLoadingStatus.getBoundingClientRect().top <= window.innerHeight + 400) {
+        loadMoreMarketCoins();
+      }
       addCustomMarketOptions(customAssets);
 
       if (!hasRequestedMarket && customAssets.length && marketConfig.selectedSymbol === 'XRP') {
         marketConfig.selectedSymbol = customAssets[customAssets.length - 1].symbol;
+        marketConfig.selectedCoinId = customAssets[customAssets.length - 1].id;
       }
 
       if (!assets.length) {
         return;
       }
 
-      const requestedAsset = hasRequestedMarket
-        ? assets.find((asset) => (requestedCoinId && asset.id === requestedCoinId)
-          || asset.symbol.toUpperCase() === requestedMarketSymbol)
+      const requestedAsset = !marketConfig.initialMarketSelectionResolved
+        ? assets.find((asset) => (marketConfig.selectedCoinId && asset.id === marketConfig.selectedCoinId)
+          || (hasRequestedMarket && asset.symbol.toUpperCase() === requestedMarketSymbol))
         : null;
       if (requestedAsset) {
         marketConfig.selectedSymbol = requestedAsset.symbol.toUpperCase();
+        marketConfig.selectedCoinId = requestedAsset.id || '';
       } else if (!assets.some((item) => item.symbol.toUpperCase() === marketConfig.selectedSymbol)) {
         marketConfig.selectedSymbol = assets[0].symbol;
+        marketConfig.selectedCoinId = assets[0].id || '';
       }
+      marketConfig.initialMarketSelectionResolved = true;
 
       const totalMarketCap = assets.reduce((sum, asset) => sum + (asset.market_cap || 0), 0);
       const totalVolume = assets.reduce((sum, asset) => sum + (asset.total_volume || 0), 0);
@@ -1507,7 +1723,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderWatchlist();
       renderAssetGrid();
       renderMarketTable();
-      setSelectedSymbol(marketConfig.selectedSymbol);
+      setSelectedSymbol(marketConfig.selectedSymbol, marketConfig.selectedCoinId);
     } catch (error) {
       console.error('Market data error:', error);
       try {
@@ -1531,13 +1747,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }).filter((asset) => Number.isFinite(asset.current_price) && asset.current_price > 0);
         const customAssets = getCustomAssets();
         assets = [...customAssets, ...fallbackAssets.filter((asset) => !customAssets.some((customAsset) => customAsset.symbol === asset.symbol))];
+        addMarketOptions(fallbackAssets);
         addCustomMarketOptions(customAssets);
         if (assets.length) {
           if (!assets.some((asset) => asset.symbol === marketConfig.selectedSymbol)) marketConfig.selectedSymbol = assets[0].symbol;
           renderWatchlist();
           renderAssetGrid();
           renderMarketTable();
-          setSelectedSymbol(marketConfig.selectedSymbol);
+          setSelectedSymbol(marketConfig.selectedSymbol, marketConfig.selectedCoinId);
           return;
         }
       } catch (fallbackError) {
@@ -1551,7 +1768,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderWatchlist();
         renderAssetGrid();
         renderMarketTable();
-        setSelectedSymbol(marketConfig.selectedSymbol);
+        setSelectedSymbol(marketConfig.selectedSymbol, marketConfig.selectedCoinId);
         return;
       }
       if (tickerSocket?.readyState === WebSocket.OPEN && assets.length) {
@@ -1598,12 +1815,14 @@ document.addEventListener('DOMContentLoaded', () => {
       marketConfig.searchText = event.target.value;
       renderAssetGrid();
       renderMarketTable();
+      window.clearTimeout(marketSearchLoadTimer);
+      marketSearchLoadTimer = window.setTimeout(loadMarketsForMarketSearch, 300);
     });
   }
 
   if (positionsMarketSelect) {
     positionsMarketSelect.addEventListener('change', (event) => {
-      setSelectedSymbol(event.target.value);
+      setSelectedSymbol(event.target.value, event.target.selectedOptions[0]?.dataset.coinId || '');
       positionsSelectedPrice = null;
       savePositionsChartTools();
       renderMarketOrderControls();
@@ -1624,7 +1843,11 @@ document.addEventListener('DOMContentLoaded', () => {
     positionsMarketOptions.addEventListener('click', (event) => {
       const choice = event.target.closest('[data-market-symbol]');
       if (!choice || !positionsMarketSelect) return;
-      positionsMarketSelect.value = choice.dataset.marketSymbol;
+      const option = Array.from(positionsMarketSelect.options).find((item) =>
+        item.value === choice.dataset.marketSymbol && (item.dataset.coinId || '') === (choice.dataset.coinId || '')
+      );
+      if (!option) return;
+      positionsMarketSelect.selectedIndex = option.index;
       positionsMarketSelect.dispatchEvent(new Event('change', { bubbles: true }));
       positionsMarketPickerButton.setAttribute('aria-expanded', 'false');
       positionsMarketOptions.hidden = true;
@@ -1642,14 +1865,14 @@ document.addEventListener('DOMContentLoaded', () => {
       positionsMarketPickerButton.focus();
     });
     if (positionsMarketSearch) {
-      positionsMarketSearch.addEventListener('input', renderPositionsMarketPicker);
+      positionsMarketSearch.addEventListener('input', () => {
+        renderPositionsMarketPicker();
+        window.clearTimeout(chartMarketSearchTimer);
+        chartMarketSearchTimer = window.setTimeout(loadMarketsForChartSearch, 300);
+      });
     }
     renderPositionsMarketPicker();
   }
-  if (loadAllChartMarketsButton) {
-    loadAllChartMarketsButton.addEventListener('click', loadAllChartMarkets);
-  }
-  if (loadMoreMarketCoinsButton) loadMoreMarketCoinsButton.addEventListener('click', loadMoreMarketCoins);
   if (positionsTimeSelect) {
     positionsTimeSelect.addEventListener('change', (event) => {
       chartInterval = event.target.value;
@@ -1753,6 +1976,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (positionsChartMode) {
     positionsChartMode.addEventListener('change', () => {
       positionsChartTools.mode = positionsChartMode.value;
+      positionsToolsOptions.hidden = true;
+      positionsToolsButton.setAttribute('aria-expanded', 'false');
       rulerAnchor = null;
       rulerDraft = null;
       const modeText = {
@@ -2112,6 +2337,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPaperOrders();
   connectLiveTicker(marketConfig.selectedSymbol);
   loadPositionCandles(marketConfig.selectedSymbol, chartInterval);
+  loadAllChartMarkets();
   fetchLiveMarketData();
   window.setInterval(fetchLiveMarketData, marketConfig.refreshMs);
   window.addEventListener('resize', drawPositionsChart);

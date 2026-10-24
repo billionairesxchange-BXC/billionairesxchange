@@ -44,6 +44,78 @@
     </header>
 
     <main>
+      <details class="autopilot-settings-disclosure section-shell" id="autopilotSettings">
+        <summary class="btn btn-primary">Auto Pilot Bot Settings</summary>
+        <section class="autopilot-section card-glass" id="autopilot" aria-labelledby="autopilotTitle">
+          <div class="autopilot-heading">
+            <div>
+              <span class="eyebrow">Multi-market paper trading</span>
+              <h3 id="autopilotTitle">Auto Pilot Bots</h3>
+              <p>Each bot scans supported crypto markets, ranks positive momentum and liquidity, then selects a market and paper-trade settings. Signals are heuristic, not predictions or guarantees.</p>
+            </div>
+            <div class="autopilot-account-summary" aria-live="polite">
+              <span>Net paper P/L<strong id="autoPilotNetPnl">$0.00</strong></span>
+              <span>Total losses<strong id="autoPilotTotalLosses">$0.00</strong></span>
+              <span>Active bots<strong id="autoPilotActiveCount">0 / 4</strong></span>
+            </div>
+          </div>
+          <p class="autopilot-disclaimer">Simulation only. These bots never access your wallet or place real exchange orders. They run only while this page is open. Market quotes are provided by Binance public data. Paper results do not predict future performance.</p>
+          <form class="autopilot-create-form" id="autoPilotCreateForm">
+            <label>Bot name
+              <input id="autoPilotBotName" type="text" maxlength="32" autocomplete="off" placeholder="e.g. Momentum Scout" required />
+            </label>
+            <label>Virtual paper balance (USD)
+              <input id="autoPilotBudget" type="number" min="20" max="1000000" step="1" value="1000" required />
+            </label>
+            <label>Maximum per trade (USD)
+              <input id="autoPilotTradeCap" type="number" min="20" max="1000000" step="1" value="100" required />
+            </label>
+            <label>How long to run
+              <select id="autoPilotDuration" required>
+                <option value="1h">1 hour</option>
+                <option value="4h">4 hours</option>
+                <option value="12h">12 hours</option>
+                <option value="24h" selected>24 hours</option>
+                <option value="7d">7 days</option>
+              </select>
+            </label>
+            <label>Realized profit goal (USD)
+              <input id="autoPilotGoal" type="number" min="1" max="1000000" step="1" value="100" required />
+            </label>
+            <label class="autopilot-consent">
+              <input id="autoPilotConsent" type="checkbox" required />
+              <span>I authorize this bot to place automatic simulated paper buys and sells. Every buy must be at least USD $20 and is capped by my maximum-per-trade setting and available virtual balance. No real funds will be used.</span>
+            </label>
+            <label class="autopilot-notification-option">
+              <input id="autoPilotBrowserNotifications" type="checkbox" />
+              <span>Also request browser notifications for completed paper trades</span>
+            </label>
+            <button class="btn btn-primary" type="submit">Create bot</button>
+          </form>
+          <p class="autopilot-status" id="autoPilotStatus" role="status" aria-live="polite">Create a bot and approve its paper-trading consent before starting it. A maximum of four bots can run at once.</p>
+          <ul class="autopilot-alerts" id="autoPilotAlerts" aria-live="polite" aria-label="Recent autopilot trade notifications"></ul>
+          <div class="autopilot-bot-list" id="autoPilotBotList" aria-live="polite"></div>
+          <section class="autopilot-history" aria-labelledby="autoPilotHistoryTitle">
+            <div class="autopilot-history-heading">
+              <div>
+                <span class="eyebrow">Closed paper trades</span>
+                <h4 id="autoPilotHistoryTitle">Profit and loss history</h4>
+              </div>
+            </div>
+            <div class="autopilot-history-table-wrap">
+              <table class="autopilot-history-table">
+                <thead>
+                  <tr><th>Bot</th><th>Coin</th><th>Trade size</th><th>Entry</th><th>Exit</th><th>Result</th><th>Closed</th></tr>
+                </thead>
+                <tbody id="autoPilotTradeHistory">
+                  <tr><td colspan="7">No autopilot trades have closed yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </details>
+
       <section class="bot-section section-shell" id="bot-trading">
         <div class="section-head">
           <div>
@@ -2116,5 +2188,6 @@
     </script>
     <script type="module" src="auth.js"></script>
     <script src="site-header.js"></script>
+    <script src="bot-autopilot.js"></script>
 </body>
 </html>
