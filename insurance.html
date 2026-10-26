@@ -57,10 +57,15 @@
           <div class="bill-payment-layout">
             <div class="bill-payment-form-panel">
               <h3>Set up your insurance policy</h3>
-              <p>Select the country, choose the insurance company, and complete the account and policy details for your coverage.</p>
 
               <form class="bill-payment-form" id="insuranceForm">
-                <div class="form-grid">
+                <div class="bill-flow-progress">
+                  <span id="insuranceStepText" aria-live="polite">Step 1 of 8: Country</span>
+                  <progress id="insuranceProgress" value="1" max="8" aria-label="Insurance setup progress"></progress>
+                </div>
+
+                <section class="bill-flow-step" data-insurance-step="0" aria-labelledby="insuranceCountryStepHeading">
+                  <h4 id="insuranceCountryStepHeading">Choose country</h4>
                   <label for="countrySelect">
                     Country for insurance
                     <select id="countrySelect" name="country" required>
@@ -72,96 +77,141 @@
                       <option value="trinidad-tobago">Trinidad &amp; Tobago</option>
                     </select>
                   </label>
+                  <div class="form-grid country-subdivision-field" id="insuranceSubdivisionField" hidden>
+                    <label for="insuranceSubdivision">
+                      <span id="insuranceSubdivisionLabel">Region / subdivision</span>
+                      <select id="insuranceSubdivision" name="subdivision" required>
+                        <option value="">Choose subdivision</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-primary" type="button" data-insurance-next>Next</button>
+                  </div>
+                </section>
 
+                <section class="bill-flow-step" data-insurance-step="1" aria-labelledby="insuranceCompanyStepHeading" hidden>
+                  <h4 id="insuranceCompanyStepHeading">Choose insurance company</h4>
                   <label for="companySelect">
                     Insurance company
                     <select id="companySelect" name="company" required>
                       <option value="">Choose a country first</option>
                     </select>
                   </label>
-                </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-insurance-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-insurance-next>Next</button>
+                  </div>
+                </section>
 
-                <div class="payment-type-grid">
-                  <label for="currencySelect">
-                    Currency type
-                    <select id="currencySelect" name="currencyType" required>
-                      <option value="usd">USD ($)</option>
-                      <option value="gbp">GBP (Â£)</option>
-                      <option value="cad">CAD (C$)</option>
-                      <option value="jmd">JMD (J$)</option>
-                      <option value="ttd">TTD (TT$)</option>
-                    </select>
-                  </label>
+                <section class="bill-flow-step" data-insurance-step="2" aria-labelledby="insuranceCryptoStepHeading" hidden>
+                  <h4 id="insuranceCryptoStepHeading">Choose crypto coin</h4>
+                  <div class="crypto-coin-picker">
+                    <span class="crypto-coin-picker-label">Crypto Coin</span>
+                    <input id="insuranceCryptoCoin" name="cryptoCurrency" type="hidden" />
+                    <button class="crypto-coin-trigger" id="insuranceCryptoToggle" type="button" aria-expanded="false" aria-controls="insuranceCryptoList">Choose a crypto coin</button>
+                    <div class="crypto-coin-list" id="insuranceCryptoList" role="listbox" aria-label="Available crypto coins" hidden></div>
+                    <span class="crypto-list-status" id="insuranceCryptoStatus" role="status" aria-live="polite">Select BTC, ETH, XRP, or SOL.</span>
+                  </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-insurance-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-insurance-next>Next</button>
+                  </div>
+                </section>
 
+                <section class="bill-flow-step" data-insurance-step="3" aria-labelledby="insurancePaymentTypeStepHeading" hidden>
+                  <h4 id="insurancePaymentTypeStepHeading">Choose payment type</h4>
                   <label for="paymentType">
                     Payment type
                     <select id="paymentType" name="paymentType" required>
-                      <option value="bank-transfer">Bank transfer</option>
-                      <option value="card-payment">Debit or credit card</option>
-                      <option value="wallet-payment">Digital wallet</option>
-                      <option value="annual-premium">Annual premium</option>
+                      <option value="wallet-payment">Wallet</option>
                     </select>
                   </label>
-                </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-insurance-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-insurance-next>Next</button>
+                  </div>
+                </section>
 
-                <div class="form-grid">
+                <section class="bill-flow-step" data-insurance-step="4" aria-labelledby="insuranceAccountStepHeading" hidden>
+                  <h4 id="insuranceAccountStepHeading">Enter account name</h4>
                   <label for="accountName">
                     Name on the account
-                    <input
-                      id="accountName"
-                      name="accountName"
-                      type="text"
-                      placeholder="e.g. Sarah Williams"
-                      required
-                    />
+                    <input id="accountName" name="accountName" type="text" placeholder="e.g. Sarah Williams" required />
                   </label>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-insurance-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-insurance-next>Next</button>
+                  </div>
+                </section>
 
+                <section class="bill-flow-step" data-insurance-step="5" aria-labelledby="insurancePolicyStepHeading" hidden>
+                  <h4 id="insurancePolicyStepHeading">Enter policy number</h4>
                   <label for="policyNumber">
-                    Policy Number
-                    <input
-                      id="policyNumber"
-                      name="policyNumber"
-                      type="text"
-                      placeholder="e.g. INS-2456789"
-                      required
-                    />
+                    Policy number
+                    <input id="policyNumber" name="policyNumber" type="text" placeholder="e.g. INS-2456789" required />
                   </label>
-                </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-insurance-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-insurance-next>Next</button>
+                  </div>
+                </section>
 
-                <div class="form-grid">
-                  <label for="coverageType">
-                    Coverage type
-                    <select id="coverageType" name="coverageType">
-                      <option value="home">Home</option>
-                      <option value="auto">Auto</option>
-                      <option value="health">Health</option>
-                      <option value="life">Life</option>
-                      <option value="business">Business</option>
-                    </select>
-                  </label>
+                <section class="bill-flow-step" data-insurance-step="6" aria-labelledby="insuranceCoverageStepHeading" hidden>
+                  <h4 id="insuranceCoverageStepHeading">Choose coverage and billing period</h4>
+                  <div class="form-grid">
+                    <label for="coverageType">
+                      Coverage type
+                      <select id="coverageType" name="coverageType" required>
+                        <option value="home">Home</option>
+                        <option value="auto">Auto</option>
+                        <option value="health">Health</option>
+                        <option value="life">Life</option>
+                        <option value="business">Business</option>
+                      </select>
+                    </label>
+                    <label for="billingPeriod">
+                      Billing period
+                      <select id="billingPeriod" name="billingPeriod" required>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="annual">Annual</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-insurance-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-insurance-next>Next</button>
+                  </div>
+                </section>
 
+                <section class="bill-flow-step" data-insurance-step="7" aria-labelledby="insurancePremiumStepHeading" hidden>
+                  <h4 id="insurancePremiumStepHeading">Enter premium amount</h4>
+                  <input id="insuranceCurrency" name="currency" type="hidden" value="USD" />
                   <label for="premiumAmount">
                     Premium amount
-                    <input
-                      id="premiumAmount"
-                      name="premiumAmount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                    />
+                    <div class="insurance-currency-input">
+                      <span id="insuranceCurrencyLabel" aria-hidden="true">USD</span>
+                      <input id="premiumAmount" name="premiumAmount" type="number" min="0.01" max="1000000" step="0.01" placeholder="0.00" required />
+                    </div>
                   </label>
-                </div>
-
-                <div class="bill-payment-summary" id="companySummary" aria-live="polite">
-                  <strong>Insurance provider</strong>
-                  <span>Select a country to see the insurance company options for your region.</span>
-                </div>
-
-                <div class="bill-payment-actions">
-                  <button class="btn btn-primary" type="submit">Continue insurance</button>
-                  <button class="btn btn-ghost" type="reset">Reset</button>
-                </div>
+                  <div class="bill-payment-summary" id="companySummary" aria-live="polite">
+                    <strong>Insurance provider</strong>
+                    <span>Select a country and insurance company.</span>
+                  </div>
+                  <div class="bill-payment-summary" id="insuranceCryptoQuote" aria-live="polite">
+                    <strong>Estimated crypto amount</strong>
+                    <span>Enter a premium and choose a coin to see an estimate.</span>
+                  </div>
+                  <p id="insuranceStatus" class="insurance-status" role="status" aria-live="polite"></p>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-insurance-back>Back</button>
+                    <div class="bill-flow-actions-end">
+                      <button class="btn btn-ghost" type="reset">Reset</button>
+                      <button class="btn btn-primary" type="submit">Send review</button>
+                    </div>
+                  </div>
+                </section>
               </form>
             </div>
 
@@ -172,7 +222,7 @@
                 <li>Valid country and selected insurance provider</li>
                 <li>Account name exactly as it appears on the policy</li>
                 <li>Policy number or reference ID for verification</li>
-                <li>Preferred currency and payment method for the premium</li>
+                <li>Select BTC, ETH, XRP, or SOL for wallet payment</li>
               </ul>
             </aside>
           </div>
@@ -180,7 +230,19 @@
       </section>
     </main>
 
-    <script>
+    <script src="api-config.js"></script>
+    <script type="module">
+      import { auth } from './firebase-client.js';
+      import COUNTRY_SUBDIVISIONS from './country-subdivisions.json' with { type: 'json' };
+      import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+
+      const authReady = new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          unsubscribe();
+          resolve(user);
+        }, () => resolve(null));
+      });
+
       const insuranceCompaniesByCountry = {
         'united-states': [
           { name: 'State Farm', coverage: 'Auto & Home', region: 'National' },
@@ -220,13 +282,96 @@
       };
 
       const countrySelect = document.getElementById('countrySelect');
+      const subdivisionField = document.getElementById('insuranceSubdivisionField');
+      const subdivisionSelect = document.getElementById('insuranceSubdivision');
+      const subdivisionLabel = document.getElementById('insuranceSubdivisionLabel');
       const companySelect = document.getElementById('companySelect');
       const companySummary = document.getElementById('companySummary');
       const insuranceForm = document.getElementById('insuranceForm');
+      const insuranceCurrency = document.getElementById('insuranceCurrency');
+      const insuranceCurrencyLabel = document.getElementById('insuranceCurrencyLabel');
+      const premiumAmount = document.getElementById('premiumAmount');
+      const cryptoCoinInput = document.getElementById('insuranceCryptoCoin');
+      const cryptoCoinToggle = document.getElementById('insuranceCryptoToggle');
+      const cryptoCoinList = document.getElementById('insuranceCryptoList');
+      const cryptoCoinStatus = document.getElementById('insuranceCryptoStatus');
+      const cryptoQuote = document.getElementById('insuranceCryptoQuote');
+      const status = document.getElementById('insuranceStatus');
+      const insuranceSteps = [...insuranceForm.querySelectorAll('[data-insurance-step]')];
+      const insuranceStepText = document.getElementById('insuranceStepText');
+      const insuranceProgress = document.getElementById('insuranceProgress');
+      const insuranceStepNames = ['Country', 'Insurance company', 'Crypto coin', 'Payment type', 'Account name', 'Policy number', 'Coverage and billing period', 'Premium amount'];
+      const cryptoCoins = [
+        { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC' },
+        { id: 'ethereum', name: 'Ethereum', symbol: 'ETH' },
+        { id: 'ripple', name: 'XRP', symbol: 'XRP' },
+        { id: 'solana', name: 'Solana', symbol: 'SOL' }
+      ];
+      const cryptoLogos = new Map();
+      const currencyByCountry = {
+        'united-states': 'USD',
+        'united-kingdom': 'GBP',
+        canada: 'CAD',
+        jamaica: 'JMD',
+        'trinidad-tobago': 'TTD'
+      };
+      let selectedCrypto = null;
+      let estimatedCryptoAmount = null;
+      let quoteRequestId = 0;
+      let quoteTimer;
+      let logoRequestTimer;
+      let currentInsuranceStep = 0;
+
+      function showInsuranceStep(stepIndex, focusHeading = true) {
+        currentInsuranceStep = Math.max(0, Math.min(stepIndex, insuranceSteps.length - 1));
+        insuranceSteps.forEach((step, index) => {
+          step.hidden = index !== currentInsuranceStep;
+        });
+        insuranceStepText.textContent = `Step ${currentInsuranceStep + 1} of ${insuranceSteps.length}: ${insuranceStepNames[currentInsuranceStep]}`;
+        insuranceProgress.value = currentInsuranceStep + 1;
+        if (focusHeading) {
+          const heading = insuranceSteps[currentInsuranceStep].querySelector('h4');
+          heading.tabIndex = -1;
+          heading.focus();
+        }
+      }
+
+      function validateInsuranceStep() {
+        const fields = insuranceSteps[currentInsuranceStep].querySelectorAll('input:not([type="hidden"]), select, textarea');
+        for (const field of fields) {
+          if (!field.checkValidity()) {
+            field.reportValidity();
+            return false;
+          }
+        }
+        if (currentInsuranceStep === 2 && !selectedCrypto) {
+          cryptoCoinToggle.setAttribute('aria-expanded', 'true');
+          cryptoCoinList.hidden = false;
+          cryptoCoinStatus.textContent = 'Select BTC, ETH, XRP, or SOL to continue.';
+          cryptoCoinList.querySelector('[role="option"]')?.focus();
+          return false;
+        }
+        return true;
+      }
+
+      function updateSubdivisionField() {
+        const config = COUNTRY_SUBDIVISIONS[countrySelect.value];
+        subdivisionField.hidden = !config;
+        subdivisionLabel.textContent = config?.label || 'Region / subdivision';
+        subdivisionSelect.replaceChildren(
+          new Option(`Choose ${config?.label.toLowerCase() || 'subdivision'}`, ''),
+          ...(config?.locations || []).map((location) => new Option(location, location))
+        );
+        subdivisionSelect.required = Boolean(config);
+      }
 
       function populateCompanies() {
         const selectedCountry = countrySelect.value;
-        companySelect.innerHTML = '<option value="">Select insurance company</option>';
+        updateSubdivisionField();
+        insuranceCurrency.value = currencyByCountry[selectedCountry] || 'USD';
+        insuranceCurrencyLabel.textContent = insuranceCurrency.value;
+        companySelect.replaceChildren(new Option(selectedCountry ? 'Select insurance company' : 'Select country first', ''));
+        companySelect.disabled = !selectedCountry;
 
         if (!selectedCountry || !insuranceCompaniesByCountry[selectedCountry]) {
           companySummary.innerHTML = '<strong>Insurance provider</strong><span>Select a country to see the insurance company options for your region.</span>';
@@ -239,10 +384,8 @@
           option.textContent = `${company.name} â€” ${company.coverage}`;
           companySelect.appendChild(option);
         });
-
-        const firstCompany = insuranceCompaniesByCountry[selectedCountry][0];
-        companySelect.value = firstCompany.name;
         updateCompanySummary();
+        scheduleCryptoQuote();
       }
 
       function updateCompanySummary() {
@@ -269,30 +412,249 @@
           <div class="summary-meta">
             <span>Coverage: ${companyDetails.coverage}</span>
             <span>Region: ${companyDetails.region}</span>
+            <span>Subdivision: ${subdivisionSelect.value}</span>
           </div>
         `;
+      }
+
+      function renderCryptoCoins() {
+        cryptoCoinList.replaceChildren(...cryptoCoins.map((coin) => {
+          const button = document.createElement('button');
+          button.className = 'crypto-coin-option';
+          button.type = 'button';
+          button.setAttribute('role', 'option');
+          button.setAttribute('aria-selected', String(coin.id === selectedCrypto?.id));
+          button.dataset.coinId = coin.id;
+          const logoWrap = document.createElement('span');
+          logoWrap.className = 'crypto-coin-logo';
+          const fallback = document.createElement('span');
+          fallback.className = 'crypto-coin-fallback';
+          fallback.textContent = coin.symbol;
+          const imageUrl = cryptoLogos.get(coin.id);
+          if (imageUrl) {
+            const image = document.createElement('img');
+            image.src = imageUrl;
+            image.alt = '';
+            image.loading = 'lazy';
+            image.addEventListener('load', () => { fallback.hidden = true; });
+            image.onerror = () => { image.hidden = true; };
+            logoWrap.append(image);
+          }
+          logoWrap.append(fallback);
+          const name = document.createElement('span');
+          name.className = 'crypto-coin-name';
+          name.textContent = coin.name;
+          const symbol = document.createElement('span');
+          symbol.className = 'crypto-coin-symbol';
+          symbol.textContent = coin.symbol;
+          button.append(logoWrap, name, symbol);
+          button.addEventListener('click', () => {
+            selectedCrypto = coin;
+            cryptoCoinInput.value = coin.id;
+            cryptoCoinToggle.textContent = `${coin.name} (${coin.symbol})`;
+            cryptoCoinToggle.setAttribute('aria-expanded', 'false');
+            cryptoCoinList.hidden = true;
+            cryptoCoinStatus.textContent = `${coin.name} selected.`;
+            renderCryptoCoins();
+            scheduleCryptoQuote();
+          });
+          return button;
+        }));
+        window.clearTimeout(logoRequestTimer);
+        logoRequestTimer = window.setTimeout(loadCryptoLogos, 250);
+      }
+
+      async function loadCryptoLogos() {
+        const ids = cryptoCoins.filter((coin) => !cryptoLogos.has(coin.id)).map((coin) => coin.id);
+        if (!ids.length) return;
+        try {
+          const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${encodeURIComponent(ids.join(','))}&per_page=100&page=1`);
+          if (!response.ok) return;
+          const markets = await response.json();
+          markets.forEach((coin) => {
+            if (coin.image) cryptoLogos.set(coin.id, coin.image);
+          });
+          cryptoCoinList.querySelectorAll('[data-coin-id]').forEach((button) => {
+            const imageUrl = cryptoLogos.get(button.dataset.coinId);
+            if (!imageUrl || button.querySelector('img')) return;
+            const image = document.createElement('img');
+            image.src = imageUrl;
+            image.alt = '';
+            image.loading = 'lazy';
+            image.onerror = () => { image.hidden = true; };
+            const logoWrap = button.querySelector('.crypto-coin-logo');
+            image.addEventListener('load', () => { logoWrap.querySelector('.crypto-coin-fallback').hidden = true; });
+            logoWrap.prepend(image);
+          });
+        } catch (error) {
+          console.warn('Could not load insurance crypto logos:', error);
+        }
+      }
+
+      async function updateCryptoQuote() {
+        const requestId = ++quoteRequestId;
+        const coin = selectedCrypto;
+        const premium = Number(premiumAmount.value);
+        const currency = insuranceCurrency.value;
+        estimatedCryptoAmount = null;
+        if (!coin || !Number.isFinite(premium) || premium <= 0) {
+          cryptoQuote.querySelector('span').textContent = 'Enter a premium and choose a coin to see an estimate.';
+          return;
+        }
+        cryptoQuote.querySelector('span').textContent = 'Calculating live estimate...';
+        try {
+          const [priceResponse, exchangeResponse] = await Promise.all([
+            fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(coin.id)}&vs_currencies=usd`),
+            currency === 'USD' ? Promise.resolve(null) : fetch('https://open.er-api.com/v6/latest/USD')
+          ]);
+          if (!priceResponse.ok || (exchangeResponse && !exchangeResponse.ok)) throw new Error('Live exchange rates are temporarily unavailable.');
+          const prices = await priceResponse.json();
+          const priceUsd = Number(prices[coin.id]?.usd);
+          const exchangeData = exchangeResponse ? await exchangeResponse.json() : null;
+          const fiatPerUsd = currency === 'USD' ? 1 : Number(exchangeData?.rates?.[currency]);
+          if (!Number.isFinite(priceUsd) || priceUsd <= 0 || !Number.isFinite(fiatPerUsd) || fiatPerUsd <= 0) {
+            throw new Error(`A live ${currency} quote is not available for this coin.`);
+          }
+          const estimate = (premium / fiatPerUsd) / priceUsd;
+          if (requestId !== quoteRequestId || selectedCrypto !== coin) return;
+          estimatedCryptoAmount = estimate;
+          const precision = estimate >= 1 ? 6 : 10;
+          cryptoQuote.querySelector('span').textContent = `${premium.toFixed(2)} ${currency} is approximately ${estimate.toLocaleString(undefined, { maximumFractionDigits: precision })} ${coin.symbol}. Estimate only; final amount may change.`;
+        } catch (error) {
+          if (requestId === quoteRequestId) cryptoQuote.querySelector('span').textContent = error.message;
+        }
+      }
+
+      function scheduleCryptoQuote() {
+        window.clearTimeout(quoteTimer);
+        quoteTimer = window.setTimeout(updateCryptoQuote, 350);
       }
 
       countrySelect.addEventListener('change', populateCompanies);
       companySelect.addEventListener('change', updateCompanySummary);
 
-      insuranceForm.addEventListener('submit', (event) => {
+      premiumAmount.addEventListener('input', scheduleCryptoQuote);
+      cryptoCoinToggle.addEventListener('click', () => {
+        const expanded = cryptoCoinToggle.getAttribute('aria-expanded') === 'true';
+        cryptoCoinToggle.setAttribute('aria-expanded', String(!expanded));
+        cryptoCoinList.hidden = expanded;
+        if (!expanded) cryptoCoinList.querySelector('[role="option"]')?.focus();
+      });
+      insuranceForm.addEventListener('click', (event) => {
+        const nextButton = event.target.closest('[data-insurance-next]');
+        const backButton = event.target.closest('[data-insurance-back]');
+        if (nextButton && validateInsuranceStep()) showInsuranceStep(currentInsuranceStep + 1);
+        if (backButton) showInsuranceStep(currentInsuranceStep - 1);
+      });
+
+      insuranceForm.addEventListener('reset', () => {
+        window.setTimeout(() => {
+          selectedCrypto = null;
+          estimatedCryptoAmount = null;
+          subdivisionSelect.value = '';
+          subdivisionSelect.required = false;
+          subdivisionField.hidden = true;
+          insuranceCurrency.value = 'USD';
+          insuranceCurrencyLabel.textContent = 'USD';
+          companySelect.replaceChildren(new Option('Select country first', ''));
+          companySelect.disabled = true;
+          cryptoCoinInput.value = '';
+          cryptoCoinToggle.textContent = 'Choose a crypto coin';
+          cryptoCoinToggle.setAttribute('aria-expanded', 'false');
+          cryptoCoinList.hidden = true;
+          cryptoCoinStatus.textContent = 'Select BTC, ETH, XRP, or SOL.';
+          cryptoQuote.querySelector('span').textContent = 'Enter a premium and choose a coin to see an estimate.';
+          status.textContent = '';
+          showInsuranceStep(0, false);
+          updateCompanySummary();
+        }, 0);
+      });
+
+      insuranceForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-
+        if (currentInsuranceStep !== insuranceSteps.length - 1 || !validateInsuranceStep()) return;
+        if (!selectedCrypto) {
+          cryptoCoinToggle.setAttribute('aria-expanded', 'true');
+          cryptoCoinList.hidden = false;
+          cryptoCoinStatus.textContent = 'Select BTC, ETH, XRP, or SOL to continue.';
+          cryptoCoinList.querySelector('[role="option"]')?.focus();
+          return;
+        }
         const formData = new FormData(insuranceForm);
-        const country = countrySelect.selectedOptions[0]?.text || 'N/A';
-        const company = companySelect.value || 'N/A';
-        const currency = formData.get('currencyType');
-        const paymentType = formData.get('paymentType');
-        const accountName = formData.get('accountName');
-        const policyNumber = formData.get('policyNumber');
+        const premium = Number(formData.get('premiumAmount'));
+        const currency = insuranceCurrency.value;
+        const controls = [...insuranceForm.querySelectorAll('input, select, button')];
+        controls.forEach((control) => { control.disabled = true; });
+        await updateCryptoQuote();
+        if (!Number.isFinite(estimatedCryptoAmount) || estimatedCryptoAmount <= 0) {
+          status.textContent = 'A current crypto estimate is required before sending the review.';
+          controls.forEach((control) => { control.disabled = false; });
+          return;
+        }
 
-        alert(
-          `Insurance request created for ${accountName} at ${company} in ${country}.\nPolicy Number: ${policyNumber}\nCurrency: ${currency.toUpperCase()}\nPayment type: ${paymentType}`
-        );
+        const selectedCoin = selectedCrypto;
+        const cryptoAmount = estimatedCryptoAmount;
+        status.textContent = 'Sending insurance review...';
+        try {
+          const user = await authReady;
+          if (!user) throw new Error('Sign in before sending an insurance review.');
+          const idToken = await user.getIdToken();
+          const paymentReference = `INSURANCE-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+          const response = await fetch(`${window.MAKINGS_API_BASE_URL}/api/insurance-payment-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+              country: countrySelect.selectedOptions[0]?.text || '',
+              subdivision: subdivisionSelect.value,
+              company: companySelect.value,
+              currency,
+              paymentType: 'wallet-payment',
+              accountName: formData.get('accountName'),
+              policyNumber: formData.get('policyNumber'),
+              coverageType: formData.get('coverageType'),
+              billingPeriod: formData.get('billingPeriod'),
+              premiumAmount: premium,
+              cryptoCurrency: `${selectedCoin.name} (${selectedCoin.symbol})`,
+              cryptoCurrencyId: selectedCoin.id,
+              estimatedCryptoAmount: cryptoAmount,
+              paymentReference
+            })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Could not email the insurance review.');
+          const submittedAt = new Intl.DateTimeFormat(undefined, {
+            dateStyle: 'medium',
+            timeStyle: 'medium'
+          }).format(new Date(result.submittedAt || Date.now()));
+          status.textContent =
+            `Insurance review sent to billionairesxchange@gmail.com\n` +
+            `Submitted: ${submittedAt}\n` +
+            `Reference: ${result.paymentReference}\n` +
+            `Country: ${countrySelect.selectedOptions[0]?.text || ''}\n` +
+            `Region / subdivision: ${subdivisionSelect.value}\n` +
+            `Insurance company: ${companySelect.value}\n` +
+            `Name on the account: ${formData.get('accountName')}\n` +
+            `Policy number: ${formData.get('policyNumber')}\n` +
+            `Coverage: ${formData.get('coverageType')}\n` +
+            `Billing period: ${formData.get('billingPeriod')}\n` +
+            `Premium: ${currency} ${premium.toFixed(2)}\n` +
+            `Payment type: Wallet\n` +
+            `Crypto coin: ${selectedCoin.name} (${selectedCoin.symbol})\n` +
+            `Estimated crypto amount: ${cryptoAmount.toPrecision(8)} ${selectedCoin.symbol}\n\n` +
+            'Review request only. No insurance premium was paid and no cryptocurrency was transferred.';
+        } catch (error) {
+          status.textContent = error.message || 'Could not email the insurance review. Please try again.';
+        } finally {
+          controls.forEach((control) => { control.disabled = false; });
+        }
       });
 
       populateCompanies();
+      renderCryptoCoins();
+      showInsuranceStep(0, false);
     </script>
     <script src="site-header.js"></script>
 </body>

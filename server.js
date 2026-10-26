@@ -3,6 +3,7 @@ const express = require('express');
 const WebSocket = require('ws');
 const axios = require('axios');
 const crypto = require('crypto');
+const COUNTRY_SUBDIVISIONS = require('./country-subdivisions.json');
 const app = express();
 const { registerMobileApi } = require('./mobile-api');
 const PORT = Number(process.env.PORT) || 3000;
@@ -58,6 +59,10 @@ function escapeHtml(value) {
     "'": '&#39;'
   })[character]);
 }
+
+const SUBDIVISION_COUNTRY_KEYS = Object.fromEntries(
+  Object.entries(COUNTRY_SUBDIVISIONS).map(([key, subdivision]) => [subdivision.country, key])
+);
 
 app.post('/api/card-request-email', async (req, res) => {
   if (!FIREBASE_WEB_API_KEY || !RESEND_API_KEY || !RESEND_FROM_EMAIL) {
@@ -184,6 +189,7 @@ app.post('/api/bill-payment-email', async (req, res) => {
 
   const {
     country,
+    subdivision,
     company,
     currency,
     accountName,
@@ -191,6 +197,9 @@ app.post('/api/bill-payment-email', async (req, res) => {
     amount,
     billingPeriod,
     cryptoCurrency,
+    cryptoCurrencyId,
+    estimatedCryptoAmount,
+    paymentType,
     paymentReference
   } = req.body || {};
   const companiesByCountry = {
@@ -201,17 +210,15 @@ app.post('/api/bill-payment-email', async (req, res) => {
     'Trinidad & Tobago': ['T&TEC', 'WASA', 'FLOW', 'Digicel', 'Bmobile']
   };
   const allowedCurrencies = new Set(['USD', 'GBP', 'CAD', 'JMD', 'TTD']);
-  const allowedCryptoCurrencies = new Set([
-    'Bitcoin (BTC)',
-    'Ethereum (ETH)',
-    'Tether (USDT - TRC20)',
-    'USD Coin (USDC - ERC20)'
-  ]);
   const allowedBillingPeriods = new Set(['monthly', 'quarterly', 'annual']);
 
   if (typeof country !== 'string' || !companiesByCountry[country]
     || typeof company !== 'string' || !companiesByCountry[country].includes(company)) {
     return res.status(400).json({ error: 'Choose a valid country and utility provider.' });
+  }
+  const validSubdivisions = COUNTRY_SUBDIVISIONS[SUBDIVISION_COUNTRY_KEYS[country]]?.locations || [];
+  if (typeof subdivision !== 'string' || !validSubdivisions.includes(subdivision)) {
+    return res.status(400).json({ error: 'Choose a valid state, region, province, territory, parish, city, or borough.' });
   }
   if (typeof currency !== 'string' || !allowedCurrencies.has(currency)) {
     return res.status(400).json({ error: 'Choose a valid bill currency.' });
@@ -229,8 +236,16 @@ app.post('/api/bill-payment-email', async (req, res) => {
   if (typeof billingPeriod !== 'string' || !allowedBillingPeriods.has(billingPeriod)) {
     return res.status(400).json({ error: 'Choose a valid billing period.' });
   }
-  if (typeof cryptoCurrency !== 'string' || !allowedCryptoCurrencies.has(cryptoCurrency)) {
+  if (typeof cryptoCurrency !== 'string' || !cryptoCurrency.trim() || cryptoCurrency.length > 160
+    || /[\r\n<>]/.test(cryptoCurrency)
+    || typeof cryptoCurrencyId !== 'string' || !/^[a-z0-9-]{1,100}$/.test(cryptoCurrencyId)) {
     return res.status(400).json({ error: 'Choose a valid cryptocurrency.' });
+  }
+  if (typeof estimatedCryptoAmount !== 'number' || !Number.isFinite(estimatedCryptoAmount) || estimatedCryptoAmount <= 0) {
+    return res.status(400).json({ error: 'A valid estimated cryptocurrency amount is required.' });
+  }
+  if (paymentType !== 'wallet-payment') {
+    return res.status(400).json({ error: 'Choose wallet payment.' });
   }
   if (typeof paymentReference !== 'string' || !/^BILL-[0-9A-F]{8}$/.test(paymentReference)) {
     return res.status(400).json({ error: 'The payment request reference is invalid. Please retry.' });
@@ -238,13 +253,17 @@ app.post('/api/bill-payment-email', async (req, res) => {
 
   const requestDetails = {
     country,
+    subdivision,
     company,
     currency,
     accountName: accountName.trim(),
     accountNumber: accountNumber.trim(),
     amount: amount.toFixed(2),
     billingPeriod,
-    cryptoCurrency,
+    cryptoCurrency: cryptoCurrency.trim(),
+    cryptoCurrencyId,
+    estimatedCryptoAmount: estimatedCryptoAmount.toPrecision(12),
+    paymentType: 'Wallet',
     paymentReference,
     customerEmail: firebaseAccount.email || 'Not provided',
     firebaseUid: firebaseAccount.localId
@@ -259,13 +278,16 @@ app.post('/api/bill-payment-email', async (req, res) => {
     `Customer email: ${requestDetails.customerEmail}`,
     `Firebase account ID: ${requestDetails.firebaseUid}`,
     `Country: ${requestDetails.country}`,
+    `State, region, province, territory, parish, city, or borough: ${requestDetails.subdivision}`,
     `Utility provider: ${requestDetails.company}`,
     `Utility account number: ${requestDetails.accountNumber}`,
     `Bill amount: ${requestDetails.currency} ${requestDetails.amount}`,
     `Billing period: ${requestDetails.billingPeriod}`,
     `Cryptocurrency selected: ${requestDetails.cryptoCurrency}`,
+    `Estimated cryptocurrency amount: ${requestDetails.estimatedCryptoAmount} ${requestDetails.cryptoCurrency}`,
+    `Payment type: ${requestDetails.paymentType}`,
     `Payment message: Utility bill payment - ${requestDetails.company} - ${requestDetails.billingPeriod} - ${requestDetails.paymentReference}`,
-    'Status: Request only. No cryptocurrency has been transferred.'
+    'Status: Review request only. The crypto amount is an estimate; no cryptocurrency has been transferred.'
   ].join('\n');
 
   try {
@@ -280,13 +302,16 @@ app.post('/api/bill-payment-email', async (req, res) => {
         <dt>Customer email</dt><dd>${safeDetails.customerEmail}</dd>
         <dt>Firebase account ID</dt><dd>${safeDetails.firebaseUid}</dd>
         <dt>Country</dt><dd>${safeDetails.country}</dd>
+        <dt>State, region, province, territory, parish, city, or borough</dt><dd>${safeDetails.subdivision}</dd>
         <dt>Utility provider</dt><dd>${safeDetails.company}</dd>
         <dt>Utility account number</dt><dd>${safeDetails.accountNumber}</dd>
         <dt>Bill amount</dt><dd>${safeDetails.currency} ${safeDetails.amount}</dd>
         <dt>Billing period</dt><dd>${safeDetails.billingPeriod}</dd>
         <dt>Cryptocurrency selected</dt><dd>${safeDetails.cryptoCurrency}</dd>
+        <dt>Estimated cryptocurrency amount</dt><dd>${safeDetails.estimatedCryptoAmount} ${safeDetails.cryptoCurrency}</dd>
+        <dt>Payment type</dt><dd>${safeDetails.paymentType}</dd>
         <dt>Payment message</dt><dd>Utility bill payment - ${safeDetails.company} - ${safeDetails.billingPeriod} - ${safeDetails.paymentReference}</dd>
-      </dl><p>No cryptocurrency has been transferred.</p>`
+      </dl><p>Review request only. The crypto amount is an estimate; no cryptocurrency has been transferred.</p>`
     }, {
       headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
       timeout: 15000
@@ -295,6 +320,351 @@ app.post('/api/bill-payment-email', async (req, res) => {
   } catch (error) {
     console.error('Resend failed to send bill payment request:', error.message);
     return res.status(502).json({ error: 'Your bill payment request could not be emailed. Please try again.' });
+  }
+});
+
+app.post('/api/mortgage-payment-email', async (req, res) => {
+  if (!FIREBASE_WEB_API_KEY || !RESEND_API_KEY || !RESEND_FROM_EMAIL) {
+    return res.status(503).json({ error: 'Mortgage payment email is not configured on the server.' });
+  }
+
+  const authorization = req.get('authorization') || '';
+  const idToken = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!idToken) return res.status(401).json({ error: 'Sign in to email your mortgage payment review.' });
+
+  let firebaseAccount;
+  try {
+    const accountResponse = await axios.post(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(FIREBASE_WEB_API_KEY)}`,
+      { idToken },
+      { timeout: 10000 }
+    );
+    firebaseAccount = accountResponse.data.users?.[0];
+  } catch (error) {
+    if (error.response?.status === 400) {
+      return res.status(401).json({ error: 'Your sign-in session is invalid or expired. Sign in again.' });
+    }
+    console.error('Firebase token verification failed for mortgage payment email:', error.message);
+    return res.status(502).json({ error: 'Could not verify your account. Try again later.' });
+  }
+
+  if (!firebaseAccount?.localId) {
+    return res.status(401).json({ error: 'Your signed-in account could not be verified.' });
+  }
+
+  const {
+    country,
+    subdivision,
+    company,
+    currency,
+    loanAccountNumber,
+    amount,
+    paymentType,
+    cryptoCurrency,
+    cryptoCurrencyId,
+    estimatedCryptoAmount,
+    paymentReference
+  } = req.body || {};
+  const companiesByCountry = {
+    'United States': ['Rocket Mortgage', 'Wells Fargo Home Mortgage', 'Chase Home Lending', 'Bank of America Home Loans', 'U.S. Bank Home Mortgage'],
+    'United Kingdom': ['Nationwide Building Society', 'Halifax Mortgages', 'Barclays Mortgages', 'Lloyds Bank Mortgages', 'NatWest Mortgages'],
+    Canada: ['RBC Royal Bank Mortgages', 'TD Canada Trust Mortgages', 'Scotiabank Mortgages', 'BMO Mortgages', 'CIBC Mortgages'],
+    Jamaica: ['National Housing Trust (NHT)', 'National Commercial Bank Jamaica', 'Scotiabank Jamaica', 'JMMB Bank', 'First Global Bank'],
+    'Trinidad & Tobago': ['First Citizens Bank', 'Republic Bank', 'RBC Royal Bank Trinidad and Tobago', 'Scotiabank Trinidad and Tobago', 'Home Mortgage Bank']
+  };
+  const currencyByCountry = {
+    'United States': 'USD',
+    'United Kingdom': 'GBP',
+    Canada: 'CAD',
+    Jamaica: 'JMD',
+    'Trinidad & Tobago': 'TTD'
+  };
+  const cryptoById = {
+    bitcoin: 'Bitcoin (BTC)',
+    ethereum: 'Ethereum (ETH)',
+    ripple: 'XRP (XRP)',
+    solana: 'Solana (SOL)'
+  };
+
+  if (typeof country !== 'string' || !companiesByCountry[country]
+    || typeof company !== 'string' || !companiesByCountry[country].includes(company)) {
+    return res.status(400).json({ error: 'Choose a valid country and mortgage company.' });
+  }
+  const validSubdivisions = COUNTRY_SUBDIVISIONS[SUBDIVISION_COUNTRY_KEYS[country]]?.locations || [];
+  if (typeof subdivision !== 'string' || !validSubdivisions.includes(subdivision)) {
+    return res.status(400).json({ error: 'Choose a valid state, region, province, territory, parish, city, or borough.' });
+  }
+  if (currency !== currencyByCountry[country]) {
+    return res.status(400).json({ error: 'Choose the currency for the selected country.' });
+  }
+  if (typeof loanAccountNumber !== 'string' || !/^[A-Za-z0-9 -]{1,40}$/.test(loanAccountNumber.trim())) {
+    return res.status(400).json({ error: 'Enter a valid mortgage loan account number.' });
+  }
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0 || amount > 1000000) {
+    return res.status(400).json({ error: 'Enter a payment amount greater than zero and no more than 1,000,000.' });
+  }
+  if (paymentType !== 'wallet') {
+    return res.status(400).json({ error: 'Choose wallet payment.' });
+  }
+  if (typeof cryptoCurrencyId !== 'string' || !cryptoById[cryptoCurrencyId]
+    || cryptoCurrency !== cryptoById[cryptoCurrencyId]) {
+    return res.status(400).json({ error: 'Choose BTC, ETH, XRP, or SOL.' });
+  }
+  if (typeof estimatedCryptoAmount !== 'number' || !Number.isFinite(estimatedCryptoAmount) || estimatedCryptoAmount <= 0) {
+    return res.status(400).json({ error: 'A valid estimated cryptocurrency amount is required.' });
+  }
+  if (typeof paymentReference !== 'string' || !/^MORTGAGE-[0-9A-F]{8}$/.test(paymentReference)) {
+    return res.status(400).json({ error: 'The mortgage payment reference is invalid. Please retry.' });
+  }
+
+  const requestDetails = {
+    country,
+    subdivision,
+    company,
+    currency,
+    loanAccountNumber: loanAccountNumber.trim(),
+    amount: amount.toFixed(2),
+    paymentType: 'Wallet',
+    cryptoCurrency,
+    estimatedCryptoAmount: estimatedCryptoAmount.toPrecision(12),
+    paymentReference,
+    customerEmail: firebaseAccount.email || 'Not provided',
+    firebaseUid: firebaseAccount.localId
+  };
+  const safeDetails = Object.fromEntries(
+    Object.entries(requestDetails).map(([key, value]) => [key, escapeHtml(value)])
+  );
+  const text = [
+    'A mortgage payment review was submitted. No mortgage payment has been received or processed.',
+    `Reference: ${requestDetails.paymentReference}`,
+    `Customer email: ${requestDetails.customerEmail}`,
+    `Firebase account ID: ${requestDetails.firebaseUid}`,
+    `Country: ${requestDetails.country}`,
+    `State, region, province, territory, parish, city, or borough: ${requestDetails.subdivision}`,
+    `Mortgage company: ${requestDetails.company}`,
+    `Loan account number: ${requestDetails.loanAccountNumber}`,
+    `Payment amount: ${requestDetails.currency} ${requestDetails.amount}`,
+    `Payment type: ${requestDetails.paymentType}`,
+    `Crypto coin selected: ${requestDetails.cryptoCurrency}`,
+    `Estimated crypto amount: ${requestDetails.estimatedCryptoAmount}`,
+    'Status: Review request only. No cryptocurrency has been transferred.'
+  ].join('\n');
+
+  try {
+    await axios.post('https://api.resend.com/emails', {
+      from: RESEND_FROM_EMAIL,
+      to: ['billionairesxchange@gmail.com'],
+      subject: `Mortgage payment review ${requestDetails.paymentReference} - unpaid`,
+      text,
+      html: `<h1>Mortgage payment review</h1><p><strong>Review only. No mortgage payment has been received or processed.</strong></p><dl>
+        <dt>Reference</dt><dd>${safeDetails.paymentReference}</dd>
+        <dt>Customer email</dt><dd>${safeDetails.customerEmail}</dd>
+        <dt>Firebase account ID</dt><dd>${safeDetails.firebaseUid}</dd>
+        <dt>Country</dt><dd>${safeDetails.country}</dd>
+        <dt>State, region, province, territory, parish, city, or borough</dt><dd>${safeDetails.subdivision}</dd>
+        <dt>Mortgage company</dt><dd>${safeDetails.company}</dd>
+        <dt>Loan account number</dt><dd>${safeDetails.loanAccountNumber}</dd>
+        <dt>Payment amount</dt><dd>${safeDetails.currency} ${safeDetails.amount}</dd>
+        <dt>Payment type</dt><dd>${safeDetails.paymentType}</dd>
+        <dt>Crypto coin selected</dt><dd>${safeDetails.cryptoCurrency}</dd>
+        <dt>Estimated crypto amount</dt><dd>${safeDetails.estimatedCryptoAmount}</dd>
+      </dl><p>Review request only. No cryptocurrency has been transferred.</p>`
+    }, {
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
+      timeout: 15000
+    });
+    return res.status(200).json({ sent: true, paymentReference: requestDetails.paymentReference });
+  } catch (error) {
+    console.error('Resend failed to send mortgage payment review:', error.message);
+    return res.status(502).json({ error: 'Your mortgage payment review could not be emailed. Please try again.' });
+  }
+});
+
+app.post('/api/insurance-payment-email', async (req, res) => {
+  if (!FIREBASE_WEB_API_KEY || !RESEND_API_KEY || !RESEND_FROM_EMAIL) {
+    return res.status(503).json({ error: 'Insurance review email is not configured on the server.' });
+  }
+
+  const authorization = req.get('authorization') || '';
+  const idToken = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!idToken) return res.status(401).json({ error: 'Sign in to email your insurance review.' });
+
+  let firebaseAccount;
+  try {
+    const accountResponse = await axios.post(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(FIREBASE_WEB_API_KEY)}`,
+      { idToken },
+      { timeout: 10000 }
+    );
+    firebaseAccount = accountResponse.data.users?.[0];
+  } catch (error) {
+    if (error.response?.status === 400) {
+      return res.status(401).json({ error: 'Your sign-in session is invalid or expired. Sign in again.' });
+    }
+    console.error('Firebase token verification failed for insurance review email:', error.message);
+    return res.status(502).json({ error: 'Could not verify your account. Try again later.' });
+  }
+
+  if (!firebaseAccount?.localId) {
+    return res.status(401).json({ error: 'Your signed-in account could not be verified.' });
+  }
+
+  const {
+    country,
+    subdivision,
+    company,
+    currency,
+    paymentType,
+    accountName,
+    policyNumber,
+    coverageType,
+    billingPeriod,
+    premiumAmount,
+    cryptoCurrency,
+    cryptoCurrencyId,
+    estimatedCryptoAmount,
+    paymentReference
+  } = req.body || {};
+  const companiesByCountry = {
+    'United States': ['State Farm', 'Allianz', 'Liberty Mutual', 'Progressive', 'AIG'],
+    'United Kingdom': ['Aviva', 'Legal & General', 'AXA', 'Direct Line', 'RSA Insurance'],
+    Canada: ['Manulife', 'Desjardins', 'TD Insurance', 'BCAA', 'Intact'],
+    Jamaica: ['Sagicor', 'JMMB Insurance', 'NEM Insurance', 'Guardian Life', 'Mighty'],
+    'Trinidad & Tobago': ['Trinbago Insurance', 'Guardian General', 'Bristol', 'Sagicor TT', 'Blue Waters Insurance']
+  };
+  const currencyByCountry = {
+    'United States': 'USD',
+    'United Kingdom': 'GBP',
+    Canada: 'CAD',
+    Jamaica: 'JMD',
+    'Trinidad & Tobago': 'TTD'
+  };
+  const cryptoById = {
+    bitcoin: 'Bitcoin (BTC)',
+    ethereum: 'Ethereum (ETH)',
+    ripple: 'XRP (XRP)',
+    solana: 'Solana (SOL)'
+  };
+  const validSubdivisions = COUNTRY_SUBDIVISIONS[SUBDIVISION_COUNTRY_KEYS[country]]?.locations || [];
+  const validCoverageTypes = new Set(['home', 'auto', 'health', 'life', 'business']);
+  const validBillingPeriods = new Set(['monthly', 'quarterly', 'annual']);
+
+  if (typeof country !== 'string' || !companiesByCountry[country]
+    || typeof company !== 'string' || !companiesByCountry[country].includes(company)) {
+    return res.status(400).json({ error: 'Choose a valid country and insurance company.' });
+  }
+  if (typeof subdivision !== 'string' || !validSubdivisions.includes(subdivision)) {
+    return res.status(400).json({ error: 'Choose a valid region or subdivision for your country.' });
+  }
+  if (currency !== currencyByCountry[country]) {
+    return res.status(400).json({ error: 'Choose the currency for the selected country.' });
+  }
+  if (paymentType !== 'wallet-payment') {
+    return res.status(400).json({ error: 'Choose wallet payment.' });
+  }
+  if (typeof accountName !== 'string' || !accountName.trim() || accountName.trim().length > 100
+    || /[\r\n<>]/.test(accountName)) {
+    return res.status(400).json({ error: 'Enter a valid name for the insurance account.' });
+  }
+  if (typeof policyNumber !== 'string' || !/^[A-Za-z0-9 -]{1,64}$/.test(policyNumber.trim())) {
+    return res.status(400).json({ error: 'Enter a valid policy number.' });
+  }
+  if (typeof coverageType !== 'string' || !validCoverageTypes.has(coverageType)) {
+    return res.status(400).json({ error: 'Choose a valid coverage type.' });
+  }
+  if (typeof billingPeriod !== 'string' || !validBillingPeriods.has(billingPeriod)) {
+    return res.status(400).json({ error: 'Choose a valid billing period.' });
+  }
+  if (typeof premiumAmount !== 'number' || !Number.isFinite(premiumAmount) || premiumAmount <= 0 || premiumAmount > 1000000) {
+    return res.status(400).json({ error: 'Enter a premium amount greater than zero and no more than 1,000,000.' });
+  }
+  if (typeof cryptoCurrencyId !== 'string' || !cryptoById[cryptoCurrencyId]
+    || cryptoCurrency !== cryptoById[cryptoCurrencyId]) {
+    return res.status(400).json({ error: 'Choose BTC, ETH, XRP, or SOL.' });
+  }
+  if (typeof estimatedCryptoAmount !== 'number' || !Number.isFinite(estimatedCryptoAmount) || estimatedCryptoAmount <= 0) {
+    return res.status(400).json({ error: 'A valid estimated cryptocurrency amount is required.' });
+  }
+  if (typeof paymentReference !== 'string' || !/^INSURANCE-[0-9A-F]{8}$/.test(paymentReference)) {
+    return res.status(400).json({ error: 'The insurance review reference is invalid. Please retry.' });
+  }
+
+  const requestDetails = {
+    country,
+    subdivision,
+    company,
+    currency,
+    paymentType: 'Wallet',
+    accountName: accountName.trim(),
+    policyNumber: policyNumber.trim(),
+    coverageType,
+    billingPeriod,
+    premiumAmount: premiumAmount.toFixed(2),
+    cryptoCurrency,
+    estimatedCryptoAmount: estimatedCryptoAmount.toPrecision(12),
+    paymentReference,
+    submittedAt: new Date().toISOString(),
+    customerEmail: firebaseAccount.email || 'Not provided',
+    firebaseUid: firebaseAccount.localId
+  };
+  const safeDetails = Object.fromEntries(
+    Object.entries(requestDetails).map(([key, value]) => [key, escapeHtml(value)])
+  );
+  const text = [
+    'An insurance review was submitted. No insurance premium has been paid or processed.',
+    `Reference: ${requestDetails.paymentReference}`,
+    `Submitted: ${requestDetails.submittedAt}`,
+    `Customer email: ${requestDetails.customerEmail}`,
+    `Firebase account ID: ${requestDetails.firebaseUid}`,
+    `Country: ${requestDetails.country}`,
+    `Region / subdivision: ${requestDetails.subdivision}`,
+    `Insurance company: ${requestDetails.company}`,
+    `Name on the account: ${requestDetails.accountName}`,
+    `Policy number: ${requestDetails.policyNumber}`,
+    `Coverage type: ${requestDetails.coverageType}`,
+    `Billing period: ${requestDetails.billingPeriod}`,
+    `Premium: ${requestDetails.currency} ${requestDetails.premiumAmount}`,
+    `Payment type: ${requestDetails.paymentType}`,
+    `Crypto coin selected: ${requestDetails.cryptoCurrency}`,
+    `Estimated crypto amount: ${requestDetails.estimatedCryptoAmount}`,
+    'Status: Review request only. No premium has been paid and no cryptocurrency has been transferred.'
+  ].join('\n');
+
+  try {
+    await axios.post('https://api.resend.com/emails', {
+      from: RESEND_FROM_EMAIL,
+      to: ['billionairesxchange@gmail.com'],
+      subject: `Insurance review ${requestDetails.paymentReference} - unpaid`,
+      text,
+      html: `<h1>Insurance review</h1><p><strong>Review only. No insurance premium has been paid or processed.</strong></p><dl>
+        <dt>Reference</dt><dd>${safeDetails.paymentReference}</dd>
+        <dt>Submitted</dt><dd>${safeDetails.submittedAt}</dd>
+        <dt>Customer email</dt><dd>${safeDetails.customerEmail}</dd>
+        <dt>Firebase account ID</dt><dd>${safeDetails.firebaseUid}</dd>
+        <dt>Country</dt><dd>${safeDetails.country}</dd>
+        <dt>Region / subdivision</dt><dd>${safeDetails.subdivision}</dd>
+        <dt>Insurance company</dt><dd>${safeDetails.company}</dd>
+        <dt>Name on the account</dt><dd>${safeDetails.accountName}</dd>
+        <dt>Policy number</dt><dd>${safeDetails.policyNumber}</dd>
+        <dt>Coverage type</dt><dd>${safeDetails.coverageType}</dd>
+        <dt>Billing period</dt><dd>${safeDetails.billingPeriod}</dd>
+        <dt>Premium</dt><dd>${safeDetails.currency} ${safeDetails.premiumAmount}</dd>
+        <dt>Payment type</dt><dd>${safeDetails.paymentType}</dd>
+        <dt>Crypto coin selected</dt><dd>${safeDetails.cryptoCurrency}</dd>
+        <dt>Estimated crypto amount</dt><dd>${safeDetails.estimatedCryptoAmount}</dd>
+      </dl><p>Review request only. No premium has been paid and no cryptocurrency has been transferred.</p>`
+    }, {
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
+      timeout: 15000
+    });
+    return res.status(200).json({
+      sent: true,
+      paymentReference: requestDetails.paymentReference,
+      submittedAt: requestDetails.submittedAt
+    });
+  } catch (error) {
+    console.error('Resend failed to send insurance review:', error.message);
+    return res.status(502).json({ error: 'Your insurance review could not be emailed. Please try again.' });
   }
 });
 

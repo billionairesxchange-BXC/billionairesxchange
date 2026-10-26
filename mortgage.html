@@ -57,8 +57,14 @@
               <h3>Pay your mortgage</h3>
               <p>Select the country where your mortgage is held, then choose the lender and enter your loan payment details.</p>
 
-              <form class="bill-payment-form" id="mortgageForm">
-                <div class="form-grid">
+              <form class="bill-payment-form mortgage-payment-form" id="mortgageForm">
+                <div class="bill-flow-progress">
+                  <span id="mortgageFlowStepText" aria-live="polite">Step 1 of 6: Country</span>
+                  <progress id="mortgageFlowProgress" value="1" max="6" aria-label="Mortgage payment setup progress"></progress>
+                </div>
+
+                <section class="bill-flow-step" data-mortgage-flow-step="0" aria-labelledby="mortgageCountryStepHeading">
+                  <h4 id="mortgageCountryStepHeading">Choose country</h4>
                   <label for="mortgageCountry">
                     Country for mortgage
                     <select id="mortgageCountry" name="country" required>
@@ -70,72 +76,100 @@
                       <option value="trinidad-tobago">Trinidad &amp; Tobago</option>
                     </select>
                   </label>
+                  <div class="form-grid country-subdivision-field" id="mortgageSubdivisionField" hidden>
+                    <label for="mortgageSubdivision">
+                      <span id="mortgageSubdivisionLabel">Region / subdivision</span>
+                      <select id="mortgageSubdivision" name="subdivision" required>
+                        <option value="">Choose subdivision</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-primary" type="button" data-mortgage-next>Next</button>
+                  </div>
+                </section>
+
+                <section class="bill-flow-step" data-mortgage-flow-step="1" aria-labelledby="mortgageCompanyStepHeading" hidden>
+                  <h4 id="mortgageCompanyStepHeading">Choose mortgage company</h4>
                   <label for="mortgageCompany">
                     Mortgage company
                     <select id="mortgageCompany" name="company" required disabled>
                       <option value="">Select country first</option>
                     </select>
                   </label>
-                </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-mortgage-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-mortgage-next>Next</button>
+                  </div>
+                </section>
 
-                <div class="payment-type-grid">
-                  <label for="mortgageCurrency">
-                    Currency type
-                    <select id="mortgageCurrency" name="currency" required>
-                      <option value="USD">USD ($)</option>
-                      <option value="GBP">GBP (Â£)</option>
-                      <option value="CAD">CAD (C$)</option>
-                      <option value="JMD">JMD (J$)</option>
-                      <option value="TTD">TTD (TT$)</option>
-                    </select>
-                  </label>
+                <section class="bill-flow-step" data-mortgage-flow-step="2" aria-labelledby="mortgageCryptoStepHeading" hidden>
+                  <h4 id="mortgageCryptoStepHeading">Choose crypto coin</h4>
+                  <div class="crypto-coin-picker">
+                    <span class="crypto-coin-picker-label">Crypto Coin</span>
+                    <input id="mortgageCryptoCoin" name="cryptoCurrency" type="hidden" />
+                    <button class="crypto-coin-trigger" id="mortgageCryptoToggle" type="button" aria-expanded="false" aria-controls="mortgageCryptoList">Choose a crypto coin</button>
+                    <div class="crypto-coin-list" id="mortgageCryptoList" role="listbox" aria-label="Available crypto coins" hidden></div>
+                    <span class="crypto-list-status" id="mortgageCryptoStatus" role="status" aria-live="polite">Select BTC, ETH, XRP, or SOL.</span>
+                  </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-mortgage-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-mortgage-next>Next</button>
+                  </div>
+                </section>
+
+                <section class="bill-flow-step" data-mortgage-flow-step="3" aria-labelledby="mortgagePaymentTypeStepHeading" hidden>
+                  <h4 id="mortgagePaymentTypeStepHeading">Choose payment type</h4>
                   <label for="mortgagePaymentType">
                     Payment type
                     <select id="mortgagePaymentType" name="paymentType" required>
-                      <option value="bank-transfer">Bank transfer</option>
-                      <option value="debit-card">Debit card</option>
-                      <option value="credit-card">Credit card</option>
                       <option value="wallet">Wallet</option>
                     </select>
                   </label>
-                </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-mortgage-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-mortgage-next>Next</button>
+                  </div>
+                </section>
 
-                <div class="form-grid">
+                <section class="bill-flow-step" data-mortgage-flow-step="4" aria-labelledby="mortgageAccountStepHeading" hidden>
+                  <h4 id="mortgageAccountStepHeading">Enter loan account number</h4>
                   <label for="loanAccountNumber">
                     Loan account number
-                    <input
-                      id="loanAccountNumber"
-                      name="loanAccountNumber"
-                      type="text"
-                      maxlength="40"
-                      autocomplete="off"
-                      placeholder="Enter your mortgage loan account number"
-                      required
-                    />
+                    <input id="loanAccountNumber" name="loanAccountNumber" type="text" maxlength="40" autocomplete="off" placeholder="Enter your mortgage loan account number" required />
                   </label>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-mortgage-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-mortgage-next>Next</button>
+                  </div>
+                </section>
+
+                <section class="bill-flow-step" data-mortgage-flow-step="5" aria-labelledby="mortgageAmountStepHeading" hidden>
+                  <h4 id="mortgageAmountStepHeading">Enter payment amount</h4>
                   <label for="paymentAmount">
                     Payment amount
-                    <input
-                      id="paymentAmount"
-                      name="paymentAmount"
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      placeholder="0.00"
-                      required
-                    />
+                    <div class="mortgage-currency-input">
+                      <span id="mortgageCurrencyLabel" aria-hidden="true">USD</span>
+                      <input id="paymentAmount" name="paymentAmount" type="number" min="0.01" max="1000000" step="0.01" placeholder="0.00" required />
+                    </div>
                   </label>
-                </div>
-
-                <div class="bill-payment-summary" id="mortgageSummary" aria-live="polite">
-                  <strong>Mortgage payment summary</strong>
-                  <span>Select your country and mortgage company.</span>
-                </div>
-                <div class="bill-payment-actions">
-                  <button class="btn btn-primary" type="submit">Review payment</button>
-                  <button class="btn btn-ghost" type="reset">Reset</button>
-                </div>
-                <p id="mortgageStatus" role="status" aria-live="polite"></p>
+                  <div class="bill-payment-summary" id="mortgageSummary" aria-live="polite">
+                    <strong>Mortgage payment summary</strong>
+                    <span>Select your country and mortgage company.</span>
+                  </div>
+                  <div class="bill-payment-summary" id="mortgageCryptoQuote" aria-live="polite">
+                    <strong>Estimated crypto amount</strong>
+                    <span>Enter a payment amount and choose a coin to see an estimate.</span>
+                  </div>
+                  <p id="mortgageStatus" role="status" aria-live="polite"></p>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-mortgage-back>Back</button>
+                    <div class="bill-flow-actions-end">
+                      <button class="btn btn-ghost" type="reset">Reset</button>
+                      <button class="btn btn-primary" type="submit">Send review</button>
+                    </div>
+                  </div>
+                </section>
               </form>
             </div>
 
@@ -146,7 +180,7 @@
                 <li>Select the country where the mortgage is registered</li>
                 <li>Choose a lender listed for that country</li>
                 <li>Enter the loan account number exactly as shown by your lender</li>
-                <li>Choose the currency and payment method for the payment</li>
+                <li>Select BTC, ETH, XRP, or SOL for wallet payment</li>
               </ul>
             </aside>
           </div>
@@ -154,7 +188,19 @@
       </section>
     </main>
 
-    <script>
+    <script src="api-config.js"></script>
+    <script type="module">
+      import { auth } from './firebase-client.js';
+      import COUNTRY_SUBDIVISIONS from './country-subdivisions.json' with { type: 'json' };
+      import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+
+      const authReady = new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          unsubscribe();
+          resolve(user);
+        }, () => resolve(null));
+      });
+
       const mortgageCompaniesByCountry = {
         'united-states': [
           'Rocket Mortgage',
@@ -195,11 +241,36 @@
 
       const form = document.getElementById('mortgageForm');
       const countrySelect = document.getElementById('mortgageCountry');
+      const subdivisionField = document.getElementById('mortgageSubdivisionField');
+      const subdivisionSelect = document.getElementById('mortgageSubdivision');
+      const subdivisionLabel = document.getElementById('mortgageSubdivisionLabel');
       const companySelect = document.getElementById('mortgageCompany');
-      const currencySelect = document.getElementById('mortgageCurrency');
       const amountInput = document.getElementById('paymentAmount');
       const summary = document.getElementById('mortgageSummary');
       const status = document.getElementById('mortgageStatus');
+      const currencyLabel = document.getElementById('mortgageCurrencyLabel');
+      const cryptoCoinInput = document.getElementById('mortgageCryptoCoin');
+      const cryptoCoinToggle = document.getElementById('mortgageCryptoToggle');
+      const cryptoCoinList = document.getElementById('mortgageCryptoList');
+      const cryptoCoinStatus = document.getElementById('mortgageCryptoStatus');
+      const cryptoQuote = document.getElementById('mortgageCryptoQuote');
+      const mortgageSteps = [...form.querySelectorAll('[data-mortgage-flow-step]')];
+      const mortgageStepText = document.getElementById('mortgageFlowStepText');
+      const mortgageProgress = document.getElementById('mortgageFlowProgress');
+      const mortgageStepNames = ['Country', 'Mortgage company', 'Crypto coin', 'Payment type', 'Loan account number', 'Payment amount'];
+      const cryptoCoins = [
+        { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC' },
+        { id: 'ethereum', name: 'Ethereum', symbol: 'ETH' },
+        { id: 'ripple', name: 'XRP', symbol: 'XRP' },
+        { id: 'solana', name: 'Solana', symbol: 'SOL' }
+      ];
+      const cryptoLogos = new Map();
+      let selectedCrypto = null;
+      let estimatedCryptoAmount = null;
+      let quoteRequestId = 0;
+      let quoteTimer;
+      let logoRequestTimer;
+      let currentMortgageStep = 0;
 
       const currencyByCountry = {
         'united-states': 'USD',
@@ -209,17 +280,61 @@
         'trinidad-tobago': 'TTD'
       };
 
+      function updateSubdivisionField() {
+        const subdivisionConfig = COUNTRY_SUBDIVISIONS[countrySelect.value];
+        subdivisionField.hidden = !subdivisionConfig;
+        subdivisionLabel.textContent = subdivisionConfig?.label || 'Region / subdivision';
+        subdivisionSelect.replaceChildren(
+          new Option(`Choose ${subdivisionConfig?.label.toLowerCase() || 'location'}`, ''),
+          ...(subdivisionConfig?.locations || []).map((location) => new Option(location, location))
+        );
+        subdivisionSelect.required = Boolean(subdivisionConfig);
+      }
+
+      function showMortgageStep(stepIndex, focusHeading = true) {
+        currentMortgageStep = Math.max(0, Math.min(stepIndex, mortgageSteps.length - 1));
+        mortgageSteps.forEach((step, index) => {
+          step.hidden = index !== currentMortgageStep;
+        });
+        mortgageStepText.textContent = `Step ${currentMortgageStep + 1} of ${mortgageSteps.length}: ${mortgageStepNames[currentMortgageStep]}`;
+        mortgageProgress.value = currentMortgageStep + 1;
+        if (focusHeading) {
+          const heading = mortgageSteps[currentMortgageStep].querySelector('h4');
+          heading.tabIndex = -1;
+          heading.focus();
+        }
+      }
+
+      function validateMortgageStep() {
+        const fields = mortgageSteps[currentMortgageStep].querySelectorAll('input:not([type="hidden"]), select, textarea');
+        for (const field of fields) {
+          if (!field.checkValidity()) {
+            field.reportValidity();
+            return false;
+          }
+        }
+
+        if (currentMortgageStep === 2 && !selectedCrypto) {
+          cryptoCoinToggle.setAttribute('aria-expanded', 'true');
+          cryptoCoinList.hidden = false;
+          cryptoCoinStatus.textContent = 'Select BTC, ETH, XRP, or SOL to continue.';
+          cryptoCoinList.querySelector('[role="option"]')?.focus();
+          return false;
+        }
+        return true;
+      }
+
       function updateCompanies() {
         const country = countrySelect.value;
+        updateSubdivisionField();
         const companies = mortgageCompaniesByCountry[country] || [];
         companySelect.replaceChildren(new Option(companies.length ? 'Choose mortgage company' : 'Select country first', ''));
         companies.forEach((company) => companySelect.add(new Option(company, company)));
         companySelect.disabled = companies.length === 0;
 
-        if (currencyByCountry[country]) {
-          currencySelect.value = currencyByCountry[country];
-        }
+        currencyLabel.textContent = currencyByCountry[country] || 'USD';
         updateSummary();
+        scheduleCryptoQuote();
       }
 
       function updateSummary() {
@@ -227,7 +342,7 @@
         const country = countrySelect.options[countrySelect.selectedIndex]?.text || '';
         const accountNumber = document.getElementById('loanAccountNumber').value.trim();
         const amount = Number(amountInput.value);
-        const currency = currencySelect.value;
+        const currency = currencyByCountry[countrySelect.value] || 'USD';
 
         summary.replaceChildren();
         const title = document.createElement('strong');
@@ -244,28 +359,247 @@
         summary.append(title, provider, details);
       }
 
+      function renderCryptoCoins() {
+        cryptoCoinList.replaceChildren(...cryptoCoins.map((coin) => {
+          const button = document.createElement('button');
+          button.className = 'crypto-coin-option';
+          button.type = 'button';
+          button.setAttribute('role', 'option');
+          button.setAttribute('aria-selected', String(coin.id === selectedCrypto?.id));
+          button.dataset.coinId = coin.id;
+
+          const logoWrap = document.createElement('span');
+          logoWrap.className = 'crypto-coin-logo';
+          const fallback = document.createElement('span');
+          fallback.className = 'crypto-coin-fallback';
+          fallback.textContent = coin.symbol;
+          const logoUrl = cryptoLogos.get(coin.id);
+          if (logoUrl) {
+            const image = document.createElement('img');
+            image.src = logoUrl;
+            image.alt = '';
+            image.loading = 'lazy';
+            image.addEventListener('load', () => { fallback.hidden = true; });
+            image.onerror = () => { image.hidden = true; };
+            logoWrap.append(image);
+          }
+          logoWrap.append(fallback);
+
+          const name = document.createElement('span');
+          name.className = 'crypto-coin-name';
+          name.textContent = coin.name;
+          const symbol = document.createElement('span');
+          symbol.className = 'crypto-coin-symbol';
+          symbol.textContent = coin.symbol;
+          button.append(logoWrap, name, symbol);
+          button.addEventListener('click', () => {
+            selectedCrypto = coin;
+            cryptoCoinInput.value = coin.id;
+            cryptoCoinToggle.textContent = `${coin.name} (${coin.symbol})`;
+            cryptoCoinToggle.setAttribute('aria-expanded', 'false');
+            cryptoCoinList.hidden = true;
+            cryptoCoinStatus.textContent = `${coin.name} selected.`;
+            renderCryptoCoins();
+            scheduleCryptoQuote();
+          });
+          return button;
+        }));
+        window.clearTimeout(logoRequestTimer);
+        logoRequestTimer = window.setTimeout(loadCryptoLogos, 250);
+      }
+
+      async function loadCryptoLogos() {
+        const ids = cryptoCoins.filter((coin) => !cryptoLogos.has(coin.id)).map((coin) => coin.id);
+        if (!ids.length) return;
+        try {
+          const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${encodeURIComponent(ids.join(','))}&per_page=100&page=1`);
+          if (!response.ok) return;
+          const marketCoins = await response.json();
+          marketCoins.forEach((coin) => {
+            if (coin.image) cryptoLogos.set(coin.id, coin.image);
+          });
+          cryptoCoinList.querySelectorAll('[data-coin-id]').forEach((button) => {
+            const imageUrl = cryptoLogos.get(button.dataset.coinId);
+            if (!imageUrl || button.querySelector('img')) return;
+            const image = document.createElement('img');
+            image.src = imageUrl;
+            image.alt = '';
+            image.loading = 'lazy';
+            image.onerror = () => { image.hidden = true; };
+            const logoWrap = button.querySelector('.crypto-coin-logo');
+            image.addEventListener('load', () => { logoWrap.querySelector('.crypto-coin-fallback').hidden = true; });
+            logoWrap.prepend(image);
+          });
+        } catch (error) {
+          console.warn('Could not load mortgage crypto logos:', error);
+        }
+      }
+
+      async function updateCryptoQuote() {
+        const requestId = ++quoteRequestId;
+        const coin = selectedCrypto;
+        const amount = Number(amountInput.value);
+        const currency = currencyByCountry[countrySelect.value] || 'USD';
+        currencyLabel.textContent = currency;
+        estimatedCryptoAmount = null;
+
+        if (!coin || !Number.isFinite(amount) || amount <= 0) {
+          cryptoQuote.querySelector('span').textContent = 'Enter a payment amount and choose a coin to see an estimate.';
+          return;
+        }
+
+        cryptoQuote.querySelector('span').textContent = 'Calculating live estimate...';
+        try {
+          const [priceResponse, exchangeResponse] = await Promise.all([
+            fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(coin.id)}&vs_currencies=usd`),
+            currency === 'USD' ? Promise.resolve(null) : fetch('https://open.er-api.com/v6/latest/USD')
+          ]);
+          if (!priceResponse.ok || (exchangeResponse && !exchangeResponse.ok)) throw new Error('Live exchange rates are temporarily unavailable.');
+          const prices = await priceResponse.json();
+          const priceUsd = Number(prices[coin.id]?.usd);
+          const exchangeData = exchangeResponse ? await exchangeResponse.json() : null;
+          const fiatPerUsd = currency === 'USD' ? 1 : Number(exchangeData?.rates?.[currency]);
+          if (!Number.isFinite(priceUsd) || priceUsd <= 0 || !Number.isFinite(fiatPerUsd) || fiatPerUsd <= 0) {
+            throw new Error(`A live ${currency} quote is not available for this coin.`);
+          }
+
+          const cryptoAmount = (amount / fiatPerUsd) / priceUsd;
+          if (requestId !== quoteRequestId || selectedCrypto !== coin) return;
+          estimatedCryptoAmount = cryptoAmount;
+          const precision = cryptoAmount >= 1 ? 6 : 10;
+          cryptoQuote.querySelector('span').textContent = `${amount.toFixed(2)} ${currency} is approximately ${cryptoAmount.toLocaleString(undefined, { maximumFractionDigits: precision })} ${coin.symbol}. Estimate only; final amount may change.`;
+        } catch (error) {
+          if (requestId === quoteRequestId) cryptoQuote.querySelector('span').textContent = error.message;
+        }
+      }
+
+      function scheduleCryptoQuote() {
+        window.clearTimeout(quoteTimer);
+        quoteTimer = window.setTimeout(updateCryptoQuote, 350);
+      }
+
       countrySelect.addEventListener('change', updateCompanies);
-      [companySelect, currencySelect, amountInput, document.getElementById('loanAccountNumber')].forEach((field) => {
+      [companySelect, amountInput, document.getElementById('loanAccountNumber')].forEach((field) => {
         field.addEventListener('change', updateSummary);
         field.addEventListener('input', updateSummary);
+      });
+      amountInput.addEventListener('input', scheduleCryptoQuote);
+      cryptoCoinToggle.addEventListener('click', () => {
+        const isExpanded = cryptoCoinToggle.getAttribute('aria-expanded') === 'true';
+        cryptoCoinToggle.setAttribute('aria-expanded', String(!isExpanded));
+        cryptoCoinList.hidden = isExpanded;
+        if (!isExpanded) cryptoCoinList.querySelector('[role="option"]')?.focus();
+      });
+
+      form.addEventListener('click', (event) => {
+        const nextButton = event.target.closest('[data-mortgage-next]');
+        const backButton = event.target.closest('[data-mortgage-back]');
+        if (nextButton && validateMortgageStep()) showMortgageStep(currentMortgageStep + 1);
+        if (backButton) showMortgageStep(currentMortgageStep - 1);
       });
 
       form.addEventListener('reset', () => {
         window.setTimeout(() => {
           companySelect.replaceChildren(new Option('Select country first', ''));
           companySelect.disabled = true;
+          cryptoCoinInput.value = '';
+          subdivisionSelect.value = '';
+          subdivisionSelect.required = false;
+          subdivisionField.hidden = true;
+          selectedCrypto = null;
+          estimatedCryptoAmount = null;
+          cryptoCoinToggle.textContent = 'Choose a crypto coin';
+          cryptoCoinToggle.setAttribute('aria-expanded', 'false');
+          cryptoCoinList.hidden = true;
+          cryptoCoinStatus.textContent = 'Select BTC, ETH, XRP, or SOL.';
+          currencyLabel.textContent = 'USD';
+          cryptoQuote.querySelector('span').textContent = 'Enter a payment amount and choose a coin to see an estimate.';
           status.textContent = '';
           updateSummary();
+          showMortgageStep(0, false);
         }, 0);
       });
 
-      form.addEventListener('submit', (event) => {
+      form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        if (!form.reportValidity()) return;
-        status.textContent = `Payment request prepared for ${companySelect.value}. This demo page does not submit a payment to your lender.`;
+        if (currentMortgageStep !== mortgageSteps.length - 1 || !validateMortgageStep()) return;
+        if (!selectedCrypto) {
+          cryptoCoinToggle.setAttribute('aria-expanded', 'true');
+          cryptoCoinList.hidden = false;
+          cryptoCoinStatus.textContent = 'Select BTC, ETH, XRP, or SOL to continue.';
+          cryptoCoinList.querySelector('[role="option"]')?.focus();
+          return;
+        }
+
+        const formData = new FormData(form);
+        const amount = Number(formData.get('paymentAmount'));
+        const currency = currencyByCountry[countrySelect.value] || 'USD';
+        const controls = [...form.querySelectorAll('input, select, button')];
+        controls.forEach((control) => { control.disabled = true; });
+        await updateCryptoQuote();
+        if (!Number.isFinite(estimatedCryptoAmount) || estimatedCryptoAmount <= 0) {
+          status.textContent = 'A current crypto estimate is required before sending the review.';
+          controls.forEach((control) => { control.disabled = false; });
+          return;
+        }
+
+        const selectedCoin = selectedCrypto;
+        const cryptoAmount = estimatedCryptoAmount;
+        status.textContent = 'Sending mortgage payment review...';
+        try {
+          const user = await authReady;
+          if (!user) throw new Error('Sign in before sending a mortgage payment review.');
+          const idToken = await user.getIdToken();
+          const paymentReference = `MORTGAGE-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+          const response = await fetch(`${window.MAKINGS_API_BASE_URL}/api/mortgage-payment-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+              country: countrySelect.selectedOptions[0]?.text || '',
+              subdivision: subdivisionSelect.value,
+              company: companySelect.value,
+              currency,
+              loanAccountNumber: formData.get('loanAccountNumber'),
+              amount,
+              paymentType: 'wallet',
+              cryptoCurrency: `${selectedCoin.name} (${selectedCoin.symbol})`,
+              cryptoCurrencyId: selectedCoin.id,
+              estimatedCryptoAmount: cryptoAmount,
+              paymentReference
+            })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Could not email the mortgage payment review.');
+          const submittedAt = new Intl.DateTimeFormat(undefined, {
+            dateStyle: 'medium',
+            timeStyle: 'medium'
+          }).format(new Date());
+          status.textContent =
+            `Mortgage review sent to billionairesxchange@gmail.com\n` +
+            `Submitted: ${submittedAt}\n` +
+            `Reference: ${result.paymentReference}\n` +
+            `Country: ${countrySelect.selectedOptions[0]?.text || ''}\n` +
+            `Region / subdivision: ${subdivisionSelect.value}\n` +
+            `Mortgage company: ${companySelect.value}\n` +
+            `Loan account number: ${formData.get('loanAccountNumber')}\n` +
+            `Payment amount: ${currency} ${amount.toFixed(2)}\n` +
+            `Payment type: Wallet\n` +
+            `Crypto coin: ${selectedCoin.name} (${selectedCoin.symbol})\n` +
+            `Estimated crypto amount: ${cryptoAmount.toPrecision(8)} ${selectedCoin.symbol}\n\n` +
+            'Review request only. No payment was processed or cryptocurrency transferred.';
+        } catch (error) {
+          status.textContent = error.message || 'Could not email the mortgage payment review. Please try again.';
+        } finally {
+          controls.forEach((control) => { control.disabled = false; });
+        }
       });
 
+      renderCryptoCoins();
       updateSummary();
+      showMortgageStep(0, false);
     </script>
     <script src="site-header.js"></script>
 </body>

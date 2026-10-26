@@ -60,7 +60,13 @@
               <p>Select the country, choose the utility company, and complete the account details for your bill payment.</p>
 
               <form class="bill-payment-form" id="billPaymentForm">
-                <div class="form-grid">
+                <div class="bill-flow-progress">
+                  <span id="billFlowStepText" aria-live="polite">Step 1 of 7: Country</span>
+                  <progress id="billFlowProgress" value="1" max="7" aria-label="Bill payment setup progress"></progress>
+                </div>
+
+                <section class="bill-flow-step" data-bill-flow-step="0" aria-labelledby="billCountryStepHeading">
+                  <h4 id="billCountryStepHeading">Choose country</h4>
                   <label for="countrySelect">
                     Country for bill payment
                     <select id="countrySelect" name="country" required>
@@ -72,112 +78,122 @@
                       <option value="trinidad-tobago">Trinidad &amp; Tobago</option>
                     </select>
                   </label>
+                  <div class="form-grid country-subdivision-field" id="billSubdivisionField" hidden>
+                    <label for="billSubdivision">
+                      <span id="billSubdivisionLabel">Region / subdivision</span>
+                      <select id="billSubdivision" name="subdivision" required>
+                        <option value="">Choose subdivision</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-primary" type="button" data-bill-next>Next</button>
+                  </div>
+                </section>
 
+                <section class="bill-flow-step" data-bill-flow-step="1" aria-labelledby="billCompanyStepHeading" hidden>
+                  <h4 id="billCompanyStepHeading">Choose utility company</h4>
                   <label for="companySelect">
                     Utility company
                     <select id="companySelect" name="company" required>
                       <option value="">Choose a country first</option>
                     </select>
                   </label>
-                </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-bill-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-bill-next>Next</button>
+                  </div>
+                </section>
 
-                <div class="payment-type-grid">
-                  <label for="currencySelect">
-                    Currency type
-                    <select id="currencySelect" name="currencyType" required>
-                      <option value="usd">USD ($)</option>
-                      <option value="gbp">GBP (Â£)</option>
-                      <option value="cad">CAD (C$)</option>
-                      <option value="jmd">JMD (J$)</option>
-                      <option value="ttd">TTD (TT$)</option>
-                    </select>
-                  </label>
+                <section class="bill-flow-step" data-bill-flow-step="2" aria-labelledby="billCryptoStepHeading" hidden>
+                  <h4 id="billCryptoStepHeading">Choose crypto coin</h4>
+                  <div class="crypto-coin-picker">
+                    <span class="crypto-coin-picker-label">Crypto Coin</span>
+                    <input id="cryptoCurrency" name="cryptoCurrency" type="hidden" />
+                    <button class="crypto-coin-trigger" id="cryptoCoinToggle" type="button" aria-expanded="false" aria-controls="cryptoCoinList">Choose a crypto coin</button>
+                    <div class="crypto-coin-list" id="cryptoCoinList" role="listbox" aria-label="Available crypto coins" aria-describedby="cryptoListStatus" hidden></div>
+                    <span class="crypto-list-status" id="cryptoListStatus" role="status" aria-live="polite">Select BTC, ETH, XRP, or SOL.</span>
+                  </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-bill-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-bill-next>Next</button>
+                  </div>
+                </section>
 
+                <section class="bill-flow-step" data-bill-flow-step="3" aria-labelledby="billPaymentTypeStepHeading" hidden>
+                  <h4 id="billPaymentTypeStepHeading">Choose payment type</h4>
                   <label for="paymentType">
                     Payment type
                     <select id="paymentType" name="paymentType" required>
-                      <option value="card-payment">Debit or credit card</option>
-                      <option value="wallet-payment">Digital wallet</option>
-                      <option value="bank-payment">Bank pay</option>
+                      <option value="wallet-payment">Wallet</option>
                     </select>
                   </label>
-                </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-bill-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-bill-next>Next</button>
+                  </div>
+                </section>
 
-                <div class="form-grid">
+                <section class="bill-flow-step" data-bill-flow-step="4" aria-labelledby="billAccountNameStepHeading" hidden>
+                  <h4 id="billAccountNameStepHeading">Enter account name</h4>
                   <label for="accountName">
                     Name on utility account
-                    <input
-                      id="accountName"
-                      name="accountName"
-                      type="text"
-                      placeholder="e.g. Maria Thompson"
-                      required
-                    />
+                    <input id="accountName" name="accountName" type="text" placeholder="e.g. Maria Thompson" required />
                   </label>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-bill-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-bill-next>Next</button>
+                  </div>
+                </section>
 
+                <section class="bill-flow-step" data-bill-flow-step="5" aria-labelledby="billAccountNumberStepHeading" hidden>
+                  <h4 id="billAccountNumberStepHeading">Enter utility account number</h4>
                   <label for="accountNumber">
                     Utility account number
-                    <input
-                      id="accountNumber"
-                      name="accountNumber"
-                      type="text"
-                      placeholder="Account or customer reference"
-                      required
-                    />
+                    <input id="accountNumber" name="accountNumber" type="text" placeholder="Account or customer reference" required />
                   </label>
-                </div>
+                  <div class="bill-flow-actions">
+                    <button class="btn btn-secondary" type="button" data-bill-back>Back</button>
+                    <button class="btn btn-primary" type="button" data-bill-next>Next</button>
+                  </div>
+                </section>
 
-                <div class="form-grid">
-                  <label for="billAmount">
-                    Bill amount
-                    <input
-                      id="billAmount"
-                      name="billAmount"
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      placeholder="0.00"
-                      required
-                    />
-                  </label>
-
-                  <label for="billingPeriod">
-                    Billing period
-                    <select id="billingPeriod" name="billingPeriod">
-                      <option value="monthly">Monthly</option>
-                      <option value="quarterly">Quarterly</option>
-                      <option value="annual">Annual</option>
-                    </select>
-                  </label>
-                </div>
-
-                <div class="bill-payment-summary" id="companySummary" aria-live="polite">
-                  <strong>Available provider</strong>
-                  <span>Select a country to see the utility company options for your region.</span>
-                </div>
-
-                <div class="bill-payment-crypto-step" id="cryptoPaymentStep" hidden>
-                  <h4>Choose a cryptocurrency</h4>
-                  <p>Submitting emails this bill payment request for review. It does not send cryptocurrency or pay the bill.</p>
-                  <p>The email includes your account name, utility account number, signed-in email, bill amount, provider, and selected cryptocurrency.</p>
-                  <label for="cryptoCurrency">
-                    Cryptocurrency
-                    <select id="cryptoCurrency" name="cryptoCurrency">
-                      <option value="">Choose a cryptocurrency</option>
-                      <option value="Bitcoin (BTC)">Bitcoin (BTC)</option>
-                      <option value="Ethereum (ETH)">Ethereum (ETH)</option>
-                      <option value="Tether (USDT - TRC20)">Tether (USDT - TRC20)</option>
-                      <option value="USD Coin (USDC - ERC20)">USD Coin (USDC - ERC20)</option>
-                    </select>
-                  </label>
-                </div>
-
-                <div class="bill-payment-result" id="paymentResult" role="status" aria-live="polite" hidden></div>
-
-                <div class="bill-payment-actions">
-                  <button class="btn btn-primary" type="submit">Continue payment</button>
-                  <button class="btn btn-ghost" type="reset">Reset</button>
-                </div>
+                <section class="bill-flow-step" data-bill-flow-step="6" aria-labelledby="billAmountStepHeading" hidden>
+                  <h4 id="billAmountStepHeading">Enter bill amount</h4>
+                  <div class="form-grid">
+                    <label for="billAmount">
+                      Bill amount
+                      <div class="bill-amount-input-wrap">
+                        <span class="bill-amount-currency" id="billCurrencyLabel" aria-hidden="true">USD</span>
+                        <input id="billAmount" name="billAmount" type="number" min="0.01" max="1000000" step="0.01" placeholder="0.00" required />
+                      </div>
+                    </label>
+                    <label for="billingPeriod">
+                      Billing period
+                      <select id="billingPeriod" name="billingPeriod">
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="annual">Annual</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="bill-payment-summary" id="companySummary" aria-live="polite">
+                    <strong>Available provider</strong>
+                    <span>Select a country to see the utility company options for your region.</span>
+                  </div>
+                  <div class="bill-payment-summary" id="cryptoQuote" aria-live="polite">
+                    <strong>Estimated crypto amount</strong>
+                    <span>Choose a country, enter your bill amount, and select a cryptocurrency to see an estimate.</span>
+                  </div>
+                  <div class="bill-payment-result" id="paymentResult" role="status" aria-live="polite" hidden></div>
+                  <div class="bill-flow-actions bill-payment-actions">
+                    <button class="btn btn-secondary" type="button" data-bill-back>Back</button>
+                    <div class="bill-flow-actions-end">
+                      <button class="btn btn-ghost" type="reset">Reset</button>
+                      <button class="btn btn-primary" type="submit">Send review</button>
+                    </div>
+                  </div>
+                </section>
               </form>
             </div>
 
@@ -188,7 +204,7 @@
                 <li>Valid country and active utility provider</li>
                 <li>Account name exactly as it appears on the bill</li>
                 <li>Utility account number or customer reference</li>
-                <li>Preferred currency and payment method for the service</li>
+                <li>Cryptocurrency to use for the wallet payment request</li>
               </ul>
             </aside>
           </div>
@@ -196,24 +212,10 @@
       </section>
     </main>
 
-    <dialog class="bill-card-dialog" id="cardPaymentDialog" aria-labelledby="cardPaymentHeading">
-      <div class="bill-card-dialog-content">
-        <h3 id="cardPaymentHeading">Card payment window</h3>
-        <p id="cardPaymentSummary"></p>
-        <p class="bill-demo-notice">
-          This is a demo checkout. For your safety, this page does not collect card numbers, expiry dates,
-          or security codes. Live card payments must use a secure, hosted payment provider.
-        </p>
-        <div class="bill-payment-actions">
-          <button class="btn btn-primary" id="simulateCardPayment" type="button">Preview demo checkout</button>
-          <button class="btn btn-ghost" id="closeCardPayment" type="button">Cancel</button>
-        </div>
-      </div>
-    </dialog>
-
     <script src="api-config.js"></script>
     <script type="module">
       import { app, auth, db } from './firebase-client.js';
+      import COUNTRY_SUBDIVISIONS from './country-subdivisions.json' with { type: 'json' };
       import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
       const authReady = new Promise((resolve) => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -261,29 +263,225 @@
       };
 
       const countrySelect = document.getElementById('countrySelect');
+      const subdivisionField = document.getElementById('billSubdivisionField');
+      const subdivisionSelect = document.getElementById('billSubdivision');
+      const subdivisionLabel = document.getElementById('billSubdivisionLabel');
       const companySelect = document.getElementById('companySelect');
-      const currencySelect = document.getElementById('currencySelect');
       const companySummary = document.getElementById('companySummary');
       const billPaymentForm = document.getElementById('billPaymentForm');
-      const paymentTypeSelect = document.getElementById('paymentType');
-      const cryptoPaymentStep = document.getElementById('cryptoPaymentStep');
       const cryptoCurrencySelect = document.getElementById('cryptoCurrency');
+      const cryptoCoinList = document.getElementById('cryptoCoinList');
+      const cryptoCoinToggle = document.getElementById('cryptoCoinToggle');
+      const cryptoListStatus = document.getElementById('cryptoListStatus');
+      const billAmountInput = document.getElementById('billAmount');
+      const billCurrencyLabel = document.getElementById('billCurrencyLabel');
+      const cryptoQuote = document.getElementById('cryptoQuote');
       const paymentResult = document.getElementById('paymentResult');
-      const cardPaymentDialog = document.getElementById('cardPaymentDialog');
-      const cardPaymentSummary = document.getElementById('cardPaymentSummary');
-      const simulateCardPaymentButton = document.getElementById('simulateCardPayment');
-      const closeCardPaymentButton = document.getElementById('closeCardPayment');
-      const continuePaymentButton = billPaymentForm.querySelector('button[type="submit"]');
-      let cryptoSelectionRequired = false;
-      let paymentReference = '';
+      const sendReviewButton = billPaymentForm.querySelector('button[type="submit"]');
+      const billFlowSteps = [...billPaymentForm.querySelectorAll('[data-bill-flow-step]')];
+      const billFlowStepText = document.getElementById('billFlowStepText');
+      const billFlowProgress = document.getElementById('billFlowProgress');
+      const billFlowStepNames = ['Country', 'Utility company', 'Crypto coin', 'Payment type', 'Account name', 'Account number', 'Bill amount'];
+      const billCurrencies = {
+        'united-states': 'USD',
+        'united-kingdom': 'GBP',
+        canada: 'CAD',
+        jamaica: 'JMD',
+        'trinidad-tobago': 'TTD'
+      };
+      let cryptoAssets = [
+        { id: 'bitcoin', name: 'Bitcoin', symbol: 'btc' },
+        { id: 'ethereum', name: 'Ethereum', symbol: 'eth' },
+        { id: 'ripple', name: 'XRP', symbol: 'xrp' },
+        { id: 'solana', name: 'Solana', symbol: 'sol' }
+      ];
+      let selectedCrypto = null;
+      let estimatedCryptoAmount = null;
+      let quoteRequestId = 0;
+      let quoteTimer;
+      let logoRequestTimer;
+      let currentBillFlowStep = 0;
+      const cryptoLogos = new Map();
 
       function setPaymentResult(message) {
         paymentResult.textContent = message;
         paymentResult.hidden = !message;
       }
 
+      function selectedBillCurrency() {
+        return billCurrencies[countrySelect.value] || 'USD';
+      }
+
+      function showBillFlowStep(stepIndex, focusHeading = true) {
+        currentBillFlowStep = Math.max(0, Math.min(stepIndex, billFlowSteps.length - 1));
+        billFlowSteps.forEach((step, index) => {
+          step.hidden = index !== currentBillFlowStep;
+        });
+        billFlowStepText.textContent = `Step ${currentBillFlowStep + 1} of ${billFlowSteps.length}: ${billFlowStepNames[currentBillFlowStep]}`;
+        billFlowProgress.value = currentBillFlowStep + 1;
+        if (focusHeading) {
+          const heading = billFlowSteps[currentBillFlowStep].querySelector('h4');
+          heading.tabIndex = -1;
+          heading.focus();
+        }
+      }
+
+      function validateBillFlowStep() {
+        const fields = billFlowSteps[currentBillFlowStep].querySelectorAll('input:not([type="hidden"]), select, textarea');
+        for (const field of fields) {
+          if (!field.checkValidity()) {
+            field.reportValidity();
+            return false;
+          }
+        }
+
+        if (currentBillFlowStep === 2 && !selectedCrypto) {
+          cryptoCoinToggle.setAttribute('aria-expanded', 'true');
+          cryptoCoinList.hidden = false;
+          cryptoListStatus.textContent = 'Select BTC, ETH, XRP, or SOL to continue.';
+          cryptoCoinList.querySelector('[role="option"]')?.focus();
+          return false;
+        }
+        return true;
+      }
+
+      function updateSubdivisionField() {
+        const subdivisionConfig = COUNTRY_SUBDIVISIONS[countrySelect.value];
+        subdivisionField.hidden = !subdivisionConfig;
+        subdivisionLabel.textContent = subdivisionConfig?.label || 'Region / subdivision';
+        subdivisionSelect.replaceChildren(
+          new Option(`Choose ${subdivisionConfig?.label.toLowerCase() || 'location'}`, ''),
+          ...(subdivisionConfig?.locations || []).map((location) => new Option(location, location))
+        );
+        subdivisionSelect.required = Boolean(subdivisionConfig);
+      }
+
+      function renderCryptoOptions() {
+        const selectedId = cryptoCurrencySelect.value || selectedCrypto?.id || '';
+        const matches = cryptoAssets;
+
+        cryptoCoinList.replaceChildren(...matches.map((coin) => {
+          const button = document.createElement('button');
+          button.className = 'crypto-coin-option';
+          button.type = 'button';
+          button.setAttribute('role', 'option');
+          button.setAttribute('aria-selected', String(coin.id === selectedId));
+          button.dataset.coinId = coin.id;
+
+          const logoWrap = document.createElement('span');
+          logoWrap.className = 'crypto-coin-logo';
+          const fallback = document.createElement('span');
+          fallback.className = 'crypto-coin-fallback';
+          fallback.textContent = coin.symbol.slice(0, 3).toUpperCase();
+          const logoUrl = cryptoLogos.get(coin.id);
+          if (logoUrl) {
+            const logo = document.createElement('img');
+            logo.src = logoUrl;
+            logo.alt = '';
+            logo.loading = 'lazy';
+            logo.addEventListener('load', () => { fallback.hidden = true; });
+            logo.onerror = () => { logo.hidden = true; };
+            logoWrap.append(logo);
+          }
+          logoWrap.append(fallback);
+
+          const name = document.createElement('span');
+          name.className = 'crypto-coin-name';
+          name.textContent = coin.name;
+          const symbol = document.createElement('span');
+          symbol.className = 'crypto-coin-symbol';
+          symbol.textContent = coin.symbol.toUpperCase();
+          button.append(logoWrap, name, symbol);
+          button.addEventListener('click', () => {
+            selectedCrypto = coin;
+            cryptoCurrencySelect.value = coin.id;
+            cryptoCoinToggle.textContent = `${coin.name} (${coin.symbol.toUpperCase()})`;
+            cryptoCoinToggle.setAttribute('aria-expanded', 'false');
+            cryptoCoinList.hidden = true;
+            cryptoListStatus.textContent = `${coin.name} selected.`;
+            renderCryptoOptions();
+            scheduleCryptoQuote();
+          });
+          return button;
+        }));
+        window.clearTimeout(logoRequestTimer);
+        logoRequestTimer = window.setTimeout(() => loadCryptoLogos(matches), 250);
+      }
+
+      async function loadCryptoLogos(coins) {
+        const coinsWithoutLogos = coins.filter((coin) => !cryptoLogos.has(coin.id));
+        if (coinsWithoutLogos.length === 0) return;
+        try {
+          const ids = coinsWithoutLogos.map((coin) => coin.id).join(',');
+          const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${encodeURIComponent(ids)}&per_page=100&page=1`);
+          if (!response.ok) return;
+          const marketCoins = await response.json();
+          marketCoins.forEach((coin) => {
+            if (coin.image) cryptoLogos.set(coin.id, coin.image);
+          });
+          cryptoCoinList.querySelectorAll('[data-coin-id]').forEach((button) => {
+            const imageUrl = cryptoLogos.get(button.dataset.coinId);
+            if (!imageUrl || button.querySelector('img')) return;
+            const image = document.createElement('img');
+            image.src = imageUrl;
+            image.alt = '';
+            image.loading = 'lazy';
+            image.onerror = () => { image.hidden = true; };
+            const logoWrap = button.querySelector('.crypto-coin-logo');
+            image.addEventListener('load', () => { logoWrap.querySelector('.crypto-coin-fallback').hidden = true; });
+            logoWrap.prepend(image);
+          });
+        } catch (error) {
+          console.warn('Could not load crypto coin logos:', error);
+        }
+      }
+
+      async function updateCryptoQuote() {
+        const requestId = ++quoteRequestId;
+        const selectedAsset = selectedCrypto;
+        const currency = selectedBillCurrency();
+        const amount = Number(billAmountInput.value);
+        billCurrencyLabel.textContent = currency;
+        estimatedCryptoAmount = null;
+
+        if (!selectedCrypto || !Number.isFinite(amount) || amount <= 0) {
+          cryptoQuote.querySelector('span').textContent = 'Enter a bill amount and select a cryptocurrency to see the estimated wallet amount.';
+          return;
+        }
+
+        cryptoQuote.querySelector('span').textContent = 'Calculating live estimate...';
+        try {
+          const [priceResponse, exchangeResponse] = await Promise.all([
+            fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(selectedAsset.id)}&vs_currencies=usd`),
+            currency === 'USD' ? Promise.resolve(null) : fetch('https://open.er-api.com/v6/latest/USD')
+          ]);
+          if (!priceResponse.ok || (exchangeResponse && !exchangeResponse.ok)) throw new Error('Live exchange rates are temporarily unavailable.');
+          const prices = await priceResponse.json();
+          const cryptoPriceUsd = Number(prices[selectedAsset.id]?.usd);
+          const exchangeData = exchangeResponse ? await exchangeResponse.json() : null;
+          const fiatPerUsd = currency === 'USD' ? 1 : Number(exchangeData?.rates?.[currency]);
+          if (!Number.isFinite(cryptoPriceUsd) || cryptoPriceUsd <= 0 || !Number.isFinite(fiatPerUsd) || fiatPerUsd <= 0) {
+            throw new Error(`A live ${currency} quote is not available for this cryptocurrency.`);
+          }
+
+          const cryptoAmount = (amount / fiatPerUsd) / cryptoPriceUsd;
+          if (requestId !== quoteRequestId || selectedCrypto !== selectedAsset) return;
+          estimatedCryptoAmount = cryptoAmount;
+          const precision = cryptoAmount >= 1 ? 6 : 10;
+          cryptoQuote.querySelector('span').textContent = `${amount.toFixed(2)} ${currency} is approximately ${cryptoAmount.toLocaleString(undefined, { maximumFractionDigits: precision })} ${selectedAsset.symbol.toUpperCase()}. This is an estimate; the final amount may change.`;
+        } catch (error) {
+          if (requestId === quoteRequestId) cryptoQuote.querySelector('span').textContent = error.message;
+        }
+      }
+
+      function scheduleCryptoQuote() {
+        window.clearTimeout(quoteTimer);
+        quoteTimer = window.setTimeout(updateCryptoQuote, 350);
+      }
+
       function populateCompanies() {
         const selectedCountry = countrySelect.value;
+        updateSubdivisionField();
         companySelect.innerHTML = '<option value="">Select utility company</option>';
 
         if (!selectedCountry || !utilityCompaniesByCountry[selectedCountry]) {
@@ -333,59 +531,63 @@
 
       countrySelect.addEventListener('change', populateCompanies);
       companySelect.addEventListener('change', updateCompanySummary);
+      countrySelect.addEventListener('change', () => {
+        billCurrencyLabel.textContent = selectedBillCurrency();
+        scheduleCryptoQuote();
+      });
+      billAmountInput.addEventListener('input', scheduleCryptoQuote);
+      cryptoCoinToggle.addEventListener('click', () => {
+        const isExpanded = cryptoCoinToggle.getAttribute('aria-expanded') === 'true';
+        cryptoCoinToggle.setAttribute('aria-expanded', String(!isExpanded));
+        cryptoCoinList.hidden = isExpanded;
+        if (!isExpanded) cryptoCoinList.querySelector('[role="option"]')?.focus();
+      });
 
-      paymentTypeSelect.addEventListener('change', () => {
-        cryptoSelectionRequired = false;
-        cryptoPaymentStep.hidden = true;
-        cryptoCurrencySelect.required = false;
-        cryptoCurrencySelect.value = '';
-        paymentReference = '';
-        continuePaymentButton.textContent = 'Continue payment';
-        setPaymentResult('');
+      billPaymentForm.addEventListener('click', (event) => {
+        const nextButton = event.target.closest('[data-bill-next]');
+        const backButton = event.target.closest('[data-bill-back]');
+        if (nextButton && validateBillFlowStep()) showBillFlowStep(currentBillFlowStep + 1);
+        if (backButton) showBillFlowStep(currentBillFlowStep - 1);
       });
 
       billPaymentForm.addEventListener('submit', async (event) => {
         event.preventDefault();
+        if (currentBillFlowStep !== billFlowSteps.length - 1 || !validateBillFlowStep()) return;
 
         const formData = new FormData(billPaymentForm);
         const company = companySelect.value;
         const amount = Number(formData.get('billAmount'));
-        const currency = currencySelect.options[currencySelect.selectedIndex].text;
+        const currency = selectedBillCurrency();
 
-        if (paymentTypeSelect.value === 'card-payment') {
-          cardPaymentSummary.textContent = `${currency} ${amount.toFixed(2)} bill payment to ${company}.`;
-          cardPaymentDialog.showModal();
+        if (!selectedCrypto) {
+          cryptoCoinToggle.setAttribute('aria-expanded', 'true');
+          cryptoCoinList.hidden = false;
+          cryptoListStatus.textContent = 'Select BTC, ETH, XRP, or SOL to continue.';
+          cryptoCoinList.querySelector('[role="option"]')?.focus();
           return;
         }
 
-        if (paymentTypeSelect.value === 'bank-payment') {
-          setPaymentResult(
-            'Bank pay is not configured yet. No bank details were collected and no payment was processed.'
-          );
+        const formControls = [...billPaymentForm.querySelectorAll('input, select, button')];
+        formControls.forEach((control) => { control.disabled = true; });
+        await updateCryptoQuote();
+        if (!Number.isFinite(estimatedCryptoAmount) || estimatedCryptoAmount <= 0) {
+          setPaymentResult('A current crypto estimate is required before sending the review.');
+          formControls.forEach((control) => { control.disabled = false; });
           return;
         }
 
-        if (!cryptoSelectionRequired) {
-          cryptoSelectionRequired = true;
-          paymentReference = `BILL-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-          cryptoPaymentStep.hidden = false;
-          cryptoCurrencySelect.required = true;
-          continuePaymentButton.textContent = 'Email payment request';
-          setPaymentResult('Choose a cryptocurrency, then email the request to BillionairesXchange.');
-          cryptoCurrencySelect.focus();
-          return;
-        }
-
-        continuePaymentButton.disabled = true;
-        setPaymentResult('Sending your bill payment request email...');
+        const submittedCrypto = selectedCrypto;
+        const submittedCryptoAmount = estimatedCryptoAmount;
+        setPaymentResult('Sending your bill payment review...');
 
         try {
           const signedInUser = await authReady;
           if (!signedInUser) {
-            throw new Error('Sign in before emailing a bill payment request. Open the Login page and sign in, then retry.');
+            throw new Error('Sign in before sending a bill payment review. Open the Login page and sign in, then retry.');
           }
 
           const idToken = await signedInUser.getIdToken();
+          const paymentReference = `BILL-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
           const response = await fetch(`${window.MAKINGS_API_BASE_URL}/api/bill-payment-email`, {
             method: 'POST',
             headers: {
@@ -394,54 +596,71 @@
             },
             body: JSON.stringify({
               country: countrySelect.selectedOptions[0]?.text || '',
+              subdivision: subdivisionSelect.value,
               company,
-              currency: currencySelect.value.toUpperCase(),
+              currency,
               accountName: formData.get('accountName'),
               accountNumber: formData.get('accountNumber'),
               amount,
               billingPeriod: formData.get('billingPeriod'),
-              cryptoCurrency: formData.get('cryptoCurrency'),
+              paymentType: 'wallet-payment',
+              cryptoCurrency: `${submittedCrypto.name} (${submittedCrypto.symbol.toUpperCase()})`,
+              cryptoCurrencyId: submittedCrypto.id,
+              estimatedCryptoAmount: submittedCryptoAmount,
               paymentReference
             })
           });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || 'Could not email your bill payment request.');
 
+          const submittedAt = new Intl.DateTimeFormat(undefined, {
+            dateStyle: 'medium',
+            timeStyle: 'medium'
+          }).format(new Date());
           setPaymentResult(
-            `Your bill payment request was emailed to billionairesxchange@gmail.com.\n` +
+            `Review sent to billionairesxchange@gmail.com\n` +
+            `Submitted: ${submittedAt}\n` +
             `Reference: ${result.paymentReference}\n` +
-            `Amount: ${currency} ${amount.toFixed(2)}\n` +
-            `Cryptocurrency selected: ${formData.get('cryptoCurrency')}\n\n` +
-            `This is a request only. No payment was processed and no cryptocurrency was transferred.`
+            `Country: ${countrySelect.selectedOptions[0]?.text || ''}\n` +
+            `Region: ${subdivisionSelect.value}\n` +
+            `Utility company: ${company}\n` +
+            `Name on utility account: ${formData.get('accountName')}\n` +
+            `Utility account number: ${formData.get('accountNumber')}\n` +
+            `Bill amount: ${currency} ${amount.toFixed(2)} (${formData.get('billingPeriod')})\n` +
+            `Payment type: Wallet\n` +
+            `Crypto coin: ${submittedCrypto.name} (${submittedCrypto.symbol.toUpperCase()})\n` +
+            `Estimated crypto amount: ${submittedCryptoAmount.toPrecision(8)} ${submittedCrypto.symbol.toUpperCase()}\n\n` +
+            `Review request only. No payment was processed and no cryptocurrency was transferred.`
           );
         } catch (error) {
           setPaymentResult(error.message || 'Could not email your bill payment request. Please try again.');
         } finally {
-          continuePaymentButton.disabled = false;
+          formControls.forEach((control) => { control.disabled = false; });
         }
       });
 
-      simulateCardPaymentButton.addEventListener('click', () => {
-        cardPaymentDialog.close();
-        setPaymentResult(
-          'DEMO CARD CHECKOUT â€” no card details were collected and no payment was processed. ' +
-          'Connect a secure hosted payment provider to accept real card payments.'
-        );
-      });
-
-      closeCardPaymentButton.addEventListener('click', () => cardPaymentDialog.close());
-
       billPaymentForm.addEventListener('reset', () => {
-        cryptoSelectionRequired = false;
-        cryptoPaymentStep.hidden = true;
-        cryptoCurrencySelect.required = false;
+        selectedCrypto = null;
+        estimatedCryptoAmount = null;
         cryptoCurrencySelect.value = '';
-        paymentReference = '';
-        continuePaymentButton.textContent = 'Continue payment';
+        subdivisionSelect.value = '';
+        subdivisionSelect.required = false;
+        subdivisionField.hidden = true;
+        cryptoCoinToggle.textContent = 'Choose a crypto coin';
+        cryptoCoinToggle.setAttribute('aria-expanded', 'false');
+        cryptoCoinList.hidden = true;
+        renderCryptoOptions();
+        cryptoListStatus.textContent = 'Select BTC, ETH, XRP, or SOL.';
+        billCurrencyLabel.textContent = 'USD';
+        cryptoQuote.querySelector('span').textContent = 'Enter a bill amount and select a cryptocurrency to see the estimated wallet amount.';
         setPaymentResult('');
+        window.setTimeout(() => showBillFlowStep(0, false), 0);
       });
 
       populateCompanies();
+      renderCryptoOptions();
+      cryptoListStatus.textContent = 'Choose BTC, ETH, XRP, or SOL.';
+      showBillFlowStep(0, false);
     </script>
     <script src="site-header.js"></script>
 </body>
