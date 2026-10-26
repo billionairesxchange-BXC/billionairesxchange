@@ -44,19 +44,47 @@
     </header>
 
     <main>
+      <section class="favorite-panel card-glass" aria-labelledby="favoriteCoinsTitle">
+        <div class="favorite-panel-head">
+          <div>
+            <span class="eyebrow">Market watchlist</span>
+            <h3 id="favoriteCoinsTitle">Favorite coins for AI analysis</h3>
+            <p>Choose coins the bot should watch. Market cap and live market signals guide its settings.</p>
+          </div>
+          <div class="favorite-add-control">
+            <label for="favoriteCoinSelect">Add favorite</label>
+            <div class="favorite-add-row">
+              <select id="favoriteCoinSelect">
+                <option value="">Choose a coin</option>
+                <option value="BTC">Bitcoin (BTC)</option>
+                <option value="ETH">Ethereum (ETH)</option>
+                <option value="XRP">XRP (XRP)</option>
+                <option value="SOL">Solana (SOL)</option>
+                <option value="ADA">Cardano (ADA)</option>
+                <option value="DOT">Polkadot (DOT)</option>
+                <option value="DOGE">Dogecoin (DOGE)</option>
+                <option value="USDT">Tether (USDT)</option>
+              </select>
+              <button class="btn btn-primary" type="button" id="addFavoriteBtn">Add</button>
+            </div>
+          </div>
+        </div>
+        <div class="favorite-slider">
+          <button class="favorite-slide-btn" type="button" id="favoritePrevBtn" aria-label="Show previous favorite coins">&#8592;</button>
+          <div class="favorite-cards" id="favoriteCards" aria-live="polite"></div>
+          <button class="favorite-slide-btn" type="button" id="favoriteNextBtn" aria-label="Show next favorite coins">&#8594;</button>
+        </div>
+        <p class="favorite-analysis-status" id="favoriteAnalysisStatus">Add a favorite coin to start personalized market analysis.</p>
+      </section>
+
       <details class="autopilot-settings-disclosure section-shell" id="autopilotSettings">
         <summary class="btn btn-primary">Auto Pilot Bot Settings</summary>
         <section class="autopilot-section card-glass" id="autopilot" aria-labelledby="autopilotTitle">
           <div class="autopilot-heading">
             <div>
               <span class="eyebrow">Multi-market paper trading</span>
-              <h3 id="autopilotTitle">Auto Pilot Bots</h3>
+              <h3 id="autopilotTitle">Create an Auto Pilot Bot</h3>
               <p>Each bot scans supported crypto markets, ranks positive momentum and liquidity, then selects a market and paper-trade settings. Signals are heuristic, not predictions or guarantees.</p>
-            </div>
-            <div class="autopilot-account-summary" aria-live="polite">
-              <span>Net paper P/L<strong id="autoPilotNetPnl">$0.00</strong></span>
-              <span>Total losses<strong id="autoPilotTotalLosses">$0.00</strong></span>
-              <span>Active bots<strong id="autoPilotActiveCount">0 / 4</strong></span>
             </div>
           </div>
           <p class="autopilot-disclaimer">Simulation only. These bots never access your wallet or place real exchange orders. They run only while this page is open. Market quotes are provided by Binance public data. Paper results do not predict future performance.</p>
@@ -92,29 +120,44 @@
             </label>
             <button class="btn btn-primary" type="submit">Create bot</button>
           </form>
-          <p class="autopilot-status" id="autoPilotStatus" role="status" aria-live="polite">Create a bot and approve its paper-trading consent before starting it. A maximum of four bots can run at once.</p>
-          <ul class="autopilot-alerts" id="autoPilotAlerts" aria-live="polite" aria-label="Recent autopilot trade notifications"></ul>
-          <div class="autopilot-bot-list" id="autoPilotBotList" aria-live="polite"></div>
-          <section class="autopilot-history" aria-labelledby="autoPilotHistoryTitle">
-            <div class="autopilot-history-heading">
-              <div>
-                <span class="eyebrow">Closed paper trades</span>
-                <h4 id="autoPilotHistoryTitle">Profit and loss history</h4>
-              </div>
-            </div>
-            <div class="autopilot-history-table-wrap">
-              <table class="autopilot-history-table">
-                <thead>
-                  <tr><th>Bot</th><th>Coin</th><th>Trade size</th><th>Entry</th><th>Exit</th><th>Result</th><th>Closed</th></tr>
-                </thead>
-                <tbody id="autoPilotTradeHistory">
-                  <tr><td colspan="7">No autopilot trades have closed yet.</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
         </section>
       </details>
+
+      <section class="autopilot-section autopilot-running-details section-shell card-glass" id="autopilotRunningDetails" aria-labelledby="autopilotRunningTitle">
+        <div class="autopilot-heading">
+          <div>
+            <span class="eyebrow">Paper trading dashboard</span>
+            <h3 id="autopilotRunningTitle">Bot Running Details</h3>
+            <p>Review bot status, balances, simulated positions, and completed trades.</p>
+          </div>
+          <div class="autopilot-account-summary" aria-live="polite">
+            <span>Net paper P/L<strong id="autoPilotNetPnl">$0.00</strong></span>
+            <span>Total losses<strong id="autoPilotTotalLosses">$0.00</strong></span>
+            <span>Active bots<strong id="autoPilotActiveCount">0 / 4</strong></span>
+          </div>
+        </div>
+        <p class="autopilot-status" id="autoPilotStatus" role="status" aria-live="polite">Create a bot and approve its paper-trading consent before starting it. A maximum of four bots can run at once.</p>
+        <ul class="autopilot-alerts" id="autoPilotAlerts" aria-live="polite" aria-label="Recent autopilot trade notifications"></ul>
+        <div class="autopilot-bot-list" id="autoPilotBotList" aria-live="polite"></div>
+        <section class="autopilot-history" aria-labelledby="autoPilotHistoryTitle">
+          <div class="autopilot-history-heading">
+            <div>
+              <span class="eyebrow">Closed paper trades</span>
+              <h4 id="autoPilotHistoryTitle">Profit and loss history</h4>
+            </div>
+          </div>
+          <div class="autopilot-history-table-wrap">
+            <table class="autopilot-history-table">
+              <thead>
+                <tr><th>Bot</th><th>Coin</th><th>Trade size</th><th>Entry</th><th>Exit</th><th>Result</th><th>Closed</th></tr>
+              </thead>
+              <tbody id="autoPilotTradeHistory">
+                <tr><td colspan="7">No autopilot trades have closed yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
 
       <section class="bot-section section-shell" id="bot-trading">
         <div class="section-head">
@@ -127,39 +170,6 @@
             Paper bot paused
           </div>
         </div>
-
-        <section class="favorite-panel card-glass" aria-labelledby="favoriteCoinsTitle">
-          <div class="favorite-panel-head">
-            <div>
-              <span class="eyebrow">Market watchlist</span>
-              <h3 id="favoriteCoinsTitle">Favorite coins for AI analysis</h3>
-              <p>Choose coins the bot should watch. Market cap and live market signals guide its settings.</p>
-            </div>
-            <div class="favorite-add-control">
-              <label for="favoriteCoinSelect">Add favorite</label>
-              <div class="favorite-add-row">
-                <select id="favoriteCoinSelect">
-                  <option value="">Choose a coin</option>
-                  <option value="BTC">Bitcoin (BTC)</option>
-                  <option value="ETH">Ethereum (ETH)</option>
-                  <option value="XRP">XRP (XRP)</option>
-                  <option value="SOL">Solana (SOL)</option>
-                  <option value="ADA">Cardano (ADA)</option>
-                  <option value="DOT">Polkadot (DOT)</option>
-                  <option value="DOGE">Dogecoin (DOGE)</option>
-                  <option value="USDT">Tether (USDT)</option>
-                </select>
-                <button class="btn btn-primary" type="button" id="addFavoriteBtn">Add</button>
-              </div>
-            </div>
-          </div>
-          <div class="favorite-slider">
-            <button class="favorite-slide-btn" type="button" id="favoritePrevBtn" aria-label="Show previous favorite coins">&#8592;</button>
-            <div class="favorite-cards" id="favoriteCards" aria-live="polite"></div>
-            <button class="favorite-slide-btn" type="button" id="favoriteNextBtn" aria-label="Show next favorite coins">&#8594;</button>
-          </div>
-          <p class="favorite-analysis-status" id="favoriteAnalysisStatus">Add a favorite coin to start personalized market analysis.</p>
-        </section>
 
         <div class="bot-layout">
           <div class="bot-control-panels">

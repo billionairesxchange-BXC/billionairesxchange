@@ -24,6 +24,8 @@
   const accountId = localStorage.getItem('makingsCurrentUser') || 'guest';
   const storageKey = `makingsAutoPilotBotsV1:${accountId}`;
   const botList = document.getElementById('autoPilotBotList');
+  const settingsDisclosure = document.getElementById('autopilotSettings');
+  const runningDetails = document.getElementById('autopilotRunningDetails');
   const status = document.getElementById('autoPilotStatus');
   const alerts = document.getElementById('autoPilotAlerts');
   const historyBody = document.getElementById('autoPilotTradeHistory');
@@ -618,6 +620,8 @@
     document.getElementById('autoPilotDuration').value = '24h';
     document.getElementById('autoPilotGoal').value = '100';
     renderBots();
+    settingsDisclosure.open = false;
+    runningDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
     announce(`${name} created and paused. Start it when you are ready; its $20 minimum applies only to simulated buys.`);
   });
 

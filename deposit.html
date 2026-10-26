@@ -54,8 +54,18 @@
         </div>
 
         <div class="card-glass bill-payment-card">
-          <div class="bill-payment-layout">
+          <div class="deposit-method-chooser" id="depositMethodChooser" aria-label="Choose a deposit method">
+            <h3>Choose how to deposit</h3>
+            <p>Select a deposit method to continue.</p>
+            <div class="deposit-method-options">
+              <button class="btn btn-secondary" type="button" data-deposit-method="bank">Deposit With Bank</button>
+              <button class="btn btn-secondary" type="button" data-deposit-method="card">Deposit With Card</button>
+            </div>
+          </div>
+
+          <div class="bill-payment-layout" id="bankDepositPanel" hidden>
             <div class="bill-payment-form-panel">
+              <button class="btn btn-ghost deposit-method-back" type="button" data-deposit-back>Choose another method</button>
               <h3>Transfer from your bank</h3>
               <p>Select the country where your bank is registered, choose a banking partner, and decide where the money should be deposited.</p>
 
@@ -211,6 +221,34 @@
               </ul>
             </aside>
           </div>
+
+          <section class="card-glass deposit-card-panel" id="cardDepositPanel" aria-labelledby="cardDepositHeading" hidden>
+            <button class="btn btn-ghost deposit-method-back" type="button" data-deposit-back>Choose another method</button>
+            <h3 id="cardDepositHeading">Deposit with a saved card</h3>
+            <p>Choose a saved credit or debit card and enter an amount. This demo does not charge your card or move real funds.</p>
+            <form class="bill-payment-form" id="cardDepositForm">
+              <label for="savedDepositCard">Saved card</label>
+              <select id="savedDepositCard" required disabled>
+                <option value="">Loading saved cards...</option>
+              </select>
+              <div class="form-grid">
+                <label for="cardDepositAmount">Deposit amount (USD)
+                  <input id="cardDepositAmount" name="amount" type="number" min="1" step="0.01" placeholder="0.00" required />
+                </label>
+                <label for="cardDepositDestination">Deposit to
+                  <select id="cardDepositDestination" name="destinationAccount" required>
+                    <option value="wallet">Wallet</option>
+                    <option value="trade-paper-balance">Trade Paper Balance</option>
+                  </select>
+                </label>
+              </div>
+              <p class="bill-payment-summary" id="cardDepositStatus" role="status" aria-live="polite">Sign in to load your saved cards.</p>
+              <div class="bill-payment-actions">
+                <button class="btn btn-primary" id="cardDepositSubmit" type="submit" disabled>Request card deposit</button>
+                <a class="btn btn-secondary" href="treasury.html?paymentMethods=1#paymentMethodsSection">Manage payment methods</a>
+              </div>
+            </form>
+          </section>
         </div>
       </section>
     </main>
@@ -221,6 +259,25 @@
       const bankSummary = document.getElementById('bankSummary');
       const depositForm = document.getElementById('depositForm');
       const selectedBank = { name: '', country: '' };
+      const bankDepositPanel = document.getElementById('bankDepositPanel');
+      const cardDepositPanel = document.getElementById('cardDepositPanel');
+      const depositMethodChooser = document.getElementById('depositMethodChooser');
+
+      document.querySelectorAll('[data-deposit-method]').forEach((button) => {
+        button.addEventListener('click', () => {
+          depositMethodChooser.hidden = true;
+          bankDepositPanel.hidden = button.dataset.depositMethod !== 'bank';
+          cardDepositPanel.hidden = button.dataset.depositMethod !== 'card';
+        });
+      });
+
+      document.querySelectorAll('[data-deposit-back]').forEach((button) => {
+        button.addEventListener('click', () => {
+          bankDepositPanel.hidden = true;
+          cardDepositPanel.hidden = true;
+          depositMethodChooser.hidden = false;
+        });
+      });
 
       function filterBanks() {
         const selectedCountry = countrySelect.value;
@@ -293,6 +350,66 @@
       });
 
       filterBanks();
+    </script>
+    <script type="module">
+      import { auth, db } from './firebase-client.js';
+      import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+      import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+      const cardSelect = document.getElementById('savedDepositCard');
+      const cardStatus = document.getElementById('cardDepositStatus');
+      const cardForm = document.getElementById('cardDepositForm');
+      const cardSubmit = document.getElementById('cardDepositSubmit');
+      let savedCards = [];
+
+      onAuthStateChanged(auth, async (user) => {
+        cardSelect.replaceChildren();
+        cardSubmit.disabled = true;
+        cardSelect.disabled = true;
+        if (!user) {
+          cardSelect.add(new Option('Sign in to use a saved card', ''));
+          cardStatus.textContent = 'Sign in to load your saved cards.';
+          return;
+        }
+
+        cardSelect.add(new Option('Loading saved cards...', ''));
+        cardStatus.textContent = 'Loading your saved cards...';
+        try {
+          const snapshot = await getDocs(collection(db, 'users', user.uid, 'paymentMethods'));
+          savedCards = snapshot.docs
+            .map((card) => ({ id: card.id, ...card.data() }))
+            .filter((card) => card.type === 'card' && card.status === 'active'
+              && typeof card.cardLast4 === 'string' && typeof card.cardNetwork === 'string');
+          cardSelect.replaceChildren();
+          cardSelect.add(new Option(savedCards.length ? 'Choose a saved card' : 'No saved cards found', ''));
+          savedCards.forEach((card) => {
+            const cardType = card.cardType || 'Card';
+            cardSelect.add(new Option(`${card.cardNetwork} ${cardType} ending in ${card.cardLast4}`, card.id));
+          });
+          cardSelect.disabled = !savedCards.length;
+          cardSubmit.disabled = !savedCards.length;
+          cardStatus.textContent = savedCards.length
+            ? `${savedCards.length} saved card${savedCards.length === 1 ? '' : 's'} available. No charge will be made.`
+            : 'No active saved cards found. Add a card in Payment Methods to continue.';
+        } catch (error) {
+          console.error('Saved deposit cards could not be loaded:', error);
+          cardSelect.replaceChildren(new Option('Could not load saved cards', ''));
+          cardSelect.disabled = true;
+          cardStatus.textContent = `Saved cards could not be loaded. ${error.message}`;
+        }
+      });
+
+      cardForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const selectedCard = savedCards.find((card) => card.id === cardSelect.value);
+        const amount = Number(document.getElementById('cardDepositAmount').value);
+        if (!selectedCard || !Number.isFinite(amount) || amount < 1) {
+          cardStatus.textContent = 'Choose an active saved card and enter a valid deposit amount.';
+          return;
+        }
+        cardStatus.textContent = `Demo card deposit request created for $${amount.toFixed(2)} using ${selectedCard.cardNetwork} ending in ${selectedCard.cardLast4}. No payment was processed.`;
+        cardForm.reset();
+      });
     </script>
     <script src="site-header.js"></script>
 </body>

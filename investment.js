@@ -17,6 +17,8 @@ const companyInvestmentSetup = document.getElementById('companyInvestmentSetup')
 const existingCompanyPanel = document.getElementById('existingCompanyPanel');
 const registerCompanyPanel = document.getElementById('registerCompanyPanel');
 const existingCompanyChoices = document.getElementById('existingCompanyChoices');
+const companyCountryChoices = document.getElementById('companyCountryChoices');
+const companyCountryStatus = document.getElementById('companyCountryStatus');
 const coinsInvestmentSetup = document.getElementById('coinsInvestmentSetup');
 const customCoinChoices = document.getElementById('customCoinChoices');
 const coinInvestmentEmpty = document.getElementById('coinInvestmentEmpty');
@@ -803,11 +805,13 @@ registerCompanyPanel.addEventListener('submit', async (event) => {
 
 const savedCompanies = JSON.parse(localStorage.getItem('makingsRegisteredCompanies') || '[]');
 const availableCompanies = [
-  { name: 'Caribbean Renewables Ltd' },
-  { name: 'Harbor Technology Group' },
-  { name: 'Island Foods Co.' },
+  { name: 'Caribbean Renewables Ltd', country: 'Jamaica' },
+  { name: 'Harbor Technology Group', country: 'Jamaica' },
+  { name: 'Island Foods Co.', country: 'Jamaica' },
   ...savedCompanies
 ];
+const investmentCompanyCountries = ['America', 'Barbados', 'Cayman Islands', 'Jamaica', 'Puerto Rico', 'United Kingdom'];
+let selectedCompanyCountry = 'All countries';
 const companyNames = new Set();
 availableCompanies.forEach((company) => {
   const name = company.name?.trim();
@@ -835,7 +839,9 @@ availableCompanies.forEach((company) => {
   const companyName = document.createElement('strong');
   companyName.textContent = name;
   const companyType = document.createElement('small');
-  companyType.textContent = company.isRegistered ? 'Added by you' : 'Available company';
+  companyType.textContent = [company.country || company.listingCountry, company.isRegistered ? 'Added by you' : 'Available company']
+    .filter(Boolean)
+    .join(' · ');
   details.append(companyName, companyType);
   option.append(logo, details);
 
@@ -860,6 +866,40 @@ availableCompanies.forEach((company) => {
 
   existingCompanyChoices.appendChild(option);
 });
+
+function renderCompaniesForCountry(country) {
+  selectedCompanyCountry = country;
+  companyCountryChoices.querySelectorAll('[data-company-country]').forEach((button) => {
+    button.setAttribute('aria-pressed', String(button.dataset.companyCountry === country));
+  });
+  let visibleCount = 0;
+  existingCompanyChoices.querySelectorAll('.company-option').forEach((option) => {
+    const company = availableCompanies.find((item) => item.name?.trim().toLocaleLowerCase() === option.dataset.companyName.toLocaleLowerCase());
+    const matches = country === 'All countries' || (company?.country || company?.listingCountry || '').toLocaleLowerCase() === country.toLocaleLowerCase();
+    option.hidden = !matches;
+    if (matches) visibleCount += 1;
+  });
+  companyCountryStatus.textContent = visibleCount
+    ? `${visibleCount} compan${visibleCount === 1 ? 'y' : 'ies'} listed${country === 'All countries' ? '' : ` in ${country}`}.`
+    : `No companies are listed in ${country} yet. Add a company and select ${country} as its country of registration and listing.`;
+  if (selectedCompanyRecord && selectedCompanyCountry !== 'All countries'
+      && (selectedCompanyRecord.country || selectedCompanyRecord.listingCountry || '').toLocaleLowerCase() !== selectedCompanyCountry.toLocaleLowerCase()) {
+    selectedCompanyRecord = null;
+    selectedCompanyDetails.hidden = true;
+  }
+}
+
+['All countries', ...investmentCompanyCountries].forEach((country) => {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'company-country-choice';
+  button.dataset.companyCountry = country;
+  button.setAttribute('aria-pressed', 'false');
+  button.textContent = country;
+  button.addEventListener('click', () => renderCompaniesForCountry(country));
+  companyCountryChoices.appendChild(button);
+});
+renderCompaniesForCountry(selectedCompanyCountry);
 
 const requestedCompanyName = new URLSearchParams(window.location.search).get('company');
 const investmentQuery = new URLSearchParams(window.location.search);
@@ -1049,7 +1089,7 @@ function renderStockListings() {
     const companyName = document.createElement('strong');
     companyName.textContent = company.name;
     const companySector = document.createElement('small');
-    companySector.textContent = `${company.symbol}.${company.exchange} · ${company.sector}${company.currency ? ` · ${company.currency}` : ''}`;
+    companySector.textContent = `${company.symbol}.${company.exchange} · ${company.sector}${company.currency ? ` · ${company.currency}` : ''}${company.sources?.length ? ` · ${company.sources.join(', ')}` : ''}`;
     details.append(companyName, companySector);
     option.append(logo, details);
 

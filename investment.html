@@ -105,6 +105,9 @@
               <button class="company-path" type="button" data-company-path="register">Add Company</button>
             </div>
             <div class="company-path-panel" id="existingCompanyPanel">
+              <p class="company-choice-label">Browse companies by country</p>
+              <div class="company-country-choices" id="companyCountryChoices" role="group" aria-label="Filter companies by country"></div>
+              <p class="company-country-status" id="companyCountryStatus" role="status" aria-live="polite"></p>
               <p class="company-choice-label">Choose a company to invest in</p>
               <div class="company-option-grid" id="existingCompanyChoices" role="group" aria-label="Available companies"></div>
               <section class="selected-company-details" id="selectedCompanyDetails" aria-labelledby="selectedCompanyName" hidden>
@@ -183,7 +186,15 @@
                 <label>Business email<input id="companyEmail" type="email" required /></label>
                 <label>Business phone<input id="companyPhone" type="tel" required /></label>
                 <label class="company-field-wide">Registered business address<input id="companyAddress" type="text" required /></label>
-                <label>Country of registration<input id="companyCountry" type="text" required /></label>
+                <label>Country of registration and listing<select id="companyCountry" required>
+                  <option value="" selected disabled>Choose a country</option>
+                  <option value="America">America</option>
+                  <option value="Barbados">Barbados</option>
+                  <option value="Cayman Islands">Cayman Islands</option>
+                  <option value="Jamaica">Jamaica</option>
+                  <option value="Puerto Rico">Puerto Rico</option>
+                  <option value="United Kingdom">United Kingdom (UK)</option>
+                </select><small class="field-help">The company will be listed in the country selected here.</small></label>
                 <label>Business type<select id="companyType"><option>Corporation</option><option>Limited company</option><option>Partnership</option><option>Sole proprietor</option></select></label>
                 <label class="company-field-wide">Business description<textarea id="companyDescription" rows="4" placeholder="Describe what your business does and the products or services it provides." required></textarea></label>
                 <label class="company-field-wide">Why are you looking for investors?<textarea id="companyInvestorPurpose" rows="4" placeholder="Explain how investment will support your business." required></textarea></label>

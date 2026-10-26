@@ -1,24 +1,30 @@
 # Investment Center stock listings
 
-The Investment Center retrieves supported stock exchanges, countries, and active stock listings from EOD Historical Data through the server API. Exchange listings are grouped by provider-reported country; the country list reflects the provider's coverage and does not imply that every country has a supported exchange.
+The Investment Center combines exchange listings from EOD Historical Data, Alpha Vantage, FCS API, and Upstox when the providers support the selected country. Results are deduplicated by exchange and symbol, and each listing shows its contributing source or sources. The provider catalog reflects the providers' actual coverage and cannot guarantee every publicly traded security.
 
-## Configuration
+## Server configuration
 
-Set `EODHD_API_TOKEN` as a server-side environment variable. Do not expose the token in browser code or commit a real token. The variable is documented in `.env.example`.
+Set provider keys only in the API server environment. Never place real keys in browser code or commit them:
 
-Without the token, the country cards remain visible and listing requests show an explicit configuration error with instructions to set `EODHD_API_TOKEN` in the server environment and restart or redeploy the API. Provider rate limits and exchange-level errors are surfaced in the Investment Center.
+- `EODHD_API_TOKEN` enables EOD Historical Data exchange catalogs and stock listings.
+- `ALPHA_VANTAGE_API_KEY` enables Alpha Vantage's active listing-status file for America (USA).
+- `FCS_API_KEY` enables the FCS API stock catalog. Results are filtered by the provider-reported country.
+- Upstox's public daily instrument master supplies NSE/BSE equity instruments for India and does not use a user API token for this catalog.
+
+The key names are documented in `.env.example`. Restart or redeploy the API after setting environment variables. Missing or unavailable providers appear as warnings; other configured sources can still return listings.
+
+## Coverage and caching
+
+- EOD Historical Data supplies listings for its reported exchanges, including the Jamaica Stock Exchange when covered by the provider.
+- Alpha Vantage's listing-status catalog is used for US active listings; it is not treated as a complete catalog for other countries.
+- FCS API is queried for its stock catalog and filtered to the selected country when the provider includes a matching country code/name.
+- Upstox instruments are included for India, limited to NSE and BSE equity instruments (`EQ`).
+- Featured country choices are America, Barbados, Cayman, Cuba, Jamaica, Puerto Rico, UK, and India. Cuba has no public stock exchange listings; Puerto Rico has no separate exchange.
+- Stocks are actual provider-returned catalog records; no sample listings are added as fallback data.
+
+Provider stock catalogs are cached in server memory for up to 24 hours, and merged country results for up to six hours. The browser displays up to 100 listings at a time and supports filtering and loading more. Country-listing data is not a quote feed; portfolio allocations and charts remain illustrative demos and no brokerage orders are sent.
 
 ## API routes
 
-- `GET /api/stocks/countries` returns supported countries and their exchanges.
-- `GET /api/stocks/listings?country=USA` returns stock listings for the selected ISO 3166-1 alpha-3 country code.
-
-Exchange and country responses are cached in server memory. Complete country listings are cached for six hours; partial results with unavailable exchanges are retried after one minute. The browser displays up to 100 listings at a time and supports filtering and loading additional listings.
-
-The main Investment Center and the Stock Investments catalog use the same API. Listing data is not a quote feed, and the portfolio, allocations, and charts remain illustrative demo features; no brokerage orders are sent.
-
-Country choices on both stock browsing pages show a regional flag icon and sort alphabetically by their displayed names. The dedicated Stocks page uses selectable country cards. For familiarity, the United States, Cayman Islands, and United Kingdom are displayed as America, Cayman, and UK.
-
-For Jamaica (`JAM`), the listing endpoint aggregates common and preferred stocks from every Jamaica exchange returned by the provider, including the Jamaica Stock Exchange when covered. The dedicated Stocks page displays the full Jamaica result set without the 100-listing page limit. Provider coverage and the server-side EODHD token are required for these listings to load.
-
-America (NYSE/Nasdaq), Barbados, Cayman, Cuba, Puerto Rico, Jamaica, and UK are always shown as country choices, even before the provider token is configured. Their cards identify the relevant exchange or market context. Stock listings are shown only when returned by the configured provider; countries with no provider exchange coverage display an explicit no-listings message rather than fabricated stocks. Cuba has no public stock exchange listings, and Puerto Rico does not have a separate stock exchange.
+- `GET /api/stocks/countries` returns provider-supported countries and the featured markets.
+- `GET /api/stocks/listings?country=JAM` returns merged listings and provider warnings for a country code.

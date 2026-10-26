@@ -26,6 +26,7 @@ body.has-site-background {
 
 header.topbar {
   flex-wrap: wrap;
+  background: transparent;
 }
 
 html[data-site-theme="black-yellow"] header.topbar {
@@ -420,7 +421,13 @@ html[data-site-theme="white-yellow"] body {
   color: #171717;
 }
 
-html[data-site-theme="white-yellow"] header.topbar,
+html[data-site-theme="white-yellow"] header.topbar {
+  background: transparent;
+  color: #171717;
+  border-color: #d4af37;
+  box-shadow: 0 2px 12px rgba(70, 55, 10, .1);
+}
+
 html[data-site-theme="white-yellow"] .site-footer {
   background: #fff;
   color: #171717;
@@ -571,7 +578,12 @@ html[data-site-theme="live-pixel"] * {
   border-radius: 0 !important;
 }
 
-html[data-site-theme="live-pixel"] header.topbar,
+html[data-site-theme="live-pixel"] header.topbar {
+  background: transparent;
+  border-color: #3fffe0;
+  box-shadow: 0 3px 0 #006b6a, 0 0 18px rgba(63, 255, 224, .12);
+}
+
 html[data-site-theme="live-pixel"] .site-footer {
   background: #080e22;
   border-color: #3fffe0;

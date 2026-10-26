@@ -8,6 +8,7 @@ const countryDisplayNames = {
   PRI: 'Puerto Rico',
   JAM: 'Jamaica',
   GBR: 'UK',
+  IND: 'India',
 };
 
 export function getFeaturedStockCountries() {
@@ -18,7 +19,8 @@ export function getFeaturedStockCountries() {
     { code: 'CUB', iso2: 'CU', name: 'Cuba', market: 'No public stock exchange listings', exchanges: [] },
     { code: 'PRI', iso2: 'PR', name: 'Puerto Rico', market: 'U.S. exchanges; no separate Puerto Rico exchange', exchanges: [] },
     { code: 'JAM', iso2: 'JM', name: 'Jamaica', market: 'Jamaica Stock Exchange', exchanges: [] },
-    { code: 'GBR', iso2: 'GB', name: 'United Kingdom', market: 'London Stock Exchange', exchanges: [] }
+    { code: 'GBR', iso2: 'GB', name: 'United Kingdom', market: 'London Stock Exchange', exchanges: [] },
+    { code: 'IND', iso2: 'IN', name: 'India', market: 'NSE / BSE', exchanges: [] }
   ];
 }
 

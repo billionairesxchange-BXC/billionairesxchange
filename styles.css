@@ -34,7 +34,7 @@ body {
 
 /* Header & Navigation */
 header.topbar {
-  background: rgba(10, 10, 10, 0.95);
+  background: transparent;
   border-bottom: 2px solid var(--primary-gold);
   padding: 1rem 2rem;
   display: flex;
@@ -660,6 +660,49 @@ header.topbar .nav-actions .btn:hover {
     padding: 1.25rem;
   }
 
+  .deposit-method-chooser {
+    display: grid;
+    justify-items: start;
+    gap: .75rem;
+    padding: 1.25rem;
+  }
+
+  .deposit-method-chooser h3,
+  .deposit-card-panel h3 {
+    margin: 0;
+    color: var(--primary-gold);
+  }
+
+  .deposit-method-chooser p,
+  .deposit-card-panel > p {
+    margin: 0;
+    color: var(--light-gold);
+  }
+
+  .deposit-method-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: .35rem;
+  }
+
+  .deposit-method-back {
+    justify-self: start;
+    margin-bottom: .5rem;
+  }
+
+  .deposit-card-panel {
+    display: grid;
+    gap: .75rem;
+    margin: 0;
+    padding: 1.25rem;
+  }
+
+  .bill-payment-layout[hidden],
+  .deposit-card-panel[hidden] {
+    display: none !important;
+  }
+
   .bill-payment-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.7fr);
@@ -1207,6 +1250,11 @@ header.topbar .nav-actions .btn:hover {
   .company-path.is-active { background: rgba(38, 38, 38, .14); border-color: var(--primary-gold); color: var(--primary-gold); }
   .company-path-panel { margin-top: 1rem; }
   .company-choice-label { color: var(--light-gold); font-size: .82rem; margin-bottom: .65rem; }
+  .company-country-choices { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .35rem; }
+  .company-country-choice { padding: .45rem .7rem; border: 1px solid rgba(212, 175, 55, .3); border-radius: 4px; background: transparent; color: var(--light-gold); cursor: pointer; }
+  .company-country-choice:hover, .company-country-choice[aria-pressed="true"] { border-color: var(--primary-gold); background: rgba(38, 38, 38, .14); color: var(--primary-gold); }
+  .company-country-choice:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
+  .company-country-status { min-height: 1.4em; margin: 0 0 .7rem; color: var(--light-gold); font-size: .78rem; }
   .company-option-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .65rem; }
   .company-option { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: .75rem; min-height: 72px; padding: .7rem; border: 1px solid rgba(212, 175, 55, .25); border-radius: 4px; background: rgba(38, 38, 38, .04); color: var(--white); text-align: left; cursor: pointer; }
   .company-option[hidden] { display: none; }
@@ -1767,35 +1815,6 @@ section {
 
 .hero-copy {
   padding-top: 2rem;
-}
-
-.platform-overview-control {
-  display: grid;
-  justify-items: start;
-  gap: .45rem;
-  margin-bottom: 1rem;
-}
-
-.platform-overview-language {
-  display: grid;
-  gap: .3rem;
-  color: var(--light-gold);
-  font-size: .8rem;
-}
-
-.platform-overview-language select {
-  min-width: 12rem;
-}
-
-.platform-overview-control button {
-  display: inline-flex;
-  align-items: center;
-  gap: .55rem;
-}
-
-.platform-overview-control [role="status"] {
-  color: var(--light-gold);
-  font-size: .8rem;
 }
 
 .hero-copy .eyebrow,
@@ -3837,6 +3856,10 @@ canvas {
   display: grid;
   gap: 1rem;
   scroll-margin-top: 1rem;
+}
+
+.autopilot-running-details {
+  margin: 1rem 0;
 }
 
 .autopilot-heading,

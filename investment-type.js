@@ -14,6 +14,8 @@ const productsContainer = document.getElementById('investmentDemoProducts');
 const catalogStatus = document.getElementById('investmentDemoCatalogStatus');
 const searchInput = document.getElementById('investmentDemoSearch');
 let stockCountryChoices = null;
+let companyCountryChoices = null;
+let selectedCompanyCountry = '';
 let stockLoadMoreButton = null;
 let stockVisibleCount = 100;
 let stockCatalogWarnings = [];
@@ -73,7 +75,52 @@ if (pageType === 'Stocks') {
   stockLoadMoreButton.hidden = true;
   productsContainer.insertAdjacentElement('afterend', stockLoadMoreButton);
   const disclaimer = document.querySelector('.investment-demo-disclaimer');
-  if (disclaimer) disclaimer.textContent = 'Stock listings are sourced from EOD Historical Data. Quotes are not provided, and allocations and charts remain illustrative demos; no real securities or brokerage orders are involved.';
+  if (disclaimer) disclaimer.textContent = 'Stock listings are merged from configured EOD Historical Data, Alpha Vantage, FCS API, and Upstox sources where available. Quotes are not provided, and allocations and charts remain illustrative demos; no real securities or brokerage orders are involved.';
+}
+
+if (pageType === 'Company') {
+  const countryHeading = document.createElement('p');
+  countryHeading.className = 'company-choice-label';
+  countryHeading.textContent = 'Browse companies by country';
+  companyCountryChoices = document.createElement('div');
+  companyCountryChoices.className = 'company-country-choices';
+  companyCountryChoices.setAttribute('role', 'group');
+  companyCountryChoices.setAttribute('aria-label', 'Filter company listings by country');
+  const countries = [
+    { label: 'All countries', value: '' },
+    { label: 'America', value: 'America' },
+    { label: 'Barbados', value: 'Barbados' },
+    { label: 'Cayman', value: 'Cayman Islands' },
+    { label: 'Jamaica', value: 'Jamaica' },
+    { label: 'Puerto Rico', value: 'Puerto Rico' },
+    { label: 'UK', value: 'United Kingdom' }
+  ];
+  countries.forEach(({ label, value }) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'company-country-choice';
+    button.dataset.companyCountry = value;
+    button.setAttribute('aria-pressed', 'false');
+    button.textContent = label;
+    button.addEventListener('click', () => {
+      selectedCompanyCountry = value;
+      companyCountryChoices.querySelectorAll('[data-company-country]').forEach((choice) => {
+        choice.setAttribute('aria-pressed', String(choice.dataset.companyCountry === value));
+      });
+      renderProducts(searchInput.value);
+    });
+    companyCountryChoices.appendChild(button);
+  });
+  searchInput.parentElement.before(countryHeading, companyCountryChoices);
+  companyCountryChoices.querySelector('[data-company-country=""]').setAttribute('aria-pressed', 'true');
+}
+
+function normalizeCompanyCountry(country) {
+  const value = String(country || '').trim().toLocaleLowerCase();
+  if (['america', 'united states', 'united states of america', 'us', 'usa'].includes(value)) return 'america';
+  if (['cayman', 'cayman islands'].includes(value)) return 'cayman islands';
+  if (['uk', 'united kingdom', 'great britain'].includes(value)) return 'united kingdom';
+  return value;
 }
 
 const marketList = (rows) => rows.map(([name, symbol, detail]) => ({ name, symbol, detail }));
@@ -159,9 +206,9 @@ const coinProducts = [
 ].map(([name, symbol]) => ({ name, symbol, detail: 'Crypto asset example' }));
 
 const defaultCompanies = [
-  { name: 'Caribbean Renewables Ltd', symbol: 'CR', detail: 'Renewable energy business profile' },
-  { name: 'Harbor Technology Group', symbol: 'HT', detail: 'Technology business profile' },
-  { name: 'Island Foods Co.', symbol: 'IF', detail: 'Food and distribution business profile' }
+  { name: 'Caribbean Renewables Ltd', symbol: 'CR', country: 'Jamaica', detail: 'Renewable energy business profile' },
+  { name: 'Harbor Technology Group', symbol: 'HT', country: 'Jamaica', detail: 'Technology business profile' },
+  { name: 'Island Foods Co.', symbol: 'IF', country: 'Jamaica', detail: 'Food and distribution business profile' }
 ];
 
 function getCompanies() {
@@ -177,6 +224,7 @@ function getCompanies() {
       companies.push({
         name,
         symbol: company.symbol || company.registrationNumber || 'COMPANY',
+        country: company.country || company.listingCountry || '',
         detail: company.description || company.type || 'Registered business profile'
       });
     });
@@ -335,7 +383,7 @@ async function loadStockCountry(countryCode) {
       id: `stock:${countryCode}:${listing.exchange}:${listing.symbol}`,
       name: listing.name,
       symbol: listing.symbol,
-      detail: `${country} · ${listing.symbol}.${listing.exchange} · ${listing.sector || 'Stock'}${listing.currency ? ` · ${listing.currency}` : ''}`
+      detail: `${country} · ${listing.symbol}.${listing.exchange} · ${listing.sector || 'Stock'}${listing.currency ? ` · ${listing.currency}` : ''}${listing.sources?.length ? ` · ${listing.sources.join(', ')}` : ''}`
     }));
     stockCatalogWarnings = result.warnings;
     stockVisibleCount = countryCode === 'JAM' ? products.length : 100;
@@ -396,7 +444,12 @@ async function loadStockCatalog() {
 
 function renderProducts(filter = '') {
   const query = filter.trim().toLocaleLowerCase();
-  const matching = products.filter((product) => `${product.name} ${product.symbol} ${product.detail || ''}`.toLocaleLowerCase().includes(query));
+  const matching = products.filter((product) => {
+    const matchesSearch = `${product.name} ${product.symbol} ${product.country || ''} ${product.detail || ''}`.toLocaleLowerCase().includes(query);
+    const matchesCountry = pageType !== 'Company' || !selectedCompanyCountry
+      || normalizeCompanyCountry(product.country) === normalizeCompanyCountry(selectedCompanyCountry);
+    return matchesSearch && matchesCountry;
+  });
   const visible = pageType === 'Stocks' ? matching.slice(0, stockVisibleCount) : matching;
   productsContainer.replaceChildren();
   visible.forEach((product) => {
@@ -415,7 +468,9 @@ function renderProducts(filter = '') {
     symbol.textContent = product.symbol;
     const detail = document.createElement('span');
     detail.className = 'investment-demo-product-detail';
-    detail.textContent = product.detail || 'Demo listing';
+    detail.textContent = product.country
+      ? `${product.country} · ${product.detail || 'Company listing'}`
+      : product.detail || 'Demo listing';
     button.append(badge, name, symbol, detail);
     button.addEventListener('click', () => selectProduct(product));
     productsContainer.appendChild(button);
@@ -430,6 +485,16 @@ function renderProducts(filter = '') {
       : stockLoadError || stockCatalogWarnings.join(' ') || 'No stock listings were returned for this country.';
     productsContainer.appendChild(empty);
   }
+  if (pageType === 'Company' && !matching.length) {
+    const empty = document.createElement('p');
+    empty.className = 'investment-demo-stock-empty';
+    empty.textContent = query
+      ? `No company listings match this search${selectedCompanyCountry ? ` in ${selectedCompanyCountry}` : ''}.`
+      : selectedCompanyCountry
+        ? `No companies are listed in ${selectedCompanyCountry} yet. Add a company in the Investment Center and select this country.`
+        : 'No company listings are available yet.';
+    productsContainer.appendChild(empty);
+  }
   if (stockLoadMoreButton) stockLoadMoreButton.hidden = visible.length >= matching.length;
   catalogStatus.textContent = pageType === 'Stocks'
     ? matching.length
@@ -437,6 +502,8 @@ function renderProducts(filter = '') {
       : selectedStockCountry
         ? `${getStockCountryName(selectedStockCountry)} stock listings unavailable. ${stockLoadError || stockCatalogWarnings.join(' ') || 'The provider returned no listings.'}${storageWarning}`
         : `Choose a country to see its available stock listings.${stockLoadError ? ` ${stockLoadError}` : ''}${storageWarning}`
+    : pageType === 'Company'
+      ? `${visible.length} compan${visible.length === 1 ? 'y' : 'ies'} shown${selectedCompanyCountry ? ` in ${selectedCompanyCountry}` : ''}.${catalogWarning}${storageWarning}`
     : `${visible.length} example listing${visible.length === 1 ? '' : 's'} shown. No live quotes are provided.${catalogWarning}${storageWarning}`;
 }
 
@@ -445,6 +512,7 @@ function renderFacts(product) {
   [
     ['Category', pageType],
     ['Reference', product.symbol],
+    ...(product.country ? [['Country', product.country]] : []),
     ['Listing type', product.detail || 'Demo listing'],
     ['Data', pageType === 'Economy' ? 'Research watchlist only' : 'Static example; not a live quote']
   ].forEach(([label, value]) => {

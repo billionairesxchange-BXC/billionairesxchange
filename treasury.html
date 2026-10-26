@@ -723,6 +723,12 @@
 
       updateMapForLocation();
 
+      if (new URLSearchParams(window.location.search).get('paymentMethods') === '1') {
+        const paymentMethodsSection = document.getElementById('paymentMethodsSection');
+        paymentMethodsSection.hidden = false;
+        paymentMethodsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
       const treasuryQuickMenu = document.getElementById('treasuryQuickMenu');
       const treasuryQuickMenuTrigger = document.getElementById('treasuryQuickMenuTrigger');
       const treasuryQuickMenuItems = document.getElementById('treasuryQuickMenuItems');
