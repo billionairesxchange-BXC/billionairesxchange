@@ -37,7 +37,6 @@
       </nav>
 
       <div class="nav-actions">
-        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
         <a class="btn btn-ghost" href="verification.html">Login</a>
         <a class="btn btn-primary" href="verification.html">Sign Up</a>
       </div>
@@ -125,6 +124,7 @@
                     Payment type
                     <select id="paymentType" name="paymentType" required>
                       <option value="wallet-payment">Wallet</option>
+                      <option value="bxc-card">BXC Card</option>
                     </select>
                   </label>
                   <div class="bill-flow-actions">
@@ -611,7 +611,7 @@
               subdivision: subdivisionSelect.value,
               company: companySelect.value,
               currency,
-              paymentType: 'wallet-payment',
+              paymentType: formData.get('paymentType'),
               accountName: formData.get('accountName'),
               policyNumber: formData.get('policyNumber'),
               coverageType: formData.get('coverageType'),
@@ -641,7 +641,7 @@
             `Coverage: ${formData.get('coverageType')}\n` +
             `Billing period: ${formData.get('billingPeriod')}\n` +
             `Premium: ${currency} ${premium.toFixed(2)}\n` +
-            `Payment type: Wallet\n` +
+            `Payment type: ${formData.get('paymentType') === 'bxc-card' ? 'BXC Card' : 'Wallet'}\n` +
             `Crypto coin: ${selectedCoin.name} (${selectedCoin.symbol})\n` +
             `Estimated crypto amount: ${cryptoAmount.toPrecision(8)} ${selectedCoin.symbol}\n\n` +
             'Review request only. No insurance premium was paid and no cryptocurrency was transferred.';

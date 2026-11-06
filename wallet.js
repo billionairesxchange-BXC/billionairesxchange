@@ -67,24 +67,18 @@ const walletRoot = document.getElementById('cryptoWallet');
 
 if (walletRoot) {
   const byId = (id) => document.getElementById(id);
-const setProviderButtonsHidden = () => {
-  const buttons = [
-    byId('walletConnectLedgerButton'),
-    byId('walletConnectHardwareButton'),
-    byId('walletRefreshButton')
-  ];
-  buttons.forEach((button) => {
-    if (button) {
-      button.hidden = true;
-      button.disabled = true;
-    }
-  });
-};
-setProviderButtonsHidden();
   const state = byId('cryptoWalletState');
   const message = byId('cryptoWalletMessage');
   const dashboard = byId('walletDashboard');
   const addressList = byId('walletAddressList');
+  const assetCatalog = byId('walletAssetCatalog');
+  const assetCatalogSearch = byId('walletAssetSearch');
+  const assetCatalogStatus = byId('walletAssetCatalogStatus');
+  const assetCatalogLoadMore = document.createElement('div');
+  assetCatalogLoadMore.id = 'walletAssetLoadMore';
+  assetCatalogLoadMore.className = 'wallet-asset-load-sentinel';
+  assetCatalogLoadMore.setAttribute('aria-hidden', 'true');
+  const balanceVisibilityButton = byId('walletBalanceVisibility');
   const forms = [
     'walletCreateForm',
     'walletUnlockForm',
@@ -99,6 +93,7 @@ setProviderButtonsHidden();
   let mnemonicPhrase = null;
   let pendingNewPhrase = null;
   let pendingPassword = null;
+  let pendingCredentialType = 'password';
   let walletAddresses = {};
   let balanceValues = {};
   let priceData = {};
@@ -118,6 +113,13 @@ setProviderButtonsHidden();
   let moralisApiKey = null;
   let nftDiscoveryRequest = 0;
   const NFT_STORAGE_KEY = 'makingsTrackedNftsV1';
+  let marketAssets = [];
+  let marketAssetPage = 1;
+  let marketAssetsHaveMore = true;
+  let marketAssetsLoading = false;
+  let marketAssetSearchText = '';
+  let marketAssetRetryAt = 0;
+  let marketAssetLoadError = '';
 
   function getSavedWallet() {
     const value = localStorage.getItem(WALLET_STORAGE_KEY);
@@ -137,6 +139,57 @@ setProviderButtonsHidden();
       console.error('Stored wallet data could not be read:', error);
       throw new Error('Saved wallet data is damaged. Restore from your recovery phrase.');
     }
+  }
+
+  function walletCredentialType() {
+    return getSavedWallet()?.credentialType === 'pin' ? 'pin' : 'password';
+  }
+
+  function configureCredentialInput(input, credentialType) {
+    const isPin = credentialType === 'pin';
+    input.inputMode = isPin ? 'numeric' : 'text';
+    input.maxLength = isPin ? 8 : 128;
+    input.pattern = isPin ? '[0-9]{4,8}' : '';
+    input.autocomplete = input.id === 'walletUnlockPassword' || input.id === 'walletBackupPassword'
+      ? 'current-password'
+      : 'new-password';
+  }
+
+  function isValidCredential(value, credentialType) {
+    if (credentialType === 'pin') return /^\d{4,8}$/.test(value);
+    return value.length >= 12
+      && /[A-Z]/.test(value)
+      && /[a-z]/.test(value)
+      && /\d/.test(value)
+      && /[^A-Za-z0-9]/.test(value);
+  }
+
+  function updateCredentialMode(prefix, credentialType) {
+    const isPin = credentialType === 'pin';
+    const label = isPin ? 'Wallet PIN' : 'Wallet password';
+    const confirmLabel = isPin ? 'Confirm PIN' : 'Confirm password';
+    const valueInput = byId(`${prefix}Password`);
+    const confirmInput = byId(`${prefix}PasswordConfirm`);
+    const labelElement = byId(`${prefix}CredentialLabel`);
+    const confirmLabelElement = byId(`${prefix}ConfirmLabel`);
+    if (labelElement) labelElement.textContent = prefix === 'walletRestore' && !isPin ? 'New wallet password' : label;
+    if (confirmLabelElement) confirmLabelElement.textContent = confirmLabel;
+    if (valueInput) configureCredentialInput(valueInput, credentialType);
+    if (confirmInput) configureCredentialInput(confirmInput, credentialType);
+    const help = byId(`${prefix}CredentialHelp`);
+    if (help) help.textContent = isPin
+      ? 'A 4–8 digit PIN encrypts the recovery phrase in this browser. A short PIN is less resistant to guessing than a strong password.'
+      : 'Use 12 or more characters with uppercase and lowercase letters, a number, and a special character.';
+  }
+
+  function updateUnlockCredentialLabel() {
+    const isPin = walletCredentialType() === 'pin';
+    const unlockCredentialLabel = byId('walletUnlockCredentialLabel');
+    if (unlockCredentialLabel) unlockCredentialLabel.textContent = isPin ? 'Wallet PIN' : 'Wallet password';
+    configureCredentialInput(byId('walletUnlockPassword'), isPin ? 'pin' : 'password');
+    const backupCredentialLabel = byId('walletBackupCredentialLabel');
+    if (backupCredentialLabel) backupCredentialLabel.textContent = isPin ? 'Wallet PIN' : 'Wallet password';
+    configureCredentialInput(byId('walletBackupPassword'), isPin ? 'pin' : 'password');
   }
 
   function rememberConnectedWallet() {
@@ -238,7 +291,7 @@ setProviderButtonsHidden();
     );
   }
 
-  async function encryptPhrase(phrase, password) {
+  async function encryptPhrase(phrase, password, credentialType = 'password') {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const key = await deriveEncryptionKey(password, salt);
@@ -249,6 +302,7 @@ setProviderButtonsHidden();
     );
     localStorage.setItem(WALLET_STORAGE_KEY, JSON.stringify({
       version: 1,
+      credentialType,
       kdf: 'PBKDF2-SHA256',
       iterations: KDF_ITERATIONS,
       cipher: 'AES-256-GCM',
@@ -492,6 +546,137 @@ setProviderButtonsHidden();
     }
   }
 
+  function renderMarketAssetCatalog() {
+    const query = marketAssetSearchText.trim().toLowerCase();
+    const results = marketAssets.filter((asset) =>
+      !query || asset.name.toLowerCase().includes(query) || asset.symbol.toLowerCase().includes(query)
+    );
+    assetCatalog.replaceChildren();
+    results.forEach((asset) => {
+      const item = document.createElement('article');
+      item.className = 'wallet-market-asset';
+      const heading = document.createElement('div');
+      heading.className = 'wallet-market-asset-heading';
+      if (asset.image) {
+        const image = document.createElement('img');
+        image.src = asset.image;
+        image.alt = '';
+        image.loading = 'lazy';
+        image.onerror = () => { image.hidden = true; };
+        heading.appendChild(image);
+      }
+      const identity = document.createElement('div');
+      const name = document.createElement('strong');
+      name.textContent = asset.name;
+      const symbol = document.createElement('span');
+      symbol.textContent = asset.symbol;
+      identity.append(name, symbol);
+      heading.appendChild(identity);
+      const price = document.createElement('strong');
+      price.className = 'wallet-market-asset-price';
+      price.textContent = Number.isFinite(asset.current_price) ? formatCurrency(asset.current_price) : 'Price unavailable';
+      const change = document.createElement('span');
+      change.className = `wallet-market-asset-change${asset.price_change_percentage_24h < 0 ? ' is-negative' : ''}`;
+      change.textContent = Number.isFinite(asset.price_change_percentage_24h)
+        ? `${asset.price_change_percentage_24h >= 0 ? '+' : ''}${asset.price_change_percentage_24h.toFixed(2)}%`
+        : '--';
+      const note = document.createElement('small');
+      note.textContent = 'Market listing · wallet balance not verified';
+      item.append(heading, price, change, note);
+      assetCatalog.appendChild(item);
+    });
+    if (marketAssetsHaveMore) assetCatalog.appendChild(assetCatalogLoadMore);
+    assetCatalogStatus.textContent = query
+      ? `${results.length} matches in ${marketAssets.length} loaded market assets${marketAssetsHaveMore ? '. Scroll down in the catalog to load more results.' : '.'}`
+      : `${marketAssets.length.toLocaleString()} CoinGecko market assets loaded${marketAssetsHaveMore ? '. Scroll down to load more automatically.' : ' — all available pages loaded.'}`;
+  }
+
+  async function loadMarketAssets() {
+    if (marketAssetsLoading || !marketAssetsHaveMore || Date.now() < marketAssetRetryAt) return;
+    marketAssetsLoading = true;
+    marketAssetLoadError = '';
+    assetCatalogStatus.textContent = 'Loading market assets...';
+    try {
+      const response = await fetchWithTimeout(
+        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${marketAssetPage}&sparkline=false&price_change_percentage=24h`
+      );
+      if (!response.ok) throw new Error(`Market asset service returned HTTP ${response.status}.`);
+      const data = await response.json();
+      if (!Array.isArray(data)) throw new Error('Market asset service returned an invalid list.');
+      const loadedIds = new Set(marketAssets.map((asset) => asset.id));
+      const newAssets = data.filter((asset) => asset.id && !loadedIds.has(asset.id)).map((asset) => ({
+        id: asset.id,
+        name: String(asset.name || asset.id),
+        symbol: String(asset.symbol || '').toUpperCase(),
+        image: String(asset.image || ''),
+        current_price: Number(asset.current_price),
+        price_change_percentage_24h: Number(asset.price_change_percentage_24h)
+      }));
+      marketAssets.push(...newAssets);
+      marketAssetPage += 1;
+      marketAssetsHaveMore = data.length === 250;
+      renderMarketAssetCatalog();
+    } catch (error) {
+      console.error('Wallet market asset catalog could not be loaded:', error);
+      marketAssetLoadError = error.message;
+      marketAssetRetryAt = Date.now() + 10000;
+      window.setTimeout(loadMarketAssets, 10000);
+    } finally {
+      marketAssetsLoading = false;
+      renderMarketAssetCatalog();
+      if (marketAssetLoadError) assetCatalogStatus.textContent = `Could not load market assets: ${marketAssetLoadError}. Retrying automatically.`;
+    }
+  }
+
+  if (assetCatalog) {
+    if ('IntersectionObserver' in window) {
+      const assetCatalogObserver = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadMarketAssets();
+      }, { root: assetCatalog, rootMargin: '240px 0px' });
+      assetCatalogObserver.observe(assetCatalogLoadMore);
+    } else {
+      assetCatalog.addEventListener('scroll', () => {
+        if (assetCatalog.scrollTop + assetCatalog.clientHeight >= assetCatalog.scrollHeight - 240) loadMarketAssets();
+      }, { passive: true });
+    }
+  }
+
+  assetCatalogSearch?.addEventListener('input', () => {
+    marketAssetSearchText = assetCatalogSearch.value;
+    renderMarketAssetCatalog();
+  });
+
+  if (balanceVisibilityButton) {
+    let balancesHidden = localStorage.getItem('treasuryBalancesHidden') === 'true';
+    const applyBalanceVisibility = () => {
+      walletAppContent.classList.toggle('treasury-balances-hidden', balancesHidden);
+      document.body.classList.toggle('treasury-balances-hidden', balancesHidden);
+      balanceVisibilityButton.setAttribute('aria-pressed', String(balancesHidden));
+      balanceVisibilityButton.setAttribute('aria-label', balancesHidden ? 'Show balances' : 'Hide balances');
+      balanceVisibilityButton.title = balancesHidden ? 'Show balances' : 'Hide balances';
+    };
+    applyBalanceVisibility();
+    balanceVisibilityButton.addEventListener('click', () => {
+      balancesHidden = !balancesHidden;
+      try {
+        localStorage.setItem('treasuryBalancesHidden', String(balancesHidden));
+      } catch (error) {
+        console.error('Treasury balance visibility preference could not be saved:', error);
+      }
+      applyBalanceVisibility();
+      document.dispatchEvent(new CustomEvent('balances-visibility-change', { detail: { hidden: balancesHidden } }));
+    });
+    document.addEventListener('balances-visibility-change', (event) => {
+      balancesHidden = Boolean(event.detail.hidden);
+      applyBalanceVisibility();
+    });
+    window.addEventListener('storage', (event) => {
+      if (event.key !== 'treasuryBalancesHidden') return;
+      balancesHidden = event.newValue === 'true';
+      applyBalanceVisibility();
+    });
+  }
+
   function renderBalances() {
     const table = byId('holdingsTableBody');
     table.replaceChildren();
@@ -504,7 +689,7 @@ setProviderButtonsHidden();
       if (!Number.isFinite(amount)) {
         const cell = document.createElement('td');
         cell.colSpan = 5;
-        cell.textContent = `${config.name}: balance unavailable — refresh to retry.`;
+        cell.textContent = `${config.name}: balance unavailable — automatic retry is enabled.`;
         row.appendChild(cell);
         table.appendChild(row);
         return;
@@ -594,7 +779,7 @@ setProviderButtonsHidden();
     renderBalances();
     const unavailable = results.filter(([, , error]) => error).map(([network]) => NETWORKS[network].name);
     byId('holdingsChange').textContent = `Updated ${new Date().toLocaleTimeString()}${unavailable.length ? `; unavailable: ${unavailable.join(', ')}` : ''}`;
-    if (unavailable.length) setMessage(`Some public network services did not respond: ${unavailable.join(', ')}. Retry refresh later.`, true);
+    if (unavailable.length) setMessage(`Some public network services did not respond: ${unavailable.join(', ')}. Balances will retry automatically.`, true);
     return unavailable;
   }
 
@@ -1016,22 +1201,20 @@ setProviderButtonsHidden();
     mnemonicPhrase = phrase;
     lastWalletActivity = Date.now();
     scheduleIdleLock();
-    onboarding.hidden = true;
-    walletAppContent.hidden = false;
-    byId('wallet').classList.remove('wallet-onboarding-active');
+    walletRoot.classList.remove('wallet-credentials-pending');
+    setVaultLockScreen(false);
     state.textContent = 'Wallet unlocked';
     dashboard.hidden = false;
     byId('walletBackupButton').hidden = false;
     byId('walletLockButton').hidden = false;
-    const refreshButton = byId('walletRefreshButton');
-    if (refreshButton) refreshButton.hidden = true;
     creationControls.forEach((button) => { button.hidden = true; });
     if (balanceInterval) clearInterval(balanceInterval);
-    balanceInterval = setInterval(() => { refreshBalances(); }, 1000);
+    balanceInterval = setInterval(() => { refreshBalances(); }, 30000);
     forms.forEach((form) => { form.hidden = true; });
     byId('walletPhrasePanel').hidden = true;
     setMessage('Deriving addresses. On-chain balances will be queried from public network services.');
     try {
+      if (assetCatalog && marketAssets.length === 0) await loadMarketAssets();
       const unavailableNetworks = await deriveAllAddresses();
       await renderTrackedNfts();
       autoDiscoverWalletNfts();
@@ -1062,11 +1245,9 @@ setProviderButtonsHidden();
     if (balanceInterval) clearInterval(balanceInterval);
     balanceInterval = null;
     const hasExternalEvmAccount = Boolean(ledgerAddress || hardwareLedgerAddress);
-    dashboard.hidden = !hasExternalEvmAccount;
+    dashboard.hidden = true;
     byId('walletBackupButton').hidden = true;
     byId('walletLockButton').hidden = true;
-    const refreshButton = byId('walletRefreshButton');
-    if (refreshButton) refreshButton.hidden = true;
     byId('walletUnlockButton').hidden = !getSavedWallet();
     byId('walletCreateButton').hidden = Boolean(getSavedWallet());
     byId('walletRestoreButton').hidden = Boolean(getSavedWallet());
@@ -1090,16 +1271,8 @@ setProviderButtonsHidden();
     byId('walletBackupForm').reset();
     byId('walletRestoreForm').reset();
     byId('walletUnlockForm').reset();
-    if (hasExternalEvmAccount) {
-      renderAddresses();
-      renderTrackedNfts();
-      autoDiscoverWalletNfts();
-      if (balanceInterval) clearInterval(balanceInterval);
-      balanceInterval = setInterval(() => { refreshBalances(); }, 1000);
-    }
-    if (showMessage) setMessage(hasExternalEvmAccount
-      ? 'Recovery-phrase wallet locked. Your connected EVM account remains available.'
-      : 'Wallet locked. The encrypted backup remains in this browser.');
+    showWalletAccessGate();
+    if (showMessage) setMessage('Wallet locked. Enter its PIN or password to continue.');
   }
 
   function renderPhrase(phrase, isBackup) {
@@ -1416,7 +1589,8 @@ setProviderButtonsHidden();
     }
 
     const connect = async () => {
-      byId('walletConnectLedgerButton').disabled = true;
+      const connectMetaMaskButton = byId('walletConnectLedgerButton');
+      if (connectMetaMaskButton) connectMetaMaskButton.disabled = true;
       status.classList.remove('is-error');
       status.textContent = requestAccess
         ? 'Approve the account connection in MetaMask.'
@@ -1452,17 +1626,16 @@ setProviderButtonsHidden();
           onboardingStatus.textContent = `MetaMask connected: ${ledgerAddress}`;
         }
         if (!mnemonicPhrase && activateAccount) {
+          setVaultLockScreen(false);
           walletAddresses = { ethereum: ledgerAddress, bsc: ledgerAddress, polygon: ledgerAddress };
           byId('wallet').classList.remove('wallet-onboarding-active');
           state.textContent = 'MetaMask account connected';
           dashboard.hidden = false;
-          const refreshButton = byId('walletRefreshButton');
-          if (refreshButton) refreshButton.hidden = true;
           renderAddresses();
           await refreshBalances();
           autoDiscoverWalletNfts();
           if (balanceInterval) clearInterval(balanceInterval);
-          balanceInterval = setInterval(() => { refreshBalances(); }, 1000);
+          balanceInterval = setInterval(() => { refreshBalances(); }, 30000);
         }
         return true;
       } catch (error) {
@@ -1478,7 +1651,7 @@ setProviderButtonsHidden();
         }
         return false;
       } finally {
-        byId('walletConnectLedgerButton').disabled = false;
+        if (connectMetaMaskButton) connectMetaMaskButton.disabled = false;
       }
     };
 
@@ -1545,12 +1718,14 @@ setProviderButtonsHidden();
     if (!window.isSecureContext || !navigator.hid) {
       status.textContent = 'Direct Ledger USB requires a secure browser context and WebHID support. Try Chrome or Edge over HTTPS, or use MetaMask.';
       status.classList.add('is-error');
+      if (byId('walletAppContent').hidden) byId('walletOnboardingMetaStatus').textContent = status.textContent;
       return;
     }
     const button = byId('walletConnectHardwareButton');
     if (button) button.disabled = true;
     status.classList.remove('is-error');
     status.textContent = 'Connect your Ledger, unlock it, and open the Ethereum app. Approve the displayed address on the device.';
+    if (byId('walletAppContent').hidden) byId('walletOnboardingMetaStatus').textContent = status.textContent;
     let transport;
     try {
       transport = await TransportWebHID.create();
@@ -1567,10 +1742,10 @@ setProviderButtonsHidden();
       button.textContent = 'Disconnect Ledger';
       status.textContent = `Ledger EVM address verified on-device: ${hardwareLedgerAddress}. Keep the Ethereum app open to sign EVM transactions.`;
       if (!mnemonicPhrase) {
+        setVaultLockScreen(false);
         walletAddresses = { ethereum: hardwareLedgerAddress, bsc: hardwareLedgerAddress, polygon: hardwareLedgerAddress };
         state.textContent = 'Ledger hardware account connected';
         dashboard.hidden = false;
-        byId('walletRefreshButton').hidden = false;
         renderAddresses();
         await refreshBalances();
         autoDiscoverWalletNfts();
@@ -1589,6 +1764,7 @@ setProviderButtonsHidden();
       console.error('Direct Ledger connection failed:', error);
       status.textContent = `Could not connect to Ledger: ${error.message}. Ensure the Ethereum app is open and close other apps using the device.`;
       status.classList.add('is-error');
+      if (byId('walletAppContent').hidden) byId('walletOnboardingMetaStatus').textContent = status.textContent;
     } finally {
       button.disabled = false;
     }
@@ -1602,7 +1778,8 @@ setProviderButtonsHidden();
         ledgerProvider = null;
         byId('walletUseLedger').checked = false;
         byId('walletUseLedger').disabled = true;
-        byId('walletConnectLedgerButton').textContent = 'Connect MetaMask';
+        const connectMetaMaskButton = byId('walletConnectLedgerButton');
+        if (connectMetaMaskButton) connectMetaMaskButton.textContent = 'Connect MetaMask';
         byId('walletLedgerStatus').textContent = 'MetaMask account changed. Reconnect to use the new account.';
         if (!mnemonicPhrase) lockWallet(false);
       }
@@ -1624,9 +1801,27 @@ setProviderButtonsHidden();
     walletAppContent.hidden = locked;
     byId('wallet').classList.toggle('wallet-onboarding-active', locked);
     document.body.classList.toggle('treasury-vault-locked', locked);
-    if (locked) setPageInertExcept(onboarding);
+    if (locked) {
+      walletRoot.classList.add('wallet-credentials-pending');
+      setPageInertExcept(onboarding);
+    }
     else Array.from(document.body.children).forEach((child) => { child.inert = false; });
   };
+
+  function showWalletAccessGate() {
+    let hasSavedWallet = false;
+    try {
+      hasSavedWallet = Boolean(getSavedWallet());
+    } catch (error) {
+      console.error('Existing wallet could not be read; requiring recovery:', error);
+    }
+    byId('walletOnboardingCreate').hidden = hasSavedWallet;
+    byId('walletOnboardingRestore').hidden = hasSavedWallet;
+    byId('walletOnboardingUnlock').hidden = !hasSavedWallet;
+    byId('walletOnboardingWelcome').hidden = hasSavedWallet;
+    byId('walletOnboardingOptions').hidden = !hasSavedWallet;
+    setVaultLockScreen(true);
+  }
   const showTreasuryWelcome = () => {
     treasuryWelcomeSplash.hidden = false;
     document.body.classList.add('treasury-welcome-active');
@@ -1639,13 +1834,57 @@ setProviderButtonsHidden();
     }, 5000);
   };
   const finishOnboarding = () => {
+    walletRoot.classList.add('wallet-credentials-pending');
     setVaultLockScreen(false);
   };
 
+  const startWalletCreateFlow = () => {
+    finishOnboarding();
+    updateCredentialMode('walletCreate', byId('walletCreateCredentialType')?.value || 'password');
+    showOnlyForm(byId('walletCreateForm'));
+    byId('walletCreatePassword').focus();
+  };
+  const startWalletRestoreFlow = () => {
+    finishOnboarding();
+    updateCredentialMode('walletRestore', byId('walletRestoreCredentialType')?.value || 'password');
+    showOnlyForm(byId('walletRestoreForm'));
+    byId('walletRestorePhrase').focus();
+  };
+  const openWalletSetupFromHash = () => {
+    const action = location.hash === '#create-wallet'
+      ? 'create'
+      : location.hash === '#recover-wallet'
+        ? 'recover'
+        : null;
+    if (!action) return;
+    requestAnimationFrame(() => walletRoot.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    try {
+      const savedWallet = getSavedWallet();
+      if (action === 'create' && savedWallet) {
+        finishOnboarding();
+        updateUnlockCredentialLabel();
+        showOnlyForm(byId('walletUnlockForm'));
+        setMessage('A wallet is already saved in this browser. Unlock it before continuing.');
+        byId('walletUnlockPassword').focus();
+        return;
+      }
+      if (action === 'recover' && savedWallet
+        && !window.confirm('Recovering a wallet will replace the encrypted wallet saved in this browser. Continue only if you have the recovery phrase for the wallet you want to restore.')) {
+        return;
+      }
+      if (action === 'create') startWalletCreateFlow();
+      else startWalletRestoreFlow();
+    } catch (error) {
+      console.error('Wallet setup could not be opened:', error);
+      setMessage(`Could not open wallet setup: ${error.message}`, true);
+    }
+  };
+
   window.addEventListener('hashchange', () => {
-    if (location.hash === '#wallet') {
+    if (location.hash === '#wallet' || location.hash === '#create-wallet' || location.hash === '#recover-wallet') {
       requestAnimationFrame(() => walletRoot.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     }
+    openWalletSetupFromHash();
   });
 
   byId('walletOnboardingNext').addEventListener('click', () => {
@@ -1657,29 +1896,49 @@ setProviderButtonsHidden();
     byId('walletOnboardingWelcome').hidden = false;
   });
   byId('walletOnboardingCreate').addEventListener('click', () => {
-    finishOnboarding();
-    showOnlyForm(byId('walletCreateForm'));
-    byId('walletCreatePassword').focus();
+    startWalletCreateFlow();
   });
   byId('walletOnboardingRestore').addEventListener('click', () => {
-    finishOnboarding();
-    showOnlyForm(byId('walletRestoreForm'));
-    byId('walletRestorePhrase').focus();
+    startWalletRestoreFlow();
   });
   byId('walletOnboardingUnlock').addEventListener('click', () => {
+    updateUnlockCredentialLabel();
     finishOnboarding();
+    byId('walletOnboardingUnlock').hidden = true;
     showOnlyForm(byId('walletUnlockForm'));
     byId('walletUnlockPassword').focus();
   });
-  byId('walletCreateButton').addEventListener('click', () => showOnlyForm(byId('walletCreateForm')));
-  byId('walletRestoreButton').addEventListener('click', () => showOnlyForm(byId('walletRestoreForm')));
-  byId('walletUnlockButton').addEventListener('click', () => showOnlyForm(byId('walletUnlockForm')));
-  byId('walletBackupButton').addEventListener('click', () => showOnlyForm(byId('walletBackupForm')));
+  byId('walletCreateButton').addEventListener('click', () => {
+    updateCredentialMode('walletCreate', byId('walletCreateCredentialType')?.value || 'password');
+    showOnlyForm(byId('walletCreateForm'));
+  });
+  byId('walletRestoreButton').addEventListener('click', () => {
+    updateCredentialMode('walletRestore', byId('walletRestoreCredentialType')?.value || 'password');
+    showOnlyForm(byId('walletRestoreForm'));
+  });
+  byId('walletUnlockButton').addEventListener('click', () => {
+    updateUnlockCredentialLabel();
+    showOnlyForm(byId('walletUnlockForm'));
+  });
+  byId('walletBackupButton').addEventListener('click', () => {
+    updateUnlockCredentialLabel();
+    showOnlyForm(byId('walletBackupForm'));
+  });
+  byId('walletCreateCredentialType')?.addEventListener('change', (event) => updateCredentialMode('walletCreate', event.target.value));
+  byId('walletRestoreCredentialType')?.addEventListener('change', (event) => updateCredentialMode('walletRestore', event.target.value));
+  byId('walletCreateForm').addEventListener('reset', () => {
+    window.setTimeout(() => updateCredentialMode('walletCreate', byId('walletCreateCredentialType')?.value || 'password'), 0);
+  });
+  byId('walletRestoreForm').addEventListener('reset', () => {
+    window.setTimeout(() => updateCredentialMode('walletRestore', byId('walletRestoreCredentialType')?.value || 'password'), 0);
+  });
   byId('walletLockButton').addEventListener('click', () => lockWallet());
   document.querySelectorAll('[data-wallet-cancel]').forEach((button) => {
     button.addEventListener('click', () => {
       pendingNewPhrase = null;
       pendingPassword = null;
+      pendingCredentialType = 'password';
+      pendingCredentialType = 'password';
       byId('walletCreateForm').reset();
       byId('walletPhrasePanel').dataset.password = '';
       byId('walletRecoveryWords').replaceChildren();
@@ -1693,14 +1952,22 @@ setProviderButtonsHidden();
   byId('walletCreateForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     const password = byId('walletCreatePassword').value;
-    if (password.length < 12 || password !== byId('walletCreatePasswordConfirm').value) {
-      setMessage('Use the same wallet password in both fields; it must be at least 12 characters.', true);
+    const credentialType = byId('walletCreateCredentialType')?.value || 'password';
+    if (!isValidCredential(password, credentialType)) {
+      setMessage(credentialType === 'pin'
+        ? 'Use a PIN containing 4 to 8 digits.'
+        : 'Use a password of at least 12 characters with uppercase and lowercase letters, a number, and a special character.', true);
+      return;
+    }
+    if (password !== byId('walletCreatePasswordConfirm').value) {
+      setMessage('The wallet credential entries do not match.', true);
       return;
     }
     try {
       const entropy = crypto.getRandomValues(new Uint8Array(16));
       pendingNewPhrase = ethers.Mnemonic.fromEntropy(ethers.hexlify(entropy)).phrase;
       pendingPassword = password;
+      pendingCredentialType = credentialType;
       byId('walletCreatePassword').value = '';
       byId('walletCreatePasswordConfirm').value = '';
       byId('walletPhrasePanel').dataset.mode = 'create';
@@ -1723,10 +1990,11 @@ setProviderButtonsHidden();
       return;
     }
     try {
-      await encryptPhrase(pendingNewPhrase, password);
+      await encryptPhrase(pendingNewPhrase, password, pendingCredentialType);
       mnemonicPhrase = pendingNewPhrase;
       pendingNewPhrase = null;
       pendingPassword = null;
+      pendingCredentialType = 'password';
       byId('walletPhrasePanel').hidden = true;
       await unlockWithPhrase(mnemonicPhrase);
     } catch (error) {
@@ -1739,8 +2007,15 @@ setProviderButtonsHidden();
     event.preventDefault();
     const password = byId('walletRestorePassword').value;
     const confirmPassword = byId('walletRestorePasswordConfirm').value;
-    if (password.length < 12 || password !== confirmPassword) {
-      setMessage('Use the same wallet password in both fields; it must be at least 12 characters.', true);
+    const credentialType = byId('walletRestoreCredentialType')?.value || 'password';
+    if (!isValidCredential(password, credentialType)) {
+      setMessage(credentialType === 'pin'
+        ? 'Use a PIN containing 4 to 8 digits.'
+        : 'Use a password of at least 12 characters with uppercase and lowercase letters, a number, and a special character.', true);
+      return;
+    }
+    if (password !== confirmPassword) {
+      setMessage('The wallet credential entries do not match.', true);
       return;
     }
     const phrase = byId('walletRestorePhrase').value.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -1752,7 +2027,7 @@ setProviderButtonsHidden();
       if (![12, 15, 18, 21, 24].includes(mnemonic.phrase.split(' ').length)) {
         throw new Error('Use a valid 12-, 15-, 18-, 21-, or 24-word BIP-39 recovery phrase.');
       }
-      await encryptPhrase(mnemonic.phrase, password);
+      await encryptPhrase(mnemonic.phrase, password, credentialType);
       await unlockWithPhrase(mnemonic.phrase);
     } catch (error) {
       console.error('Wallet restore failed:', error);
@@ -1982,6 +2257,17 @@ setProviderButtonsHidden();
       link.textContent = transaction.hash;
       message.replaceChildren(document.createTextNode('Transaction confirmed: '), link);
       message.classList.remove('is-error');
+      if (typeof window.bxcAddNotification !== 'function') {
+        console.error('The Wallet transaction notification could not be saved because the notification inbox is unavailable.');
+      } else {
+        const currency = NETWORKS[network].symbol;
+        window.bxcAddNotification({
+          source: 'Wallet',
+          title: 'Transaction confirmed',
+          message: `Sent ${amount} ${currency} successfully.`,
+          type: 'info'
+        });
+      }
       byId('walletSendRecipient').value = '';
       byId('walletSendAmount').value = '';
       await refreshBalances();
@@ -2026,9 +2312,10 @@ setProviderButtonsHidden();
     }
   });
   byId('preferredCurrency').addEventListener('change', renderBalances);
-  byId('walletRefreshButton')?.addEventListener('click', async () => {
-    await refreshBalances();
-    autoDiscoverWalletNfts();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && (mnemonicPhrase || ledgerAddress || hardwareLedgerAddress)) {
+      void refreshBalances();
+    }
   });
   window.addEventListener('pagehide', () => {
     clearIdleLockTimer();
@@ -2061,31 +2348,39 @@ setProviderButtonsHidden();
 
   try {
     const savedWallet = getSavedWallet();
-    const hasExistingWallet = Boolean(savedWallet)
-      || localStorage.getItem(CONNECTED_WALLET_STORAGE_KEY) === 'true';
-    byId('walletOnboardingCreate').hidden = Boolean(savedWallet);
-    byId('walletOnboardingRestore').hidden = Boolean(savedWallet);
-    byId('walletOnboardingUnlock').hidden = !savedWallet;
-    byId('walletOnboardingOptions').hidden = true;
-    byId('walletOnboardingWelcome').hidden = false;
-    setVaultLockScreen(!hasExistingWallet);
-    if (hasExistingWallet) showTreasuryWelcome();
+    showWalletAccessGate();
     const isSecureContext = window.isSecureContext || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     if (!isSecureContext || !crypto.subtle) {
       creationControls.forEach((button) => { button.disabled = true; });
       byId('walletRestoreButton').disabled = true;
       byId('walletUnlockButton').disabled = true;
+      state.textContent = 'Secure connection required';
       setMessage('Secure browser cryptography requires HTTPS or localhost. Open this wallet over a secure connection.', true);
     } else if (savedWallet) {
       byId('walletCreateButton').hidden = true;
       byId('walletRestoreButton').hidden = true;
       byId('walletUnlockButton').hidden = false;
       state.textContent = 'Wallet locked in this browser';
+    } else {
+      state.textContent = 'No wallet set up';
     }
   } catch (error) {
     setVaultLockScreen(true);
     byId('walletCreateButton').hidden = true;
     byId('walletRestoreButton').hidden = true;
     setMessage(error.message, true);
+  }
+
+  openWalletSetupFromHash();
+
+  if (window.ethereum) void connectMetaMask(false);
+  if (navigator.hid && window.isSecureContext) {
+    navigator.hid.getDevices().then((devices) => {
+      if (!ledgerAddress && !hardwareLedgerAddress && devices.some((device) => device.vendorId === 0x2c97)) {
+        byId('walletOnboardingMetaStatus').textContent = 'A previously authorized Ledger device is available. Click Connect Ledger to choose and verify its Ethereum account.';
+      }
+    }).catch((error) => {
+      console.error('Previously authorized Ledger devices could not be detected:', error);
+    });
   }
 }

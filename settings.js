@@ -3,6 +3,10 @@
   const availableThemes = new Set(['black-yellow', 'white-yellow', 'live-pixel']);
   const themeInputs = [...document.querySelectorAll('input[name="siteTheme"]')];
   const status = document.getElementById('themeSaveStatus');
+  const profileDialog = document.getElementById('settingsProfileDialog');
+  const profileOpen = document.getElementById('settingsProfileOpen');
+  const profileClose = document.getElementById('settingsProfileClose');
+  const profileStatus = document.getElementById('settingsProfileStatus');
   let currentTheme = 'black-yellow';
 
   try {
@@ -29,5 +33,29 @@
         status.textContent = 'Theme applied for this page, but could not be saved in this browser.';
       }
     });
+  });
+
+  profileOpen?.addEventListener('click', () => profileDialog?.showModal());
+  profileClose?.addEventListener('click', () => profileDialog?.close());
+  profileDialog?.addEventListener('click', (event) => {
+    if (event.target === profileDialog) profileDialog.close();
+  });
+  document.getElementById('settingsProfilePhoto')?.addEventListener('click', () => {
+    const photoAction = [...document.querySelectorAll('.profile-menu-dropdown button[role="menuitem"]')]
+      .find((button) => /photo/i.test(button.textContent));
+    if (!photoAction) {
+      profileStatus.textContent = 'Sign in to change your profile photo.';
+      return;
+    }
+    photoAction.click();
+  });
+  document.getElementById('settingsProfileLogout')?.addEventListener('click', () => {
+    const logoutAction = [...document.querySelectorAll('.profile-menu-dropdown button[role="menuitem"]')]
+      .find((button) => button.textContent.trim() === 'Log out');
+    if (!logoutAction) {
+      profileStatus.textContent = 'You are not signed in.';
+      return;
+    }
+    logoutAction.click();
   });
 })();

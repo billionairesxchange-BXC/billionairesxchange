@@ -32,7 +32,6 @@
         <a href="create-coin.html">Create Coin</a>
       </nav>
       <div class="nav-actions">
-        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
         <a class="btn btn-secondary" href="treasury.html#wallet">Back to Treasury</a>
       </div>
     </header>
@@ -60,21 +59,21 @@
             <div class="metal-card-grid">
               <button class="metal-card-choice" type="button" data-card-style="silver-metal" aria-pressed="false">
                 <span class="metal-card-preview metal-card-preview-silver" aria-hidden="true">
-                  <span>BILLIONAIRES</span><span class="metal-card-chip">â–¦</span><strong>YOUR NAME</strong><small>SILVER</small>
+                  <span>BILLIONAIRESXCHANGE</span><span class="metal-card-chip">BXC</span><strong>YOUR NAME</strong><small>SILVER</small>
                 </span>
                 <strong>Silver Metal</strong>
                 <span>Silver metal card</span>
               </button>
               <button class="metal-card-choice" type="button" data-card-style="black-metal" aria-pressed="false">
                 <span class="metal-card-preview metal-card-preview-black" aria-hidden="true">
-                  <span>BILLIONAIRES</span><span class="metal-card-chip">â–¦</span><strong>YOUR NAME</strong><small>BLACK</small>
+                  <span>BILLIONAIRESXCHANGE</span><span class="metal-card-chip">BXC</span><strong>YOUR NAME</strong><small>BLACK</small>
                 </span>
                 <strong>Black Metal</strong>
                 <span>Black metal card</span>
               </button>
               <button class="metal-card-choice" type="button" data-card-style="bronze-metal" aria-pressed="false">
                 <span class="metal-card-preview metal-card-preview-bronze" aria-hidden="true">
-                  <span>BILLIONAIRES</span><span class="metal-card-chip">â–¦</span><strong>YOUR NAME</strong><small>BRONZE</small>
+                  <span>BILLIONAIRESXCHANGE</span><span class="metal-card-chip">BXC</span><strong>YOUR NAME</strong><small>BRONZE</small>
                 </span>
                 <strong>Bronze Metal</strong>
                 <span>Bronze metal card</span>
@@ -84,27 +83,36 @@
           <section id="plasticCardOptions" class="plastic-card-options" hidden aria-labelledby="plasticCardHeading">
             <h3 id="plasticCardHeading">Regular white plastic card</h3>
             <p class="request-card-help">The white blank card is the default. Upload a photo design below to preview it on the card.</p>
-            <div class="plastic-card-preview" aria-label="Regular white plastic card preview">
-              <img class="plastic-card-full-artwork" id="plasticCardArtwork" alt="Uploaded design covering the plastic card preview" hidden />
-              <div class="plastic-card-preview-brand">BILLIONAIRESXCHANGE <span aria-hidden="true">â–¦</span></div>
-              <span class="plastic-card-artwork-placeholder" id="plasticCardArtworkPlaceholder">Your card design will appear here</span>
-              <strong id="plasticCardPreviewName">YOUR NAME</strong>
-              <small>REGULAR PLASTIC</small>
-            </div>
           </section>
         </section>
 
         <section id="cardRequestFormPanel" class="card-glass request-card-panel" hidden aria-labelledby="requestDetailsHeading">
           <h2 id="requestDetailsHeading">Request details</h2>
           <p class="request-card-help">Your request is saved to your account. Card requests are subject to review and approval.</p>
+          <div id="selectedCardPreview" class="selected-card-preview" hidden>
+            <h3>Selected card preview</h3>
+            <div id="selectedMetalPreview" class="metal-card-preview metal-card-preview-silver" hidden>
+              <span>BILLIONAIRESXCHANGE</span>
+              <span class="metal-card-chip">BXC</span>
+              <strong id="selectedMetalPreviewName">YOUR NAME</strong>
+              <small id="selectedMetalPreviewStyle">SILVER</small>
+            </div>
+            <div id="selectedPlasticPreview" class="plastic-card-preview" hidden>
+              <img class="plastic-card-full-artwork" id="plasticCardArtwork" alt="Uploaded design covering the plastic card preview" hidden />
+              <div class="plastic-card-preview-brand">BILLIONAIRESXCHANGE <span aria-hidden="true">BXC</span></div>
+              <span class="plastic-card-artwork-placeholder" id="plasticCardArtworkPlaceholder">Your card design will appear here</span>
+              <strong id="plasticCardPreviewName">YOUR NAME</strong>
+              <small>REGULAR PLASTIC</small>
+            </div>
+          </div>
           <form id="cardRequestForm" class="request-card-form">
             <label>
               Name to display on card
               <input id="cardEngraving" name="engravingText" type="text" maxlength="20" autocomplete="name" required />
             </label>
             <label>
-              Design notes (optional)
-              <textarea id="cardDesignNote" name="designNote" rows="3" maxlength="300" placeholder="Share any additional design preferences."></textarea>
+              Engrave notes (optional)
+              <textarea id="cardEngraveNote" name="engraveNote" rows="3" maxlength="300" placeholder="Share any additional engraving preferences."></textarea>
             </label>
             <label>
               Upload a card design photo (optional)
@@ -156,6 +164,10 @@
       const plasticCardArtwork = document.getElementById('plasticCardArtwork');
       const plasticCardArtworkPlaceholder = document.getElementById('plasticCardArtworkPlaceholder');
       const plasticCardPreviewName = document.getElementById('plasticCardPreviewName');
+      const selectedCardPreview = document.getElementById('selectedCardPreview');
+      const selectedMetalPreview = document.getElementById('selectedMetalPreview');
+      const selectedMetalPreviewName = document.getElementById('selectedMetalPreviewName');
+      const selectedMetalPreviewStyle = document.getElementById('selectedMetalPreviewStyle');
       const engravingInput = document.getElementById('cardEngraving');
       let signedInUser = null;
       let selectedMaterial = '';
@@ -172,6 +184,7 @@
       function setMaterial(material) {
         selectedMaterial = material;
         selectedStyle = null;
+        submitButton.disabled = !signedInUser;
         document.querySelectorAll('[data-card-material]').forEach((button) => {
           const active = button.dataset.cardMaterial === material;
           button.classList.toggle('btn-primary', active);
@@ -183,6 +196,7 @@
           button.setAttribute('aria-pressed', 'false');
         });
         cardRequestFormPanel.hidden = true;
+        selectedCardPreview.hidden = true;
         metalCardOptions.hidden = material !== 'Metal';
         plasticCardOptions.hidden = material !== 'Plastic';
         designImagePreview.hidden = !designImageData || material !== 'Metal';
@@ -197,6 +211,25 @@
           selectedStyle = 'white-plastic-regular';
           cardRequestFormPanel.hidden = false;
           materialStatus.textContent = 'Regular white plastic card selected. Upload a design photo to preview it on the card, or request the blank white card.';
+          updateSelectedCardPreview();
+        }
+      }
+
+      function updateSelectedCardPreview() {
+        const hasSelectedStyle = Boolean(cardStyles[selectedStyle]);
+        selectedCardPreview.hidden = !hasSelectedStyle;
+        selectedMetalPreview.hidden = selectedMaterial !== 'Metal' || !hasSelectedStyle;
+        document.getElementById('selectedPlasticPreview').hidden = selectedMaterial !== 'Plastic' || !hasSelectedStyle;
+        if (selectedMaterial === 'Metal' && cardStyles[selectedStyle]) {
+          selectedMetalPreview.className = `metal-card-preview metal-card-preview-${selectedStyle.replace('-metal', '')}`;
+          selectedMetalPreviewName.textContent = engravingInput.value.trim().toUpperCase() || 'YOUR NAME';
+          selectedMetalPreviewStyle.textContent = cardStyles[selectedStyle].name.replace(' Metal', '').toUpperCase();
+        }
+        plasticCardPreviewName.textContent = engravingInput.value.trim().toUpperCase() || 'YOUR NAME';
+        if (designImageData && selectedMaterial === 'Plastic') {
+          plasticCardArtwork.src = designImageData;
+          plasticCardArtwork.hidden = false;
+          plasticCardArtworkPlaceholder.hidden = true;
         }
       }
 
@@ -213,7 +246,9 @@
         plasticCardArtwork.removeAttribute('src');
         plasticCardArtwork.hidden = true;
         plasticCardArtworkPlaceholder.hidden = false;
-        cardRequestStatus.textContent = 'Selected design photo removed. Choose another photo or continue without one.';
+        if (selectedMaterial === 'Plastic') {
+          cardRequestStatus.textContent = 'Selected design photo removed. Choose another photo or continue without one.';
+        }
       }
 
       async function loadMyRequests(user) {
@@ -241,7 +276,7 @@
             const title = document.createElement('h3');
             title.textContent = request.cardStyle || 'ATM card';
             const details = document.createElement('p');
-            details.textContent = `Material: ${request.material} Â· Engraving: ${request.engravingText || 'Not provided'}`;
+            details.textContent = `Material: ${request.material} · Engraving: ${request.engravingText || 'Not provided'} · Engrave notes: ${request.engraveNote || request.designNote || 'None'}`;
             const status = document.createElement('p');
             status.textContent = `Status: ${request.status || 'Submitted'} Â· ${formatRequestDate(request.createdAt)}`;
             article.append(title, details, status);
@@ -279,6 +314,9 @@
             item.setAttribute('aria-pressed', String(active));
           });
           cardRequestFormPanel.hidden = false;
+          submitButton.disabled = !signedInUser;
+          cardRequestStatus.textContent = '';
+          updateSelectedCardPreview();
           cardRequestFormPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
       });
@@ -306,6 +344,7 @@
             plasticCardArtwork.src = designImageData;
             plasticCardArtwork.hidden = false;
             plasticCardArtworkPlaceholder.hidden = true;
+            updateSelectedCardPreview();
           }
           cardRequestStatus.textContent = '';
         } catch (error) {
@@ -322,6 +361,7 @@
 
       engravingInput.addEventListener('input', () => {
         plasticCardPreviewName.textContent = engravingInput.value.trim().toUpperCase() || 'YOUR NAME';
+        selectedMetalPreviewName.textContent = engravingInput.value.trim().toUpperCase() || 'YOUR NAME';
       });
 
       onAuthStateChanged(auth, (user) => {
@@ -358,7 +398,7 @@
           cardStyle: cardStyles[selectedStyle].name,
           styleId: selectedStyle,
           engravingText,
-          designNote: document.getElementById('cardDesignNote').value.trim(),
+          engraveNote: document.getElementById('cardEngraveNote').value.trim(),
           designImageData
         };
         submitButton.disabled = true;
@@ -371,20 +411,6 @@
             createdAt: serverTimestamp()
           });
           requestSaved = true;
-          cardRequestForm.reset();
-          designImageData = '';
-          designImagePreview.hidden = true;
-          plasticCardArtwork.removeAttribute('src');
-          plasticCardArtwork.hidden = true;
-          plasticCardArtworkPlaceholder.hidden = false;
-          plasticCardPreviewName.textContent = 'YOUR NAME';
-          selectedStyle = selectedMaterial === 'Plastic' ? 'white-plastic-regular' : null;
-          designImageInput.value = '';
-          document.querySelectorAll('[data-card-style]').forEach((button) => {
-            button.classList.remove('is-selected');
-            button.setAttribute('aria-pressed', 'false');
-          });
-          cardRequestFormPanel.hidden = selectedMaterial !== 'Plastic';
           await loadMyRequests(signedInUser);
           const apiBaseUrl = window.MAKINGS_API_BASE_URL || window.location.origin;
           const emailResponse = await fetch(`${apiBaseUrl}/api/card-request-email`, {
@@ -399,8 +425,9 @@
           if (!emailResponse.ok) {
             throw new Error(emailResult.error || 'Email notification could not be sent.');
           }
-          materialStatus.textContent = 'Your request was submitted and sent to the card team. Choose a card design to submit another request.';
-          cardRequestStatus.textContent = 'Request submitted and email notification sent.';
+          materialStatus.textContent = 'Thank you for your request. We are reviewing it and will reach out to you by email.';
+          cardRequestStatus.textContent = 'Thank you for your request. We are reviewing it and will reach out to you by email.';
+          submitButton.disabled = true;
         } catch (error) {
           console.error('Unable to submit card request:', error);
           if (requestSaved) {

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Offshore Account Inquiry</title>
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange" width="100" />
+        <div><p class="brand-name">BillionairesXchange</p><small>Crypto Trading &amp; Investment</small></div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a><a href="trade.html">Trade</a><a href="shop.html">Shop</a>
+        <a href="bot-trading.html">Trading Bot</a><a href="treasury.html#wallet">Wallet</a>
+        <a href="create-coin.html">Create Coin</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="treasury.html#wallet">Back to Wallet</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="bill-payment-page section-shell" aria-labelledby="offshoreHeading">
+        <div class="section-head">
+          <div><span class="eyebrow">Account services</span><h1 id="offshoreHeading">Offshore account inquiry</h1></div>
+        </div>
+        <div class="card-glass bill-payment-card">
+          <div class="bill-payment-form-panel">
+            <form class="bill-payment-form" id="offshoreInquiryForm">
+              <div class="bill-flow-progress">
+                <span id="offshoreStepText" aria-live="polite">Step 1 of 3: Review</span>
+                <progress id="offshoreProgress" value="1" max="3" aria-label="Inquiry progress"></progress>
+              </div>
+
+              <section class="bill-flow-step" data-offshore-step="0" aria-labelledby="offshoreReviewHeading">
+                <h2 id="offshoreReviewHeading">Before you continue</h2>
+                <p>This form submits an inquiry for human review. It does not open or fund a bank account, create a balance or transaction history, or link a BXC Card.</p>
+                <p>Account availability, eligibility, minimum funding, fees, required documents, and any card services must be confirmed by a licensed provider. No account can be guaranteed against loss, legal process, seizure, or investigation. Do not send funds or identity documents through this inquiry.</p>
+                <p>We use your existing signed-in session to identify your account. This form will never ask for your password.</p>
+                <div class="bill-flow-actions"><button class="btn btn-primary" type="button" data-offshore-next>Next</button></div>
+              </section>
+
+              <section class="bill-flow-step" data-offshore-step="1" aria-labelledby="offshoreDetailsHeading" hidden>
+                <h2 id="offshoreDetailsHeading">Contact details</h2>
+                <div class="form-grid">
+                  <label for="offshoreFirstName">First name<input id="offshoreFirstName" name="firstName" maxlength="60" autocomplete="given-name" required /></label>
+                  <label for="offshoreLastName">Last name<input id="offshoreLastName" name="lastName" maxlength="60" autocomplete="family-name" required /></label>
+                  <label for="offshoreAge">Age<input id="offshoreAge" name="age" type="number" min="18" max="120" step="1" required /></label>
+                  <label for="offshoreEmail">Signed-in email<input id="offshoreEmail" name="email" type="email" autocomplete="email" readonly required /></label>
+                  <label for="offshorePhone">Phone number<input id="offshorePhone" name="phone" type="tel" maxlength="24" autocomplete="tel" placeholder="+1 555 123 4567" required /></label>
+                </div>
+                <label for="offshoreAddress">Residential address<textarea id="offshoreAddress" name="address" rows="3" maxlength="240" autocomplete="street-address" required></textarea></label>
+                <div class="bill-flow-actions">
+                  <button class="btn btn-secondary" type="button" data-offshore-back>Back</button>
+                  <button class="btn btn-primary" type="button" data-offshore-next>Next</button>
+                </div>
+              </section>
+
+              <section class="bill-flow-step" data-offshore-step="2" aria-labelledby="offshoreAccountHeading" hidden>
+                <h2 id="offshoreAccountHeading">Account inquiry</h2>
+                <label for="offshoreAccountType">Account type
+                  <select id="offshoreAccountType" name="accountType" required>
+                    <option value="">Choose an account type</option>
+                    <option value="checking">Checking</option>
+                    <option value="savings">Savings</option>
+                  </select>
+                </label>
+                <label class="wallet-backup-confirm"><input id="offshoreBxcCardInterest" name="bxcCardInterest" type="checkbox" /> I’m interested in linking a BXC Card if an account is approved and the provider supports it.</label>
+                <label class="wallet-backup-confirm"><input id="offshoreTermsAccepted" type="checkbox" required /> I understand this is an inquiry only, not an opened account or financial guarantee.</label>
+                <p class="bill-payment-result" id="offshoreStatus" role="status" aria-live="polite" hidden></p>
+                <div class="bill-flow-actions">
+                  <button class="btn btn-secondary" type="button" data-offshore-back>Back</button>
+                  <div class="bill-flow-actions-end">
+                    <button class="btn btn-ghost" type="reset">Reset</button>
+                    <button class="btn btn-primary" type="submit">Send inquiry</button>
+                  </div>
+                </div>
+              </section>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="api-config.js"></script>
+    <script type="module">
+      import { auth } from './firebase-client.js';
+      import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+
+      const form = document.getElementById('offshoreInquiryForm');
+      const steps = [...form.querySelectorAll('[data-offshore-step]')];
+      const stepText = document.getElementById('offshoreStepText');
+      const progress = document.getElementById('offshoreProgress');
+      const status = document.getElementById('offshoreStatus');
+      const emailInput = document.getElementById('offshoreEmail');
+      const stepNames = ['Review', 'Contact details', 'Account inquiry'];
+      let currentStep = 0;
+      let currentUser = null;
+
+      const authReady = new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          currentUser = user;
+          emailInput.value = user?.email || '';
+          unsubscribe();
+          resolve(user);
+        }, () => resolve(null));
+      });
+
+      function showStep(index) {
+        currentStep = Math.max(0, Math.min(index, steps.length - 1));
+        steps.forEach((step, stepIndex) => { step.hidden = stepIndex !== currentStep; });
+        stepText.textContent = `Step ${currentStep + 1} of ${steps.length}: ${stepNames[currentStep]}`;
+        progress.value = currentStep + 1;
+        steps[currentStep].querySelector('h2')?.focus();
+      }
+
+      function validateCurrentStep() {
+        for (const field of steps[currentStep].querySelectorAll('input, select, textarea')) {
+          if (!field.checkValidity()) {
+            field.reportValidity();
+            return false;
+          }
+        }
+        return true;
+      }
+
+      form.addEventListener('click', (event) => {
+        if (event.target.closest('[data-offshore-next]') && validateCurrentStep()) showStep(currentStep + 1);
+        if (event.target.closest('[data-offshore-back]')) showStep(currentStep - 1);
+      });
+
+      form.addEventListener('reset', () => window.setTimeout(() => {
+        status.hidden = true;
+        status.textContent = '';
+        emailInput.value = currentUser?.email || '';
+        showStep(0);
+      }, 0));
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (currentStep !== steps.length - 1 || !validateCurrentStep()) return;
+        const user = await authReady;
+        if (!user) {
+          status.hidden = false;
+          status.textContent = 'Sign in to send an account inquiry. We do not collect your password here.';
+          return;
+        }
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        const fields = [...form.querySelectorAll('input, select, textarea, button')];
+        fields.forEach((field) => { field.disabled = true; });
+        status.hidden = false;
+        status.textContent = 'Sending inquiry for review...';
+        try {
+          const response = await fetch(`${window.MAKINGS_API_BASE_URL}/api/offshore-account-inquiry-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${await user.getIdToken()}`
+            },
+            body: JSON.stringify({
+              firstName: form.elements.firstName.value,
+              lastName: form.elements.lastName.value,
+              age: Number(form.elements.age.value),
+              email: user.email || '',
+              phone: form.elements.phone.value,
+              address: form.elements.address.value,
+              accountType: form.elements.accountType.value,
+              bxcCardInterest: form.elements.bxcCardInterest.checked
+            })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Could not send your inquiry.');
+          const submittedAt = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(result.submittedAt));
+          status.textContent = `Inquiry sent for review. Reference: ${result.reference}. Submitted: ${submittedAt}. This does not open or fund an account.`;
+          form.querySelector('[data-offshore-back]').disabled = true;
+          submitButton.disabled = true;
+        } catch (error) {
+          status.textContent = error.message || 'Could not send your inquiry. Please try again.';
+          fields.forEach((field) => { field.disabled = false; });
+        }
+      });
+
+      showStep(0);
+    </script>
+    <script src="site-header.js"></script>
+  </body>
+</html>

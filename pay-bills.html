@@ -37,7 +37,6 @@
       </nav>
 
       <div class="nav-actions">
-        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
         <a class="btn btn-ghost" href="verification.html">Login</a>
         <a class="btn btn-primary" href="verification.html">Sign Up</a>
       </div>
@@ -57,7 +56,6 @@
           <div class="bill-payment-layout">
             <div class="bill-payment-form-panel">
               <h3>Set up your utility payment</h3>
-              <p>Select the country, choose the utility company, and complete the account details for your bill payment.</p>
 
               <form class="bill-payment-form" id="billPaymentForm">
                 <div class="bill-flow-progress">
@@ -126,6 +124,7 @@
                     Payment type
                     <select id="paymentType" name="paymentType" required>
                       <option value="wallet-payment">Wallet</option>
+                      <option value="bxc-card">BXC Card</option>
                     </select>
                   </label>
                   <div class="bill-flow-actions">
@@ -603,7 +602,7 @@
               accountNumber: formData.get('accountNumber'),
               amount,
               billingPeriod: formData.get('billingPeriod'),
-              paymentType: 'wallet-payment',
+              paymentType: formData.get('paymentType'),
               cryptoCurrency: `${submittedCrypto.name} (${submittedCrypto.symbol.toUpperCase()})`,
               cryptoCurrencyId: submittedCrypto.id,
               estimatedCryptoAmount: submittedCryptoAmount,
@@ -627,7 +626,7 @@
             `Name on utility account: ${formData.get('accountName')}\n` +
             `Utility account number: ${formData.get('accountNumber')}\n` +
             `Bill amount: ${currency} ${amount.toFixed(2)} (${formData.get('billingPeriod')})\n` +
-            `Payment type: Wallet\n` +
+            `Payment type: ${formData.get('paymentType') === 'bxc-card' ? 'BXC Card' : 'Wallet'}\n` +
             `Crypto coin: ${submittedCrypto.name} (${submittedCrypto.symbol.toUpperCase()})\n` +
             `Estimated crypto amount: ${submittedCryptoAmount.toPrecision(8)} ${submittedCrypto.symbol.toUpperCase()}\n\n` +
             `Review request only. No payment was processed and no cryptocurrency was transferred.`

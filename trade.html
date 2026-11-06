@@ -37,7 +37,6 @@
       </nav>
 
       <div class="nav-actions">
-        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
         <a class="btn btn-ghost" href="verification.html">Login</a>
         <a class="btn btn-primary" href="verification.html">Sign Up</a>
       </div>
@@ -166,16 +165,24 @@
                 </div>
               </div>
             </div>
-            <strong id="positionsChartPrice">--</strong>
+            <div class="positions-chart-header-actions">
+              <strong id="positionsChartPrice">--</strong>
+              <button class="positions-fullscreen-button" id="positionsFullscreenButton" type="button" aria-pressed="false" aria-label="Open Position Market View full screen">Full screen</button>
+            </div>
           </div>
           <div id="price">Waiting for live data...</div>
           <div class="positions-chart-wrap">
-            <canvas id="positionsCandleChart" aria-label="Candlestick chart with timestamps for the selected market"></canvas>
-            <button class="positions-save-risk-button" id="positionsSaveRiskSetup" type="button" disabled>Show levels</button>
-            <p id="positionsChartStatus">Loading market candles...</p>
+            <canvas id="positionsCandleChart" aria-label="Candlestick chart with timestamps for the selected market" title="Scroll over the chart to zoom in and out"></canvas>
+            <button class="positions-save-risk-button" id="positionsSaveRiskSetup" type="button" disabled>Set risk levels</button>
             <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
           </div>
-          <div class="positions-chart-price-actions" role="group" aria-label="Place paper trade at the selected chart price">
+          <p id="positionsChartStatus" role="status" aria-live="polite">Loading market candles...</p>
+          <div class="positions-chart-actions" role="group" aria-label="Set paper trade amount">
+            <label for="positionsOrderQuantity">Trade amount (USDT)</label>
+            <input id="positionsOrderQuantity" type="number" min="1" step="0.01" value="0.00" inputmode="decimal" />
+            <span id="positionsOrderEstimate">Estimated total: --</span>
+          </div>
+          <div class="positions-chart-price-actions" role="group" aria-label="Place a paper trade at the selected chart price">
             <button class="btn positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy at chart price</button>
             <button class="btn positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell at chart price</button>
           </div>
@@ -193,6 +200,7 @@
               </div>
             </label>
           </div>
+          <p class="positions-order-help">Set your Stop Loss and Take Profit prices before placing a trade. Levels appear on the chart and are applied to new positions.</p>
           <dialog class="positions-tool-dialog" id="positionsToolDialog" aria-labelledby="positionsToolDialogTitle">
             <form id="positionsToolForm">
               <div class="positions-tool-dialog-head">
@@ -242,11 +250,6 @@
               </div>
             </form>
           </dialog>
-          <div class="positions-chart-actions" role="group" aria-label="Set trade quantity">
-            <label for="positionsOrderQuantity">Quantity</label>
-            <input id="positionsOrderQuantity" type="number" min="0.00000001" step="any" value="0.01" inputmode="decimal" />
-            <span id="positionsOrderEstimate">Estimated total: --</span>
-          </div>
         </div>
         <div class="trade-balances card-glass" aria-label="Trade account balances">
           <div class="trade-balance-card">
@@ -260,8 +263,8 @@
             <small>Paper profits transferred out of trading</small>
           </div>
           <div class="trade-balance-actions">
-            <button class="btn btn-primary" id="tradeDepositButton" type="button">Deposit from bank</button>
-            <button class="btn btn-ghost" id="tradeTransferButton" type="button">Transfer profits</button>
+            <button class="btn btn-primary" id="tradeDepositButton" type="button" aria-expanded="false" aria-controls="tradeBalanceDialog">Deposit from bank</button>
+            <button class="btn btn-ghost" id="tradeTransferButton" type="button" aria-expanded="false" aria-controls="tradeBalanceDialog">Transfer profits</button>
             <small>Paper simulation only. No real bank transfer is made.</small>
           </div>
         </div>
@@ -320,6 +323,11 @@
 
     <div id="toast" class="toast" aria-live="polite">Welcome to BillionairesXchange Trade Center.</div>
 
+    <script>
+      const tradeSection = document.getElementById('trade');
+      const marketsSection = document.getElementById('markets');
+      marketsSection.before(tradeSection);
+    </script>
     <script src="api-config.js"></script>
     <script src="script.js"></script>
     <script type="module" src="auth.js"></script>

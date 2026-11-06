@@ -2,7 +2,7 @@
   const createForm = document.getElementById('autoPilotCreateForm');
   if (!createForm) return;
 
-  const minimumBuyUsd = 20;
+  const minimumTradeUsd = 0.01;
   const maxActiveBots = 4;
   const refreshIntervalMs = 15000;
   const marketPairs = {
@@ -58,6 +58,7 @@
         const wasRunning = bot.status === 'running' || bot.status === 'finishing';
         return {
           ...bot,
+          selectedSymbol: String(bot.openPosition?.symbol || bot.selectedSymbol || '').toUpperCase(),
           status: wasRunning ? 'paused' : bot.status,
           endsAt: null,
           startedAt: null,
@@ -68,6 +69,12 @@
           remainingMs: Number.isFinite(Number(bot.remainingMs))
             ? Math.max(0, Number(bot.remainingMs))
             : duration.milliseconds,
+          buyAmountUsd: Number.isFinite(Number(bot.buyAmountUsd)) && Number(bot.buyAmountUsd) >= minimumTradeUsd
+            ? Number(bot.buyAmountUsd)
+            : null,
+          sellAmountUsd: Number.isFinite(Number(bot.sellAmountUsd)) && Number(bot.sellAmountUsd) >= minimumTradeUsd
+            ? Number(bot.sellAmountUsd)
+            : null,
           openPosition: bot.openPosition || null,
           trades: Array.isArray(bot.trades) ? bot.trades : [],
           learning: bot.learning && typeof bot.learning === 'object' ? bot.learning : {},
@@ -157,7 +164,7 @@
     if (!bots.length) {
       const empty = document.createElement('p');
       empty.className = 'autopilot-empty';
-      empty.textContent = 'No autopilot bots yet. Create one above and explicitly approve its simulated $20 minimum-buy rule.';
+      empty.textContent = 'No Auto Pilot bots yet. Choose a coin and approve simulated paper trading when creating one.';
       botList.appendChild(empty);
       renderSummary();
       renderHistory();
@@ -179,7 +186,7 @@
 
       const summary = document.createElement('div');
       summary.className = 'autopilot-bot-details';
-      addDetail(summary, 'Selected coin', bot.openPosition?.symbol || bot.selectedSymbol || 'Scanning');
+      addDetail(summary, 'Selected coin', bot.openPosition?.symbol || bot.selectedSymbol || 'Choose a coin');
       addDetail(summary, 'Virtual cash', money(bot.balance));
       addDetail(summary, 'Realized P/L', money(bot.realizedPnl));
       const openPnl = bot.openPosition
@@ -188,6 +195,9 @@
       addDetail(summary, 'Open P/L', money(openPnl));
       addDetail(summary, 'Goal', money(bot.goalUsd));
       addDetail(summary, 'Trade cap', money(bot.tradeCapUsd));
+      addDetail(summary, 'Buy / sell size', bot.buyAmountUsd
+        ? `${money(bot.buyAmountUsd)} / ${money(bot.sellAmountUsd)}`
+        : 'Adaptive sizing (legacy bot)');
       addDetail(summary, 'Adaptive settings', bot.currentSettings
         ? `${bot.currentSettings.risk} · ${bot.currentSettings.strategy}`
         : 'Auto-selected per market');
@@ -205,8 +215,32 @@
 
       const actions = document.createElement('div');
       actions.className = 'autopilot-bot-actions';
+      if (bot.status === 'paused' && !bot.openPosition) {
+        const marketLabel = document.createElement('label');
+        marketLabel.className = 'autopilot-market-select';
+        marketLabel.textContent = 'Coin';
+        const marketSelect = document.createElement('select');
+        marketSelect.dataset.action = 'select-market';
+        marketSelect.dataset.botId = bot.id;
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Choose a coin';
+        marketSelect.appendChild(placeholder);
+        Object.keys(marketPairs).forEach((symbol) => {
+          const option = document.createElement('option');
+          option.value = symbol;
+          option.textContent = `${symbol}/USDT`;
+          marketSelect.appendChild(option);
+        });
+        marketSelect.value = bot.selectedSymbol || '';
+        marketLabel.appendChild(marketSelect);
+        card.appendChild(marketLabel);
+      }
       if (bot.status === 'paused') {
-        actions.appendChild(makeActionButton('Start Auto Pilot', 'start', bot.id, 'btn-primary'));
+        const startButton = makeActionButton('Start Auto Pilot', 'start', bot.id, 'btn-primary');
+        startButton.disabled = !bot.selectedSymbol;
+        if (!bot.selectedSymbol) startButton.title = 'Choose a coin before starting Auto Pilot.';
+        actions.appendChild(startButton);
       }
       if (bot.status === 'running' || bot.status === 'finishing') {
         actions.appendChild(makeActionButton('Pause bot', 'pause', bot.id, 'btn-ghost'));
@@ -270,8 +304,13 @@
   }
 
   function recordOutcome(bot, position, exitPrice, reason) {
-    const proceeds = position.quantity * exitPrice;
-    const pnl = proceeds - position.amount;
+    const sellAmount = Number(bot.sellAmountUsd);
+    const quantity = Number.isFinite(sellAmount) && sellAmount > 0
+      ? Math.min(position.quantity, sellAmount / exitPrice)
+      : position.quantity;
+    const costBasis = position.amount * (quantity / position.quantity);
+    const proceeds = quantity * exitPrice;
+    const pnl = proceeds - costBasis;
     bot.balance += proceeds;
     bot.realizedPnl = (Number(bot.realizedPnl) || 0) + pnl;
     bot.totalLosses = (Number(bot.totalLosses) || 0) + (pnl < 0 ? Math.abs(pnl) : 0);
@@ -279,8 +318,8 @@
       id: `${bot.id}-${Date.now()}`,
       botName: bot.name,
       symbol: position.symbol,
-      amount: position.amount,
-      quantity: position.quantity,
+      amount: costBasis,
+      quantity,
       entryPrice: position.entryPrice,
       exitPrice,
       pnl,
@@ -296,11 +335,26 @@
     learning.losses += pnl <= 0 ? 1 : 0;
     learning.returnPctTotal += position.amount ? pnl / position.amount * 100 : 0;
     bot.learning[position.symbol] = learning;
-    bot.openPosition = null;
+    position.quantity -= quantity;
+    position.amount -= costBasis;
+    position.lastPrice = exitPrice;
+    if (position.quantity <= 1e-10) bot.openPosition = null;
 
     const result = pnl > 0
       ? `${bot.name}: ${position.symbol} paper trade gained ${money(pnl)}.`
       : `${bot.name}: ${position.symbol} paper trade lost ${money(Math.abs(pnl))}.`;
+    if (pnl !== 0) {
+      if (typeof window.bxcAddNotification !== 'function') {
+        console.error('The Auto Pilot trade outcome could not be saved because the notification inbox is unavailable.');
+      } else {
+        window.bxcAddNotification({
+          source: 'Trading Bot',
+          title: pnl > 0 ? 'Auto Pilot paper trade gain' : 'Auto Pilot paper trade loss',
+          message: result,
+          type: pnl > 0 ? 'gain' : 'loss'
+        });
+      }
+    }
     announce(result);
     addTradeAlert(result, pnl);
     notifyBrowser(bot, result);
@@ -357,13 +411,17 @@
 
   function openPaperPosition(bot, market) {
     const settings = settingsForMarket(market);
-    const amount = Math.min(bot.tradeCapUsd, bot.balance, Math.max(minimumBuyUsd, bot.balance * settings.riskFraction));
-    if (amount < minimumBuyUsd) {
+    const defaultAmount = bot.balance * settings.riskFraction;
+    const requestedAmount = Number.isFinite(Number(bot.buyAmountUsd)) && Number(bot.buyAmountUsd) > 0
+      ? Number(bot.buyAmountUsd)
+      : defaultAmount;
+    const amount = Math.min(requestedAmount, bot.tradeCapUsd, bot.balance);
+    if (amount < minimumTradeUsd) {
       bot.status = 'paused';
       bot.endsAt = null;
       bot.startedAt = null;
       bot.remainingMs = Math.max(0, bot.remainingMs);
-      announce(`${bot.name} paused: its virtual balance is below the USD $20 minimum buy.`, true);
+      announce(`${bot.name} paused: its virtual balance is below the minimum $0.01 paper trade.`, true);
       return;
     }
 
@@ -388,7 +446,7 @@
       risk: settings.risk,
       strategy: settings.strategy
     };
-    announce(`${bot.name} selected ${market.symbol} (${market.changePct >= 0 ? '+' : ''}${market.changePct.toFixed(2)}% 24h, score ${market.score.toFixed(2)}). Opened a ${settings.risk.toLowerCase()} paper position for ${money(amountToSpend)}; minimum buy is $20.`);
+    announce(`${bot.name} selected ${market.symbol} (${market.changePct >= 0 ? '+' : ''}${market.changePct.toFixed(2)}% 24h, score ${market.score.toFixed(2)}). Opened a ${settings.risk.toLowerCase()} paper position for ${money(amountToSpend)}.`);
   }
 
   function closeIfTriggered(bot, market, reason) {
@@ -403,13 +461,19 @@
 
     const closeReason = reason || (stopHit ? 'stop-loss' : targetHit ? 'take-profit' : 'duration ended');
     const pnl = recordOutcome(bot, position, market.price, closeReason);
-    if (bot.realizedPnl >= bot.goalUsd) {
+    if (bot.realizedPnl >= bot.goalUsd && bot.openPosition) {
+      bot.status = 'finishing';
+      bot.remainingMs = 0;
+      bot.endsAt = null;
+      bot.startedAt = null;
+      announce(`${bot.name} reached its realized profit goal and is closing the remaining paper position.`);
+    } else if (bot.realizedPnl >= bot.goalUsd) {
       bot.status = 'goal-reached';
       bot.remainingMs = 0;
       bot.endsAt = null;
       bot.startedAt = null;
       announce(`${bot.name} reached its realized profit goal of ${money(bot.goalUsd)}. Bot paused.`);
-    } else if (durationEnded) {
+    } else if (durationEnded && !bot.openPosition) {
       bot.status = 'completed';
       bot.remainingMs = 0;
       bot.endsAt = null;
@@ -480,9 +544,10 @@
       announce(`${bot.name} reached its realized profit goal of ${money(bot.goalUsd)}.`);
       return;
     }
-    const candidate = chooseCandidate(bot, markets);
+    const selectedMarket = markets.filter((market) => market.symbol === bot.selectedSymbol);
+    const candidate = chooseCandidate(bot, selectedMarket);
     if (!candidate) {
-      announce(`${bot.name} found no positive-momentum, $1M-volume market this scan. It will check again.`);
+      announce(`${bot.name} found no positive-momentum, $1M-volume signal for ${bot.selectedSymbol || 'its selected coin'} this scan. It will check again.`);
       return;
     }
     openPaperPosition(bot, candidate);
@@ -522,8 +587,12 @@
       announce('This bot has no saved paper-trading authorization. Create it again and accept the consent checkbox before starting.', true);
       return;
     }
-    if (bot.balance < minimumBuyUsd) {
-      announce(`${bot.name} needs at least $20 in virtual balance before it can buy.`, true);
+    if (!Object.prototype.hasOwnProperty.call(marketPairs, bot.selectedSymbol)) {
+      announce(`${bot.name} needs a supported coin selected before it can start.`, true);
+      return;
+    }
+    if (bot.balance < minimumTradeUsd) {
+      announce(`${bot.name} needs at least $0.01 in virtual balance before it can buy.`, true);
       return;
     }
     if (bot.remainingMs <= 0 && !bot.openPosition) {
@@ -554,7 +623,7 @@
     }
     startCycleTimer();
     renderBots();
-    announce(`${bot.name} started. It scans multiple supported markets every 15 seconds and uses paper funds only.`);
+    announce(`${bot.name} started. It monitors ${bot.selectedSymbol}/USDT every 15 seconds and uses paper funds only.`);
     await runCycle();
   }
 
@@ -579,12 +648,19 @@
     const name = document.getElementById('autoPilotBotName').value.trim();
     const startingBalance = Number(document.getElementById('autoPilotBudget').value);
     const tradeCapUsd = Number(document.getElementById('autoPilotTradeCap').value);
+    const selectedSymbol = document.getElementById('autoPilotCoin').value;
+    const buyAmountUsd = Number(document.getElementById('autoPilotBuyAmount').value);
+    const sellAmountUsd = Number(document.getElementById('autoPilotSellAmount').value);
     const durationKey = document.getElementById('autoPilotDuration').value;
     const goalUsd = Number(document.getElementById('autoPilotGoal').value);
     const consentGranted = document.getElementById('autoPilotConsent').checked;
-    if (!name || name.length > 32 || startingBalance < minimumBuyUsd || tradeCapUsd < minimumBuyUsd
-      || tradeCapUsd > startingBalance || goalUsd <= 0 || !durationOptions[durationKey] || !consentGranted) {
-      announce('Enter a name, a virtual balance of at least $20, a trade cap between $20 and your balance, a goal and duration, then accept the paper-trading authorization.', true);
+    if (!name || name.length > 32 || !Object.prototype.hasOwnProperty.call(marketPairs, selectedSymbol)
+      || !Number.isFinite(startingBalance) || startingBalance < minimumTradeUsd
+      || !Number.isFinite(tradeCapUsd) || tradeCapUsd < minimumTradeUsd || tradeCapUsd > startingBalance
+      || !Number.isFinite(buyAmountUsd) || buyAmountUsd < minimumTradeUsd || buyAmountUsd > tradeCapUsd
+      || !Number.isFinite(sellAmountUsd) || sellAmountUsd < minimumTradeUsd
+      || !Number.isFinite(goalUsd) || goalUsd <= 0 || !durationOptions[durationKey] || !consentGranted) {
+      announce('Choose a supported coin, enter a name, set a positive balance, buy amount (at least $0.01 and no more than the trade cap), sell amount and goal, choose a duration, and accept the paper-trading authorization.', true);
       return;
     }
 
@@ -595,6 +671,8 @@
       startingBalance,
       balance: startingBalance,
       tradeCapUsd,
+      buyAmountUsd,
+      sellAmountUsd,
       goalUsd,
       durationKey,
       remainingMs: durationOptions[durationKey].milliseconds,
@@ -602,7 +680,7 @@
       endsAt: null,
       realizedPnl: 0,
       totalLosses: 0,
-      selectedSymbol: '',
+      selectedSymbol,
       openPosition: null,
       trades: [],
       learning: {},
@@ -617,12 +695,15 @@
     createForm.reset();
     document.getElementById('autoPilotBudget').value = '1000';
     document.getElementById('autoPilotTradeCap').value = '100';
+    document.getElementById('autoPilotCoin').value = '';
+    document.getElementById('autoPilotBuyAmount').value = '25';
+    document.getElementById('autoPilotSellAmount').value = '25';
     document.getElementById('autoPilotDuration').value = '24h';
     document.getElementById('autoPilotGoal').value = '100';
     renderBots();
     settingsDisclosure.open = false;
     runningDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    announce(`${name} created and paused. Start it when you are ready; its $20 minimum applies only to simulated buys.`);
+    announce(`${name} created for ${selectedSymbol} and paused. Start it when you are ready; paper trades can be below $20.`);
   });
 
   botList.addEventListener('click', (event) => {
@@ -643,6 +724,24 @@
       } else {
         bots.unshift(bot);
       }
+    }
+  });
+
+  botList.addEventListener('change', (event) => {
+    const select = event.target.closest('select[data-action="select-market"]');
+    if (!select) return;
+    const bot = bots.find((item) => item.id === select.dataset.botId);
+    if (!bot || bot.status !== 'paused' || bot.openPosition) return;
+    if (!Object.prototype.hasOwnProperty.call(marketPairs, select.value)) {
+      bot.selectedSymbol = '';
+      if (persistBots()) renderBots();
+      announce('Choose a supported coin before starting this Auto Pilot bot.', true);
+      return;
+    }
+    bot.selectedSymbol = select.value;
+    if (persistBots()) {
+      renderBots();
+      announce(`${bot.name} is configured for ${bot.selectedSymbol}.`);
     }
   });
 

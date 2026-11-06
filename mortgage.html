@@ -35,7 +35,6 @@
         <a href="create-coin.html">Create Coin</a>
       </nav>
       <div class="nav-actions">
-        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
         <a class="btn btn-ghost" href="verification.html">Login</a>
         <a class="btn btn-primary" href="verification.html">Sign Up</a>
       </div>
@@ -124,6 +123,7 @@
                     Payment type
                     <select id="mortgagePaymentType" name="paymentType" required>
                       <option value="wallet">Wallet</option>
+                      <option value="bxc-card">BXC Card</option>
                     </select>
                   </label>
                   <div class="bill-flow-actions">
@@ -564,7 +564,7 @@
               currency,
               loanAccountNumber: formData.get('loanAccountNumber'),
               amount,
-              paymentType: 'wallet',
+              paymentType: formData.get('paymentType'),
               cryptoCurrency: `${selectedCoin.name} (${selectedCoin.symbol})`,
               cryptoCurrencyId: selectedCoin.id,
               estimatedCryptoAmount: cryptoAmount,
@@ -586,7 +586,7 @@
             `Mortgage company: ${companySelect.value}\n` +
             `Loan account number: ${formData.get('loanAccountNumber')}\n` +
             `Payment amount: ${currency} ${amount.toFixed(2)}\n` +
-            `Payment type: Wallet\n` +
+            `Payment type: ${formData.get('paymentType') === 'bxc-card' ? 'BXC Card' : 'Wallet'}\n` +
             `Crypto coin: ${selectedCoin.name} (${selectedCoin.symbol})\n` +
             `Estimated crypto amount: ${cryptoAmount.toPrecision(8)} ${selectedCoin.symbol}\n\n` +
             'Review request only. No payment was processed or cryptocurrency transferred.';

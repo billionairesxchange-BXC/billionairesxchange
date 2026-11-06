@@ -37,7 +37,6 @@
       </nav>
 
       <div class="nav-actions">
-        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
         <a class="btn btn-ghost" href="verification.html">Login</a>
         <a class="btn btn-primary" href="verification.html">Sign Up</a>
       </div>
@@ -93,10 +92,6 @@
             <p class="coin-deployment-status" id="coinDeploymentStatus" role="status" aria-live="polite"></p>
           </form>
 
-          <div class="card-glass custom-coin-list">
-            <h3>Your deployed ERC-20 tokens</h3>
-            <ul id="customCoinList"></ul>
-          </div>
         </div>
 
         <section class="coin-market card-glass" aria-labelledby="coinMarketTitle">
@@ -166,6 +161,11 @@
           </div>
           <p class="coin-order-status" id="stopMarketStatus" role="status">The chart and order panel are a local demo; orders do not execute on-chain.</p>
         </section>
+
+        <div class="card-glass custom-coin-list">
+          <h3>Your deployed ERC-20 tokens</h3>
+          <ul id="customCoinList"></ul>
+        </div>
 
         <div class="coin-info card-glass">
           <h3>How to Create Your Coin</h3>
@@ -734,6 +734,16 @@
           toast.textContent = `${coin.name} (${coin.symbol}) deployed to ${network.name} successfully.`;
           toast.classList.add('show');
           setTimeout(() => toast.classList.remove('show'), 5000);
+          if (typeof window.bxcAddNotification !== 'function') {
+            console.error('The Create Coin deployment notification could not be saved because the notification inbox is unavailable.');
+          } else {
+            window.bxcAddNotification({
+              source: 'Create Coin',
+              title: 'Token deployment confirmed',
+              message: `${coin.name} (${coin.symbol}) was confirmed on ${network.name}. Contract: ${contractAddress}.`,
+              type: 'info'
+            });
+          }
           event.target.reset();
         } catch (error) {
           if (submittedTransactionHash) {

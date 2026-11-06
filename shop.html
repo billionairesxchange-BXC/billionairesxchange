@@ -37,7 +37,6 @@
       </nav>
 
       <div class="nav-actions">
-        <a class="btn btn-secondary" href="about-support.html">About &amp; Support</a>
         <a class="btn btn-ghost" href="verification.html">Login</a>
         <a class="btn btn-primary" href="verification.html">Sign Up</a>
       </div>
@@ -613,6 +612,16 @@
             customCardType.required = false;
             sellStatus.textContent = 'Your gift card listing is live.';
             showToast('Gift card listing published.');
+            if (typeof window.bxcAddNotification !== 'function') {
+              console.error('The Shop listing notification could not be saved because the notification inbox is unavailable.');
+            } else {
+              window.bxcAddNotification({
+                source: 'Shop',
+                title: 'Gift card listing published',
+                message: `${cardType} listing published for $${askingPrice.toFixed(2)}.`,
+                type: 'info'
+              });
+            }
             updateGiftCardAction('buy');
           } catch (error) {
             console.error('Unable to publish gift card listing:', error);

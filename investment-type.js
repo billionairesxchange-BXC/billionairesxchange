@@ -27,20 +27,23 @@ const selectedDescription = document.getElementById('investmentDemoDescription')
 const factsList = document.getElementById('investmentDemoFacts');
 const chartSection = document.createElement('section');
 chartSection.className = 'investment-demo-chart';
-chartSection.setAttribute('aria-label', 'Illustrative listing chart');
+chartSection.setAttribute('aria-label', pageType === 'Coins' ? 'Live coin market chart' : 'Illustrative listing chart');
 chartSection.hidden = true;
 const chartHeading = document.createElement('div');
 chartHeading.className = 'investment-demo-chart-heading';
 const chartTitle = document.createElement('strong');
-chartTitle.textContent = 'Illustrative market chart';
+chartTitle.textContent = pageType === 'Coins' ? '24-hour market price' : 'Illustrative market chart';
 const chartBadge = document.createElement('span');
-chartBadge.textContent = 'SAMPLE DATA';
-chartHeading.append(chartTitle, chartBadge);
+chartBadge.textContent = pageType === 'Coins' ? 'LIVE MARKET DATA' : 'SAMPLE DATA';
+const chartPrice = document.createElement('strong');
+chartPrice.className = 'investment-demo-chart-price';
+chartHeading.append(chartTitle, chartPrice, chartBadge);
 const chartCanvas = document.createElement('canvas');
-chartCanvas.setAttribute('aria-label', 'Illustrative sample chart for the selected listing');
+chartCanvas.setAttribute('aria-label', pageType === 'Coins' ? 'Live market price chart for the selected coin' : 'Illustrative sample chart for the selected listing');
 const chartNote = document.createElement('p');
 chartNote.className = 'investment-demo-chart-note';
 chartNote.textContent = 'Example visualization only. This is not live market data or an investment recommendation.';
+if (pageType === 'Coins') chartNote.textContent = 'CoinGecko market prices. Prices refresh periodically; demo allocations do not place real orders.';
 chartSection.append(chartHeading, chartCanvas, chartNote);
 selectedDescription.insertAdjacentElement('afterend', chartSection);
 const allocationForm = document.getElementById('investmentDemoForm');
@@ -60,6 +63,23 @@ const companyManagementLink = document.getElementById('companyManagementLink');
 const storageKey = 'makingsInvestmentDemoState';
 const contractDetails = {};
 let catalogWarning = '';
+let coinMarketPage = 1;
+let coinMarketLoading = false;
+let coinMarketHasMore = true;
+let coinMarketRefreshTimer = null;
+let coinChartRequestVersion = 0;
+let coinChartPrices = [];
+let coinMarketRefreshError = '';
+const coinLoadMoreButton = pageType === 'Coins' ? document.createElement('button') : null;
+if (coinLoadMoreButton) {
+  coinLoadMoreButton.type = 'button';
+  coinLoadMoreButton.id = 'investmentCoinLoadMore';
+  coinLoadMoreButton.className = 'btn btn-secondary';
+  coinLoadMoreButton.textContent = 'Load more coins';
+  coinLoadMoreButton.hidden = true;
+  coinLoadMoreButton.setAttribute('aria-controls', 'investmentDemoProducts');
+  productsContainer.after(coinLoadMoreButton);
+}
 
 if (pageType === 'Stocks') {
   stockCountryChoices = document.createElement('div');
@@ -201,9 +221,18 @@ const staticProducts = {
 };
 
 const coinProducts = [
-  ['Bitcoin', 'BTC'], ['Ethereum', 'ETH'], ['XRP', 'XRP'], ['Solana', 'SOL'], ['Polkadot', 'DOT'],
-  ['Dogecoin', 'DOGE'], ['Cardano', 'ADA'], ['BNB', 'BNB'], ['TRON', 'TRX'], ['Tether', 'USDT'], ['USD Coin', 'USDC']
-].map(([name, symbol]) => ({ name, symbol, detail: 'Crypto asset example' }));
+  ['Bitcoin', 'BTC', 'bitcoin'], ['Ethereum', 'ETH', 'ethereum'], ['XRP', 'XRP', 'ripple'], ['Solana', 'SOL', 'solana'],
+  ['Polkadot', 'DOT', 'polkadot'], ['Dogecoin', 'DOGE', 'dogecoin'], ['Cardano', 'ADA', 'cardano'],
+  ['BNB', 'BNB', 'binancecoin'], ['TRON', 'TRX', 'tron'], ['Tether', 'USDT', 'tether'],
+  ['USDC', 'USDC', 'usd-coin'], ['Chainlink', 'LINK', 'chainlink'], ['Avalanche', 'AVAX', 'avalanche-2'],
+  ['Litecoin', 'LTC', 'litecoin'], ['Bitcoin Cash', 'BCH', 'bitcoin-cash'], ['Stellar', 'XLM', 'stellar'],
+  ['Shiba Inu', 'SHIB', 'shiba-inu'], ['Toncoin', 'TON', 'the-open-network'],
+  ['Uniswap', 'UNI', 'uniswap'], ['Sui', 'SUI', 'sui'], ['Aptos', 'APT', 'aptos'],
+  ['NEAR Protocol', 'NEAR', 'near'], ['Internet Computer', 'ICP', 'internet-computer'],
+  ['Ethereum Classic', 'ETC', 'ethereum-classic'], ['Monero', 'XMR', 'monero'],
+  ['Dai', 'DAI', 'dai'], ['Render', 'RENDER', 'render-token'], ['Pepe', 'PEPE', 'pepe'],
+  ['Cronos', 'CRO', 'crypto-com-chain'], ['Hedera', 'HBAR', 'hedera-hashgraph']
+].map(([name, symbol, id]) => ({ id, name, symbol, detail: 'Loading live market data...' }));
 
 const defaultCompanies = [
   { name: 'Caribbean Renewables Ltd', symbol: 'CR', country: 'Jamaica', detail: 'Renewable energy business profile' },
@@ -256,7 +285,11 @@ function getProducts() {
       catalogWarning = ` Created coins could not be loaded; built-in coin examples remain available. ${error.message}`;
     }
     const all = [...coinProducts, ...customCoins.filter((coin) => coin?.name && /^[A-Z0-9]{2,8}$/i.test(coin.symbol || '')).map((coin) => ({
-      name: coin.name, symbol: coin.symbol.toUpperCase(), detail: 'User-created coin example', id: `coin:${coin.symbol.toUpperCase()}`
+      name: coin.name,
+      symbol: coin.symbol.toUpperCase(),
+      detail: 'User-created token; no public market feed',
+      image: typeof coin.logo === 'string' ? coin.logo : '',
+      id: `coin:${coin.symbol.toUpperCase()}`
     }))];
     return all.map((product) => ({ ...product, id: product.id || `coin:${product.symbol}` }));
   }
@@ -277,6 +310,10 @@ if (!titles[pageType]) {
   pageTitle.textContent = titles[pageType];
   catalogTitle.textContent = pageType === 'Economy' ? 'Economic indicators' : `Available ${pageType.toLocaleLowerCase()}`;
   companyManagementLink.hidden = pageType !== 'Company';
+  if (pageType === 'Coins') {
+    const disclaimer = document.querySelector('.investment-demo-disclaimer');
+    if (disclaimer) disclaimer.textContent = 'Coin listings, logos, and market prices are provided by CoinGecko. Portfolio allocations and watchlists are local demos and do not place real orders.';
+  }
   if (pageType === 'Economy') {
     amountLabel.hidden = true;
     amountInput.hidden = true;
@@ -442,6 +479,77 @@ async function loadStockCatalog() {
   catalogStatus.textContent = `${stockCountries.length} country markets available. Choose a country to check its stock listings.`;
 }
 
+function formatCoinPrice(value) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: value >= 1 ? 2 : 8
+  }).format(value);
+}
+
+function renderCoinProducts(markets, append) {
+  const customCoins = products.filter((product) => product.id.startsWith('coin:'));
+  const marketProducts = markets.map((market) => ({
+    id: market.id,
+    name: market.name,
+    symbol: String(market.symbol || '').toUpperCase(),
+    image: market.image,
+    currentPrice: Number(market.current_price),
+    marketCap: Number(market.market_cap) || 0,
+    totalVolume: Number(market.total_volume) || 0,
+    change24h: Number(market.price_change_percentage_24h) || 0,
+    detail: 'Live USD market data'
+  })).filter((product) => product.id && product.symbol && Number.isFinite(product.currentPrice) && product.currentPrice > 0);
+
+  if (!append) {
+    products = [...marketProducts, ...customCoins];
+  } else {
+    const existingIds = new Set(products.map((product) => product.id));
+    products.push(...marketProducts.filter((product) => !existingIds.has(product.id)));
+  }
+  if (selectedProduct) {
+    selectedProduct = products.find((product) => product.id === selectedProduct.id) || selectedProduct;
+    chartProduct = selectedProduct;
+    chartPrice.textContent = Number.isFinite(selectedProduct.currentPrice)
+      ? formatCoinPrice(selectedProduct.currentPrice)
+      : '--';
+    renderFacts(selectedProduct);
+  }
+  renderProducts(searchInput.value);
+}
+
+async function loadCoinMarkets() {
+  if (pageType !== 'Coins' || coinMarketLoading || !coinMarketHasMore) return;
+  coinMarketLoading = true;
+  coinLoadMoreButton.disabled = true;
+  coinLoadMoreButton.textContent = 'Loading coins...';
+  catalogStatus.textContent = `Loading live crypto markets (page ${coinMarketPage})...`;
+  try {
+    const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${coinMarketPage}&sparkline=false&price_change_percentage=24h`);
+    if (!response.ok) throw new Error(`CoinGecko returned ${response.status}`);
+    const markets = await response.json();
+    if (!Array.isArray(markets)) throw new Error('The market list response was not a valid list.');
+    if (!markets.length && coinMarketPage === 1) throw new Error('CoinGecko returned an empty market list.');
+    renderCoinProducts(markets, coinMarketPage > 1);
+    coinMarketHasMore = markets.length === 250;
+    coinMarketPage += 1;
+    coinMarketRefreshError = '';
+    coinLoadMoreButton.hidden = !coinMarketHasMore;
+  } catch (error) {
+    coinMarketRefreshError = error.message;
+    if (!products.length) renderProducts(searchInput.value);
+    catalogStatus.textContent = `Live coin markets could not be loaded: ${error.message}. Showing the built-in coin list instead.`;
+    coinLoadMoreButton.hidden = false;
+  } finally {
+    coinMarketLoading = false;
+    coinLoadMoreButton.disabled = false;
+    coinLoadMoreButton.textContent = coinMarketRefreshError ? 'Retry coin loading' : 'Load more coins';
+    if (!coinMarketRefreshError) {
+      catalogStatus.textContent = `${products.filter((product) => !product.id.startsWith('coin:')).length} live coins and ${products.filter((product) => product.id.startsWith('coin:')).length} custom tokens shown. Prices are provided by CoinGecko.${storageWarning}`;
+    }
+  }
+}
+
 function renderProducts(filter = '') {
   const query = filter.trim().toLocaleLowerCase();
   const matching = products.filter((product) => {
@@ -459,16 +567,21 @@ function renderProducts(filter = '') {
     button.setAttribute('aria-pressed', String(selectedProduct?.id === product.id));
     const badge = document.createElement('img');
     badge.className = 'investment-demo-product-icon';
-    badge.src = window.createMarketLogoSrc(product.symbol, pageType);
+    badge.src = product.image || window.createMarketLogoSrc(product.symbol, pageType);
     badge.alt = '';
     badge.setAttribute('aria-hidden', 'true');
+    badge.addEventListener('error', () => {
+      badge.src = window.createMarketLogoSrc(product.symbol, pageType);
+    }, { once: true });
     const name = document.createElement('strong');
     name.textContent = product.name;
     const symbol = document.createElement('small');
     symbol.textContent = product.symbol;
     const detail = document.createElement('span');
     detail.className = 'investment-demo-product-detail';
-    detail.textContent = product.country
+    detail.textContent = pageType === 'Coins' && Number.isFinite(product.currentPrice)
+      ? `${formatCoinPrice(product.currentPrice)} · ${product.change24h >= 0 ? '+' : ''}${product.change24h.toFixed(2)}%`
+      : product.country
       ? `${product.country} · ${product.detail || 'Company listing'}`
       : product.detail || 'Demo listing';
     button.append(badge, name, symbol, detail);
@@ -496,6 +609,10 @@ function renderProducts(filter = '') {
     productsContainer.appendChild(empty);
   }
   if (stockLoadMoreButton) stockLoadMoreButton.hidden = visible.length >= matching.length;
+  if (pageType === 'Coins') {
+    catalogStatus.textContent = `${matching.length} coin${matching.length === 1 ? '' : 's'} match your search. ${coinMarketRefreshError ? `Live market data unavailable: ${coinMarketRefreshError}` : 'CoinGecko live market prices refresh periodically.'}${storageWarning}`;
+    return;
+  }
   catalogStatus.textContent = pageType === 'Stocks'
     ? matching.length
       ? `${visible.length} of ${matching.length} matching stock listings shown. No live quotes are provided.${stockCatalogWarnings.length ? ` Some exchanges could not be loaded: ${stockCatalogWarnings.join('; ')}` : ''}${storageWarning}`
@@ -512,9 +629,14 @@ function renderFacts(product) {
   [
     ['Category', pageType],
     ['Reference', product.symbol],
+    ...(pageType === 'Coins' && Number.isFinite(product.currentPrice) ? [['Live price', formatCoinPrice(product.currentPrice)]] : []),
+    ...(pageType === 'Coins' && Number.isFinite(product.change24h) ? [['24-hour change', `${product.change24h >= 0 ? '+' : ''}${product.change24h.toFixed(2)}%`]] : []),
+    ...(pageType === 'Coins' && Number.isFinite(product.marketCap) && product.marketCap > 0 ? [['Market cap', formatMoney(product.marketCap)]] : []),
     ...(product.country ? [['Country', product.country]] : []),
     ['Listing type', product.detail || 'Demo listing'],
-    ['Data', pageType === 'Economy' ? 'Research watchlist only' : 'Static example; not a live quote']
+    ['Data', pageType === 'Coins' && !product.id.startsWith('coin:')
+      ? 'CoinGecko live market data'
+      : pageType === 'Economy' ? 'Research watchlist only' : 'Static demo listing; no live quote']
   ].forEach(([label, value]) => {
     const wrapper = document.createElement('div');
     const term = document.createElement('dt');
@@ -526,7 +648,80 @@ function renderFacts(product) {
   });
 }
 
+function drawLiveCoinChart() {
+  const bounds = chartCanvas.getBoundingClientRect();
+  if (!bounds.width || !bounds.height) return;
+  const ratio = window.devicePixelRatio || 1;
+  const width = bounds.width;
+  const height = bounds.height;
+  chartCanvas.width = Math.round(width * ratio);
+  chartCanvas.height = Math.round(height * ratio);
+  const context = chartCanvas.getContext('2d');
+  if (!context) return;
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = '#0c0c0c';
+  context.fillRect(0, 0, width, height);
+
+  if (coinChartPrices.length < 2) {
+    context.fillStyle = '#9b927a';
+    context.font = '12px Inter, sans-serif';
+    context.fillText('Waiting for live price history...', 16, Math.max(32, height / 2));
+    return;
+  }
+  const padding = { top: 18, right: 78, bottom: 25, left: 12 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const prices = coinChartPrices.map((point) => point.price).filter((price) => Number.isFinite(price) && price > 0);
+  if (prices.length < 2) return;
+  let min = Math.min(...prices);
+  let max = Math.max(...prices);
+  if (min === max) {
+    min *= 0.995;
+    max *= 1.005;
+  }
+  const spread = max - min;
+  min -= spread * 0.08;
+  max += spread * 0.08;
+  const y = (price) => padding.top + ((max - price) / (max - min)) * plotHeight;
+  context.font = '10px Inter, sans-serif';
+  context.lineWidth = 1;
+  for (let row = 0; row <= 4; row += 1) {
+    const price = max - (max - min) * row / 4;
+    const lineY = y(price);
+    context.strokeStyle = 'rgba(212, 175, 55, .14)';
+    context.beginPath();
+    context.moveTo(padding.left, lineY);
+    context.lineTo(width - padding.right, lineY);
+    context.stroke();
+    context.fillStyle = '#9b927a';
+    context.fillText(formatCoinPrice(price), width - padding.right + 6, lineY + 3);
+  }
+  const firstPrice = prices[0];
+  const lastPrice = prices[prices.length - 1];
+  const strokeColor = lastPrice >= firstPrice ? '#31d598' : '#ff6b7a';
+  const points = coinChartPrices.filter((point) => Number.isFinite(point.price) && point.price > 0);
+  const x = (index) => padding.left + plotWidth * index / (points.length - 1);
+  context.strokeStyle = strokeColor;
+  context.lineWidth = 2;
+  context.beginPath();
+  points.forEach((point, index) => {
+    if (index === 0) context.moveTo(x(index), y(point.price));
+    else context.lineTo(x(index), y(point.price));
+  });
+  context.stroke();
+  context.fillStyle = '#9b927a';
+  context.fillText('24 hours ago', padding.left, height - 8);
+  context.textAlign = 'right';
+  context.fillText('Now', width - padding.right, height - 8);
+  context.textAlign = 'left';
+}
+
 function drawProductChart(product) {
+  if (pageType === 'Coins') {
+    drawLiveCoinChart();
+    return;
+  }
   const bounds = chartCanvas.getBoundingClientRect();
   if (!bounds.width || !bounds.height) return;
 
@@ -606,14 +801,104 @@ function drawProductChart(product) {
   context.fillText('Sample history', padding.left, height - 8);
 }
 
+async function loadCoinChart(product) {
+  const requestVersion = ++coinChartRequestVersion;
+  coinChartPrices = [];
+  drawLiveCoinChart();
+  chartPrice.textContent = Number.isFinite(product.currentPrice) ? formatCoinPrice(product.currentPrice) : '--';
+  if (product.id.startsWith('coin:')) {
+    chartBadge.textContent = 'NO LIVE MARKET';
+    chartNote.textContent = 'This user-created token does not have a CoinGecko market listing, so a live chart is not available.';
+    drawLiveCoinChart();
+    return;
+  }
+  chartBadge.textContent = 'LOADING LIVE DATA';
+  chartNote.textContent = 'Loading 24-hour market history from CoinGecko...';
+  try {
+    const response = await fetch(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(product.id)}/market_chart?vs_currency=usd&days=1&interval=hourly`);
+    if (!response.ok) throw new Error(`CoinGecko returned ${response.status}`);
+    const history = await response.json();
+    if (requestVersion !== coinChartRequestVersion || selectedProduct?.id !== product.id) return;
+    if (!Array.isArray(history.prices)) throw new Error('The market history response was invalid.');
+    coinChartPrices = history.prices
+      .filter((point) => Array.isArray(point) && Number.isFinite(Number(point[0])) && Number.isFinite(Number(point[1])) && Number(point[1]) > 0)
+      .map(([time, price]) => ({ time: Number(time), price: Number(price) }));
+    if (coinChartPrices.length < 2) throw new Error('CoinGecko did not return enough price history to draw a chart.');
+    chartBadge.textContent = 'LIVE MARKET DATA';
+    chartNote.textContent = 'CoinGecko 24-hour price history. The current price refreshes every 60 seconds; demo allocations do not place real orders.';
+    drawLiveCoinChart();
+  } catch (error) {
+    if (requestVersion !== coinChartRequestVersion || selectedProduct?.id !== product.id) return;
+    chartBadge.textContent = 'LIVE HISTORY UNAVAILABLE';
+    chartNote.textContent = `Live chart history could not be loaded: ${error.message}`;
+    drawLiveCoinChart();
+  }
+}
+
+async function refreshSelectedCoinPrice(product, requestVersion) {
+  if (!product || product.id.startsWith('coin:')) return;
+  try {
+    const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${encodeURIComponent(product.id)}&sparkline=false&price_change_percentage=24h`);
+    if (!response.ok) throw new Error(`CoinGecko returned ${response.status}`);
+    const [market] = await response.json();
+    if (requestVersion !== coinChartRequestVersion || selectedProduct?.id !== product.id) return;
+    if (!market) throw new Error('CoinGecko returned no data for this coin.');
+    const currentPrice = Number(market.current_price);
+    if (!Number.isFinite(currentPrice) || currentPrice <= 0) throw new Error('CoinGecko did not return a valid live price.');
+    const updatedProduct = products.find((item) => item.id === product.id) || product;
+    Object.assign(updatedProduct, {
+      currentPrice,
+      change24h: Number(market.price_change_percentage_24h) || 0,
+      marketCap: Number(market.market_cap) || updatedProduct.marketCap,
+      totalVolume: Number(market.total_volume) || updatedProduct.totalVolume
+    });
+    if (selectedProduct?.id === product.id) {
+      selectedProduct = updatedProduct;
+      chartProduct = updatedProduct;
+    }
+    chartPrice.textContent = formatCoinPrice(currentPrice);
+    renderFacts(updatedProduct);
+    renderProducts(searchInput.value);
+    if (coinChartPrices.length) {
+      coinChartPrices[coinChartPrices.length - 1] = { time: Date.now(), price: currentPrice };
+      drawLiveCoinChart();
+    }
+    chartNote.textContent = coinChartPrices.length
+      ? 'CoinGecko price history with the latest quote refreshed just now. Demo allocations do not place real orders.'
+      : 'The latest CoinGecko quote refreshed just now, but price history is currently unavailable.';
+  } catch (error) {
+    if (requestVersion !== coinChartRequestVersion || selectedProduct?.id !== product.id) return;
+    chartNote.textContent = `Live price refresh failed: ${error.message}. Showing the last available quote.`;
+  }
+}
+
 function selectProduct(product) {
   selectedProduct = product;
   chartProduct = product;
   chartSection.hidden = false;
-  chartCanvas.setAttribute('aria-label', `Illustrative sample chart for ${product.name}`);
-  drawProductChart(product);
+  chartCanvas.setAttribute('aria-label', `${pageType === 'Coins' ? 'Live market price chart' : 'Illustrative sample chart'} for ${product.name}`);
+  if (pageType === 'Coins') {
+    if (coinMarketRefreshTimer) window.clearInterval(coinMarketRefreshTimer);
+    chartPrice.textContent = Number.isFinite(product.currentPrice) ? formatCoinPrice(product.currentPrice) : '--';
+    chartBadge.textContent = product.id.startsWith('coin:') ? 'NO LIVE MARKET' : 'LIVE MARKET DATA';
+    chartNote.textContent = product.id.startsWith('coin:')
+      ? 'This user-created token does not have a CoinGecko market listing, so a live chart is not available.'
+      : 'Loading 24-hour market history from CoinGecko...';
+    loadCoinChart(product);
+    if (!product.id.startsWith('coin:')) {
+      const requestVersion = coinChartRequestVersion;
+      coinMarketRefreshTimer = window.setInterval(
+        () => refreshSelectedCoinPrice(product, requestVersion),
+        60000
+      );
+    }
+  } else {
+    drawProductChart(product);
+  }
   selectedTitle.textContent = product.name;
-  const detail = product.detail || 'Static listing example for the demo portfolio.';
+  const detail = pageType === 'Coins' && product.id.startsWith('coin:')
+    ? 'User-created token. This token is not known to have a publicly listed live market price.'
+    : product.detail || 'Static listing example for the demo portfolio.';
   selectedDescription.textContent = pageType === 'Options'
     ? `${detail}. This demo has no option-chain quotes, contract pricing, or exercise functionality.`
     : pageType === 'Futures'
@@ -683,6 +968,10 @@ searchInput.addEventListener('input', () => {
   stockVisibleCount = 100;
   renderProducts(searchInput.value);
 });
+
+if (coinLoadMoreButton) {
+  coinLoadMoreButton.addEventListener('click', loadCoinMarkets);
+}
 
 if (stockLoadMoreButton) {
   stockLoadMoreButton.addEventListener('click', () => {
@@ -783,6 +1072,17 @@ renderPortfolio();
 const requestedSymbol = new URLSearchParams(window.location.search).get('market');
 if (pageType === 'Stocks') {
   loadStockCatalog();
+} else if (pageType === 'Coins') {
+  const initialProduct = requestedSymbol
+    ? products.find((product) => product.symbol === requestedSymbol)
+    : products[0];
+  if (initialProduct) selectProduct(initialProduct);
+  loadCoinMarkets().then(() => {
+    if (!requestedSymbol) return;
+    const linkedProduct = products.find((product) => product.symbol === requestedSymbol);
+    if (linkedProduct) selectProduct(linkedProduct);
+    else actionStatus.textContent = `The linked market (${requestedSymbol}) is not in this page's loaded coin markets.`;
+  });
 } else if (requestedSymbol) {
   const linkedProduct = products.find((product) => product.symbol === requestedSymbol);
   if (linkedProduct) selectProduct(linkedProduct);
