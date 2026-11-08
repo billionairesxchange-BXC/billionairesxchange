@@ -28,3 +28,14 @@ Trading-provider OAuth/API-key authorization and live synchronization are not
 enabled by this scaffold. Do not collect provider credentials until a server
 side encrypted secret store, key rotation, and provider-specific authorization
 flows have been configured and reviewed.
+
+## Background paper trading
+
+The Render API runs the paper-trade worker and stores per-Firebase-user demo
+state in the `paper_account_state` table, which it creates at startup. Configure
+`DATABASE_URL` with a persistent PostgreSQL connection string and
+`FIREBASE_WEB_API_KEY` in Render. The API service uses the always-on Starter
+plan so its 15-second worker continues after users close their pages. Browser
+sync requires Firebase sign-in. The worker manages paper positions and bot
+state only; it does not place real exchange or brokerage orders. Investment
+Center allocations are illustrative demo records and do not accrue returns.
