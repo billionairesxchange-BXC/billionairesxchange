@@ -16,6 +16,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="market-history.js"></script>
   </head>
   <body class="trade-page">
     <header class="topbar">
@@ -105,14 +106,46 @@
       </section>
 
       <section class="trade-section section-shell" id="trade">
+        <div class="trade-balances card-glass" aria-label="Trade account balances">
+          <div class="trade-balance-card">
+            <span class="eyebrow">Trade paper balance</span>
+            <strong id="paperBalanceSummary">$10,000.00</strong>
+            <small>Available for paper trades</small>
+          </div>
+          <div class="trade-balance-card">
+            <span class="eyebrow">Account balance</span>
+            <strong id="tradeAccountBalance">$0.00</strong>
+            <small>Paper profits transferred out of trading</small>
+          </div>
+          <div class="trade-balance-actions">
+            <button class="btn btn-primary" id="tradeDepositButton" type="button" aria-expanded="false" aria-controls="tradeBalanceDialog">Deposit from bank</button>
+            <button class="btn btn-ghost" id="tradeTransferButton" type="button" aria-expanded="false" aria-controls="tradeBalanceDialog">Transfer profits</button>
+          </div>
+        </div>
         <div class="card-glass positions-chart-panel">
           <div class="positions-chart-header">
             <div>
               <span class="eyebrow">Position market view</span>
               <h3 id="positionsChartTitle">BTC / USD</h3>
               <div class="positions-market-row">
-                <div class="positions-market-selector" role="group" aria-labelledby="positionsMarketLabel">
-                  <span id="positionsMarketLabel">Choose market</span>
+                <div class="positions-tools-menu">
+                  <button class="positions-tools-button" id="positionsToolsButton" type="button" aria-expanded="false" aria-controls="positionsToolsOptions">Tools</button>
+                  <div class="positions-tools-options" id="positionsToolsOptions" hidden>
+                    <label class="positions-tools-mode">
+                      Pointer
+                      <select id="positionsChartMode" aria-label="Choose chart pointer tool">
+                        <option value="crosshair">Crosshair</option>
+                        <option value="ruler">Ruler</option>
+                        <option value="entry">Chart trade price</option>
+                      </select>
+                    </label>
+                    <button type="button" data-chart-tool="import">Import Indicator</button>
+                    <button type="button" data-chart-tool="create">Create Indicator</button>
+                    <button type="button" data-chart-tool="custom-candles">Custom Candlesticks</button>
+                    <button type="button" data-chart-tool="layout">Chart margins</button>
+                  </div>
+                </div>
+                <div class="positions-market-selector" role="group" aria-label="Select market">
                   <div class="positions-market-picker">
                     <button class="positions-market-picker-button" id="positionsMarketPickerButton" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="positionsMarketOptions">
                       <span class="positions-market-logo" id="positionsMarketPickerLogo" aria-hidden="true">B</span>
@@ -146,23 +179,6 @@
                     </optgroup>
                   </select>
                 </label>
-                <div class="positions-tools-menu">
-                  <button class="positions-tools-button" id="positionsToolsButton" type="button" aria-expanded="false" aria-controls="positionsToolsOptions">Tools</button>
-                  <div class="positions-tools-options" id="positionsToolsOptions" hidden>
-                    <label class="positions-tools-mode">
-                      Pointer
-                      <select id="positionsChartMode" aria-label="Choose chart pointer tool">
-                        <option value="crosshair">Crosshair</option>
-                        <option value="ruler">Ruler</option>
-                        <option value="entry">Chart trade price</option>
-                      </select>
-                    </label>
-                    <button type="button" data-chart-tool="import">Import Indicator</button>
-                    <button type="button" data-chart-tool="create">Create Indicator</button>
-                    <button type="button" data-chart-tool="custom-candles">Custom Candlesticks</button>
-                    <button type="button" data-chart-tool="layout">Chart margins</button>
-                  </div>
-                </div>
               </div>
             </div>
             <div class="positions-chart-header-actions">
@@ -200,7 +216,6 @@
               </div>
             </label>
           </div>
-          <p class="positions-order-help">Set your Stop Loss and Take Profit prices before placing a trade. Levels appear on the chart and are applied to new positions.</p>
           <dialog class="positions-tool-dialog" id="positionsToolDialog" aria-labelledby="positionsToolDialogTitle">
             <form id="positionsToolForm">
               <div class="positions-tool-dialog-head">
@@ -251,23 +266,6 @@
             </form>
           </dialog>
         </div>
-        <div class="trade-balances card-glass" aria-label="Trade account balances">
-          <div class="trade-balance-card">
-            <span class="eyebrow">Trade paper balance</span>
-            <strong id="paperBalanceSummary">$10,000.00</strong>
-            <small>Available for paper trades</small>
-          </div>
-          <div class="trade-balance-card">
-            <span class="eyebrow">Account balance</span>
-            <strong id="tradeAccountBalance">$0.00</strong>
-            <small>Paper profits transferred out of trading</small>
-          </div>
-          <div class="trade-balance-actions">
-            <button class="btn btn-primary" id="tradeDepositButton" type="button" aria-expanded="false" aria-controls="tradeBalanceDialog">Deposit from bank</button>
-            <button class="btn btn-ghost" id="tradeTransferButton" type="button" aria-expanded="false" aria-controls="tradeBalanceDialog">Transfer profits</button>
-            <small>Paper simulation only. No real bank transfer is made.</small>
-          </div>
-        </div>
         <dialog class="trade-balance-dialog" id="tradeBalanceDialog" aria-labelledby="tradeBalanceDialogTitle">
           <form id="tradeBalanceForm">
             <h3 id="tradeBalanceDialogTitle">Trade balance</h3>
@@ -280,41 +278,18 @@
             </div>
           </form>
         </dialog>
-        <div class="terminal-lower-grid"><div class="card-glass data-panel"><div class="panel-title"><div><span class="eyebrow">Positions</span><h3>Open positions</h3></div><strong id="paperBalance">10,000.00 USDT</strong></div><div id="positionsList" class="empty-state">No open paper positions.</div></div></div>
-        <div class="card-glass data-panel orders-history"><div class="panel-title"><div><span class="eyebrow">Execution log</span><h3>Recent orders</h3></div><button class="text-button" id="clearOrders" type="button">Clear</button></div><div id="ordersList" class="orders-list"><div class="empty-state">Your paper orders will appear here.</div></div></div>
-      </section>
-
-      <section class="news-section section-shell">
-        <div class="section-head">
-          <div>
-            <span class="eyebrow">Market news</span>
-            <h2>Crypto and company market updates</h2>
+        <div class="terminal-lower-grid">
+          <div class="card-glass data-panel">
+            <div class="panel-title"><div><span class="eyebrow">Positions</span><h3>Open positions</h3></div><strong id="paperBalance">10,000.00 USDT</strong></div>
+            <div id="positionsList" class="empty-state">No open paper positions.</div>
+          </div>
+          <div class="card-glass data-panel orders-history">
+            <div class="panel-title"><div><span class="eyebrow">Execution log</span><h3>Recent orders</h3></div><button class="text-button" id="clearOrders" type="button">Clear</button></div>
+            <div id="ordersList" class="orders-list"><div class="empty-state">Your paper orders will appear here.</div></div>
           </div>
         </div>
-
-        <div class="news-grid">
-          <article class="news-card card-glass">
-            <span class="tag">Crypto</span>
-            <h3>Bitcoin demand surges as ETFs fund inflow remains strong.</h3>
-            <p>Large institutional buyers continue to accumulate BTC across major exchanges and treasury desks.</p>
-          </article>
-          <article class="news-card card-glass">
-            <span class="tag">Stocks</span>
-            <h3>Nasdaq momentum keeps Tesla and Apple active in high-volume trading.</h3>
-            <p>Tech stocks continue to drive sentiment while commodity names stay steady on supply concerns.</p>
-          </article>
-          <article class="news-card card-glass">
-            <span class="tag">Commodities</span>
-            <h3>Oil, gold, and copper attract safe-haven traders amid global volatility.</h3>
-            <p>Investors rotate into hard assets as inflation and rate expectations continue to shift.</p>
-          </article>
-          <article class="news-card card-glass">
-            <span class="tag">Consumer</span>
-            <h3>Wendy's, McDonald's, KFC, and Burger King remain market bellwethers.</h3>
-            <p>Food-service stocks remain highly watched as margins and consumer demand recover regionally.</p>
-          </article>
-        </div>
       </section>
+
     </main>
 
     <footer class="site-footer">
@@ -329,6 +304,7 @@
       marketsSection.before(tradeSection);
     </script>
     <script src="api-config.js"></script>
+    <script src="paper-account.js"></script>
     <script src="script.js"></script>
     <script type="module" src="auth.js"></script>
     <script src="site-header.js"></script>

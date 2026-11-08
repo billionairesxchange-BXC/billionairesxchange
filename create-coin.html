@@ -34,6 +34,7 @@
         <a href="bot-trading.html">Trading Bot</a>
         <a href="treasury.html#wallet">Wallet</a>
         <a href="create-coin.html">Create Coin</a>
+        <a href="about-support.html">About</a>
       </nav>
 
       <div class="nav-actions">
@@ -167,28 +168,6 @@
           <ul id="customCoinList"></ul>
         </div>
 
-        <div class="coin-info card-glass">
-          <h3>How to Create Your Coin</h3>
-          <div class="info-grid">
-            <div class="info-card">
-              <h4>1. Enter Coin Details</h4>
-              <p>Choose a unique name, symbol, and website URL for your cryptocurrency. This information will be displayed on the marketplace.</p>
-            </div>
-            <div class="info-card">
-              <h4>2. Upload Coin Image</h4>
-              <p>Add a professional logo or icon for your coin. This helps users identify and remember your coin in the marketplace.</p>
-            </div>
-            <div class="info-card">
-              <h4>3. Set Initial Supply</h4>
-              <p>Choose the number of tokens minted once to your wallet. The fixed supply cannot be increased or minted again.</p>
-            </div>
-            <div class="info-card">
-              <h4>4. Deploy the ERC-20</h4>
-              <p>Choose Ethereum, BNB Smart Chain, or Polygon PoS, then approve the deployment in your wallet and pay that network's gas fee. Your contract is saved after confirmation.</p>
-            </div>
-          </div>
-        </div>
-
         <div class="coin-benefits card-glass">
           <h3>Benefits of Creating Your Coin</h3>
           <div class="benefits-grid">
@@ -214,6 +193,28 @@
             </div>
           </div>
         </div>
+      </section>
+
+      <section class="crypto-wallet-form wallet-nft-panel card-glass" aria-labelledby="walletNftHeading">
+        <h3 id="walletNftHeading">Your NFTs</h3>
+        <p>Connect an EVM wallet above or a Solana wallet below to discover NFTs. Your Moralis API key stays in this page's memory.</p>
+        <button class="btn btn-secondary" id="walletNftSolanaConnect" type="button">Connect Solana wallet</button>
+        <p id="walletNftSolanaStatus" class="wallet-nft-discovery-status" role="status" aria-live="polite">Solana wallet not connected.</p>
+        <form id="walletNftDiscoveryForm" class="wallet-nft-discovery-form">
+          <label>Moralis API key<input type="password" id="walletNftApiKey" autocomplete="off" spellcheck="false" required /></label>
+          <button class="btn btn-primary" id="walletNftDiscoverButton" type="submit">Discover NFTs</button>
+        </form>
+        <p class="wallet-nft-api-help">Get a key from <a href="https://admin.moralis.com/" target="_blank" rel="noopener noreferrer">Moralis</a>. It is sent only to Moralis for NFT lookup requests.</p>
+        <p id="walletNftDiscoveryStatus" class="wallet-nft-discovery-status" role="status" aria-live="polite">Connect an EVM wallet above, then enter a Moralis API key to discover NFTs.</p>
+        <div class="wallet-nft-list" id="walletNftDiscoveryList" aria-live="polite"></div>
+        <h4 class="wallet-nft-manual-heading">Track an EVM ERC-721 NFT</h4>
+        <form id="walletNftForm">
+          <label>Network<select id="walletNftNetwork"><option value="ethereum">Ethereum</option><option value="bsc">BNB Smart Chain</option><option value="polygon">Polygon</option></select></label>
+          <label>Contract address<input id="walletNftContract" type="text" autocomplete="off" spellcheck="false" required /></label>
+          <label>Token ID<input id="walletNftTokenId" type="text" inputmode="numeric" autocomplete="off" required /></label>
+          <button class="btn btn-secondary" id="walletNftAddButton" type="submit">Track NFT</button>
+        </form>
+        <div class="wallet-nft-list" id="walletNftList"></div>
       </section>
     </main>
 
@@ -787,6 +788,7 @@
     </script>
     <script src="script.js"></script>
     <script type="module" src="auth.js"></script>
+    <script type="module" src="create-coin-nfts.js"></script>
     <script src="site-header.js"></script>
 </body>
 </html>

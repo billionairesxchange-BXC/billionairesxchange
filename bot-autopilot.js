@@ -1,4 +1,6 @@
 (() => {
+  const initialize = async () => {
+  await window.makingsPaperAccountReady;
   const createForm = document.getElementById('autoPilotCreateForm');
   if (!createForm) return;
 
@@ -55,13 +57,9 @@
         }
         const duration = durationOptions[bot.durationKey];
         if (!duration) throw new Error(`Saved bot "${bot.name}" has an unsupported duration.`);
-        const wasRunning = bot.status === 'running' || bot.status === 'finishing';
         return {
           ...bot,
           selectedSymbol: String(bot.openPosition?.symbol || bot.selectedSymbol || '').toUpperCase(),
-          status: wasRunning ? 'paused' : bot.status,
-          endsAt: null,
-          startedAt: null,
           realizedPnl: Number(bot.realizedPnl) || 0,
           totalLosses: Number.isFinite(Number(bot.totalLosses))
             ? Math.max(0, Number(bot.totalLosses))
@@ -96,6 +94,9 @@
       return false;
     }
     try {
+      bots.forEach((bot) => {
+        if (bot.status === 'running' || bot.status === 'finishing') bot.clientUpdatedAt = Date.now();
+      });
       localStorage.setItem(storageKey, JSON.stringify(bots));
       return true;
     } catch (error) {
@@ -578,6 +579,10 @@
   }
 
   async function startBot(bot) {
+    if (!window.makingsBackgroundTradingEnabled) {
+      announce('Sign in and ensure the background paper-trading service is available before starting a bot.', true);
+      return;
+    }
     const activeCount = bots.filter((item) => item.status === 'running' || item.status === 'finishing').length;
     if (activeCount >= maxActiveBots) {
       announce(`Only ${maxActiveBots} bots can run at the same time. Pause another bot before starting this one.`, true);
@@ -635,6 +640,10 @@
     bot.endsAt = null;
     if (persistBots()) {
       renderBots();
+      if (bots.some((bot) => bot.status === 'running' || bot.status === 'finishing')) {
+        startCycleTimer();
+        runCycle();
+      }
       announce(`${bot.name} paused. Any open paper position is retained and can be managed when the bot resumes.`);
     }
     if (!bots.some((item) => item.status === 'running' || item.status === 'finishing') && cycleTimer) {
@@ -703,7 +712,7 @@
     renderBots();
     settingsDisclosure.open = false;
     runningDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    announce(`${name} created for ${selectedSymbol} and paused. Start it when you are ready; paper trades can be below $20.`);
+    announce(`${name} created for ${selectedSymbol} and paused. Start it when you are ready; it uses simulated paper trades only.`);
   });
 
   botList.addEventListener('click', (event) => {
@@ -745,24 +754,12 @@
     }
   });
 
-  window.addEventListener('pagehide', () => {
-    let changed = false;
-    bots.forEach((bot) => {
-      if (bot.status === 'running' || bot.status === 'finishing') {
-        if (bot.status === 'running' && bot.endsAt) bot.remainingMs = Math.max(0, bot.endsAt - Date.now());
-        bot.status = 'paused';
-        bot.startedAt = null;
-        bot.endsAt = null;
-        changed = true;
-      }
-    });
-    if (changed) persistBots();
-  });
-
   renderBots();
   if (bots.some((bot) => bot.status === 'paused' && bot.remainingMs <= 0 && !bot.openPosition)) {
-    announce('A saved bot has completed its run time. Start is disabled; create a new bot for another session.');
+    announce('A saved bot has completed its run time. Create a new bot for another session.');
   } else if (bots.some((bot) => bot.status === 'paused' && bot.openPosition)) {
-    announce('Saved bots are paused while this page is closed. Resume a bot to continue managing its open paper position.');
+    announce('Saved bots are paused. Resume a bot to continue managing its open paper position.');
   }
+  };
+  initialize();
 })();

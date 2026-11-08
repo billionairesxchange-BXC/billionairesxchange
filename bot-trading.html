@@ -16,6 +16,11 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="api-config.js"></script>
+    <script src="market-history.js"></script>
+    <script src="paper-account.js"></script>
+    <script src="api-config.js"></script>
+    <script src="paper-account.js"></script>
   </head>
   <body>
     <header class="topbar">
@@ -34,6 +39,7 @@
         <a href="bot-trading.html">Trading Bot</a>
         <a href="treasury.html#wallet">Wallet</a>
         <a href="create-coin.html">Create Coin</a>
+        <a href="about-support.html">About</a>
       </nav>
 
       <div class="nav-actions">
@@ -48,7 +54,7 @@
           <div>
             <span class="eyebrow">Market watchlist</span>
             <h3 id="favoriteCoinsTitle">Favorite coins for AI analysis</h3>
-            <p>Choose coins the bot should watch. Market cap and live market signals guide its settings.</p>
+            <p>Add coins to your watchlist, then select a coin when you want to analyze it.</p>
           </div>
           <div class="favorite-add-control">
             <label for="favoriteCoinSelect">Add favorite</label>
@@ -76,14 +82,14 @@
         <p class="favorite-analysis-status" id="favoriteAnalysisStatus">Add a favorite coin to start personalized market analysis.</p>
       </section>
 
-      <section class="bot-chart-section card-glass" aria-labelledby="botChartHeading">
+      <section class="bot-chart-section card-glass" id="botChartSection" aria-labelledby="botChartHeading">
         <h3 id="botChartHeading">Market Chart</h3>
         <div class="bot-chart-toolbar">
           <label class="positions-market-selector">
             <span>Choose market</span>
             <select id="botChartMarketSelect" class="bot-chart-market-select">
               <option value="">Choose a coin</option>
-              <option value="BTC" selected>BTC / USD</option>
+              <option value="BTC">BTC / USD</option>
               <option value="ETH">ETH / USD</option>
               <option value="XRP">XRP / USD</option>
               <option value="SOL">SOL / USD</option>
@@ -108,11 +114,13 @@
             </div>
           </div>
           <button class="btn btn-ghost bot-settings-toggle" id="botSettingsToggle" type="button" aria-expanded="false" aria-controls="botSettingsPanel">Bot Configuration</button>
+          <button class="btn btn-ghost bot-chart-fullscreen" id="botChartFullscreen" type="button" aria-label="Open market chart full screen" aria-pressed="false">Full screen</button>
         </div>
         <div class="bot-chart-wrap">
           <canvas id="botCanvas" width="600" height="320" aria-label="BillionairesXchange live trading bot candlestick chart"></canvas>
-          <button class="bot-chart-resizer" id="botChartResizer" type="button" aria-label="Resize bot chart" title="Drag to resize chart"></button>
+          <button class="bot-chart-resizer" id="botChartResizer" type="button" aria-label="Resize bot chart" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight" aria-describedby="botChartResizeHelp" title="Drag or use arrow keys to resize chart"></button>
         </div>
+        <p id="botChartResizeHelp" class="visually-hidden">Drag the resize handle or focus it and use the arrow keys to adjust the chart size.</p>
         <p id="botChartStatus" class="bot-chart-status" aria-live="polite">Choose a market to load chart candles.</p>
         <div class="bot-actions">
           <button class="btn btn-primary" type="button" id="startBotBtn">Start bot</button>
@@ -121,6 +129,27 @@
         </div>
         <p id="botMarketStatus" class="bot-market-status">Select a coin to connect its market feed. Trades are simulated.</p>
         <p id="botLearningStatus" class="bot-learning-status" aria-live="polite">Learning starts when market history is available.</p>
+        <dialog class="bot-configuration-dialog" id="botConfigurationSummaryDialog" aria-labelledby="botConfigurationSummaryTitle">
+          <div class="bot-configuration-dialog-head">
+            <h3 id="botConfigurationSummaryTitle">Bot Configuration Summary</h3>
+            <button class="btn btn-ghost" id="closeBotConfigurationSummaryButton" type="button" aria-label="Close bot configuration summary">×</button>
+          </div>
+          <dl class="bot-configuration-summary" id="botConfigurationSummary"></dl>
+        </dialog>
+        <dialog class="bot-configuration-dialog bot-wallet-pin-dialog" id="botWalletPinDialog" aria-labelledby="botWalletPinTitle">
+          <div class="bot-configuration-dialog-head">
+            <h3 id="botWalletPinTitle">Verify wallet PIN</h3>
+            <button class="btn btn-ghost" id="closeBotWalletPinDialog" type="button" aria-label="Cancel full screen">×</button>
+          </div>
+          <p id="botWalletPinDescription">Enter your wallet PIN to open the Trading Bot full screen.</p>
+          <form id="botWalletPinForm">
+            <label for="botWalletPinInput" id="botWalletPinLabel">Five-digit wallet PIN</label>
+            <input id="botWalletPinInput" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8" pattern="[0-9]{4,8}" required />
+            <p id="botWalletPinStatus" role="status" aria-live="polite"></p>
+            <button class="btn btn-primary" type="submit" id="verifyBotWalletPin">Verify PIN</button>
+          </form>
+          <button class="btn btn-primary" id="botWalletPinContinue" type="button" hidden>Continue to full screen</button>
+        </dialog>
       </section>
 
       <section class="ai-analyst card-glass" aria-live="polite" aria-labelledby="aiAnalystHeading">
@@ -181,53 +210,73 @@
           <div class="autopilot-heading">
             <div>
               <span class="eyebrow">Paper trading dashboard</span>
-              <h3 id="autopilotRunningTitle">Bot Running Details</h3>
-              <p>Review bot status, balances, simulated positions, and completed trades.</p>
-              <details class="autopilot-settings-disclosure" id="autopilotSettings">
-                <summary class="btn btn-primary">Auto Pilot Bot Settings</summary>
-                <section class="autopilot-section card-glass" id="autopilot" aria-labelledby="autopilotTitle">
-                  <div class="autopilot-heading">
-                    <div>
-                      <span class="eyebrow">Multi-market paper trading</span>
-                      <h3 id="autopilotTitle">Create an Auto Pilot Bot</h3>
-                      <p>Each bot scans supported crypto markets, ranks positive momentum and liquidity, then selects a market and paper-trade settings. Signals are heuristic, not predictions or guarantees.</p>
+              <div class="autopilot-running-title-row">
+                <h3 id="autopilotRunningTitle">Bot Running Details</h3>
+                <details class="autopilot-settings-disclosure" id="autopilotSettings">
+                  <summary class="btn btn-primary">Auto Pilot Bot Settings</summary>
+                  <section class="autopilot-section card-glass" id="autopilot" aria-labelledby="autopilotTitle">
+                    <div class="autopilot-heading">
+                      <div>
+                        <span class="eyebrow">Multi-market paper trading</span>
+                        <h3 id="autopilotTitle">Create an Auto Pilot Bot</h3>
+                        <p>Each bot scans supported crypto markets, ranks positive momentum and liquidity, then selects a market and paper-trade settings. Signals are heuristic, not predictions or guarantees.</p>
+                      </div>
                     </div>
-                  </div>
-                  <p class="autopilot-disclaimer">Simulation only. These bots never access your wallet or place real exchange orders. They run only while this page is open. Market quotes are provided by Binance public data. Paper results do not predict future performance.</p>
-                  <form class="autopilot-create-form" id="autoPilotCreateForm">
-                    <label>Bot name
-                      <input id="autoPilotBotName" type="text" maxlength="32" autocomplete="off" placeholder="e.g. Momentum Scout" required />
-                    </label>
-                    <label>Virtual paper balance (USD)
-                      <input id="autoPilotBudget" type="number" min="20" max="1000000" step="1" value="1000" required />
-                    </label>
-                    <label>Maximum per trade (USD)
-                      <input id="autoPilotTradeCap" type="number" min="20" max="1000000" step="1" value="100" required />
-                    </label>
-                    <label>How long to run
-                      <select id="autoPilotDuration" required>
-                        <option value="1h">1 hour</option>
-                        <option value="4h">4 hours</option>
-                        <option value="12h">12 hours</option>
-                        <option value="24h" selected>24 hours</option>
-                        <option value="7d">7 days</option>
-                      </select>
-                    </label>
-                    <label>Realized profit goal (USD)
-                      <input id="autoPilotGoal" type="number" min="1" max="1000000" step="1" value="100" required />
-                    </label>
-                    <label class="autopilot-consent">
-                      <input id="autoPilotConsent" type="checkbox" required />
-                      <span>I authorize this bot to place automatic simulated paper buys and sells. Every buy must be at least USD $20 and is capped by my maximum-per-trade setting and available virtual balance. No real funds will be used.</span>
-                    </label>
-                    <label class="autopilot-notification-option">
-                      <input id="autoPilotBrowserNotifications" type="checkbox" />
-                      <span>Also request browser notifications for completed paper trades</span>
-                    </label>
-                    <button class="btn btn-primary" type="submit">Create bot</button>
-                  </form>
-                </section>
-              </details>
+                    <p class="autopilot-disclaimer">Simulation only. These bots never access your wallet or place real exchange orders. They run only while this page is open. Market quotes are provided by Binance public data. Paper results do not predict future performance.</p>
+                    <form class="autopilot-create-form" id="autoPilotCreateForm">
+                      <label>Bot name
+                        <input id="autoPilotBotName" type="text" maxlength="32" autocomplete="off" placeholder="e.g. Momentum Scout" required />
+                      </label>
+                      <label>Virtual paper balance (USD)
+                        <input id="autoPilotBudget" type="number" min="20" max="1000000" step="1" value="1000" required />
+                      </label>
+                      <label>Maximum per trade (USD)
+                        <input id="autoPilotTradeCap" type="number" min="20" max="1000000" step="1" value="100" required />
+                      </label>
+                      <label>Coin to scan
+                        <select id="autoPilotCoin" required>
+                          <option value="">Choose a coin</option>
+                          <option value="BTC">Bitcoin (BTC)</option>
+                          <option value="ETH">Ethereum (ETH)</option>
+                          <option value="XRP">XRP (XRP)</option>
+                          <option value="SOL">Solana (SOL)</option>
+                          <option value="ADA">Cardano (ADA)</option>
+                          <option value="DOT">Polkadot (DOT)</option>
+                          <option value="DOGE">Dogecoin (DOGE)</option>
+                        </select>
+                      </label>
+                      <label>Paper buy amount (USD)
+                        <input id="autoPilotBuyAmount" type="number" min="0.01" max="1000000" step="0.01" value="25" required />
+                      </label>
+                      <label>Paper sell amount (USD)
+                        <input id="autoPilotSellAmount" type="number" min="0.01" max="1000000" step="0.01" value="25" required />
+                      </label>
+                      <label>How long to run
+                        <select id="autoPilotDuration" required>
+                          <option value="1h">1 hour</option>
+                          <option value="4h">4 hours</option>
+                          <option value="12h">12 hours</option>
+                          <option value="24h" selected>24 hours</option>
+                          <option value="7d">7 days</option>
+                        </select>
+                      </label>
+                      <label>Realized profit goal (USD)
+                        <input id="autoPilotGoal" type="number" min="1" max="1000000" step="1" value="100" required />
+                      </label>
+                      <label class="autopilot-consent">
+                        <input id="autoPilotConsent" type="checkbox" required />
+                        <span>I authorize this bot to place automatic simulated paper buys and sells. Each buy is capped by my maximum-per-trade setting and available virtual balance. No real funds will be used.</span>
+                      </label>
+                      <label class="autopilot-notification-option">
+                        <input id="autoPilotBrowserNotifications" type="checkbox" />
+                        <span>Also request browser notifications for completed paper trades</span>
+                      </label>
+                      <button class="btn btn-primary" type="submit">Create bot</button>
+                    </form>
+                  </section>
+                </details>
+              </div>
+              <p>Review bot status, balances, simulated positions, and completed trades.</p>
             </div>
             <div class="autopilot-account-summary" aria-live="polite">
               <span>Net paper P/L<strong id="autoPilotNetPnl">$0.00</strong></span>
@@ -258,13 +307,14 @@
           </section>
         </section>
 
-        <div class="bot-layout">
+        <dialog class="bot-configuration-dialog bot-settings-dialog" id="botSettingsDialog" aria-labelledby="botSettingsDialogTitle">
+          <div class="bot-configuration-dialog-head">
+            <h3 id="botSettingsDialogTitle">Bot Configuration</h3>
+            <button class="btn btn-ghost" id="closeBotSettingsDialog" type="button" aria-label="Close bot configuration">×</button>
+          </div>
           <div class="bot-control-panels">
-            <section class="card-glass bot-controls">
-              <div class="bot-configuration-heading">
-                <h3>Bot Configuration</h3>
-              </div>
-              <div id="botSettingsPanel" hidden>
+            <section class="bot-controls">
+              <div id="botSettingsPanel">
                 <label>
                   Strategy
                   <select id="strategy">
@@ -279,7 +329,7 @@
                   Select Coin to Trade
                   <select id="coinSelect" required>
                     <option value="">Choose a coin</option>
-                    <option value="BTC" selected>Bitcoin (BTC)</option>
+                    <option value="BTC">Bitcoin (BTC)</option>
                     <option value="ETH">Ethereum (ETH)</option>
                     <option value="XRP">XRP (XRP)</option>
                     <option value="SOL">Solana (SOL)</option>
@@ -342,33 +392,31 @@
                       Maximum Trade Amount ($)
                       <input type="number" id="maxTradeAmount" placeholder="e.g., 1000" min="0" step="50" />
                     </label>
-                    <button class="btn btn-primary" id="saveRiskSettingsBtn" type="button">Save bot configuration</button>
-                    <p id="riskSettingsStatus" aria-live="polite"></p>
                   </div>
                 </section>
+                <button class="btn btn-primary bot-settings-save" id="saveRiskSettingsBtn" type="button">Save and close</button>
+                <p id="riskSettingsStatus" aria-live="polite"></p>
               </div>
             </section>
-
           </div>
-
-        </div>
-
-        <dialog class="bot-configuration-dialog" id="botConfigurationSummaryDialog" aria-labelledby="botConfigurationSummaryTitle">
-          <div class="bot-configuration-dialog-head">
-            <h3 id="botConfigurationSummaryTitle">Bot Configuration Summary</h3>
-            <button class="btn btn-ghost" id="closeBotConfigurationSummaryButton" type="button" aria-label="Close bot configuration summary">×</button>
-          </div>
-          <dl class="bot-configuration-summary" id="botConfigurationSummary"></dl>
         </dialog>
 
         <div class="bot-goal-scan-grid">
           <section class="card-glass bot-goal-panel">
             <h4 id="agentGoalHeading">Agent goal</h4>
             <p>Set a realized profit target for this paper-trading account.</p>
-            <label for="botGoalProfit">Target profit (USD)</label>
-            <div class="bot-goal-controls">
-              <input type="number" id="botGoalProfit" min="1" step="25" value="1000" />
-              <button class="btn btn-primary" type="button" id="saveBotGoalBtn">Save goal</button>
+            <div class="bot-goal-summary" id="botGoalSummary" hidden>
+              <span>Saved profit goal: <strong id="botGoalSavedValue"></strong></span>
+              <button class="btn btn-ghost bot-goal-edit-button" type="button" id="editBotGoalBtn" aria-label="Edit profit goal" title="Edit profit goal">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path></svg>
+              </button>
+            </div>
+            <div id="botGoalEditor">
+              <label for="botGoalProfit">Target profit (USD)</label>
+              <div class="bot-goal-controls">
+                <input type="number" id="botGoalProfit" min="1" step="25" value="1000" />
+                <button class="btn btn-primary" type="button" id="saveBotGoalBtn">Save goal</button>
+              </div>
             </div>
             <progress id="botGoalProgressBar" value="0" max="100" aria-label="Progress toward profit goal"></progress>
             <p id="botGoalProgress" aria-live="polite">$0.00 of $1,000.00 realized</p>
@@ -377,11 +425,23 @@
           <section class="market-scan-panel card-glass" aria-labelledby="marketScanTitle">
             <div>
               <h3 id="marketScanTitle">Market Opportunity Scan</h3>
-              <p id="marketScanStatus" aria-live="polite">Checking liquid supported markets for positive 24-hour momentum.</p>
+              <p id="marketScanStatus" aria-live="polite">Scanning all liquid USDT spot markets for positive 24-hour momentum.</p>
               <p id="minimumTradeNotice">Minimum paper buy: $20.00 USD equivalent.</p>
+              <div id="marketOpportunity" class="market-scan-opportunity" hidden>
+                <p id="marketOpportunityDetails"></p>
+                <p id="marketOpportunityPrompt">Would you like to trade this market, or should I find a different market?</p>
+                <div class="market-scan-actions">
+                  <button class="btn btn-ghost" type="button" id="enableMarketVoiceBtn" hidden>Enable voice conversation</button>
+                </div>
+                <form id="marketOpportunityTradeForm" class="market-scan-trade-form" hidden>
+                  <label for="marketTradeAmount">Paper trade amount (USD)</label>
+                  <input type="number" id="marketTradeAmount" min="20" step="0.01" value="20" required />
+                  <button class="btn btn-primary" type="submit" id="startMarketTradeBtn">Start paper trade</button>
+                  <button class="btn btn-ghost" type="button" id="chooseAnotherMarketBtn">Choose another market</button>
+                </form>
+                <p id="marketOpportunityStatus" aria-live="polite"></p>
+              </div>
             </div>
-            <button class="btn btn-ghost" type="button" id="scanMarketsBtn">Scan markets now</button>
-            <button class="btn btn-primary" type="button" id="analyzeBestMarketBtn" hidden>Analyze top market</button>
           </section>
         </div>
 
@@ -411,27 +471,6 @@
           <ul id="leaderboardList" class="leaderboard-list"></ul>
         </section>
 
-        <div class="bot-info card-glass">
-          <h3>How Bot Trading Works</h3>
-          <div class="info-grid">
-            <div class="info-card">
-              <h4>1. Configure Settings</h4>
-              <p>Select your preferred coin, set your risk level, and choose a trading strategy that suits your investment goals.</p>
-            </div>
-            <div class="info-card">
-              <h4>2. Set Risk Management</h4>
-              <p>Define your stop-loss to limit losses and take-profit to secure gains. The bot will automatically close positions at these levels.</p>
-            </div>
-            <div class="info-card">
-              <h4>3. Choose Duration</h4>
-              <p>Select how long the bot should trade - from quick 1-hour sessions to continuous 24/7 automated trading.</p>
-            </div>
-            <div class="info-card">
-              <h4>4. Monitor & Adjust</h4>
-              <p>Watch your bot in real-time, receive notifications on trades, and adjust settings as market conditions change.</p>
-            </div>
-          </div>
-        </div>
       </section>
 
     </main>
@@ -443,6 +482,8 @@
     <div id="toast" class="toast" aria-live="polite">Welcome to BillionairesXchange Bot Trading.</div>
 
     <script>
+      (async () => {
+      await window.makingsPaperAccountReady;
       const coinSelect = document.getElementById('coinSelect');
       const durationSelect = document.getElementById('tradingDuration');
       const stopLossInput = document.getElementById('stopLoss');
@@ -452,6 +493,8 @@
       const toast = document.getElementById('toast');
       const botCanvas = document.getElementById('botCanvas');
       const botChartWrap = document.querySelector('.bot-chart-wrap');
+      const botChartSection = document.getElementById('botChartSection');
+      const botChartFullscreen = document.getElementById('botChartFullscreen');
       const botChartResizer = document.getElementById('botChartResizer');
       const botChartMarketSelect = document.getElementById('botChartMarketSelect');
       const botChartTimeButton = document.getElementById('botChartTimeButton');
@@ -464,11 +507,21 @@
       const botTrades = document.getElementById('botTrades');
       const botStatus = document.querySelector('.bot-status');
       const botSettingsToggle = document.getElementById('botSettingsToggle');
-      const botSettingsPanel = document.getElementById('botSettingsPanel');
+      const botSettingsDialog = document.getElementById('botSettingsDialog');
+      const closeBotSettingsDialog = document.getElementById('closeBotSettingsDialog');
       const botConfigurationSummaryButton = document.getElementById('botConfigurationSummaryButton');
       const botConfigurationSummaryDialog = document.getElementById('botConfigurationSummaryDialog');
       const closeBotConfigurationSummaryButton = document.getElementById('closeBotConfigurationSummaryButton');
       const botConfigurationSummary = document.getElementById('botConfigurationSummary');
+      const botWalletPinDialog = document.getElementById('botWalletPinDialog');
+      const botWalletPinForm = document.getElementById('botWalletPinForm');
+      const botWalletPinInput = document.getElementById('botWalletPinInput');
+      const botWalletPinStatus = document.getElementById('botWalletPinStatus');
+      const botWalletPinContinue = document.getElementById('botWalletPinContinue');
+      const botWalletPinLabel = document.getElementById('botWalletPinLabel');
+      const botWalletPinDescription = document.getElementById('botWalletPinDescription');
+      let walletSecurityModule;
+      let walletPinVerified = false;
       const riskSettingsToggle = document.getElementById('riskSettingsToggle');
       const riskSettingsPanel = document.getElementById('riskSettingsPanel');
       const saveRiskSettingsBtn = document.getElementById('saveRiskSettingsBtn');
@@ -495,6 +548,10 @@
       const favoriteNextBtn = document.getElementById('favoriteNextBtn');
       const favoriteAnalysisStatus = document.getElementById('favoriteAnalysisStatus');
       const botGoalProfit = document.getElementById('botGoalProfit');
+      const botGoalSummary = document.getElementById('botGoalSummary');
+      const botGoalSavedValue = document.getElementById('botGoalSavedValue');
+      const botGoalEditor = document.getElementById('botGoalEditor');
+      const editBotGoalBtn = document.getElementById('editBotGoalBtn');
       const botGoalProgress = document.getElementById('botGoalProgress');
       const botGoalProgressBar = document.getElementById('botGoalProgressBar');
       const botLearningStatus = document.getElementById('botLearningStatus');
@@ -504,8 +561,15 @@
       const botAccountBalance = document.getElementById('botAccountBalance');
       const marketScanStatus = document.getElementById('marketScanStatus');
       const minimumTradeNotice = document.getElementById('minimumTradeNotice');
-      const scanMarketsBtn = document.getElementById('scanMarketsBtn');
-      const analyzeBestMarketBtn = document.getElementById('analyzeBestMarketBtn');
+      const marketOpportunity = document.getElementById('marketOpportunity');
+      const marketOpportunityDetails = document.getElementById('marketOpportunityDetails');
+      const marketOpportunityPrompt = document.getElementById('marketOpportunityPrompt');
+      const marketOpportunityTradeForm = document.getElementById('marketOpportunityTradeForm');
+      const marketOpportunityStatus = document.getElementById('marketOpportunityStatus');
+      const marketTradeAmount = document.getElementById('marketTradeAmount');
+      const startMarketTradeBtn = document.getElementById('startMarketTradeBtn');
+      const chooseAnotherMarketBtn = document.getElementById('chooseAnotherMarketBtn');
+      const enableMarketVoiceBtn = document.getElementById('enableMarketVoiceBtn');
       let accountCurrency = (() => {
         const saved = (localStorage.getItem('preferredCurrency') || 'USD').toUpperCase();
         return ['USD', 'JMD', 'EUR'].includes(saved) ? saved : 'USD';
@@ -513,8 +577,20 @@
       const minimumTradeUsd = 20;
       let accountCurrencyRates = { USD: 1 };
       let bestMarket = null;
-      let lastNotifiedMarket = '';
       let marketScanInProgress = false;
+      let marketOpportunityPending = false;
+      const rejectedMarketPairs = new Set();
+      const MarketSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const marketVoicePreferenceKey = 'botMarketVoiceConversationEnabled';
+      let marketVoiceEnabled = (() => {
+        try {
+          return localStorage.getItem(marketVoicePreferenceKey) === 'true';
+        } catch (error) {
+          console.error('Market voice preference could not be loaded:', error);
+          return false;
+        }
+      })();
+      let marketSpeechRecognition = null;
       const botMemoryKey = `makingsBotMemory:${localStorage.getItem('makingsCurrentUser') || 'guest'}`;
       let botSettingsStorageKey = `makingsBotSettings:${localStorage.getItem('makingsCurrentUser') || 'guest'}`;
       let botSettings;
@@ -584,7 +660,7 @@
           return {
             goalProfit: Number(saved.goalProfit) > 0 ? Number(saved.goalProfit) : key.endsWith(':guest') ? botMemory.goalProfit : 1000,
             strategy: ['Momentum', 'Scalp', 'Mean reversion (single market)', 'Dollar-cost averaging'].includes(saved.strategy) ? saved.strategy : 'Momentum',
-            coin: typeof saved.coin === 'string' && /^[A-Z0-9]{2,12}$/.test(saved.coin) ? saved.coin : 'BTC',
+            coin: typeof saved.coin === 'string' && /^[A-Z0-9]{2,12}$/.test(saved.coin) ? saved.coin : '',
             duration: ['1h', '4h', '12h', '24h', '7d', '30d', 'continuous'].includes(saved.duration) ? saved.duration : '24h',
             risk: ['Conservative', 'Balanced', 'Aggressive'].includes(settings.risk) ? settings.risk : 'Balanced',
             stopLoss: Number.isFinite(Number(settings.stopLoss)) && Number(settings.stopLoss) >= 0 && Number(settings.stopLoss) <= 100 ? Number(settings.stopLoss) : 5,
@@ -596,7 +672,7 @@
           return {
             goalProfit: key.endsWith(':guest') ? botMemory.goalProfit : 1000,
             strategy: 'Momentum',
-            coin: 'BTC',
+            coin: '',
             duration: '24h',
             risk: 'Balanced',
             stopLoss: 5,
@@ -609,6 +685,9 @@
       function applyAccountBotSettings() {
         botMemory.goalProfit = botSettings.goalProfit;
         botGoalProfit.value = botSettings.goalProfit;
+        botGoalSavedValue.textContent = formatMoney(botSettings.goalProfit);
+        botGoalSummary.hidden = false;
+        botGoalEditor.hidden = true;
         if (strategy.querySelector(`option[value="${botSettings.strategy}"]`) || Array.from(strategy.options).some((option) => option.textContent === botSettings.strategy)) {
           strategy.value = botSettings.strategy;
         }
@@ -698,6 +777,8 @@
         marketSymbol: null,
         marketRetryTimer: null,
         chartCandles: [],
+        sharedTrainingCandles: {},
+        sharedTrainingInterval: {},
         chartInterval: botChartTools.interval,
         chartSocket: null,
         chartRequestVersion: 0,
@@ -705,11 +786,25 @@
         history: [65000, 65750, 66100, 66420, 66380, 66940, 67150],
         positionRecords: JSON.parse(localStorage.getItem('botPositionRecords') || '[]')
       };
+      try {
+        const savedBackgroundState = JSON.parse(localStorage.getItem('makingsBotBackgroundState') || 'null');
+        if (savedBackgroundState && savedBackgroundState.running === true) {
+          botState.running = true;
+          botState.balance = Number(savedBackgroundState.balance) || botState.balance;
+          botState.pnl = Number(savedBackgroundState.pnl) || botState.pnl;
+          botState.position = Object.prototype.hasOwnProperty.call(savedBackgroundState, 'position')
+            ? savedBackgroundState.position
+            : botState.position;
+          coinSelect.value = savedBackgroundState.symbol || coinSelect.value;
+        }
+      } catch (error) {
+        console.error('Background bot state could not be restored:', error);
+      }
       applyAccountBotSettings();
       if (botChartWrap) {
         botChartWrap.style.height = `${botChartTools.height}px`;
         botChartWrap.style.minHeight = `${botChartTools.height}px`;
-        if (botChartTools.width) botChartWrap.style.width = `${Math.min(botChartTools.width, botChartWrap.parentElement.clientWidth)}px`;
+        if (botChartTools.width) botChartWrap.style.width = `${Math.min(botChartTools.width, getBotChartAvailableWidth())}px`;
       }
 
       const coinPrices = {
@@ -730,6 +825,7 @@
       let botMarketListLoading = false;
       let botCoinPriceRefreshTimer = null;
       let botSpotPairsByBase = null;
+      let botSpotMarketsBySymbol = null;
 
       function formatAccountCurrency(value) {
         return new Intl.NumberFormat(undefined, {
@@ -777,44 +873,315 @@
         }
       }
 
-      async function scanMarkets() {
-        if (marketScanInProgress) return;
+      async function loadBotSpotMarkets() {
+        if (botSpotMarketsBySymbol) return botSpotMarketsBySymbol;
+        const exchangeInfo = await fetchBotMarketData('/api/v3/exchangeInfo');
+        const spotMarkets = new Map();
+        const pairsByBase = new Map();
+        exchangeInfo.symbols?.forEach((pair) => {
+          if (pair.quoteAsset !== 'USDT' || pair.status !== 'TRADING' || pair.isSpotTradingAllowed === false
+            || !/^[A-Z0-9]{1,12}$/.test(pair.baseAsset || '')) return;
+          spotMarkets.set(pair.symbol, pair);
+          if (!pairsByBase.has(pair.baseAsset)) pairsByBase.set(pair.baseAsset, pair.symbol);
+        });
+        if (!spotMarkets.size) throw new Error('No active USDT spot markets were returned');
+        botSpotMarketsBySymbol = spotMarkets;
+        botSpotPairsByBase = pairsByBase;
+        return spotMarkets;
+      }
+
+      async function scanMarkets(force = false) {
+        if (marketScanInProgress || (marketOpportunityPending && !force)) return;
         marketScanInProgress = true;
-        scanMarketsBtn.disabled = true;
-        marketScanStatus.textContent = 'Scanning supported liquid USDT spot markets…';
+        marketScanStatus.textContent = 'Scanning all active USDT spot markets…';
+        marketOpportunity.hidden = true;
         try {
-          const symbols = encodeURIComponent(JSON.stringify(Object.values(marketPairs).slice(0, 40)));
-          const markets = await fetchBotMarketData(`/api/v3/ticker/24hr?symbols=${symbols}`);
+          const spotMarkets = await loadBotSpotMarkets();
+          const markets = await fetchBotMarketData('/api/v3/ticker/24hr');
           if (!Array.isArray(markets)) throw new Error('Market scan returned an invalid result');
-          const liquidMarkets = markets.map((market) => ({
-            symbol: Object.keys(marketPairs).find((key) => marketPairs[key] === market.symbol),
-            change: Number(market.priceChangePercent),
-            volume: Number(market.quoteVolume),
-            price: Number(market.lastPrice)
-          })).filter((market) => market.symbol && Number.isFinite(market.change)
-            && Number.isFinite(market.volume) && market.volume >= 1000000);
-          const candidates = liquidMarkets.filter((market) => market.change > 0)
+          const candidates = markets.filter((market) => spotMarkets.has(market.symbol)
+              && !rejectedMarketPairs.has(market.symbol))
+            .map((market) => ({
+              symbol: spotMarkets.get(market.symbol).baseAsset,
+              pair: market.symbol,
+              change: Number(market.priceChangePercent),
+              volume: Number(market.quoteVolume),
+              price: Number(market.lastPrice),
+              high: Number(market.highPrice),
+              low: Number(market.lowPrice)
+            }))
+            .filter((market) => Number.isFinite(market.change) && market.change > 0
+              && Number.isFinite(market.volume) && market.volume >= 1000000
+              && Number.isFinite(market.price) && market.price > 0)
             .sort((left, right) => right.change - left.change);
           bestMarket = candidates[0] || null;
           if (!bestMarket) {
-            marketScanStatus.textContent = 'No supported market currently has both positive 24-hour momentum and at least $1M in 24-hour volume. No market is being recommended.';
-            analyzeBestMarketBtn.hidden = true;
+            marketOpportunityPending = false;
+            const emptyScanMessage = rejectedMarketPairs.size
+              ? 'No different market currently meets the positive-momentum and $1M volume criteria after excluding markets you passed on. The scan will check again automatically.'
+              : 'No market currently has positive 24-hour momentum and at least $1M in 24-hour volume. The scan will check again automatically.';
+            marketScanStatus.textContent = emptyScanMessage;
+            notifyTrade(`Market scan: ${emptyScanMessage}`);
             return;
           }
 
+          marketPairs[bestMarket.symbol] = bestMarket.pair;
           coinPrices[bestMarket.symbol] = bestMarket.price;
-          marketScanStatus.textContent = `Top positive 24-hour mover: ${bestMarket.symbol}/USDT, +${bestMarket.change.toFixed(2)}%, with ${formatMoney(bestMarket.volume)} traded. Past performance does not predict future returns.`;
-          analyzeBestMarketBtn.hidden = false;
-          const notificationSignature = bestMarket.symbol;
-          if (notificationSignature !== lastNotifiedMarket) {
-            lastNotifiedMarket = notificationSignature;
-            notifyTrade(`Market scan: ${bestMarket.symbol}/USDT currently leads supported liquid markets at +${bestMarket.change.toFixed(2)}% over 24 hours. This is a momentum signal, not a profit guarantee. Minimum paper buy: ${accountCurrencyRates[accountCurrency] ? formatAccountCurrency(minimumTradeUsd * accountCurrencyRates[accountCurrency]) : 'USD $20 equivalent'}.`);
+          if (!coinSelect.querySelector(`option[value="${bestMarket.symbol}"]`)) {
+            coinSelect.add(new Option(`${bestMarket.symbol} (${bestMarket.symbol})`, bestMarket.symbol));
           }
+          if (!favoriteCoinSelect.querySelector(`option[value="${bestMarket.symbol}"]`)) {
+            favoriteCoinSelect.add(new Option(`${bestMarket.symbol} (${bestMarket.symbol})`, bestMarket.symbol));
+          }
+          marketOpportunityPending = true;
+          marketScanStatus.textContent = 'Top market found across active USDT spot pairs. Choose whether you want to trade it.';
+          const dailyRangePercent = bestMarket.high > bestMarket.low && bestMarket.price > 0
+            ? ((bestMarket.high - bestMarket.low) / bestMarket.price) * 100
+            : null;
+          const momentumAssessment = bestMarket.change >= 5
+            ? 'The AI review sees strong positive 24-hour momentum'
+            : bestMarket.change >= 1
+              ? 'The AI review sees moderate positive 24-hour momentum'
+              : 'The AI review sees slight positive 24-hour momentum';
+          const formatMarketPrice = (price) => `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: price < 1 ? 8 : 2 })}`;
+          const review = `${bestMarket.symbol}/USDT: ${momentumAssessment} at +${bestMarket.change.toFixed(2)}%, with ${formatMoney(bestMarket.volume)} in 24-hour trading volume. Latest price: ${formatMarketPrice(bestMarket.price)}.${dailyRangePercent === null ? '' : ` The 24-hour high-to-low range is ${dailyRangePercent.toFixed(2)}% of the current price.`} This is market information, not a prediction or a guarantee of profit.`;
+          marketOpportunityDetails.textContent = review;
+          marketOpportunityPrompt.textContent = 'Would you like to trade this market, or should I find a different market? Say “I like it” or “find another market,” or choose below.';
+          marketOpportunityTradeForm.hidden = true;
+          marketOpportunityStatus.textContent = '';
+          marketOpportunity.hidden = false;
+          enableMarketVoiceBtn.hidden = !MarketSpeechRecognition || !('speechSynthesis' in window) || marketVoiceEnabled;
+          if (marketVoiceEnabled) startMarketVoiceConversation();
+          notifyTrade(`Market scan: ${review}`);
         } catch (error) {
           marketScanStatus.textContent = `Market scan failed: ${error.message}. No market recommendation was made.`;
+          marketOpportunityPending = false;
+          notifyTrade(`Market scan: The all-market scan failed: ${error.message}. No market recommendation was made.`);
         } finally {
           marketScanInProgress = false;
-          scanMarketsBtn.disabled = false;
+        }
+      }
+
+      function speakMarketResponse(message, onEnd = null) {
+        if (!('speechSynthesis' in window)) {
+          if (onEnd) onEnd();
+          return;
+        }
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(message);
+          utterance.lang = 'en-US';
+          const americanVoice = window.speechSynthesis.getVoices().find((voice) =>
+            /^en-US$/i.test(voice.lang) && /Jenny|Aria|Ava|Samantha|Google US English|United States/i.test(voice.name)
+          ) || window.speechSynthesis.getVoices().find((voice) => /^en-US$/i.test(voice.lang));
+          if (americanVoice) utterance.voice = americanVoice;
+          utterance.rate = 0.96;
+          utterance.onend = onEnd;
+          utterance.onerror = () => {
+            if (onEnd) onEnd();
+          };
+          window.speechSynthesis.speak(utterance);
+        } catch (error) {
+          marketOpportunityStatus.textContent = `Spoken response unavailable: ${error.message}. Use the on-screen choices instead.`;
+          if (onEnd) onEnd();
+        }
+      }
+
+      function listenForMarketVoiceReply(mode = 'decision') {
+        if (!marketVoiceEnabled || !MarketSpeechRecognition || !bestMarket) return;
+        try {
+          marketSpeechRecognition = new MarketSpeechRecognition();
+          marketSpeechRecognition.lang = 'en-US';
+          marketSpeechRecognition.interimResults = false;
+          marketSpeechRecognition.maxAlternatives = 1;
+          marketSpeechRecognition.addEventListener('start', () => {
+            marketOpportunityStatus.textContent = mode === 'amount'
+              ? 'Listening for your USD amount. Say, for example, “50 dollars,” or enter it below.'
+              : 'Listening. Say “I like it” with an amount, or “find another market.”';
+          }, { once: true });
+          marketSpeechRecognition.addEventListener('result', (event) => {
+            const transcript = event.results[0]?.[0]?.transcript?.trim();
+            if (!transcript) {
+              marketOpportunityStatus.textContent = 'No voice reply was detected. Use the on-screen choices instead.';
+              return;
+            }
+            if (mode === 'amount') {
+              const spokenAmount = parseMarketTradeAmount(transcript);
+              if (!spokenAmount || spokenAmount < minimumTradeUsd) {
+                marketOpportunityStatus.textContent = `I heard “${transcript}”. Please say an amount of at least $20, or enter it below.`;
+                marketOpportunityTradeForm.hidden = false;
+                marketTradeAmount.focus();
+                return;
+              }
+              marketTradeAmount.value = String(spokenAmount);
+              marketOpportunityStatus.textContent = `You chose ${formatMoney(spokenAmount)}.`;
+              speakMarketResponse(`You chose ${formatMoney(spokenAmount)}. I will check the balance and latest price, then place the paper trade.`, executeMarketOpportunityTrade);
+              return;
+            }
+            respondToMarketVoice(transcript);
+          }, { once: true });
+          marketSpeechRecognition.addEventListener('error', (event) => {
+            marketOpportunityStatus.textContent = `Voice reply unavailable: ${event.error}. Use the on-screen choices instead.`;
+          }, { once: true });
+          marketSpeechRecognition.start();
+        } catch (error) {
+          marketOpportunityStatus.textContent = `Voice reply could not start: ${error.message}. Use the on-screen choices instead.`;
+        }
+      }
+
+      function parseMarketTradeAmount(transcript) {
+        const numericAmount = transcript.match(/(?:\$|\bUSD\s*)(\d+(?:\.\d{1,2})?)|\b(\d+(?:\.\d{1,2})?)\s*(?:dollars?|bucks?|USD)\b/i);
+        if (numericAmount) return Number(numericAmount[1] || numericAmount[2]);
+        const numberWord = '(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand)';
+        const spokenAmountMatch = transcript.toLowerCase().match(new RegExp(`(${numberWord}(?:[\\s-]+${numberWord})*)\\s+(?:dollars?|bucks?|usd)\\b`));
+        if (!spokenAmountMatch) return null;
+        const amountWords = spokenAmountMatch[1].replace(/\band\b/g, '').trim();
+        const smallNumbers = { zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+        let total = 0;
+        let group = 0;
+        let found = false;
+        for (const word of amountWords.split(/[\s-]+/)) {
+          if (Object.prototype.hasOwnProperty.call(smallNumbers, word)) {
+            group += smallNumbers[word];
+            found = true;
+          } else if (word === 'hundred' && group > 0) {
+            group *= 100;
+          } else if (word === 'thousand' && group > 0) {
+            total += group * 1000;
+            group = 0;
+          } else if (word) {
+            return null;
+          }
+        }
+        return found ? total + group : null;
+      }
+
+      function respondToMarketVoice(transcript) {
+        const reply = transcript.toLowerCase();
+        marketOpportunityStatus.textContent = `I heard: “${transcript}”`;
+        if (/\b(different|another|alternate|find|no thanks|don't|do not|dislike|not really|no)\b/.test(reply)) {
+          speakMarketResponse('Okay, I will look for a different market.', requestDifferentMarket);
+          return;
+        }
+        if (/\b(like|yes|trade|buy|go ahead)\b/.test(reply)) {
+          acceptMarketOpportunity();
+          const amount = parseMarketTradeAmount(transcript);
+          if (amount !== null) {
+            if (amount < minimumTradeUsd) {
+              marketOpportunityStatus.textContent = 'The minimum paper trade is 20 US dollars. Please say an amount of at least 20 dollars or enter it below.';
+              speakMarketResponse('The minimum paper trade is 20 US dollars. What amount would you like to trade?');
+              listenForMarketVoiceReply('amount');
+              return;
+            }
+            marketTradeAmount.value = String(amount);
+            marketOpportunityStatus.textContent = `You chose ${formatMoney(amount)}.`;
+            speakMarketResponse(`You chose ${formatMoney(amount)}. I will check the balance and latest price, then place the paper trade.`, executeMarketOpportunityTrade);
+            return;
+          }
+          marketOpportunityPrompt.textContent = 'How much would you like to trade? The minimum is $20. Say an amount such as “50 dollars,” or enter it below.';
+          marketOpportunityStatus.textContent = 'Tell me the USD amount you want to paper trade, or enter it below.';
+          speakMarketResponse(marketOpportunityPrompt.textContent, () => listenForMarketVoiceReply('amount'));
+          return;
+        }
+        marketOpportunityStatus.textContent = `I heard: “${transcript}”. Say “I like it” with an amount, or “find another market.”`;
+        speakMarketResponse('Would you like this market, or should I find another one?');
+      }
+
+      function startMarketVoiceConversation() {
+        if (!marketVoiceEnabled || !bestMarket || !MarketSpeechRecognition || !('speechSynthesis' in window)) return;
+        speakMarketResponse(
+          `${marketOpportunityDetails.textContent} ${marketOpportunityPrompt.textContent}`,
+          () => listenForMarketVoiceReply()
+        );
+        marketOpportunityStatus.textContent = 'The AI is reviewing the market. I will listen for your choice when it finishes.';
+      }
+
+      function acceptMarketOpportunity() {
+        if (!bestMarket) return;
+        marketOpportunityTradeForm.hidden = false;
+        marketTradeAmount.focus();
+      }
+
+      function requestDifferentMarket() {
+        if (bestMarket) rejectedMarketPairs.add(bestMarket.pair);
+        marketOpportunityPending = false;
+        bestMarket = null;
+        marketOpportunity.hidden = true;
+        marketScanStatus.textContent = 'Scanning again for the next top market…';
+        scanMarkets(true);
+      }
+
+      enableMarketVoiceBtn.addEventListener('click', async () => {
+        if (!bestMarket || !MarketSpeechRecognition || !('speechSynthesis' in window)) return;
+        enableMarketVoiceBtn.disabled = true;
+        marketOpportunityStatus.textContent = 'Requesting microphone permission for hands-free market conversations…';
+        let audioStream;
+        try {
+          if (!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone access requires a supported secure browser connection');
+          audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioStream.getTracks().forEach((track) => track.stop());
+          localStorage.setItem(marketVoicePreferenceKey, 'true');
+          marketVoiceEnabled = true;
+          enableMarketVoiceBtn.hidden = true;
+          marketOpportunityStatus.textContent = 'Voice conversation enabled. You will not need to press a reply button for future market scans.';
+          startMarketVoiceConversation();
+        } catch (error) {
+          audioStream?.getTracks().forEach((track) => track.stop());
+          console.error('Hands-free market voice could not be enabled:', error);
+          marketVoiceEnabled = false;
+          enableMarketVoiceBtn.disabled = false;
+          marketOpportunityStatus.textContent = `Hands-free voice could not be enabled: ${error.message}. You can still choose with the buttons or amount field.`;
+        }
+      });
+
+      async function executeMarketOpportunityTrade() {
+        if (!bestMarket) return;
+        const amount = Number(marketTradeAmount.value);
+        if (!Number.isFinite(amount) || amount < minimumTradeUsd) {
+          marketOpportunityStatus.textContent = 'Enter a paper trade amount of at least USD $20.00.';
+          marketTradeAmount.focus();
+          return;
+        }
+        if (!window.makingsBackgroundTradingEnabled) {
+          marketOpportunityStatus.textContent = 'Sign in and ensure the background paper-trading service is available before starting a paper trade.';
+          return;
+        }
+        const configuredMaximum = Number(document.getElementById('maxTradeAmount').value);
+        if (configuredMaximum > 0 && amount > configuredMaximum) {
+          marketOpportunityStatus.textContent = `This amount exceeds the maximum paper trade amount of ${formatMoney(configuredMaximum)}.`;
+          return;
+        }
+
+        startMarketTradeBtn.disabled = true;
+        marketOpportunityStatus.textContent = 'Checking the latest market price…';
+        try {
+          const pair = bestMarket.pair;
+          const quote = await fetchBotMarketData(`/api/v3/ticker/price?symbol=${encodeURIComponent(pair)}`);
+          const currentPrice = Number(quote.price);
+          if (!Number.isFinite(currentPrice) || currentPrice <= 0) throw new Error('A valid current market price was not returned');
+          if (!botSpotMarketsBySymbol?.has(pair)) throw new Error('This market is no longer available for spot trading');
+
+          botState.balance = getTradePaperBalance();
+          if (amount > botState.balance) throw new Error('Not enough paper balance for this trade');
+          const quantity = amount / currentPrice;
+          if (!Number.isFinite(quantity) || quantity <= 0) throw new Error('The trade quantity could not be calculated');
+
+          coinPrices[bestMarket.symbol] = currentPrice;
+          coinSelect.value = bestMarket.symbol;
+          coinSelect.dispatchEvent(new Event('change'));
+          botState.balance -= amount;
+          openPositionRecord(bestMarket.symbol, quantity, currentPrice, 'Market scan');
+          persistBotMemory();
+          updatePerformancePanel();
+          notifyTrade(`Market scan paper buy: ${quantity.toPrecision(8)} ${bestMarket.symbol} at ${formatMoney(currentPrice)} for ${formatMoney(amount)}.`);
+          marketScanStatus.textContent = `Paper trade started for ${bestMarket.symbol}/USDT.`;
+          marketOpportunity.hidden = true;
+          marketOpportunityPending = false;
+          bestMarket = null;
+        } catch (error) {
+          marketOpportunityStatus.textContent = `Paper trade could not be started: ${error.message}.`;
+        } finally {
+          startMarketTradeBtn.disabled = false;
         }
       }
 
@@ -838,6 +1205,21 @@
         try {
           localStorage.setItem(tradePaperBalanceKey, String(botState.balance));
           localStorage.setItem(botMemoryKey, JSON.stringify(botMemory));
+          localStorage.setItem('makingsBotBackgroundState', JSON.stringify({
+            running: botState.running,
+            symbol: coinSelect.value,
+            balance: botState.balance,
+            pnl: botState.pnl,
+            position: botState.position,
+            history: botState.history.slice(-20),
+            strategy: strategy.value,
+            goalProfit: botMemory.goalProfit,
+            stopLoss: Number(stopLossInput.value) || 5,
+            takeProfit: Number(takeProfitInput.value) || 10,
+            riskLevel: riskLevel.value,
+            maxTradeAmount: Number(document.getElementById('maxTradeAmount').value) || 0,
+            updatedAt: Date.now()
+          }));
         } catch (error) {
           botLearningStatus.textContent = 'Memory could not be saved. Browser storage may be full.';
         }
@@ -947,7 +1329,7 @@
               addedCount += 1;
             }
           });
-          if (!botSavedCoinApplied && !botCoinSelectionTouched
+          if (botSettings.coin && !botSavedCoinApplied && !botCoinSelectionTouched
             && coinSelect.querySelector(`option[value="${botSettings.coin}"]`)) {
             coinSelect.value = botSettings.coin;
             botSavedCoinApplied = true;
@@ -1091,6 +1473,7 @@
       }
 
       const strategyNames = ['Momentum', 'Scalp', 'Mean reversion (single market)', 'Dollar-cost averaging'];
+      const maxTrainingCandles = 1000;
 
       function persistMarketSamples(symbol, samples) {
         if (!symbol || !samples.length) return;
@@ -1112,6 +1495,52 @@
         if (!changed) return;
         botMemory.priceHistory[symbol] = history.slice(-720);
         trainStrategies(symbol);
+      }
+
+      function getStrategyTrainingPrices(symbol) {
+        const sharedCandles = botState.sharedTrainingCandles[symbol] || [];
+        const samples = sharedCandles.length
+          ? sharedCandles.map((candle) => Number(candle.close))
+          : (botMemory.priceHistory[symbol] || []).map((sample) => Number(sample.price));
+        return samples.filter((price) => Number.isFinite(price) && price > 0).slice(-maxTrainingCandles);
+      }
+
+      async function saveBotMarketCandles(symbol, pair, interval, candles, source) {
+        try {
+          await window.BxcMarketHistory.saveCandles({
+            market: pair,
+            mode: 'spot',
+            interval,
+            source,
+            candles
+          });
+          if (interval === botState.chartInterval) {
+            let history = botState.sharedTrainingCandles[symbol] || [];
+            if (candles.length > 1) {
+              history = await window.BxcMarketHistory.getCandles({
+                market: pair,
+                mode: 'spot',
+                interval,
+                limit: maxTrainingCandles
+              });
+            } else {
+              const candle = candles[0];
+              const existingIndex = history.findIndex((item) => item.time === candle.time);
+              if (existingIndex >= 0) history[existingIndex] = candle;
+              else history.push(candle);
+              history = history.sort((first, second) => first.time - second.time).slice(-maxTrainingCandles);
+            }
+            botState.sharedTrainingCandles[symbol] = history;
+            botState.sharedTrainingInterval[symbol] = interval;
+            trainStrategies(symbol);
+          }
+          return true;
+        } catch (error) {
+          console.error(`Trading Bot ${symbol} market history could not be saved or loaded:`, error);
+          botChartStatus.textContent = `Market history could not be saved or loaded: ${error.message}`;
+          botLearningStatus.textContent = `Shared market history unavailable: ${error.message}`;
+          return false;
+        }
       }
 
       function getStrategySignal(strategyName, prices) {
@@ -1161,21 +1590,17 @@
       const historicalSignalAccuracyCache = new Map();
 
       function getHistoricalSignalAccuracy(symbol, strategyName, signal) {
-        const samples = botMemory.priceHistory[symbol] || [];
-        const latestSample = samples[samples.length - 1];
+        const prices = getStrategyTrainingPrices(symbol);
+        const latestPrice = prices[prices.length - 1];
         const cacheKey = [
           symbol,
           strategyName,
           signal,
-          samples.length,
-          Number(latestSample?.time) || 0,
-          Number(latestSample?.price) || 0
+          prices.length,
+          Number(latestPrice) || 0,
+          botState.sharedTrainingInterval[symbol] || 'local'
         ].join(':');
         if (historicalSignalAccuracyCache.has(cacheKey)) return historicalSignalAccuracyCache.get(cacheKey);
-        const prices = samples
-          .map((sample) => Number(sample.price))
-          .filter((price) => Number.isFinite(price) && price > 0)
-          .slice(-720);
         let wins = 0;
         let signals = 0;
         for (let index = 12; index < prices.length - 1; index += 1) {
@@ -1193,8 +1618,7 @@
       }
 
       function trainStrategies(symbol) {
-        const samples = botMemory.priceHistory[symbol] || [];
-        const prices = samples.map((sample) => sample.price);
+        const prices = getStrategyTrainingPrices(symbol);
         const model = {};
         strategyNames.forEach((name) => {
           const backtest = backtestStrategy(name, prices);
@@ -1318,7 +1742,7 @@
 
       function renderFavoriteCards() {
         if (!favoriteState.favorites.length) {
-          favoriteCards.innerHTML = '<p class="favorite-empty">No favorite coins yet. Add one to begin automatic analysis.</p>';
+          favoriteCards.innerHTML = '<p class="favorite-empty">No favorite coins yet. Add one to build your market watchlist.</p>';
           favoritePrevBtn.disabled = true;
           favoriteNextBtn.disabled = true;
           return;
@@ -1391,6 +1815,24 @@
         coinSelect.value = symbol;
         coinSelect.dispatchEvent(new Event('change'));
         renderFavoriteCards();
+      }
+
+      function moveFavoriteSlide(direction) {
+        const favorites = favoriteState.favorites;
+        if (!favorites.length) return;
+        const currentIndex = favorites.indexOf(coinSelect.value);
+        const nextIndex = currentIndex < 0
+          ? direction > 0 ? 0 : favorites.length - 1
+          : (currentIndex + direction + favorites.length) % favorites.length;
+        const symbol = favorites[nextIndex];
+        selectFavorite(symbol);
+        const activeCard = [...favoriteCards.querySelectorAll('.favorite-card')]
+          .find((card) => card.dataset.symbol === symbol);
+        activeCard?.scrollIntoView({
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
       }
 
       async function refreshFavoriteMarketData() {
@@ -1504,8 +1946,12 @@
 
       function updateLearningStatus() {
         const samples = botMemory.priceHistory[coinSelect.value] || [];
+        const sharedSamples = botState.sharedTrainingCandles[coinSelect.value] || [];
         const closedTrades = botMemory.closedTrades.length;
-        botLearningStatus.textContent = `${samples.length} saved candles · ${closedTrades} closed paper trades · ${botMemory.lastTrainingAt ? `last trained ${new Date(botMemory.lastTrainingAt).toLocaleTimeString()}` : 'waiting to train'}. Historical results do not predict future returns.`;
+        const historySummary = sharedSamples.length
+          ? `${sharedSamples.length} shared ${botState.sharedTrainingInterval[coinSelect.value] || ''} candles · ${samples.length} local price samples`
+          : `${samples.length} local price samples · shared candle history not loaded`;
+        botLearningStatus.textContent = `${historySummary} · ${closedTrades} closed paper trades · ${botMemory.lastTrainingAt ? `last trained ${new Date(botMemory.lastTrainingAt).toLocaleTimeString()}` : 'waiting to train'}. Historical results do not predict future returns.`;
       }
 
       function addFeedItem(message) {
@@ -1520,17 +1966,34 @@
       function notifyTrade(message, type = 'success', realizedPnl = null) {
         addFeedItem(message);
         showToast(message, type);
-        if (Number.isFinite(realizedPnl) && realizedPnl !== 0) {
-          if (typeof window.bxcAddNotification !== 'function') {
-            console.error('The trade outcome notification could not be saved because the notification inbox is unavailable.');
-          } else {
-            window.bxcAddNotification({
-              source: 'Trading Bot',
-              title: realizedPnl > 0 ? 'Paper trade gain' : 'Paper trade loss',
-              message,
-              type: realizedPnl > 0 ? 'gain' : 'loss'
-            });
-          }
+        if (typeof window.bxcAddNotification !== 'function') {
+          console.error('The Trading Bot analysis notification could not be saved because the notification inbox is unavailable.');
+        } else {
+          const hasRealizedResult = Number.isFinite(realizedPnl) && realizedPnl !== 0;
+          const isMarketScan = message.startsWith('Market scan:');
+          const isMarketScanPaperBuy = message.startsWith('Market scan paper buy:');
+          const isAiBuy = message.startsWith('AI BUY:');
+          const isAiSell = message.includes('AI SELL:');
+          const notificationType = hasRealizedResult
+            ? realizedPnl > 0 ? 'gain' : 'loss'
+            : 'info';
+          const title = hasRealizedResult
+            ? realizedPnl > 0 ? 'Paper trade gain' : 'Paper trade loss'
+            : isMarketScan
+              ? 'Market scan analysis'
+              : isMarketScanPaperBuy
+                ? 'Market scan paper trade'
+                : isAiBuy
+                  ? 'AI buy analysis'
+                  : isAiSell
+                    ? 'AI sell analysis'
+                    : 'Trading Bot analysis';
+          window.bxcAddNotification({
+            source: 'Trading Bot',
+            title,
+            message,
+            type: notificationType
+          });
         }
         if ('Notification' in window && Notification.permission === 'granted') {
           new Notification('BillionairesXchange AI trading bot', { body: message });
@@ -1601,6 +2064,13 @@
         botChartTools.interval = botState.chartInterval;
         botChartTools.market = coinSelect.value;
         localStorage.setItem('makingsBotChartTools', JSON.stringify(botChartTools));
+      }
+
+      function getBotChartAvailableWidth() {
+        const parent = botChartWrap.parentElement;
+        const styles = getComputedStyle(parent);
+        const horizontalPadding = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+        return Math.max(0, parent.clientWidth - horizontalPadding);
       }
 
       function updateBotChartZoom(direction, step = 6) {
@@ -1794,9 +2264,6 @@
         const socketBase = botMarketSocketBases[hostIndex % botMarketSocketBases.length];
         const socket = new WebSocket(`${socketBase}/ws/${pair.toLowerCase()}@kline_${interval}`);
         botState.chartSocket = socket;
-        socket.addEventListener('open', () => {
-          if (botState.chartSocket === socket) botChartStatus.textContent = `Live ${symbol} ${interval} chart connected.`;
-        });
         socket.addEventListener('message', (event) => {
           if (botState.chartSocket !== socket || requestVersion !== botState.chartRequestVersion) return;
           let kline;
@@ -1811,12 +2278,14 @@
             open: Number(kline.o),
             high: Number(kline.h),
             low: Number(kline.l),
-            close: Number(kline.c)
+            close: Number(kline.c),
+            volume: Number(kline.v) || 0
           };
           const lastCandle = botState.chartCandles[botState.chartCandles.length - 1];
           if (lastCandle?.time === candle.time) botState.chartCandles[botState.chartCandles.length - 1] = candle;
           else botState.chartCandles.push(candle);
           botState.chartCandles = botState.chartCandles.slice(-120);
+          if (kline.x) saveBotMarketCandles(symbol, pair, interval, [candle], 'trading-bot-chart');
           renderBotChart();
         });
         socket.addEventListener('error', () => socket.close());
@@ -1877,19 +2346,57 @@
         botChartStatus.textContent = `Loading ${symbol} ${botState.chartInterval} candles...`;
         const interval = botState.chartInterval;
         try {
+          const savedHistory = await window.BxcMarketHistory.getCandles({
+            market: pair,
+            mode: 'spot',
+            interval,
+            limit: maxTrainingCandles
+          });
+          if (requestVersion !== botState.chartRequestVersion) return;
+          if (savedHistory.length) {
+            botState.sharedTrainingCandles[symbol] = savedHistory;
+            botState.sharedTrainingInterval[symbol] = interval;
+            botState.chartCandles = savedHistory.slice(-120);
+            trainStrategies(symbol);
+            botChartStatus.textContent = `Showing ${symbol} ${interval} · ${savedHistory.length} shared candles loaded`;
+            renderBotChart();
+          }
+        } catch (historyError) {
+          console.error(`Trading Bot ${symbol} saved candle history could not be loaded:`, historyError);
+          botChartStatus.textContent = `Saved market history could not be loaded: ${historyError.message}. Trying the live data feed...`;
+        }
+        try {
           const candles = await fetchBotMarketData(`/api/v3/klines?symbol=${pair}&interval=${interval}&limit=120`);
           if (requestVersion !== botState.chartRequestVersion) return;
-          botState.chartCandles = candles.map((candle) => ({
+          const loadedCandles = candles.map((candle) => ({
             time: Number(candle[0]),
             open: Number(candle[1]),
             high: Number(candle[2]),
             low: Number(candle[3]),
             close: Number(candle[4])
           }));
+          botState.chartCandles = loadedCandles;
+          const historySaved = await saveBotMarketCandles(symbol, pair, interval, loadedCandles, 'trading-bot-chart');
+          if (requestVersion !== botState.chartRequestVersion) return;
+          if (!historySaved) {
+            botState.chartCandles = loadedCandles.slice(-120);
+            renderBotChart();
+            return;
+          }
+          const history = botState.sharedTrainingCandles[symbol] || loadedCandles;
+          botState.sharedTrainingCandles[symbol] = history;
+          botState.sharedTrainingInterval[symbol] = interval;
+          trainStrategies(symbol);
+          botState.chartCandles = history.slice(-120);
+          botChartStatus.textContent = `Showing ${symbol} ${interval} chart · ${history.length} shared candles used for bounded strategy backtests`;
           renderBotChart();
         } catch (error) {
           if (requestVersion !== botState.chartRequestVersion) return;
-          botChartStatus.textContent = `Candle history unavailable; building the ${interval} chart from live candles...`;
+          console.error(`Trading Bot ${symbol} candle history could not be loaded:`, error);
+          botChartStatus.textContent = botState.chartCandles.length
+            ? `Showing saved ${symbol} ${interval} candles; live refresh failed: ${error.message}`
+            : `Candle history unavailable: ${error.message}. Building from live candles...`;
+          renderBotChart();
         }
         if (requestVersion === botState.chartRequestVersion) connectBotChartStream(symbol, pair, interval, requestVersion);
       }
@@ -1911,6 +2418,14 @@
           if (!Number.isFinite(price) || price <= 0) return;
           coinPrices[symbol] = price;
           if (candle.x) {
+            saveBotMarketCandles(symbol, pair, '1m', [{
+              time: Number(candle.t),
+              open: Number(candle.o),
+              high: Number(candle.h),
+              low: Number(candle.l),
+              close: price,
+              volume: Number(candle.v) || 0
+            }], 'trading-bot-live-feed');
             botState.history.push(price);
             if (botState.history.length > 30) botState.history.shift();
             persistMarketSamples(symbol, [{ time: Number(candle.T) || Date.now(), price }]);
@@ -2145,11 +2660,16 @@
         }
 
         decideTrade(symbol, nextPrice);
+        persistBotMemory();
         renderBotChart();
         updatePerformancePanel();
       }
 
       function executeManualTrade(direction) {
+        if (!window.makingsBackgroundTradingEnabled) {
+          showToast('Sign in and connect the background paper-trading service before placing paper trades.', 'warning');
+          return;
+        }
         if (!coinSelect.value) {
           showToast('Select a coin before placing a trade.', 'warning');
           return;
@@ -2196,13 +2716,14 @@
 
         if (direction === 'sell') {
           const marketValue = currentPrice * quantity;
-          const openRecord = [...botState.positionRecords].reverse().find((record) => record.symbol === symbol && record.source === 'Manual AI buy' && record.status === 'OPEN');
+          const openRecord = [...botState.positionRecords].reverse().find((record) => record.symbol === symbol
+            && ['Manual AI buy', 'Market scan'].includes(record.source) && record.status === 'OPEN');
           if (!openRecord || Math.abs(openRecord.quantity - quantity) > 0.00000001) {
-            showToast('Sell the full quantity of an open manual paper position.', 'warning');
+            showToast('Sell the full quantity of an open manual or market-scan paper position.', 'warning');
             return;
           }
           botState.balance += marketValue;
-          const closedRecord = closePositionRecord(symbol, currentPrice, quantity, 'Manual AI buy');
+          const closedRecord = closePositionRecord(symbol, currentPrice, quantity, openRecord.source);
           const result = (currentPrice - closedRecord.openPrice) * quantity;
           botState.pnl += result;
           const realizedProfit = Number(localStorage.getItem(realizedProfitKey)) || 0;
@@ -2236,6 +2757,7 @@
       coinSelect.addEventListener('change', () => { updateLeaderboard(); updateLearningStatus(); });
       const positionBotConfigurationSummary = () => {
         if (!botConfigurationSummaryDialog.open) return;
+        if (document.fullscreenElement && botChartSection.contains(document.fullscreenElement)) return;
         const triggerBounds = botConfigurationSummaryButton.getBoundingClientRect();
         const dialogBounds = botConfigurationSummaryDialog.getBoundingClientRect();
         const margin = 12;
@@ -2256,13 +2778,25 @@
           return;
         }
         updateSummary();
-        botConfigurationSummaryDialog.show();
+        botConfigurationSummaryDialog.showModal();
         positionBotConfigurationSummary();
         botConfigurationSummaryButton.setAttribute('aria-expanded', 'true');
+        if (document.fullscreenElement === botChartSection) {
+          botConfigurationSummaryDialog.requestFullscreen().catch((error) => {
+            console.error('Bot configuration summary could not open full screen:', error);
+            botChartStatus.textContent = `The configuration summary could not open full screen: ${error.message}`;
+          });
+        }
       });
       closeBotConfigurationSummaryButton.addEventListener('click', () => botConfigurationSummaryDialog.close());
       botConfigurationSummaryDialog.addEventListener('close', () => {
         botConfigurationSummaryButton.setAttribute('aria-expanded', 'false');
+        if (document.fullscreenElement === botConfigurationSummaryDialog) {
+          document.exitFullscreen().catch((error) => {
+            console.error('Full-screen configuration summary could not be closed:', error);
+            botChartStatus.textContent = `Full screen could not be closed: ${error.message}`;
+          });
+        }
       });
       window.addEventListener('resize', positionBotConfigurationSummary);
       botChartMarketSelect.addEventListener('change', () => {
@@ -2300,6 +2834,80 @@
         if (event.key !== 'Escape') return;
         botChartTimeOptions.hidden = true;
         botChartTimeButton.setAttribute('aria-expanded', 'false');
+      });
+      botChartFullscreen.addEventListener('click', async () => {
+        try {
+          if (document.fullscreenElement === botChartSection) {
+            await document.exitFullscreen();
+            return;
+          }
+          walletPinVerified = false;
+          botWalletPinInput.value = '';
+          botWalletPinForm.hidden = false;
+          botWalletPinContinue.hidden = true;
+          botWalletPinStatus.textContent = 'Checking wallet credentials…';
+          botWalletPinDialog.showModal();
+          walletSecurityModule = walletSecurityModule || await import('./wallet-security.js');
+          const credentialInfo = walletSecurityModule.getWalletCredentialInfo();
+          const isPin = credentialInfo.type === 'pin';
+          botWalletPinLabel.textContent = isPin ? 'Five-digit wallet PIN' : 'Wallet password';
+          botWalletPinDescription.textContent = isPin
+            ? 'Enter the five-digit PIN that encrypts your wallet to open the Trading Bot full screen.'
+            : 'This browser has a password-protected wallet. Enter its wallet password to open the Trading Bot full screen.';
+          botWalletPinInput.inputMode = isPin ? 'numeric' : 'text';
+          botWalletPinInput.maxLength = isPin ? 8 : 128;
+          botWalletPinInput.pattern = isPin ? '[0-9]{4,8}' : '';
+          document.getElementById('verifyBotWalletPin').textContent = isPin ? 'Verify PIN' : 'Verify password';
+          botWalletPinStatus.textContent = isPin ? '' : 'Existing password-protected wallets remain supported.';
+          botWalletPinInput.focus();
+        } catch (error) {
+          console.error('Market chart full screen could not be changed:', error);
+          botWalletPinStatus.textContent = error.message.includes('No wallet has been created')
+            ? 'Create a wallet and its five-digit PIN before opening the Trading Bot full screen.'
+            : `Wallet credentials could not be checked: ${error.message}`;
+        }
+      });
+      botWalletPinForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          walletSecurityModule = walletSecurityModule || await import('./wallet-security.js');
+          const valid = await walletSecurityModule.verifyWalletCredential(botWalletPinInput.value);
+          if (!valid) {
+            botWalletPinStatus.textContent = 'That wallet credential is incorrect. Try again.';
+            botWalletPinInput.select();
+            return;
+          }
+          walletPinVerified = true;
+          botWalletPinForm.hidden = true;
+          botWalletPinContinue.hidden = false;
+          botWalletPinStatus.textContent = 'Wallet credential verified. Continue to open the chart full screen.';
+          botWalletPinContinue.focus();
+        } catch (error) {
+          console.error('Trading Bot wallet credential verification failed:', error);
+          botWalletPinStatus.textContent = `Wallet credential verification failed: ${error.message}`;
+        }
+      });
+      document.getElementById('closeBotWalletPinDialog').addEventListener('click', () => botWalletPinDialog.close());
+      botWalletPinDialog.addEventListener('close', () => {
+        walletPinVerified = false;
+        botWalletPinInput.value = '';
+      });
+      botWalletPinContinue.addEventListener('click', () => {
+        if (!walletPinVerified) return;
+        botChartSection.requestFullscreen().then(() => {
+          botWalletPinDialog.close();
+        }).catch((error) => {
+          console.error('Verified market chart full screen could not be opened:', error);
+          botWalletPinDialog.close();
+          botChartStatus.textContent = `Full screen could not be opened: ${error.message}`;
+        });
+      });
+      document.addEventListener('fullscreenchange', () => {
+        const isFullscreen = Boolean(document.fullscreenElement && botChartSection.contains(document.fullscreenElement));
+        botChartFullscreen.textContent = isFullscreen ? 'Exit full screen' : 'Full screen';
+        botChartFullscreen.setAttribute('aria-label', isFullscreen ? 'Exit market chart full screen' : 'Open market chart full screen');
+        botChartFullscreen.setAttribute('aria-pressed', String(isFullscreen));
+        requestAnimationFrame(renderBotChart);
       });
       riskSettingsToggle.addEventListener('click', () => {
         const isOpen = riskSettingsPanel.hidden;
@@ -2339,18 +2947,26 @@
         riskSettingsStatus.textContent = 'Risk settings saved for this account.';
         updateSummary();
         showToast('Account risk settings saved.', 'success');
+        botSettingsDialog.close();
       });
       botSettingsToggle.addEventListener('click', () => {
-        const isOpen = botSettingsPanel.hidden;
-        botSettingsPanel.hidden = !isOpen;
-        botSettingsToggle.setAttribute('aria-expanded', String(isOpen));
-        botSettingsToggle.textContent = isOpen ? 'Hide Bot Configuration' : 'Bot Configuration';
+        botSettingsDialog.showModal();
+        botSettingsToggle.setAttribute('aria-expanded', 'true');
+      });
+      closeBotSettingsDialog.addEventListener('click', () => botSettingsDialog.close());
+      botSettingsDialog.addEventListener('close', () => {
+        botSettingsToggle.setAttribute('aria-expanded', 'false');
       });
       durationSelect.addEventListener('change', updateSummary);
       stopLossInput.addEventListener('input', updateSummary);
       takeProfitInput.addEventListener('input', updateSummary);
       riskLevel.addEventListener('change', updateSummary);
       strategy.addEventListener('change', updateSummary);
+      editBotGoalBtn.addEventListener('click', () => {
+        botGoalSummary.hidden = true;
+        botGoalEditor.hidden = false;
+        botGoalProfit.focus();
+      });
       document.getElementById('saveBotGoalBtn').addEventListener('click', () => {
         const goal = Number(botGoalProfit.value);
         if (!Number.isFinite(goal) || goal <= 0) {
@@ -2366,6 +2982,9 @@
         }
         botMemory.goalProfit = goal;
         persistBotMemory();
+        botGoalSavedValue.textContent = formatMoney(goal);
+        botGoalSummary.hidden = false;
+        botGoalEditor.hidden = true;
         renderGoalProgress();
         pauseBotAtGoal();
         showToast('Paper-trading profit goal saved.', 'success');
@@ -2382,7 +3001,6 @@
         }
         if (favoriteState.favorites.includes(symbol)) {
           showToast(`${symbol} is already in your favorites.`, 'warning');
-          selectFavorite(symbol);
           return;
         }
         favoriteState.favorites.push(symbol);
@@ -2392,32 +3010,42 @@
         }
         favoriteCoinSelect.value = '';
         renderFavoriteCards();
-        selectFavorite(symbol);
+        favoriteAnalysisStatus.textContent = `${symbol} added to your watchlist. Select its card when you want to analyze it.`;
         refreshFavoriteMarketData();
       });
 
       favoritePrevBtn.addEventListener('click', () => {
-        favoriteCards.scrollBy({ left: -210, behavior: 'smooth' });
+        moveFavoriteSlide(-1);
       });
 
       favoriteNextBtn.addEventListener('click', () => {
-        favoriteCards.scrollBy({ left: 210, behavior: 'smooth' });
+        moveFavoriteSlide(1);
       });
 
-      scanMarketsBtn.addEventListener('click', scanMarkets);
-      analyzeBestMarketBtn.addEventListener('click', () => {
-        if (!bestMarket) return;
-        coinSelect.value = bestMarket.symbol;
-        coinSelect.dispatchEvent(new Event('change'));
+      chooseAnotherMarketBtn.addEventListener('click', () => {
+        marketOpportunityTradeForm.hidden = true;
+        marketOpportunityStatus.textContent = '';
+      });
+      marketOpportunityTradeForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        executeMarketOpportunityTrade();
       });
 
       document.getElementById('startBotBtn').addEventListener('click', function() {
+        if (!window.makingsBackgroundTradingEnabled) {
+          showToast('Sign in and ensure the background paper-trading service is available before starting the bot.', 'warning');
+          return;
+        }
         if (botState.pnl >= botMemory.goalProfit) {
           showToast('Profit goal already reached. Raise the goal before restarting.', 'warning');
           return;
         }
         if (!coinSelect.value || !durationSelect.value) {
           showToast('Please choose a coin and trading duration.', 'warning');
+          return;
+        }
+        if (!Object.prototype.hasOwnProperty.call(marketPairs, coinSelect.value)) {
+          showToast('Background paper trading currently supports BTC, ETH, XRP, SOL, ADA, DOT, and DOGE only.', 'warning');
           return;
         }
 
@@ -2427,6 +3055,7 @@
         }
 
         botState.running = true;
+        persistBotMemory();
         if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
         updateStatusLabel();
         this.disabled = true;
@@ -2442,6 +3071,7 @@
         }
 
         botState.running = false;
+        persistBotMemory();
         updateStatusLabel();
         this.disabled = true;
         document.getElementById('startBotBtn').disabled = false;
@@ -2452,6 +3082,31 @@
       manualSellBtn.addEventListener('click', () => executeManualTrade('sell'));
 
       if (botChartResizer && botChartWrap) {
+        const resizeBotChart = (widthChange, heightChange) => {
+          const parentWidth = getBotChartAvailableWidth();
+          const currentWidth = botChartWrap.getBoundingClientRect().width;
+          const currentHeight = botChartWrap.getBoundingClientRect().height;
+          const minWidth = Math.min(320, parentWidth);
+          const nextWidth = Math.min(parentWidth, Math.max(minWidth, currentWidth + widthChange));
+          const nextHeight = Math.min(720, Math.max(260, currentHeight + heightChange));
+          botChartWrap.style.width = `${nextWidth}px`;
+          botChartWrap.style.height = `${nextHeight}px`;
+          botChartWrap.style.minHeight = `${nextHeight}px`;
+          saveBotChartPreferences();
+          renderBotChart();
+        };
+        botChartResizer.addEventListener('keydown', (event) => {
+          const step = event.shiftKey ? 40 : 16;
+          const changes = {
+            ArrowLeft: [-step, 0],
+            ArrowRight: [step, 0],
+            ArrowUp: [0, step],
+            ArrowDown: [0, -step]
+          }[event.key];
+          if (!changes) return;
+          event.preventDefault();
+          resizeBotChart(...changes);
+        });
         botChartResizer.addEventListener('pointerdown', (event) => {
           event.preventDefault();
           botChartResizer.setPointerCapture(event.pointerId);
@@ -2459,9 +3114,10 @@
           const startY = event.clientY;
           const startWidth = botChartWrap.getBoundingClientRect().width;
           const startHeight = botChartWrap.getBoundingClientRect().height;
-          const parentWidth = botChartWrap.parentElement.getBoundingClientRect().width;
           const resizeChart = (moveEvent) => {
-            const nextWidth = Math.min(parentWidth, Math.max(320, startWidth + moveEvent.clientX - startX));
+            const parentWidth = getBotChartAvailableWidth();
+            const minWidth = Math.min(320, parentWidth);
+            const nextWidth = Math.min(parentWidth, Math.max(minWidth, startWidth + moveEvent.clientX - startX));
             const nextHeight = Math.min(720, Math.max(260, startHeight + moveEvent.clientY - startY));
             botChartWrap.style.width = `${nextWidth}px`;
             botChartWrap.style.height = `${nextHeight}px`;
@@ -2504,8 +3160,6 @@
       if (coinSelect.value) {
         if (favoriteState.favorites.includes(coinSelect.value)) applyAutomaticSettings(coinSelect.value);
         coinSelect.dispatchEvent(new Event('change'));
-      } else if (favoriteState.favorites.length) {
-        selectFavorite(favoriteState.favorites[0]);
       }
       refreshFavoriteMarketData();
       setInterval(refreshFavoriteMarketData, 60000);
@@ -2515,8 +3169,18 @@
       updatePerformancePanel();
       updateLearningStatus();
       renderPositionRecords();
-      window.addEventListener('resize', renderBotChart);
+      window.addEventListener('resize', () => {
+        if (document.fullscreenElement !== botChartSection && botChartTools.width) {
+          const availableWidth = getBotChartAvailableWidth();
+          botChartWrap.style.width = `${Math.min(botChartTools.width, availableWidth)}px`;
+        }
+        renderBotChart();
+      });
       renderBotChart();
+      if (botState.running && window.makingsBackgroundTradingEnabled) {
+        botState.intervalId = window.setInterval(tickBot, 3000);
+      }
+      })();
     </script>
     <script type="module" src="auth.js"></script>
     <script src="site-header.js"></script>

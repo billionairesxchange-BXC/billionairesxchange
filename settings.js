@@ -41,13 +41,12 @@
     if (event.target === profileDialog) profileDialog.close();
   });
   document.getElementById('settingsProfilePhoto')?.addEventListener('click', () => {
-    const photoAction = [...document.querySelectorAll('.profile-menu-dropdown button[role="menuitem"]')]
-      .find((button) => /photo/i.test(button.textContent));
-    if (!photoAction) {
+    const photoInput = document.querySelector('.profile-menu-dropdown input[type="file"]');
+    if (!photoInput) {
       profileStatus.textContent = 'Sign in to change your profile photo.';
       return;
     }
-    photoAction.click();
+    photoInput.click();
   });
   document.getElementById('settingsProfileLogout')?.addEventListener('click', () => {
     const logoutAction = [...document.querySelectorAll('.profile-menu-dropdown button[role="menuitem"]')]

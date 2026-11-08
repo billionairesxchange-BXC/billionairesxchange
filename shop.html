@@ -53,11 +53,26 @@
         </div>
 
         <div class="shop-category-grid" role="group" aria-label="Shop categories">
-          <a class="btn btn-secondary shop-category-button" href="gadgets.html" aria-label="Browse gadgets for sale">ðŸ“± Gadgets</a>
-          <a class="btn btn-secondary shop-category-button" href="gaming.html" aria-label="Browse gaming items for sale">ðŸŽ® Gaming</a>
-          <a class="btn btn-secondary shop-category-button" href="bitcoin-miners.html" aria-label="Browse Bitcoin miners for sale">â›ï¸ Bitcoin Miners</a>
-          <button class="btn btn-secondary shop-category-button" type="button" data-shop-category="grocery" aria-pressed="false">ðŸ›’ Grocery</button>
-          <button class="btn btn-primary shop-category-button" type="button" data-shop-category="gift-cards" aria-pressed="false">ðŸŽ Gift Cards</button>
+          <a class="btn btn-secondary shop-category-button" href="gadgets.html" aria-label="Browse gadgets for sale">
+            <svg class="shop-category-logo" viewBox="0 0 48 48" aria-hidden="true"><rect x="14" y="5" width="20" height="38" rx="4" /><path d="M20 10h8M21 37h6" /><circle cx="24" cy="24" r="7" /></svg>
+            <span>Gadgets</span>
+          </a>
+          <a class="btn btn-secondary shop-category-button" href="gaming.html" aria-label="Browse gaming items for sale">
+            <svg class="shop-category-logo" viewBox="0 0 48 48" aria-hidden="true"><path d="M14 15h20c5 0 8 4 9 10l2 9c1 5-4 8-8 5l-7-5H18l-7 5c-4 3-9 0-8-5l2-9c1-6 4-10 9-10Z" /><path d="M14 22v10M9 27h10M33 24h.1M38 30h.1" /></svg>
+            <span>Gaming</span>
+          </a>
+          <a class="btn btn-secondary shop-category-button" href="bitcoin-miners.html" aria-label="Browse Bitcoin miners for sale">
+            <svg class="shop-category-logo" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="9" width="34" height="30" rx="4" /><path d="M13 16h22M13 23h22M13 30h22M17 35h.1M24 35h.1M31 35h.1" /><circle cx="36" cy="14" r="2" /></svg>
+            <span>Bitcoin Miners</span>
+          </a>
+          <button class="btn btn-secondary shop-category-button" type="button" data-shop-category="grocery" aria-pressed="false">
+            <svg class="shop-category-logo" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 9h5l5 23h22l6-16H13" /><path d="M18 22h20M20 27h16" /><circle cx="19" cy="38" r="3" /><circle cx="35" cy="38" r="3" /></svg>
+            <span>Grocery</span>
+          </button>
+          <button class="btn btn-primary shop-category-button" type="button" data-shop-category="gift-cards" aria-pressed="false">
+            <svg class="shop-category-logo" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="20" width="34" height="23" rx="3" /><path d="M5 14h38v8H5zM24 14v29M24 14H15c-7 0-7-9-1-9 5 0 10 9 10 9Zm0 0h9c7 0 7-9 1-9-5 0-10 9-10 9Z" /></svg>
+            <span>Gift Cards</span>
+          </button>
         </div>
 
         <section class="shop-category-details card-glass" id="shopCategoryDetails" aria-live="polite" aria-labelledby="shopCategoryTitle">

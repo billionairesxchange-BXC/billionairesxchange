@@ -7,6 +7,23 @@ import {
   sortStockCountries
 } from './stock-market-api.js';
 
+async function loadClassicScript(source) {
+  await new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = source;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Unable to load ${source}.`));
+    document.head.appendChild(script);
+  });
+}
+
+if (!window.makingsPaperAccountReady) {
+  await loadClassicScript('api-config.js');
+  await loadClassicScript('paper-account.js');
+  await import('./auth.js');
+}
+await window.makingsPaperAccountReady;
+
 const pageType = document.body.dataset.investmentType;
 const pageTitle = document.querySelector('[data-page-title]');
 const catalogTitle = document.querySelector('[data-catalog-title]');
@@ -146,19 +163,25 @@ function normalizeCompanyCountry(country) {
 const marketList = (rows) => rows.map(([name, symbol, detail]) => ({ name, symbol, detail }));
 const demoMarkets = {
   Futures: marketList([
-    ['E-mini S&P 500', 'CME_MINI:ES1!', 'Equity index future'],
-    ['E-mini Nasdaq-100', 'CME_MINI:NQ1!', 'Equity index future'],
-    ['E-mini Dow Jones', 'CBOT_MINI:YM1!', 'Equity index future'],
+    ['USOIL', 'TVC:USOIL', 'Energy market reference'],
     ['Gold', 'COMEX:GC1!', 'Commodity future'],
-    ['Crude Oil', 'NYMEX:CL1!', 'Energy future'],
-    ['Bitcoin Futures', 'CME:BTC1!', 'Digital asset future'],
-    ['10-Year Treasury Note', 'CBOT:ZN1!', 'Interest-rate future']
+    ['Silver', 'COMEX:SI1!', 'Commodity future']
+  ]),
+  Stocks: marketList([
+    ['Apple', 'NASDAQ:AAPL', 'US-listed company stock'],
+    ['Tesla', 'NASDAQ:TSLA', 'US-listed company stock'],
+    ['Netflix', 'NASDAQ:NFLX', 'US-listed company stock']
+  ]),
+  Forex: marketList([
+    ['EURUSD', 'FX:EURUSD', 'Euro / US dollar currency pair'],
+    ['GBPUSD', 'FX:GBPUSD', 'British pound / US dollar currency pair'],
+    ['USDJPY', 'FX:USDJPY', 'US dollar / Japanese yen currency pair']
   ]),
   Indices: marketList([
-    ['S&P 500', 'SP:SPX', 'US large-cap index'], ['Nasdaq 100', 'NASDAQ:NDX', 'US technology-heavy index'],
-    ['Dow Jones Industrial Average', 'DJ:DJI', 'US blue-chip index'], ['Russell 2000', 'TVC:RUT', 'US small-cap index'],
-    ['VIX', 'CBOE:VIX', 'Volatility index'], ['DAX', 'XETR:DAX', 'German equity index'],
-    ['Nikkei 225', 'TSE:NI225', 'Japanese equity index']
+    ['NDQ', 'NASDAQ:NDX', 'US technology-heavy index'],
+    ['DJI', 'DJ:DJI', 'US blue-chip index'],
+    ['VIX', 'CBOE:VIX', 'Volatility index'],
+    ['DXY', 'TVC:DXY', 'US dollar currency index']
   ]),
   Options: marketList([
     ['SPY (underlying)', 'AMEX:SPY', 'Underlying asset only; no option contract data'],
@@ -200,7 +223,12 @@ const demoMarkets = {
     ['Russell 2000 ETF (IWM)', 'AMEX:IWM', 'Exchange-traded fund example'],
     ['Gold ETF (GLD)', 'AMEX:GLD', 'Exchange-traded fund example'],
     ['20+ year Treasury ETF (TLT)', 'NASDAQ:TLT', 'Exchange-traded fund example'],
-    ['Emerging markets ETF (EEM)', 'AMEX:EEM', 'Exchange-traded fund example']
+    ['Emerging markets ETF (EEM)', 'AMEX:EEM', 'Exchange-traded fund example'],
+    ['E-mini S&P 500', 'CME_MINI:ES1!', 'Index futures reference moved from Futures'],
+    ['E-mini Nasdaq-100', 'CME_MINI:NQ1!', 'Index futures reference moved from Futures'],
+    ['E-mini Dow Jones', 'CBOT_MINI:YM1!', 'Index futures reference moved from Futures'],
+    ['Bitcoin Futures', 'CME:BTC1!', 'Digital asset futures reference moved from Futures'],
+    ['10-Year Treasury Note', 'CBOT:ZN1!', 'Interest-rate futures reference moved from Futures']
   ])
 };
 
@@ -237,7 +265,9 @@ const coinProducts = [
 const defaultCompanies = [
   { name: 'Caribbean Renewables Ltd', symbol: 'CR', country: 'Jamaica', detail: 'Renewable energy business profile' },
   { name: 'Harbor Technology Group', symbol: 'HT', country: 'Jamaica', detail: 'Technology business profile' },
-  { name: 'Island Foods Co.', symbol: 'IF', country: 'Jamaica', detail: 'Food and distribution business profile' }
+  { name: 'Island Foods Co.', symbol: 'IF', country: 'Jamaica', detail: 'Food and distribution business profile' },
+  { name: 'Walmart', symbol: 'WMT', country: 'America', detail: 'Retail company profile' },
+  { name: 'Amazon', symbol: 'AMZN', country: 'America', detail: 'E-commerce and technology company profile' }
 ];
 
 function getCompanies() {
@@ -300,7 +330,8 @@ function getProducts() {
 const titles = {
   Company: 'Company investments', Coins: 'Coin investments', Stocks: 'Stock investments', Bonds: 'Bond investments',
   CDs: 'Certificate of deposit demo', Futures: 'Futures demo', Indices: 'Indices demo', Options: 'Options demo',
-  Economy: 'Economy research', 'Corporate Bonds': 'Corporate bond demo', 'Government Bonds': 'Government bond demo', ETFs: 'ETF demo'
+  Economy: 'Economy research', 'Corporate Bonds': 'Corporate bond demo', 'Government Bonds': 'Government bond demo',
+  ETFs: 'ETF demo', Forex: 'Forex demo'
 };
 
 if (!titles[pageType]) {
@@ -370,7 +401,7 @@ if (!titles[pageType]) {
   }
 }
 
-let products = pageType === 'Stocks' ? [] : getProducts();
+let products = getProducts();
 let selectedProduct = null;
 let chartProduct = null;
 let state = { cash: 10000, entries: [] };
@@ -571,7 +602,7 @@ function renderProducts(filter = '') {
     badge.alt = '';
     badge.setAttribute('aria-hidden', 'true');
     badge.addEventListener('error', () => {
-      badge.src = window.createMarketLogoSrc(product.symbol, pageType);
+      badge.src = window.createMarketLogoFallbackSrc(product.symbol, pageType);
     }, { once: true });
     const name = document.createElement('strong');
     name.textContent = product.name;
@@ -1030,7 +1061,9 @@ allocationForm.addEventListener('submit', (event) => {
     saveState();
     renderPortfolio();
     amountInput.value = '';
-    actionStatus.textContent = `Demo allocation recorded for ${selectedProduct.name}. No order was sent.`;
+    actionStatus.textContent = window.makingsBackgroundTradingEnabled
+      ? `Demo allocation recorded for ${selectedProduct.name} and synced to your account. No order was sent.`
+      : `Demo allocation saved in this browser only for ${selectedProduct.name}. Sign in and connect the background service to sync it across devices. No order was sent.`;
   } catch (error) {
     state.cash += entry.amount;
     state.entries = state.entries.filter((item) => item.id !== entry.id);
@@ -1072,6 +1105,10 @@ renderPortfolio();
 const requestedSymbol = new URLSearchParams(window.location.search).get('market');
 if (pageType === 'Stocks') {
   loadStockCatalog();
+  if (requestedSymbol) {
+    const linkedProduct = products.find((product) => product.symbol === requestedSymbol);
+    if (linkedProduct) selectProduct(linkedProduct);
+  }
 } else if (pageType === 'Coins') {
   const initialProduct = requestedSymbol
     ? products.find((product) => product.symbol === requestedSymbol)

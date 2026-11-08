@@ -58,6 +58,60 @@ document.querySelectorAll('a[href="treasury.html#wallet"]').forEach((link) => {
   link.textContent = 'Wallet';
 });
 
+const walletSplash = document.createElement('div');
+walletSplash.className = 'site-wallet-splash';
+walletSplash.hidden = true;
+walletSplash.setAttribute('role', 'status');
+walletSplash.setAttribute('aria-live', 'polite');
+walletSplash.innerHTML = '<img src="BillionairesXchange-Logo.png" alt=""><p></p>';
+const walletSplashMessage = walletSplash.querySelector('p');
+document.body.appendChild(walletSplash);
+let walletSplashActive = false;
+let skipArrivalSplash = false;
+let arrivalSplashTimer = null;
+try {
+  skipArrivalSplash = sessionStorage.getItem('bxcSkipArrivalSplash') === '1';
+  sessionStorage.removeItem('bxcSkipArrivalSplash');
+} catch (error) {
+  console.warn('The site arrival splash preference could not be read:', error);
+}
+if (!skipArrivalSplash) {
+  walletSplashMessage.textContent = 'Loading BillionairesXchange…';
+  walletSplash.hidden = false;
+  document.body.classList.add('site-wallet-splash-active');
+  arrivalSplashTimer = window.setTimeout(() => {
+    if (walletSplashActive) return;
+    walletSplash.hidden = true;
+    document.body.classList.remove('site-wallet-splash-active');
+  }, 1400);
+}
+document.addEventListener('click', (event) => {
+  if (!(event.target instanceof Element)) return;
+  const link = event.target.closest('a[href]');
+  if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
+    || link.target === '_blank' || walletSplashActive) return;
+  const destination = new URL(link.href, window.location.href);
+  if (!/\/treasury\.html$/i.test(destination.pathname)
+    || !['#wallet', '#create-wallet', '#recover-wallet'].includes(destination.hash)) return;
+
+  event.preventDefault();
+  walletSplashActive = true;
+  window.clearTimeout(arrivalSplashTimer);
+  link.closest('dialog[open]')?.close();
+  document.body.classList.add('site-wallet-splash-active');
+  walletSplashMessage.textContent = 'Opening your wallet…';
+  walletSplash.hidden = false;
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch((error) => console.warn('Wallet navigation could not exit full screen:', error));
+  }
+  try {
+    sessionStorage.setItem('bxcSkipArrivalSplash', '1');
+  } catch (error) {
+    console.warn('The wallet arrival splash preference could not be saved:', error);
+  }
+  window.setTimeout(() => window.location.assign(destination.href), 8000);
+}, true);
+
 function applyTheme(theme) {
   const selectedTheme = themes.includes(theme) ? theme : 'black-yellow';
   document.documentElement.dataset.siteTheme = selectedTheme;
@@ -79,6 +133,7 @@ try {
 applyTheme(savedTheme);
 
 siteHeaders.forEach((header) => {
+  if (document.body.classList.contains('home-page')) return;
   if (header.querySelector('.site-utility-banner')) return;
 
   const settingsLink = header.querySelector('a[href="settings.html"]') || document.createElement('a');
@@ -86,10 +141,15 @@ siteHeaders.forEach((header) => {
   settingsLink.className = 'site-utility-link';
   settingsLink.textContent = 'Settings';
 
+  const aboutLink = document.createElement('a');
+  aboutLink.className = 'site-utility-link';
+  aboutLink.href = 'about-support.html';
+  aboutLink.textContent = 'About';
+
   const banner = document.createElement('nav');
   banner.className = 'site-utility-banner';
   banner.setAttribute('aria-label', 'Quick links');
-  banner.append(settingsLink);
+  banner.append(aboutLink, settingsLink);
 
   const profileButton = document.createElement('button');
   profileButton.className = 'site-profile-icon-button';
@@ -325,12 +385,6 @@ siteHeaders.forEach((header) => {
     </div>
     <nav class="site-profile-wallet-links" aria-label="Wallet actions">
       <h3>Wallet</h3>
-      <a href="treasury.html#create-wallet">Create wallet</a>
-      <a href="treasury.html#recover-wallet">Recover wallet</a>
-      <a href="deposit.html">Deposit</a>
-      <a href="withdraw.html">Withdraw</a>
-      <a href="transfer.html">Transfer</a>
-      <a href="send.html">Send</a>
       <a href="pay-bills.html">Pay Bills</a>
       <a href="request-card.html">Request Card</a>
       <a href="investment.html">Investment</a>
@@ -397,12 +451,12 @@ siteHeaders.forEach((header) => {
     document.dispatchEvent(new CustomEvent('balances-visibility-change', { detail: { hidden } }));
   });
   profileDialog.querySelector('[data-profile-action="photo"]').addEventListener('click', () => {
-    const photoAction = document.querySelector('.profile-menu-dropdown button[role="menuitem"]:not([type="file"])');
-    if (!photoAction || !/photo/i.test(photoAction.textContent)) {
+    const photoInput = document.querySelector('.profile-menu-dropdown input[type="file"]');
+    if (!photoInput) {
       profileStatus.textContent = 'Sign in to change your profile photo.';
       return;
     }
-    photoAction.click();
+    photoInput.click();
   });
   profileDialog.querySelector('[data-profile-action="logout"]').addEventListener('click', () => {
     const logoutAction = [...document.querySelectorAll('.profile-menu-dropdown button[role="menuitem"]')]

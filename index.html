@@ -35,6 +35,7 @@
         <a href="bot-trading.html">Trading Bot</a>
         <a href="treasury.html#wallet">Wallet</a>
         <a href="create-coin.html">Create Coin</a>
+        <a href="about-support.html">About</a>
       </nav>
 
       <div class="nav-actions">
@@ -117,16 +118,17 @@
         </aside>
       </section>
 
-      <section class="section-shell" aria-labelledby="top-investments-heading">
+      <section class="section-shell" aria-labelledby="homeMarketSectionHeading">
         <div class="section-heading">
-          <span class="eyebrow">Investment Center companies</span>
-          <h2 id="top-investments-heading">Companies Available for Investment</h2>
+          <span class="eyebrow">Explore global markets</span>
+          <h2 id="homeMarketSectionHeading">Explore Markets</h2>
         </div>
-        <div class="home-company-grid" id="homeCompanyGrid" aria-label="Companies available for investment"></div>
         <nav class="home-investment-banner" aria-label="Investment categories">
-          <span class="home-investment-banner-label">Explore markets</span>
+          <span class="home-investment-banner-label">Browse by category</span>
           <div class="home-investment-banner-buttons">
-            <button class="home-investment-category" type="button" data-home-market-category="Futures" aria-pressed="false">Futures</button>
+            <button class="home-investment-category is-selected" type="button" data-home-market-category="Futures" aria-pressed="true">Futures</button>
+            <button class="home-investment-category" type="button" data-home-market-category="Stocks" aria-pressed="false">Stocks</button>
+            <button class="home-investment-category" type="button" data-home-market-category="Forex" aria-pressed="false">Forex</button>
             <button class="home-investment-category" type="button" data-home-market-category="Indices" aria-pressed="false">Indices</button>
             <button class="home-investment-category" type="button" data-home-market-category="Options" aria-pressed="false">Options</button>
             <button class="home-investment-category" type="button" data-home-market-category="Economy" aria-pressed="false">Economy</button>
@@ -135,23 +137,35 @@
             <button class="home-investment-category" type="button" data-home-market-category="ETFs" aria-pressed="false">ETFs</button>
           </div>
         </nav>
-        <section class="home-market-explorer" id="homeMarketExplorer" aria-labelledby="homeMarketExplorerTitle" hidden>
+        <section class="home-market-explorer" id="homeMarketExplorer" aria-labelledby="homeMarketExplorerTitle">
           <div class="home-market-explorer-heading">
             <div>
               <span class="eyebrow">Market explorer</span>
-              <h3 id="homeMarketExplorerTitle">Choose a category</h3>
+              <h3 id="homeMarketExplorerTitle">Futures markets</h3>
               <p id="homeMarketExplorerDescription">Select a market to view its chart preview.</p>
             </div>
           </div>
           <div class="home-market-options" id="homeMarketOptions" role="group" aria-label="Available markets"></div>
           <div class="home-market-chart-preview" id="homeMarketChartPreview" hidden>
             <canvas id="homeMarketChart" aria-label="Illustrative chart preview for the selected market"></canvas>
-            <a class="home-market-chart-hit-area" id="homeMarketChartLink" href="investment.html" aria-label="Open selected market in the Investment Center">
+            <a class="home-market-chart-hit-area" id="homeMarketChartLink" href="investment-futures.html" aria-label="Open selected market in the Investment Center">
               <span class="home-market-chart-cta">Open this market in the Investment Center</span>
             </a>
           </div>
           <p class="home-market-chart-note" id="homeMarketChartNote" role="status">Charts are illustrative previews, not live market data or investment recommendations. Options charts show the underlying asset.</p>
         </section>
+      </section>
+
+      <section class="section-shell" aria-labelledby="top-investments-heading">
+        <div class="section-heading">
+          <span class="eyebrow">Investment Center companies</span>
+          <h2 id="top-investments-heading">Companies Available for Investment</h2>
+        </div>
+        <div class="home-company-carousel-controls" role="group" aria-label="Company slides">
+          <button class="btn btn-secondary" id="homeCompanyPrevious" type="button" aria-label="Show previous companies" aria-controls="homeCompanyGrid" disabled>Previous</button>
+          <button class="btn btn-secondary" id="homeCompanyNext" type="button" aria-label="Show next companies" aria-controls="homeCompanyGrid">Next</button>
+        </div>
+        <div class="home-company-grid" id="homeCompanyGrid" role="list" aria-label="Companies available for investment"></div>
       </section>
 
       <section class="section-shell home-coin-market" aria-labelledby="homeCoinMarketHeading">
@@ -184,10 +198,6 @@
             </tbody>
           </table>
         </div>
-        <div class="home-coin-market-footer">
-          <button class="btn btn-primary" id="loadMoreHomeCoins" type="button" hidden>Load more coins</button>
-          <a class="btn btn-secondary" href="trade.html">Open Trading Markets</a>
-        </div>
       </section>
     </main>
 
@@ -200,21 +210,38 @@
     <script>
       (() => {
         const companyGrid = document.getElementById('homeCompanyGrid');
+        const previousButton = document.getElementById('homeCompanyPrevious');
+        const nextButton = document.getElementById('homeCompanyNext');
         const featuredCompanies = [
           {
             name: 'Caribbean Renewables Ltd',
+            country: 'Jamaica',
             description: 'A renewable energy company focused on clean power projects across the Caribbean.',
             investorPurpose: 'Seeking investment to support renewable energy development.'
           },
           {
             name: 'Harbor Technology Group',
+            country: 'Jamaica',
             description: 'A technology business focused on digital services and software solutions.',
             investorPurpose: 'Seeking investment to expand technology products and services.'
           },
           {
             name: 'Island Foods Co.',
+            country: 'Jamaica',
             description: 'A food business serving local and regional customers.',
             investorPurpose: 'Seeking investment to grow production and distribution.'
+          },
+          {
+            name: 'Walmart',
+            country: 'America',
+            description: 'A retail company serving customers through stores and online channels.',
+            investorPurpose: 'Company profile available for review in the demo Investment Center.'
+          },
+          {
+            name: 'Amazon',
+            country: 'America',
+            description: 'An e-commerce and technology company offering online retail and cloud services.',
+            investorPurpose: 'Company profile available for review in the demo Investment Center.'
           }
         ];
 
@@ -245,8 +272,10 @@
 
         companies.forEach((company) => {
           const name = company.name.trim();
+          const country = company.country || company.listingCountry || 'Country not provided';
           const card = document.createElement('article');
           card.className = 'home-company-card card-glass';
+          card.setAttribute('role', 'listitem');
 
           const identity = document.createElement('button');
           identity.className = 'home-company-trigger';
@@ -266,7 +295,7 @@
           }
 
           const identityText = document.createElement('div');
-          identityText.append(makeText('h3', '', name));
+          identityText.append(makeText('h3', '', name), makeText('p', 'home-company-country', country));
           identity.append(logo, identityText);
 
           const details = document.createElement('dl');
@@ -274,7 +303,7 @@
           details.hidden = true;
           const detailRows = [
             ['Business type', company.type || 'Company'],
-            ['Country', company.country || 'Not provided'],
+            ['Country', country],
             ['About', company.description || 'Open the Investment Center to review this company profile.'],
             ['Investment purpose', company.investorPurpose || 'View the company profile and investment details.']
           ];
@@ -301,6 +330,41 @@
           companyGrid.appendChild(card);
         });
 
+        const updateCompanyControls = () => {
+          const maxScroll = companyGrid.scrollWidth - companyGrid.clientWidth;
+          previousButton.disabled = companyGrid.scrollLeft <= 1;
+          nextButton.disabled = companyGrid.scrollLeft >= maxScroll - 1;
+          const hasOverflow = maxScroll > 1;
+          previousButton.hidden = !hasOverflow;
+          nextButton.hidden = !hasOverflow;
+        };
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const scrollCompanies = (direction) => {
+          const firstCard = companyGrid.querySelector('.home-company-card');
+          if (!firstCard) return;
+          const gap = Number.parseFloat(getComputedStyle(companyGrid).columnGap) || 0;
+          companyGrid.scrollBy({
+            left: direction * (firstCard.getBoundingClientRect().width + gap),
+            behavior: reducedMotion.matches ? 'auto' : 'smooth'
+          });
+        };
+        const advanceCompanySlides = () => {
+          const controls = document.querySelector('.home-company-carousel-controls');
+          if (document.hidden || companyGrid.matches(':hover') || companyGrid.contains(document.activeElement)
+            || controls.matches(':hover') || controls.contains(document.activeElement) || reducedMotion.matches) return;
+          if (nextButton.disabled) {
+            companyGrid.scrollTo({ left: 0, behavior: 'smooth' });
+            return;
+          }
+          scrollCompanies(1);
+        };
+        previousButton.addEventListener('click', () => scrollCompanies(-1));
+        nextButton.addEventListener('click', () => scrollCompanies(1));
+        companyGrid.addEventListener('scroll', updateCompanyControls, { passive: true });
+        window.addEventListener('resize', updateCompanyControls);
+        window.setInterval(advanceCompanySlides, 5000);
+        updateCompanyControls();
+
       })();
     </script>
     <script>
@@ -316,22 +380,25 @@
         const chartNote = document.getElementById('homeMarketChartNote');
         const marketsByCategory = {
           Futures: [
-            { name: 'E-mini S&P 500', symbol: 'CME_MINI:ES1!' },
-            { name: 'E-mini Nasdaq-100', symbol: 'CME_MINI:NQ1!' },
-            { name: 'E-mini Dow Jones', symbol: 'CBOT_MINI:YM1!' },
+            { name: 'USOIL', symbol: 'TVC:USOIL' },
             { name: 'Gold', symbol: 'COMEX:GC1!' },
-            { name: 'Crude Oil', symbol: 'NYMEX:CL1!' },
-            { name: 'Bitcoin Futures', symbol: 'CME:BTC1!' },
-            { name: '10-Year Treasury Note', symbol: 'CBOT:ZN1!' }
+            { name: 'Silver', symbol: 'COMEX:SI1!' }
+          ],
+          Stocks: [
+            { name: 'Apple', symbol: 'NASDAQ:AAPL', displaySymbol: 'AAPL' },
+            { name: 'Tesla', symbol: 'NASDAQ:TSLA', displaySymbol: 'TSLA' },
+            { name: 'Netflix', symbol: 'NASDAQ:NFLX', displaySymbol: 'NFLX' }
+          ],
+          Forex: [
+            { name: 'EURUSD', symbol: 'FX:EURUSD', displaySymbol: 'EURUSD' },
+            { name: 'GBPUSD', symbol: 'FX:GBPUSD', displaySymbol: 'GBPUSD' },
+            { name: 'USDJPY', symbol: 'FX:USDJPY', displaySymbol: 'USDJPY' }
           ],
           Indices: [
-            { name: 'S&P 500', symbol: 'SP:SPX' },
-            { name: 'Nasdaq 100', symbol: 'NASDAQ:NDX' },
-            { name: 'Dow Jones Industrial Average', symbol: 'DJ:DJI' },
-            { name: 'Russell 2000', symbol: 'TVC:RUT' },
-            { name: 'VIX', symbol: 'CBOE:VIX' },
-            { name: 'DAX', symbol: 'XETR:DAX' },
-            { name: 'Nikkei 225', symbol: 'TSE:NI225' }
+            { name: 'NDQ', symbol: 'NASDAQ:NDX', displaySymbol: 'NDQ' },
+            { name: 'DJI', symbol: 'DJ:DJI', displaySymbol: 'DJI' },
+            { name: 'VIX', symbol: 'CBOE:VIX', displaySymbol: 'VIX' },
+            { name: 'DXY', symbol: 'TVC:DXY', displaySymbol: 'DXY' }
           ],
           Options: [
             { name: 'SPY (underlying)', symbol: 'AMEX:SPY' },
@@ -373,7 +440,12 @@
             { name: 'Russell 2000 ETF (IWM)', symbol: 'AMEX:IWM' },
             { name: 'Gold ETF (GLD)', symbol: 'AMEX:GLD' },
             { name: '20+ year Treasury ETF (TLT)', symbol: 'NASDAQ:TLT' },
-            { name: 'Emerging markets ETF (EEM)', symbol: 'AMEX:EEM' }
+            { name: 'Emerging markets ETF (EEM)', symbol: 'AMEX:EEM' },
+            { name: 'E-mini S&P 500', symbol: 'CME_MINI:ES1!' },
+            { name: 'E-mini Nasdaq-100', symbol: 'CME_MINI:NQ1!' },
+            { name: 'E-mini Dow Jones', symbol: 'CBOT_MINI:YM1!' },
+            { name: 'Bitcoin Futures', symbol: 'CME:BTC1!' },
+            { name: '10-Year Treasury Note', symbol: 'CBOT:ZN1!' }
           ]
         };
         let selectedCategory = '';
@@ -466,8 +538,7 @@
           drawMarketChart(market);
         };
 
-        categoryButtons.forEach((button) => {
-          button.addEventListener('click', () => {
+        const selectCategory = (button, shouldScroll = true) => {
             selectedCategory = button.dataset.homeMarketCategory;
             const markets = marketsByCategory[selectedCategory] || [];
             categoryButtons.forEach((item) => {
@@ -487,27 +558,48 @@
               option.type = 'button';
               option.className = 'home-market-option';
               option.dataset.marketSymbol = market.symbol;
-              option.setAttribute('aria-label', `${market.name} (${market.symbol})`);
+              const marketTicker = market.displaySymbol || market.symbol;
+              option.setAttribute('aria-label', `${market.name} (${marketTicker})`);
               option.setAttribute('aria-pressed', 'false');
               const icon = document.createElement('img');
               icon.className = 'home-market-option-icon';
               icon.src = window.createMarketLogoSrc(market.symbol, selectedCategory);
               icon.alt = '';
               icon.setAttribute('aria-hidden', 'true');
+              icon.addEventListener('error', () => {
+                icon.src = window.createMarketLogoFallbackSrc(market.symbol, selectedCategory);
+              }, { once: true });
               const name = document.createElement('span');
               name.className = 'home-market-option-name';
               name.textContent = market.name;
               const symbol = document.createElement('span');
               symbol.className = 'home-market-option-symbol';
-              symbol.textContent = market.symbol;
+              symbol.textContent = marketTicker;
               option.append(icon, name, symbol);
               option.addEventListener('click', () => showMarket(market));
               marketOptions.appendChild(option);
             });
-            explorer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            marketOptions.querySelector('button')?.focus({ preventScroll: true });
+            if (shouldScroll) explorer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
+
+        categoryButtons.forEach((button) => {
+          const icon = document.createElement('img');
+          icon.className = 'home-investment-category-icon';
+          icon.src = window.createMarketLogoSrc(button.dataset.homeMarketCategory, button.dataset.homeMarketCategory);
+          icon.alt = '';
+          icon.setAttribute('aria-hidden', 'true');
+          button.prepend(icon);
+          button.addEventListener('click', () => {
+            selectCategory(button);
           });
         });
+
+        const initialCategory = categoryButtons.find((button) => button.dataset.homeMarketCategory === 'Futures');
+        if (initialCategory) {
+          selectCategory(initialCategory, false);
+          const initialMarket = marketsByCategory.Futures[0];
+          if (initialMarket) showMarket(initialMarket);
+        }
 
         window.addEventListener('resize', () => {
           if (selectedMarket && !chartPreview.hidden) drawMarketChart(selectedMarket);
@@ -518,13 +610,11 @@
       (() => {
         const marketBody = document.getElementById('homeCoinMarketBody');
         const marketStatus = document.getElementById('homeCoinMarketStatus');
-        const loadMoreButton = document.getElementById('loadMoreHomeCoins');
         const refreshButton = document.getElementById('refreshHomeCoinMarket');
         const searchForm = document.getElementById('homeCoinSearchForm');
         const searchInput = document.getElementById('homeCoinSearchInput');
         const searchButton = document.getElementById('searchHomeCoins');
         const pageSize = 250;
-        let page = 0;
         let totalMarketCapUsd = 0;
         let isLoading = false;
 
@@ -683,54 +773,43 @@
             });
         }
 
-        async function loadNextPage(reset) {
+        async function loadMarket() {
           if (isLoading) return;
           isLoading = true;
-          loadMoreButton.disabled = true;
           refreshButton.disabled = true;
-          if (reset) {
-            page = 0;
-            totalMarketCapUsd = 0;
-            marketBody.replaceChildren();
-            marketStatus.textContent = 'Loading coin market data…';
-            loadMoreButton.hidden = true;
-          } else {
-            marketStatus.textContent = 'Loading more coins…';
-          }
+          totalMarketCapUsd = 0;
+          marketBody.replaceChildren();
+          marketStatus.textContent = 'Loading coin market data…';
+          marketStatus.hidden = false;
 
           try {
-            if (reset || !totalMarketCapUsd) {
-              const globalResponse = await fetch('https://api.coingecko.com/api/v3/global');
-              if (!globalResponse.ok) throw new Error(`Global market data request failed (${globalResponse.status}).`);
-              const globalData = await globalResponse.json();
-              totalMarketCapUsd = Number(globalData.data?.total_market_cap?.usd);
-              if (!Number.isFinite(totalMarketCapUsd) || totalMarketCapUsd <= 0) {
-                throw new Error('Global crypto market capitalization is unavailable.');
-              }
+            const globalResponse = await fetch('https://api.coingecko.com/api/v3/global');
+            if (!globalResponse.ok) throw new Error(`Global market data request failed (${globalResponse.status}).`);
+            const globalData = await globalResponse.json();
+            totalMarketCapUsd = Number(globalData.data?.total_market_cap?.usd);
+            if (!Number.isFinite(totalMarketCapUsd) || totalMarketCapUsd <= 0) {
+              throw new Error('Global crypto market capitalization is unavailable.');
             }
 
-            const nextPage = page + 1;
             const response = await fetch(
-              `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${pageSize}&page=${nextPage}&sparkline=false`
+              `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${pageSize}&page=1&sparkline=false`
             );
             if (!response.ok) throw new Error(`Coin market request failed (${response.status}).`);
             const coins = await response.json();
             if (!Array.isArray(coins)) throw new Error('Coin market response was invalid.');
 
-            renderCoins(coins, (nextPage - 1) * pageSize + 1);
-            if (reset) renderTrackedCoins();
-            page = nextPage;
-            marketStatus.textContent = coins.length
-              ? `Showing ${marketBody.rows.length.toLocaleString()} market-listed coins.`
-              : 'No more market-listed coins were returned.';
-            loadMoreButton.hidden = coins.length < pageSize;
+            renderCoins(coins, 1);
+            renderTrackedCoins();
+            marketStatus.textContent = coins.length ? '' : 'No market-listed coins were returned.';
+            marketStatus.hidden = coins.length > 0;
           } catch (error) {
             console.error('Unable to load the home coin market:', error);
-            if (reset && marketBody.rows.length === 0) renderTrackedCoins();
+            marketStatus.hidden = false;
+            if (marketBody.rows.length === 0) renderTrackedCoins();
             marketStatus.textContent = marketBody.rows.length
               ? `${error.message}`
               : `${error.message} Please try again later.`;
-            if (reset && marketBody.rows.length === 0) {
+            if (marketBody.rows.length === 0) {
               marketBody.replaceChildren();
               const row = document.createElement('tr');
               const cell = createCell('Coin market data could not be loaded. Use Refresh market to try again.', 'home-coin-market-message');
@@ -740,7 +819,6 @@
             }
           } finally {
             isLoading = false;
-            loadMoreButton.disabled = false;
             refreshButton.disabled = false;
           }
         }
@@ -748,18 +826,17 @@
         async function searchCoins(query) {
           const normalizedQuery = query.trim();
           if (!normalizedQuery) {
-            await loadNextPage(true);
+            await loadMarket();
             return;
           }
           if (isLoading) return;
 
           isLoading = true;
           searchButton.disabled = true;
-          loadMoreButton.disabled = true;
           refreshButton.disabled = true;
-          loadMoreButton.hidden = true;
           marketBody.replaceChildren();
           marketStatus.textContent = `Searching coins for “${normalizedQuery}”…`;
+          marketStatus.hidden = false;
           try {
             const searchResponse = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(normalizedQuery)}`);
             if (!searchResponse.ok) throw new Error(`Coin search failed (${searchResponse.status}).`);
@@ -808,7 +885,6 @@
           } finally {
             isLoading = false;
             searchButton.disabled = false;
-            loadMoreButton.disabled = false;
             refreshButton.disabled = false;
           }
         }
@@ -824,9 +900,8 @@
           event.preventDefault();
           searchCoins(searchInput.value);
         });
-        loadMoreButton.addEventListener('click', () => loadNextPage(false));
-        refreshButton.addEventListener('click', () => loadNextPage(true));
-        loadNextPage(true);
+        refreshButton.addEventListener('click', loadMarket);
+        loadMarket();
       })();
     </script>
     <script>
