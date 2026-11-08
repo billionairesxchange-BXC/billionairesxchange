@@ -84474,6 +84474,13 @@ if (walletRoot) {
       console.error("Could not remember the connected Treasury wallet:", error);
     }
   }, setMessage = function(text, isError2 = false) {
+    if (document.body.classList.contains("treasury-vault-locked")) {
+      const onboardingStatus = byId("walletOnboardingMetaStatus");
+      onboardingStatus.textContent = text;
+      onboardingStatus.hidden = !text;
+      onboardingStatus.classList.toggle("is-error", isError2);
+      return;
+    }
     message.textContent = text;
     message.classList.toggle("is-error", isError2);
   }, clearIdleLockTimer = function() {
@@ -84950,6 +84957,9 @@ if (walletRoot) {
     byId("walletOnboardingMetaStatus").hidden = true;
     byId("walletOnboardingMetaStatus").textContent = "";
     byId("walletOnboardingMetaStatus").classList.remove("is-error");
+    onboardingCreateFlow.hidden = true;
+    byId("walletOnboardingCreate").parentElement.hidden = false;
+    byId("walletOnboardingBack").hidden = false;
     if (hasSavedWallet) {
       updateUnlockCredentialLabel();
       updateUnlockAttemptStatus();
@@ -86029,6 +86039,8 @@ This transaction cannot be reversed.`);
   const onboarding = byId("walletOnboarding");
   const walletAppContent = byId("walletAppContent");
   document.body.append(onboarding);
+  const onboardingCreateFlow = byId("walletOnboardingCreateFlow");
+  onboardingCreateFlow.append(byId("walletCreateForm"), byId("walletPhrasePanel"));
   const setPageInertExcept = (exemptElement) => {
     Array.from(document.body.children).forEach((child) => {
       child.inert = child !== exemptElement;
@@ -86051,7 +86063,12 @@ This transaction cannot be reversed.`);
     setVaultLockScreen(false);
   };
   const startWalletCreateFlow = () => {
-    finishOnboarding();
+    byId("walletOnboardingWelcome").hidden = true;
+    byId("walletOnboardingOptions").hidden = false;
+    byId("walletOnboardingCreate").parentElement.hidden = true;
+    byId("walletOnboardingBack").hidden = true;
+    onboardingCreateFlow.hidden = false;
+    setVaultLockScreen(true);
     updateCredentialMode("walletCreate", byId("walletCreateCredentialType")?.value || "pin");
     showOnlyForm(byId("walletCreateForm"));
     byId("walletCreatePassword").focus();

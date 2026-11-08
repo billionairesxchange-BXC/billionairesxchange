@@ -5263,6 +5263,15 @@ body.positions-market-view-fullscreen-active {
   align-self: center;
 }
 
+.favorite-panel,
+.ai-analyst,
+.bot-chart-section {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  align-self: stretch;
+}
+
 .bot-performance {
   margin-top: 2rem;
 }
@@ -5539,6 +5548,11 @@ body.treasury-welcome-active {
 
 .wallet-onboarding-actions .btn {
   min-height: 62px;
+}
+
+.wallet-onboarding-create-flow {
+  width: min(100%, 560px);
+  margin: 0 auto;
 }
 
 .wallet-onboarding-unlock-form {

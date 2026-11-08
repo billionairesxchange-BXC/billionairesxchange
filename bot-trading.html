@@ -433,7 +433,7 @@
                 <div class="market-scan-actions">
                   <button class="btn btn-ghost" type="button" id="playMarketDetailsBtn">Play market details</button>
                   <button class="btn btn-ghost" type="button" id="pauseMarketDetailsBtn" hidden>Pause reading</button>
-                  <button class="btn btn-ghost" type="button" id="enableMarketVoiceBtn" hidden>Enable voice conversation</button>
+                  <button class="btn btn-ghost" type="button" id="enableMarketVoiceBtn" hidden>Retry microphone access</button>
                 </div>
                 <form id="marketOpportunityTradeForm" class="market-scan-trade-form" hidden>
                   <label for="marketTradeAmount">Paper trade amount (USD, minimum $20)</label>
@@ -610,15 +610,7 @@
       let marketOpportunityPending = false;
       const rejectedMarketPairs = new Set();
       const MarketSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const marketVoicePreferenceKey = 'botMarketVoiceConversationEnabled';
-      let marketVoiceEnabled = (() => {
-        try {
-          return localStorage.getItem(marketVoicePreferenceKey) === 'true';
-        } catch (error) {
-          console.error('Market voice preference could not be loaded:', error);
-          return false;
-        }
-      })();
+      let marketVoiceEnabled = Boolean(MarketSpeechRecognition && ('speechSynthesis' in window));
       let marketSpeechRecognition = null;
       let marketSpeechRequestVersion = 0;
       const botMemoryKey = `makingsBotMemory:${localStorage.getItem('makingsCurrentUser') || 'guest'}`;
@@ -983,7 +975,7 @@
           const formatMarketPrice = (price) => `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: price < 1 ? 8 : 2 })}`;
           const review = `${bestMarket.symbol}/USDT: ${momentumAssessment} at +${bestMarket.change.toFixed(2)}%, with ${formatMoney(bestMarket.volume)} in 24-hour trading volume. Latest price: ${formatMarketPrice(bestMarket.price)}.${dailyRangePercent === null ? '' : ` The 24-hour high-to-low range is ${dailyRangePercent.toFixed(2)}% of the current price.`} This is market information, not a prediction or a guarantee of profit.`;
           marketOpportunityDetails.textContent = review;
-          marketOpportunityPrompt.textContent = 'Say “I like it” and an amount (minimum $20), or “scan markets” to find a different opportunity. You can also choose the strategy and risk controls below.';
+          marketOpportunityPrompt.textContent = 'I am listening automatically. Say “next market” or “give me a different one” to skip, or “trade this market” / “keep this” and an amount (minimum $20). You can also choose the strategy and risk controls below.';
           marketOpportunityTradeForm.hidden = true;
           marketOpportunityStatus.textContent = '';
           marketOpportunity.hidden = false;
@@ -996,6 +988,9 @@
           marketScanStatus.textContent = `Market scan failed: ${error.message}. No market recommendation was made.`;
           marketOpportunityPending = false;
           notifyTrade(`Market scan: The all-market scan failed: ${error.message}. No market recommendation was made.`);
+          if (marketVoiceEnabled) {
+            speakMarketResponse(`${marketScanStatus.textContent} Say “scan markets” to try again.`, () => listenForMarketVoiceReply());
+          }
         } finally {
           marketScanInProgress = false;
         }
@@ -1051,7 +1046,7 @@
           marketSpeechRecognition.addEventListener('start', () => {
             voiceStatus.textContent = mode === 'amount'
               ? 'Listening for your USD amount. Say, for example, “50 dollars,” or enter it below.'
-              : 'Listening. Say “scan markets,” or “I like it” with an amount and trade settings.';
+              : 'Listening automatically. Say “next market,” “give me a different one,” “trade this market,” or “keep this.”';
           }, { once: true });
           marketSpeechRecognition.addEventListener('result', (event) => {
             const transcript = event.results[0]?.[0]?.transcript?.trim();
@@ -1061,6 +1056,10 @@
               return;
             }
             if (mode === 'amount') {
+              if (isDifferentMarketRequest(transcript) || isMarketScanRequest(transcript)) {
+                respondToMarketVoice(transcript);
+                return;
+              }
               const spokenAmount = parseMarketTradeAmount(transcript);
               if (!spokenAmount || spokenAmount < minimumTradeUsd) {
                 voiceStatus.textContent = `I heard “${transcript}”. Please say an amount of at least $20, or enter it below.`;
@@ -1079,10 +1078,16 @@
           }, { once: true });
           marketSpeechRecognition.addEventListener('error', (event) => {
             voiceStatus.textContent = `Voice reply unavailable: ${event.error}. Try again or use the on-screen controls.`;
+            marketVoiceEnabled = false;
+            enableMarketVoiceBtn.hidden = !MarketSpeechRecognition || !('speechSynthesis' in window);
+            enableMarketVoiceBtn.disabled = false;
           }, { once: true });
           marketSpeechRecognition.start();
         } catch (error) {
           voiceStatus.textContent = `Voice reply could not start: ${error.message}. Use the on-screen controls instead.`;
+          marketVoiceEnabled = false;
+          enableMarketVoiceBtn.hidden = !MarketSpeechRecognition || !('speechSynthesis' in window);
+          enableMarketVoiceBtn.disabled = false;
         }
       }
 
@@ -1152,22 +1157,56 @@
 
       function acknowledgeMarketTrade(onEnd) {
         const duration = getMarketTradeDuration();
-        const response = `Sure. I will prepare ${bestMarket.symbol} using ${marketTradeStrategy.value}, ${marketTradeRisk.value} risk, a ${marketTradeStopLoss.value}% stop-loss, and a ${marketTradeTakeProfit.value}% take-profit. I selected a ${duration.label} trading duration based on the market's recent range. I will verify the amount, balance, and latest price before placing this paper trade.`;
+        const response = `Okay. I will prepare ${bestMarket.symbol} using ${marketTradeStrategy.value}, ${marketTradeRisk.value} risk, a ${marketTradeStopLoss.value}% stop-loss, and a ${marketTradeTakeProfit.value}% take-profit. I selected a ${duration.label} trading duration based on the market's recent range. I will verify the amount, balance, and latest price before placing this paper trade.`;
         speakMarketResponse(response, onEnd);
       }
 
       async function executeVoiceMarketTrade() {
         const started = await executeMarketOpportunityTrade();
         if (!started && marketVoiceEnabled && bestMarket) {
-          speakMarketResponse(`${marketOpportunityStatus.textContent} You can correct the amount or settings and say “I like it” again.`, () => listenForMarketVoiceReply());
+          speakMarketResponse(`${marketOpportunityStatus.textContent} You can correct the amount or settings, then say “trade this market” or “keep this” again.`, () => listenForMarketVoiceReply());
         }
       }
 
+      function normalizeMarketVoiceReply(transcript) {
+        return transcript.toLowerCase().replace(/[’]/g, "'").replace(/[.!?,]/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+
+      function isDifferentMarketRequest(transcript) {
+        const reply = normalizeMarketVoiceReply(transcript);
+        const intents = [
+          /\bnext(?:\s+(?:market|one|coin))?\b/,
+          /\banother(?:\s+(?:market|one|coin))?\b/,
+          /\b(?:give|show|find)\s+me\s+(?:a\s+)?(?:different|another|new)\b/,
+          /\b(?:different|another|new)\s+(?:market|one|coin)\b/,
+          /\b(?:i\s+)?(?:don't|dont|do not)\s+like\s+(?:this|that|it|this one|that one|this market|this coin)\b/,
+          /\bnot\s+(?:this|that|this one|that one|this market|this coin|for me)\b/,
+          /\bpass(?:\s+on)?\b/,
+          /\bskip\s+(?:this|it|the market|the coin)\b/,
+          /\bmove\s+on\b/,
+          /\bno\s+thanks\b/
+        ];
+        return intents.some((intent) => intent.test(reply));
+      }
+
+      function isMarketScanRequest(transcript) {
+        const reply = normalizeMarketVoiceReply(transcript);
+        return /\b(?:scan|rescan|search|check)\b.*\bmarkets?\b|\bmarkets?\b.*\b(?:scan|rescan|search|check)\b|\bscan again\b/.test(reply);
+      }
+
       function respondToMarketVoice(transcript) {
-        const reply = transcript.toLowerCase();
+        const reply = normalizeMarketVoiceReply(transcript);
         marketOpportunityStatus.textContent = `I heard: “${transcript}”`;
-        if (/\b(scan|rescan|search)\b.*\bmarket(s)?\b|\bmarket(s)?\b.*\b(scan|rescan|search)\b/.test(reply)) {
+        if (isMarketScanRequest(reply)) {
           speakMarketResponse('Okay, scanning the markets now.', () => scanMarkets(true));
+          return;
+        }
+        if (isDifferentMarketRequest(reply)) {
+          if (bestMarket) {
+            speakMarketResponse('Okay, I will scan for a different market.', requestDifferentMarket);
+          } else {
+            speakMarketResponse('Okay, scanning for a market now.', () => scanMarkets(true));
+          }
           return;
         }
         if (!bestMarket) {
@@ -1175,11 +1214,11 @@
           speakMarketResponse('I do not have a market selected yet. Say “scan markets” and I will check again.', () => listenForMarketVoiceReply());
           return;
         }
-        if (/\b(different|another|alternate|find|no thanks|don't|do not|dislike|not really|no)\b/.test(reply)) {
-          speakMarketResponse('Okay, I will scan for a different market.', requestDifferentMarket);
+        if (/^(?:ok(?:ay)?|sure|all right|alright|got it)$/.test(reply)) {
+          speakMarketResponse('Okay. I am listening.', () => listenForMarketVoiceReply());
           return;
         }
-        if (/\b(like|yes|trade|buy|go ahead)\b/.test(reply)) {
+        if (/\b(?:like|yes|trade|buy|go ahead|keep|take|accept|choose)\b/.test(reply)) {
           acceptMarketOpportunity();
           applyMarketTradeVoiceSettings(transcript);
           const amount = parseMarketTradeAmount(transcript);
@@ -1199,16 +1238,16 @@
           speakMarketResponse(`Okay. What amount would you like to trade? The minimum is 20 dollars. You can also say a strategy, risk level, stop-loss, and take-profit.`, () => listenForMarketVoiceReply('amount'));
           return;
         }
-        marketOpportunityStatus.textContent = `I heard: “${transcript}”. Say “I like it” with an amount, or “scan markets.”`;
-        speakMarketResponse('Would you like this market, or should I scan for another one?', () => listenForMarketVoiceReply());
+        marketOpportunityStatus.textContent = `I heard: “${transcript}”. Say “next market,” “give me a different one,” “trade this market,” or “keep this.”`;
+        speakMarketResponse('Okay. You can ask for the next market, ask for a different one, or say trade this market or keep this.', () => listenForMarketVoiceReply());
       }
 
       function startMarketVoiceConversation() {
         if (!marketVoiceEnabled || !MarketSpeechRecognition || !('speechSynthesis' in window)) return;
         const review = bestMarket
-          ? `${marketOpportunityDetails.textContent} ${marketOpportunityPrompt.textContent}`
-          : `${marketScanStatus.textContent} Say “scan markets” whenever you want me to check again.`;
-        speakMarketResponse(`Sure. Voice conversation is enabled. ${review}`, () => listenForMarketVoiceReply());
+          ? `${marketOpportunityDetails.textContent} I am listening for your choice.`
+          : `${marketScanStatus.textContent} I will listen when a market is ready.`;
+        speakMarketResponse(`Okay. Voice conversation is ready. ${review}`, () => listenForMarketVoiceReply());
         const voiceStatus = marketOpportunity.hidden ? marketScanStatus : marketOpportunityStatus;
         voiceStatus.textContent = 'The AI is reviewing the market. I will listen for your choice when it finishes.';
       }
@@ -1236,7 +1275,6 @@
           if (!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone access requires a supported secure browser connection');
           audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           audioStream.getTracks().forEach((track) => track.stop());
-          localStorage.setItem(marketVoicePreferenceKey, 'true');
           marketVoiceEnabled = true;
           enableMarketVoiceBtn.hidden = true;
           marketOpportunityStatus.textContent = 'Voice conversation enabled. You will not need to press a reply button for future market scans.';

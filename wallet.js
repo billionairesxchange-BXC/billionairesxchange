@@ -334,6 +334,13 @@ if (walletRoot) {
   }
 
   function setMessage(text, isError = false) {
+    if (document.body.classList.contains('treasury-vault-locked')) {
+      const onboardingStatus = byId('walletOnboardingMetaStatus');
+      onboardingStatus.textContent = text;
+      onboardingStatus.hidden = !text;
+      onboardingStatus.classList.toggle('is-error', isError);
+      return;
+    }
     message.textContent = text;
     message.classList.toggle('is-error', isError);
   }
@@ -1900,6 +1907,8 @@ if (walletRoot) {
   const onboarding = byId('walletOnboarding');
   const walletAppContent = byId('walletAppContent');
   document.body.append(onboarding);
+  const onboardingCreateFlow = byId('walletOnboardingCreateFlow');
+  onboardingCreateFlow.append(byId('walletCreateForm'), byId('walletPhrasePanel'));
   const setPageInertExcept = (exemptElement) => {
     Array.from(document.body.children).forEach((child) => {
       child.inert = child !== exemptElement;
@@ -1937,6 +1946,9 @@ if (walletRoot) {
     byId('walletOnboardingMetaStatus').hidden = true;
     byId('walletOnboardingMetaStatus').textContent = '';
     byId('walletOnboardingMetaStatus').classList.remove('is-error');
+    onboardingCreateFlow.hidden = true;
+    byId('walletOnboardingCreate').parentElement.hidden = false;
+    byId('walletOnboardingBack').hidden = false;
     if (hasSavedWallet) {
       updateUnlockCredentialLabel();
       updateUnlockAttemptStatus();
@@ -1950,7 +1962,12 @@ if (walletRoot) {
   };
 
   const startWalletCreateFlow = () => {
-    finishOnboarding();
+    byId('walletOnboardingWelcome').hidden = true;
+    byId('walletOnboardingOptions').hidden = false;
+    byId('walletOnboardingCreate').parentElement.hidden = true;
+    byId('walletOnboardingBack').hidden = true;
+    onboardingCreateFlow.hidden = false;
+    setVaultLockScreen(true);
     updateCredentialMode('walletCreate', byId('walletCreateCredentialType')?.value || 'pin');
     showOnlyForm(byId('walletCreateForm'));
     byId('walletCreatePassword').focus();
