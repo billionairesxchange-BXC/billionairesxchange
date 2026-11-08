@@ -4510,22 +4510,27 @@ body.positions-market-view-fullscreen-active {
 
 .market-scan-trade-form label {
   display: grid;
+  min-width: min(180px, 100%);
+  flex: 1 1 180px;
   gap: .35rem;
   color: var(--light-gold);
   font-size: .82rem;
 }
 
-.market-scan-trade-form input {
-  width: min(220px, 100%);
+.market-scan-trade-form input,
+.market-scan-trade-form select {
+  width: 100%;
   min-height: 38px;
   padding: .4rem .55rem;
   border: 1px solid rgba(212, 175, 55, .45);
   border-radius: 5px;
   background: #0b0b0b;
   color: var(--white);
+  font: inherit;
 }
 
-.market-scan-trade-form input:focus {
+.market-scan-trade-form input:focus,
+.market-scan-trade-form select:focus {
   outline: 2px solid rgba(212, 175, 55, .55);
   outline-offset: 1px;
 }

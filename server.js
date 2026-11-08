@@ -259,7 +259,7 @@ function processClassicBot(state, markets) {
   const now = Date.now();
   let bot;
   try { bot = JSON.parse(state.makingsBotBackgroundState || 'null'); } catch { return; }
-  if (!bot || bot.running !== true || Date.now() - Number(bot.updatedAt) < 30000) return;
+  if (!bot || (bot.running !== true && !bot.position) || Date.now() - Number(bot.updatedAt) < 30000) return;
   const market = markets[bot.symbol];
   if (!market) return;
   let balance = Number(bot.balance);
@@ -300,14 +300,24 @@ function processClassicBot(state, markets) {
   let closedTrade = null;
   if (position && position.symbol === bot.symbol) {
     const movePct = (market.price - Number(position.entry)) / Number(position.entry) * 100;
-    if (movePct >= Number(position.takeProfit) || movePct <= -Number(position.stopLoss)) {
+    const durationExpired = Number(position.expiresAt) > 0 && now >= Number(position.expiresAt);
+    if (durationExpired || movePct >= Number(position.takeProfit) || movePct <= -Number(position.stopLoss)) {
       const result = Number(position.size) * (market.price - Number(position.entry));
       balance += Number(position.size) * market.price;
       pnl += result;
-      closedTrade = { symbol: bot.symbol, entry: Number(position.entry), exit: market.price, pnl: result, time: Date.now() };
+      closedTrade = {
+        symbol: bot.symbol,
+        entry: Number(position.entry),
+        exit: market.price,
+        pnl: result,
+        source: position.source || 'AI bot',
+        pauseAfterExit: position.pauseAfterExit === true,
+        reason: durationExpired ? 'duration ended' : movePct >= Number(position.takeProfit) ? 'take-profit' : 'stop-loss',
+        time: now
+      };
       position = null;
     }
-  } else if (signal === 'BUY' && market.volume >= 1000000 && pnl < Number(bot.goalProfit)) {
+  } else if (bot.running === true && signal === 'BUY' && market.volume >= 1000000 && pnl < Number(bot.goalProfit)) {
     const risk = { Conservative: 0.03, Balanced: 0.06, Aggressive: 0.1 }[bot.riskLevel] || 0.06;
     const maxTrade = Number(bot.maxTradeAmount) > 0 ? Number(bot.maxTradeAmount) : Infinity;
     const size = Math.min(balance * risk / market.price, 2.5, maxTrade / market.price);
@@ -332,9 +342,10 @@ function processClassicBot(state, markets) {
     }
   }
   state.makingsBotBackgroundState = JSON.stringify({
-    ...bot, running: pnl < Number(bot.goalProfit), balance, pnl, position,
+    ...bot, running: bot.running === true && !(closedTrade?.pauseAfterExit) && pnl < Number(bot.goalProfit), balance, pnl, position,
     history: prices.slice(-30), updatedAt: Date.now()
   });
+  state.makingsTradePaperBalance = String(balance);
   state.makingsPositionMarketBalance = String(balance);
   if (pnl !== Number(bot.pnl || 0)) {
     const realized = Number(state.makingsTradeRealizedProfit) || 0;
@@ -343,7 +354,8 @@ function processClassicBot(state, markets) {
   if (closedTrade) {
     try {
       const records = JSON.parse(state.botPositionRecords || '[]');
-      const record = Array.isArray(records) ? [...records].reverse().find((item) => item.symbol === bot.symbol && item.source === 'AI bot' && item.status === 'OPEN') : null;
+      const record = Array.isArray(records) ? [...records].reverse().find((item) => item.symbol === bot.symbol
+        && item.source === closedTrade.source && item.status === 'OPEN') : null;
       if (record) {
         record.closePrice = market.price;
         record.closedAt = closedTrade.time;

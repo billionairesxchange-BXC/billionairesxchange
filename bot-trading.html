@@ -431,11 +431,34 @@
                 <p id="marketOpportunityDetails"></p>
                 <p id="marketOpportunityPrompt">Would you like to trade this market, or should I find a different market?</p>
                 <div class="market-scan-actions">
+                  <button class="btn btn-ghost" type="button" id="playMarketDetailsBtn">Play market details</button>
+                  <button class="btn btn-ghost" type="button" id="pauseMarketDetailsBtn" hidden>Pause reading</button>
                   <button class="btn btn-ghost" type="button" id="enableMarketVoiceBtn" hidden>Enable voice conversation</button>
                 </div>
                 <form id="marketOpportunityTradeForm" class="market-scan-trade-form" hidden>
-                  <label for="marketTradeAmount">Paper trade amount (USD)</label>
+                  <label for="marketTradeAmount">Paper trade amount (USD, minimum $20)</label>
                   <input type="number" id="marketTradeAmount" min="20" step="0.01" value="20" required />
+                  <label for="marketTradeStrategy">Strategy
+                    <select id="marketTradeStrategy">
+                      <option>Momentum</option>
+                      <option>Scalp</option>
+                      <option>Mean reversion (single market)</option>
+                      <option>Dollar-cost averaging</option>
+                    </select>
+                  </label>
+                  <label for="marketTradeRisk">Risk level
+                    <select id="marketTradeRisk">
+                      <option>Conservative</option>
+                      <option selected>Balanced</option>
+                      <option>Aggressive</option>
+                    </select>
+                  </label>
+                  <label for="marketTradeStopLoss">Stop-Loss (%)
+                    <input type="number" id="marketTradeStopLoss" min="0.1" max="100" step="0.1" value="5" required />
+                  </label>
+                  <label for="marketTradeTakeProfit">Take-Profit (%)
+                    <input type="number" id="marketTradeTakeProfit" min="0.1" max="500" step="0.1" value="10" required />
+                  </label>
                   <button class="btn btn-primary" type="submit" id="startMarketTradeBtn">Start paper trade</button>
                   <button class="btn btn-ghost" type="button" id="chooseAnotherMarketBtn">Choose another market</button>
                 </form>
@@ -567,9 +590,15 @@
       const marketOpportunityTradeForm = document.getElementById('marketOpportunityTradeForm');
       const marketOpportunityStatus = document.getElementById('marketOpportunityStatus');
       const marketTradeAmount = document.getElementById('marketTradeAmount');
+      const marketTradeStrategy = document.getElementById('marketTradeStrategy');
+      const marketTradeRisk = document.getElementById('marketTradeRisk');
+      const marketTradeStopLoss = document.getElementById('marketTradeStopLoss');
+      const marketTradeTakeProfit = document.getElementById('marketTradeTakeProfit');
       const startMarketTradeBtn = document.getElementById('startMarketTradeBtn');
       const chooseAnotherMarketBtn = document.getElementById('chooseAnotherMarketBtn');
       const enableMarketVoiceBtn = document.getElementById('enableMarketVoiceBtn');
+      const playMarketDetailsBtn = document.getElementById('playMarketDetailsBtn');
+      const pauseMarketDetailsBtn = document.getElementById('pauseMarketDetailsBtn');
       let accountCurrency = (() => {
         const saved = (localStorage.getItem('preferredCurrency') || 'USD').toUpperCase();
         return ['USD', 'JMD', 'EUR'].includes(saved) ? saved : 'USD';
@@ -591,6 +620,7 @@
         }
       })();
       let marketSpeechRecognition = null;
+      let marketSpeechRequestVersion = 0;
       const botMemoryKey = `makingsBotMemory:${localStorage.getItem('makingsCurrentUser') || 'guest'}`;
       let botSettingsStorageKey = `makingsBotSettings:${localStorage.getItem('makingsCurrentUser') || 'guest'}`;
       let botSettings;
@@ -922,6 +952,9 @@
               : 'No market currently has positive 24-hour momentum and at least $1M in 24-hour volume. The scan will check again automatically.';
             marketScanStatus.textContent = emptyScanMessage;
             notifyTrade(`Market scan: ${emptyScanMessage}`);
+            if (marketVoiceEnabled) {
+              speakMarketResponse(`${emptyScanMessage} Say “scan markets” whenever you want me to check again.`, () => listenForMarketVoiceReply());
+            }
             return;
           }
 
@@ -935,6 +968,10 @@
           }
           marketOpportunityPending = true;
           marketScanStatus.textContent = 'Top market found across active USDT spot pairs. Choose whether you want to trade it.';
+          marketTradeStrategy.value = strategy.value;
+          marketTradeRisk.value = riskLevel.value;
+          marketTradeStopLoss.value = String(Number(stopLossInput.value) > 0 ? Number(stopLossInput.value) : 5);
+          marketTradeTakeProfit.value = String(Number(takeProfitInput.value) > 0 ? Number(takeProfitInput.value) : 10);
           const dailyRangePercent = bestMarket.high > bestMarket.low && bestMarket.price > 0
             ? ((bestMarket.high - bestMarket.low) / bestMarket.price) * 100
             : null;
@@ -946,10 +983,12 @@
           const formatMarketPrice = (price) => `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: price < 1 ? 8 : 2 })}`;
           const review = `${bestMarket.symbol}/USDT: ${momentumAssessment} at +${bestMarket.change.toFixed(2)}%, with ${formatMoney(bestMarket.volume)} in 24-hour trading volume. Latest price: ${formatMarketPrice(bestMarket.price)}.${dailyRangePercent === null ? '' : ` The 24-hour high-to-low range is ${dailyRangePercent.toFixed(2)}% of the current price.`} This is market information, not a prediction or a guarantee of profit.`;
           marketOpportunityDetails.textContent = review;
-          marketOpportunityPrompt.textContent = 'Would you like to trade this market, or should I find a different market? Say “I like it” or “find another market,” or choose below.';
+          marketOpportunityPrompt.textContent = 'Say “I like it” and an amount (minimum $20), or “scan markets” to find a different opportunity. You can also choose the strategy and risk controls below.';
           marketOpportunityTradeForm.hidden = true;
           marketOpportunityStatus.textContent = '';
           marketOpportunity.hidden = false;
+          playMarketDetailsBtn.hidden = !('speechSynthesis' in window);
+          pauseMarketDetailsBtn.hidden = true;
           enableMarketVoiceBtn.hidden = !MarketSpeechRecognition || !('speechSynthesis' in window) || marketVoiceEnabled;
           if (marketVoiceEnabled) startMarketVoiceConversation();
           notifyTrade(`Market scan: ${review}`);
@@ -969,63 +1008,81 @@
         }
         try {
           window.speechSynthesis.cancel();
+          const requestVersion = ++marketSpeechRequestVersion;
           const utterance = new SpeechSynthesisUtterance(message);
           utterance.lang = 'en-US';
-          const americanVoice = window.speechSynthesis.getVoices().find((voice) =>
-            /^en-US$/i.test(voice.lang) && /Jenny|Aria|Ava|Samantha|Google US English|United States/i.test(voice.name)
-          ) || window.speechSynthesis.getVoices().find((voice) => /^en-US$/i.test(voice.lang));
+          const voices = window.speechSynthesis.getVoices();
+          const maleVoicePattern = /David|Guy|Mark|Eric|Alex|Tony|Daniel|James|Christopher|Ryan|Fred|Matthew|John|George|Brian|Evan/i;
+          const maleVoice = voices.find((voice) => /^en-US$/i.test(voice.lang) && (voice.gender === 'male' || maleVoicePattern.test(voice.name)))
+            || voices.find((voice) => maleVoicePattern.test(voice.name));
+          const americanVoice = maleVoice || voices.find((voice) => /^en-US$/i.test(voice.lang));
           if (americanVoice) utterance.voice = americanVoice;
           utterance.rate = 0.96;
-          utterance.onend = onEnd;
-          utterance.onerror = () => {
+          utterance.pitch = maleVoice ? 0.95 : 0.78;
+          playMarketDetailsBtn.hidden = true;
+          pauseMarketDetailsBtn.hidden = false;
+          const finishSpeech = () => {
+            if (requestVersion !== marketSpeechRequestVersion) return;
+            playMarketDetailsBtn.hidden = false;
+            pauseMarketDetailsBtn.hidden = true;
             if (onEnd) onEnd();
+          };
+          utterance.onend = finishSpeech;
+          utterance.onerror = () => {
+            finishSpeech();
           };
           window.speechSynthesis.speak(utterance);
         } catch (error) {
+          playMarketDetailsBtn.hidden = false;
+          pauseMarketDetailsBtn.hidden = true;
           marketOpportunityStatus.textContent = `Spoken response unavailable: ${error.message}. Use the on-screen choices instead.`;
           if (onEnd) onEnd();
         }
       }
 
       function listenForMarketVoiceReply(mode = 'decision') {
-        if (!marketVoiceEnabled || !MarketSpeechRecognition || !bestMarket) return;
+        if (!marketVoiceEnabled || !MarketSpeechRecognition) return;
+        const voiceStatus = marketOpportunity.hidden ? marketScanStatus : marketOpportunityStatus;
         try {
           marketSpeechRecognition = new MarketSpeechRecognition();
           marketSpeechRecognition.lang = 'en-US';
           marketSpeechRecognition.interimResults = false;
           marketSpeechRecognition.maxAlternatives = 1;
           marketSpeechRecognition.addEventListener('start', () => {
-            marketOpportunityStatus.textContent = mode === 'amount'
+            voiceStatus.textContent = mode === 'amount'
               ? 'Listening for your USD amount. Say, for example, “50 dollars,” or enter it below.'
-              : 'Listening. Say “I like it” with an amount, or “find another market.”';
+              : 'Listening. Say “scan markets,” or “I like it” with an amount and trade settings.';
           }, { once: true });
           marketSpeechRecognition.addEventListener('result', (event) => {
             const transcript = event.results[0]?.[0]?.transcript?.trim();
             if (!transcript) {
-              marketOpportunityStatus.textContent = 'No voice reply was detected. Use the on-screen choices instead.';
+              voiceStatus.textContent = 'No voice reply was detected. Try again or use the on-screen controls.';
+              if (marketVoiceEnabled) listenForMarketVoiceReply(mode);
               return;
             }
             if (mode === 'amount') {
               const spokenAmount = parseMarketTradeAmount(transcript);
               if (!spokenAmount || spokenAmount < minimumTradeUsd) {
-                marketOpportunityStatus.textContent = `I heard “${transcript}”. Please say an amount of at least $20, or enter it below.`;
+                voiceStatus.textContent = `I heard “${transcript}”. Please say an amount of at least $20, or enter it below.`;
                 marketOpportunityTradeForm.hidden = false;
                 marketTradeAmount.focus();
+                speakMarketResponse('The minimum trade is 20 dollars. Please say the amount again.', () => listenForMarketVoiceReply('amount'));
                 return;
               }
               marketTradeAmount.value = String(spokenAmount);
-              marketOpportunityStatus.textContent = `You chose ${formatMoney(spokenAmount)}.`;
-              speakMarketResponse(`You chose ${formatMoney(spokenAmount)}. I will check the balance and latest price, then place the paper trade.`, executeMarketOpportunityTrade);
+              applyMarketTradeVoiceSettings(transcript);
+              voiceStatus.textContent = `You chose ${formatMoney(spokenAmount)}.`;
+              acknowledgeMarketTrade(executeVoiceMarketTrade);
               return;
             }
             respondToMarketVoice(transcript);
           }, { once: true });
           marketSpeechRecognition.addEventListener('error', (event) => {
-            marketOpportunityStatus.textContent = `Voice reply unavailable: ${event.error}. Use the on-screen choices instead.`;
+            voiceStatus.textContent = `Voice reply unavailable: ${event.error}. Try again or use the on-screen controls.`;
           }, { once: true });
           marketSpeechRecognition.start();
         } catch (error) {
-          marketOpportunityStatus.textContent = `Voice reply could not start: ${error.message}. Use the on-screen choices instead.`;
+          voiceStatus.textContent = `Voice reply could not start: ${error.message}. Use the on-screen controls instead.`;
         }
       }
 
@@ -1056,50 +1113,109 @@
         return found ? total + group : null;
       }
 
+      function applyMarketTradeVoiceSettings(transcript) {
+        const reply = transcript.toLowerCase();
+        if (/\bmean[ -]reversion\b/.test(reply)) marketTradeStrategy.value = 'Mean reversion (single market)';
+        else if (/\bdollar[ -]cost averaging\b|\bdca\b/.test(reply)) marketTradeStrategy.value = 'Dollar-cost averaging';
+        else if (/\bscalp(?:ing)?\b/.test(reply)) marketTradeStrategy.value = 'Scalp';
+        else if (/\bmomentum\b/.test(reply)) marketTradeStrategy.value = 'Momentum';
+
+        if (/\b(conservative|low risk)\b/.test(reply)) marketTradeRisk.value = 'Conservative';
+        else if (/\bbalanced\b/.test(reply)) marketTradeRisk.value = 'Balanced';
+        else if (/\b(aggressive|high risk)\b/.test(reply)) marketTradeRisk.value = 'Aggressive';
+        else if (/\bmedium risk\b/.test(reply)) marketTradeRisk.value = 'Balanced';
+
+        const percentageNumber = '(\\d+(?:\\.\\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty)';
+        const stopLossMatch = reply.match(new RegExp(`stop[\\s-]*loss(?:\\s+(?:of|at))?\\s+${percentageNumber}`));
+        const takeProfitMatch = reply.match(new RegExp(`take[\\s-]*profit(?:\\s+(?:of|at))?\\s+${percentageNumber}`));
+        const percentageWords = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, fifteen: 15, twenty: 20, thirty: 30, forty: 40, fifty: 50 };
+        const toPercentage = (match) => {
+          if (!match) return null;
+          const value = Number(match[1]);
+          return Number.isFinite(value) ? value : percentageWords[match[1]];
+        };
+        const stopLoss = toPercentage(stopLossMatch);
+        const takeProfit = toPercentage(takeProfitMatch);
+        if (stopLoss !== null) marketTradeStopLoss.value = String(stopLoss);
+        if (takeProfit !== null) marketTradeTakeProfit.value = String(takeProfit);
+      }
+
+      function getMarketTradeDuration() {
+        const rangePercent = bestMarket && bestMarket.price > 0
+          ? ((bestMarket.high - bestMarket.low) / bestMarket.price) * 100
+          : 0;
+        if (rangePercent > 5) return { value: '4h', label: '4 hours' };
+        if (rangePercent > 2.5) return { value: '12h', label: '12 hours' };
+        if (rangePercent > 1.25) return { value: '24h', label: '24 hours' };
+        return { value: '7d', label: '7 days' };
+      }
+
+      function acknowledgeMarketTrade(onEnd) {
+        const duration = getMarketTradeDuration();
+        const response = `Sure. I will prepare ${bestMarket.symbol} using ${marketTradeStrategy.value}, ${marketTradeRisk.value} risk, a ${marketTradeStopLoss.value}% stop-loss, and a ${marketTradeTakeProfit.value}% take-profit. I selected a ${duration.label} trading duration based on the market's recent range. I will verify the amount, balance, and latest price before placing this paper trade.`;
+        speakMarketResponse(response, onEnd);
+      }
+
+      async function executeVoiceMarketTrade() {
+        const started = await executeMarketOpportunityTrade();
+        if (!started && marketVoiceEnabled && bestMarket) {
+          speakMarketResponse(`${marketOpportunityStatus.textContent} You can correct the amount or settings and say “I like it” again.`, () => listenForMarketVoiceReply());
+        }
+      }
+
       function respondToMarketVoice(transcript) {
         const reply = transcript.toLowerCase();
         marketOpportunityStatus.textContent = `I heard: “${transcript}”`;
+        if (/\b(scan|rescan|search)\b.*\bmarket(s)?\b|\bmarket(s)?\b.*\b(scan|rescan|search)\b/.test(reply)) {
+          speakMarketResponse('Okay, scanning the markets now.', () => scanMarkets(true));
+          return;
+        }
+        if (!bestMarket) {
+          marketScanStatus.textContent = 'No market is selected yet. Say “scan markets” to search again.';
+          speakMarketResponse('I do not have a market selected yet. Say “scan markets” and I will check again.', () => listenForMarketVoiceReply());
+          return;
+        }
         if (/\b(different|another|alternate|find|no thanks|don't|do not|dislike|not really|no)\b/.test(reply)) {
-          speakMarketResponse('Okay, I will look for a different market.', requestDifferentMarket);
+          speakMarketResponse('Okay, I will scan for a different market.', requestDifferentMarket);
           return;
         }
         if (/\b(like|yes|trade|buy|go ahead)\b/.test(reply)) {
           acceptMarketOpportunity();
+          applyMarketTradeVoiceSettings(transcript);
           const amount = parseMarketTradeAmount(transcript);
           if (amount !== null) {
             if (amount < minimumTradeUsd) {
               marketOpportunityStatus.textContent = 'The minimum paper trade is 20 US dollars. Please say an amount of at least 20 dollars or enter it below.';
-              speakMarketResponse('The minimum paper trade is 20 US dollars. What amount would you like to trade?');
-              listenForMarketVoiceReply('amount');
+              speakMarketResponse('The minimum paper trade is 20 dollars. What amount would you like to trade?', () => listenForMarketVoiceReply('amount'));
               return;
             }
             marketTradeAmount.value = String(amount);
             marketOpportunityStatus.textContent = `You chose ${formatMoney(amount)}.`;
-            speakMarketResponse(`You chose ${formatMoney(amount)}. I will check the balance and latest price, then place the paper trade.`, executeMarketOpportunityTrade);
+            acknowledgeMarketTrade(executeVoiceMarketTrade);
             return;
           }
-          marketOpportunityPrompt.textContent = 'How much would you like to trade? The minimum is $20. Say an amount such as “50 dollars,” or enter it below.';
+          marketOpportunityPrompt.textContent = 'How much would you like to trade? The minimum is $20. You may also say a strategy, risk level, stop-loss, and take-profit.';
           marketOpportunityStatus.textContent = 'Tell me the USD amount you want to paper trade, or enter it below.';
-          speakMarketResponse(marketOpportunityPrompt.textContent, () => listenForMarketVoiceReply('amount'));
+          speakMarketResponse(`Okay. What amount would you like to trade? The minimum is 20 dollars. You can also say a strategy, risk level, stop-loss, and take-profit.`, () => listenForMarketVoiceReply('amount'));
           return;
         }
-        marketOpportunityStatus.textContent = `I heard: “${transcript}”. Say “I like it” with an amount, or “find another market.”`;
-        speakMarketResponse('Would you like this market, or should I find another one?');
+        marketOpportunityStatus.textContent = `I heard: “${transcript}”. Say “I like it” with an amount, or “scan markets.”`;
+        speakMarketResponse('Would you like this market, or should I scan for another one?', () => listenForMarketVoiceReply());
       }
 
       function startMarketVoiceConversation() {
-        if (!marketVoiceEnabled || !bestMarket || !MarketSpeechRecognition || !('speechSynthesis' in window)) return;
-        speakMarketResponse(
-          `${marketOpportunityDetails.textContent} ${marketOpportunityPrompt.textContent}`,
-          () => listenForMarketVoiceReply()
-        );
-        marketOpportunityStatus.textContent = 'The AI is reviewing the market. I will listen for your choice when it finishes.';
+        if (!marketVoiceEnabled || !MarketSpeechRecognition || !('speechSynthesis' in window)) return;
+        const review = bestMarket
+          ? `${marketOpportunityDetails.textContent} ${marketOpportunityPrompt.textContent}`
+          : `${marketScanStatus.textContent} Say “scan markets” whenever you want me to check again.`;
+        speakMarketResponse(`Sure. Voice conversation is enabled. ${review}`, () => listenForMarketVoiceReply());
+        const voiceStatus = marketOpportunity.hidden ? marketScanStatus : marketOpportunityStatus;
+        voiceStatus.textContent = 'The AI is reviewing the market. I will listen for your choice when it finishes.';
       }
 
       function acceptMarketOpportunity() {
         if (!bestMarket) return;
         marketOpportunityTradeForm.hidden = false;
-        marketTradeAmount.focus();
       }
 
       function requestDifferentMarket() {
@@ -1135,21 +1251,40 @@
       });
 
       async function executeMarketOpportunityTrade() {
-        if (!bestMarket) return;
+        if (!bestMarket) return false;
         const amount = Number(marketTradeAmount.value);
+        const stopLossPercent = Number(marketTradeStopLoss.value);
+        const takeProfitPercent = Number(marketTradeTakeProfit.value);
         if (!Number.isFinite(amount) || amount < minimumTradeUsd) {
           marketOpportunityStatus.textContent = 'Enter a paper trade amount of at least USD $20.00.';
           marketTradeAmount.focus();
-          return;
+          return false;
+        }
+        if (!Number.isFinite(stopLossPercent) || stopLossPercent <= 0 || stopLossPercent > 100
+          || !Number.isFinite(takeProfitPercent) || takeProfitPercent <= 0 || takeProfitPercent > 500) {
+          marketOpportunityStatus.textContent = 'Choose a stop-loss from 0.1% to 100% and a take-profit from 0.1% to 500%.';
+          return false;
         }
         if (!window.makingsBackgroundTradingEnabled) {
           marketOpportunityStatus.textContent = 'Sign in and ensure the background paper-trading service is available before starting a paper trade.';
-          return;
+          return false;
+        }
+        if (botState.pnl >= botMemory.goalProfit) {
+          marketOpportunityStatus.textContent = 'The bot profit goal is already reached. Raise the goal in Bot Settings before opening another managed trade.';
+          return false;
+        }
+        if (botState.position) {
+          marketOpportunityStatus.textContent = `Close the existing ${botState.position.symbol} paper position before opening another bot-managed position.`;
+          return false;
         }
         const configuredMaximum = Number(document.getElementById('maxTradeAmount').value);
+        if (!Number.isFinite(configuredMaximum) || configuredMaximum < 0) {
+          marketOpportunityStatus.textContent = 'The configured maximum trade amount is invalid. Update the bot risk settings before trading.';
+          return false;
+        }
         if (configuredMaximum > 0 && amount > configuredMaximum) {
           marketOpportunityStatus.textContent = `This amount exceeds the maximum paper trade amount of ${formatMoney(configuredMaximum)}.`;
-          return;
+          return false;
         }
 
         startMarketTradeBtn.disabled = true;
@@ -1166,20 +1301,63 @@
           const quantity = amount / currentPrice;
           if (!Number.isFinite(quantity) || quantity <= 0) throw new Error('The trade quantity could not be calculated');
 
+          const selectedDuration = getMarketTradeDuration();
+          const selectedStrategy = marketTradeStrategy.value;
+          const selectedRisk = marketTradeRisk.value;
+          if (!['Momentum', 'Scalp', 'Mean reversion (single market)', 'Dollar-cost averaging'].includes(selectedStrategy)
+            || !['Conservative', 'Balanced', 'Aggressive'].includes(selectedRisk)) {
+            throw new Error('Choose a valid strategy and risk level');
+          }
+          strategy.value = selectedStrategy;
+          riskLevel.value = selectedRisk;
+          stopLossInput.value = String(stopLossPercent);
+          takeProfitInput.value = String(takeProfitPercent);
+          durationSelect.value = selectedDuration.value;
+          updateSummary();
+          const autoStartedBot = !botState.running;
           coinPrices[bestMarket.symbol] = currentPrice;
           coinSelect.value = bestMarket.symbol;
           coinSelect.dispatchEvent(new Event('change'));
           botState.balance -= amount;
-          openPositionRecord(bestMarket.symbol, quantity, currentPrice, 'Market scan');
+          botState.position = {
+            symbol: bestMarket.symbol,
+            entry: currentPrice,
+            size: quantity,
+            stopLoss: stopLossPercent,
+            takeProfit: takeProfitPercent,
+            strategy: selectedStrategy,
+            source: 'Market scan',
+            duration: selectedDuration.value,
+            expiresAt: Date.now() + ({ '4h': 4, '12h': 12, '24h': 24, '7d': 168 }[selectedDuration.value] * 60 * 60 * 1000),
+            pauseAfterExit: autoStartedBot
+          };
+          const marketScanRecord = openPositionRecord(bestMarket.symbol, quantity, currentPrice, 'Market scan');
+          Object.assign(marketScanRecord, {
+            strategy: selectedStrategy,
+            riskLevel: selectedRisk,
+            stopLoss: stopLossPercent,
+            takeProfit: takeProfitPercent,
+            duration: selectedDuration.value,
+            expiresAt: botState.position.expiresAt
+          });
+          savePositionRecords();
+          renderPositionRecords();
+          botState.running = true;
+          updateStatusLabel();
+          document.getElementById('startBotBtn').disabled = true;
+          document.getElementById('pauseBotBtn').disabled = false;
+          if (!botState.intervalId) botState.intervalId = window.setInterval(tickBot, 3000);
           persistBotMemory();
           updatePerformancePanel();
-          notifyTrade(`Market scan paper buy: ${quantity.toPrecision(8)} ${bestMarket.symbol} at ${formatMoney(currentPrice)} for ${formatMoney(amount)}.`);
-          marketScanStatus.textContent = `Paper trade started for ${bestMarket.symbol}/USDT.`;
+          notifyTrade(`Market scan paper buy: ${quantity.toPrecision(8)} ${bestMarket.symbol} at ${formatMoney(currentPrice)} for ${formatMoney(amount)}. ${selectedStrategy}, ${selectedRisk} risk, ${stopLossPercent}% stop-loss, ${takeProfitPercent}% take-profit, ${selectedDuration.label} duration.`);
+          marketScanStatus.textContent = `Paper trade started for ${bestMarket.symbol}/USDT. The bot will manage its risk limits and ${selectedDuration.label} duration.`;
           marketOpportunity.hidden = true;
           marketOpportunityPending = false;
           bestMarket = null;
+          return true;
         } catch (error) {
           marketOpportunityStatus.textContent = `Paper trade could not be started: ${error.message}.`;
+          return false;
         } finally {
           startMarketTradeBtn.disabled = false;
         }
@@ -2608,10 +2786,18 @@
 
         if (botState.position && botState.position.symbol === symbol) {
           const movePct = ((tradePrice - botState.position.entry) / botState.position.entry) * 100;
+          const durationExpired = Number(botState.position.expiresAt) > 0 && Date.now() >= botState.position.expiresAt;
 
-          if (analysis.action === 'SELL' || movePct >= botState.position.takeProfit || movePct <= -botState.position.stopLoss) {
+          if (durationExpired || analysis.action === 'SELL' || movePct >= botState.position.takeProfit || movePct <= -botState.position.stopLoss) {
             const exitValue = botState.position.size * tradePrice;
             const result = exitValue - (botState.position.size * botState.position.entry);
+            const exitReason = durationExpired
+              ? 'the selected trading duration ended'
+              : movePct >= botState.position.takeProfit
+                ? 'the take-profit limit was reached'
+                : movePct <= -botState.position.stopLoss
+                  ? 'the stop-loss limit was reached'
+                  : 'the strategy signaled an exit';
             botState.pnl += result;
             botState.balance += exitValue;
             const realizedProfit = Number(localStorage.getItem(realizedProfitKey)) || 0;
@@ -2620,18 +2806,26 @@
 
             if (result > 0) {
               botState.wins += 1;
-              notifyTrade(`AI SELL: ${symbol} closed at ${formatMoney(tradePrice)}. Profit ${formatMoney(result)}.`, 'success', result);
+              notifyTrade(`AI SELL: ${symbol} closed at ${formatMoney(tradePrice)} because ${exitReason}. Profit ${formatMoney(result)}.`, 'success', result);
             } else if (result < 0) {
               botState.losses += 1;
-              notifyTrade(`AI SELL: ${symbol} closed at ${formatMoney(tradePrice)}. Loss ${formatMoney(Math.abs(result))}.`, 'loss', result);
+              notifyTrade(`AI SELL: ${symbol} closed at ${formatMoney(tradePrice)} because ${exitReason}. Loss ${formatMoney(Math.abs(result))}.`, 'loss', result);
             } else {
-              notifyTrade(`AI SELL: ${symbol} closed at ${formatMoney(tradePrice)}. The trade broke even.`);
+              notifyTrade(`AI SELL: ${symbol} closed at ${formatMoney(tradePrice)} because ${exitReason}. The trade broke even.`);
             }
 
             const closedPosition = botState.position;
-            closePositionRecord(symbol, tradePrice, closedPosition.size);
+            closePositionRecord(symbol, tradePrice, closedPosition.size, closedPosition.source || null);
             botState.position = null;
             recordClosedOutcome(closedPosition, tradePrice, result);
+            if (closedPosition.pauseAfterExit) {
+              botState.running = false;
+              window.clearInterval(botState.intervalId);
+              botState.intervalId = null;
+              updateStatusLabel();
+              document.getElementById('startBotBtn').disabled = false;
+              document.getElementById('pauseBotBtn').disabled = true;
+            }
             persistBotMemory();
             updatePerformancePanel();
           }
@@ -3025,6 +3219,31 @@
       chooseAnotherMarketBtn.addEventListener('click', () => {
         marketOpportunityTradeForm.hidden = true;
         marketOpportunityStatus.textContent = '';
+      });
+      playMarketDetailsBtn.addEventListener('click', () => {
+        if (!('speechSynthesis' in window)) {
+          marketOpportunityStatus.textContent = 'Spoken market details are not supported in this browser.';
+          return;
+        }
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+          playMarketDetailsBtn.hidden = true;
+          pauseMarketDetailsBtn.hidden = false;
+          marketOpportunityStatus.textContent = 'Market details reading resumed.';
+          return;
+        }
+        if (!bestMarket) return;
+        const review = `${marketOpportunityDetails.textContent} ${marketOpportunityPrompt.textContent}`;
+        speakMarketResponse(review, () => {
+          if (marketVoiceEnabled) listenForMarketVoiceReply();
+        });
+      });
+      pauseMarketDetailsBtn.addEventListener('click', () => {
+        if (!window.speechSynthesis.speaking) return;
+        window.speechSynthesis.pause();
+        playMarketDetailsBtn.hidden = false;
+        pauseMarketDetailsBtn.hidden = true;
+        marketOpportunityStatus.textContent = 'Reading paused. Select Play market details to continue.';
       });
       marketOpportunityTradeForm.addEventListener('submit', (event) => {
         event.preventDefault();
