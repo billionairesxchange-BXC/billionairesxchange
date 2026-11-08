@@ -975,7 +975,7 @@
           const formatMarketPrice = (price) => `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: price < 1 ? 8 : 2 })}`;
           const review = `${bestMarket.symbol}/USDT: ${momentumAssessment} at +${bestMarket.change.toFixed(2)}%, with ${formatMoney(bestMarket.volume)} in 24-hour trading volume. Latest price: ${formatMarketPrice(bestMarket.price)}.${dailyRangePercent === null ? '' : ` The 24-hour high-to-low range is ${dailyRangePercent.toFixed(2)}% of the current price.`} This is market information, not a prediction or a guarantee of profit.`;
           marketOpportunityDetails.textContent = review;
-          marketOpportunityPrompt.textContent = 'I am listening automatically. Say “next market” or “give me a different one” to skip, or “trade this market” / “keep this” and an amount (minimum $20). You can also choose the strategy and risk controls below.';
+          marketOpportunityPrompt.textContent = 'I am listening automatically. Say “next market” or “give me a different one” to skip, or “start paper trading” / “trade this market” and an amount (minimum $20). You can also choose the strategy and risk controls below.';
           marketOpportunityTradeForm.hidden = true;
           marketOpportunityStatus.textContent = '';
           marketOpportunity.hidden = false;
@@ -1046,7 +1046,7 @@
           marketSpeechRecognition.addEventListener('start', () => {
             voiceStatus.textContent = mode === 'amount'
               ? 'Listening for your USD amount. Say, for example, “50 dollars,” or enter it below.'
-              : 'Listening automatically. Say “next market,” “give me a different one,” “trade this market,” or “keep this.”';
+              : 'Listening automatically. Say “next market,” “give me a different one,” “start paper trading,” or “trade this market.”';
           }, { once: true });
           marketSpeechRecognition.addEventListener('result', (event) => {
             const transcript = event.results[0]?.[0]?.transcript?.trim();
@@ -1194,6 +1194,12 @@
         return /\b(?:scan|rescan|search|check)\b.*\bmarkets?\b|\bmarkets?\b.*\b(?:scan|rescan|search|check)\b|\bscan again\b/.test(reply);
       }
 
+      function isPaperTradeRequest(transcript) {
+        const reply = normalizeMarketVoiceReply(transcript);
+        return /\b(?:start|begin|execute|place|open)\b.{0,24}\b(?:paper\s+)?trad(?:e|ing)\b/.test(reply)
+          || /\bpaper\s+trad(?:e|ing)\s+(?:this|the)\s+(?:market|coin)\b/.test(reply);
+      }
+
       function respondToMarketVoice(transcript) {
         const reply = normalizeMarketVoiceReply(transcript);
         marketOpportunityStatus.textContent = `I heard: “${transcript}”`;
@@ -1218,7 +1224,7 @@
           speakMarketResponse('Okay. I am listening.', () => listenForMarketVoiceReply());
           return;
         }
-        if (/\b(?:like|yes|trade|buy|go ahead|keep|take|accept|choose)\b/.test(reply)) {
+        if (isPaperTradeRequest(reply) || /\b(?:like|yes|trade|buy|go ahead|keep|take|accept|choose)\b/.test(reply)) {
           acceptMarketOpportunity();
           applyMarketTradeVoiceSettings(transcript);
           const amount = parseMarketTradeAmount(transcript);
