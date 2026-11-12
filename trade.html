@@ -122,101 +122,195 @@
             <button class="btn btn-ghost" id="tradeTransferButton" type="button" aria-expanded="false" aria-controls="tradeBalanceDialog">Transfer profits</button>
           </div>
         </div>
-        <div class="card-glass positions-chart-panel">
-          <div class="positions-chart-header">
-            <div>
-              <span class="eyebrow">Position market view</span>
-              <h3 id="positionsChartTitle">BTC / USD</h3>
-              <div class="positions-market-row">
-                <div class="positions-tools-menu">
-                  <button class="positions-tools-button" id="positionsToolsButton" type="button" aria-expanded="false" aria-controls="positionsToolsOptions">Tools</button>
-                  <div class="positions-tools-options" id="positionsToolsOptions" hidden>
-                    <label class="positions-tools-mode">
-                      Pointer
-                      <select id="positionsChartMode" aria-label="Choose chart pointer tool">
-                        <option value="crosshair">Crosshair</option>
-                        <option value="ruler">Ruler</option>
-                        <option value="entry">Chart trade price</option>
-                      </select>
-                    </label>
-                    <button type="button" data-chart-tool="import">Import Indicator</button>
-                    <button type="button" data-chart-tool="create">Create Indicator</button>
-                    <button type="button" data-chart-tool="custom-candles">Custom Candlesticks</button>
-                    <button type="button" data-chart-tool="layout">Chart margins</button>
-                  </div>
-                </div>
-                <div class="positions-market-selector" role="group" aria-label="Select market">
-                  <div class="positions-market-picker">
-                    <button class="positions-market-picker-button" id="positionsMarketPickerButton" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="positionsMarketOptions">
-                      <span class="positions-market-logo" id="positionsMarketPickerLogo" aria-hidden="true">B</span>
-                      <span id="positionsMarketPickerText">BTC / USD</span>
-                      <span class="positions-market-picker-chevron" aria-hidden="true">▾</span>
-                    </button>
-                    <div class="positions-market-options" id="positionsMarketOptions" role="group" aria-label="Available crypto markets" hidden>
-                      <input id="positionsMarketSearch" type="search" aria-label="Search crypto markets" placeholder="Search coins..." autocomplete="off" />
-                      <div class="positions-market-option-list" id="positionsMarketOptionList"></div>
+        <div class="card-glass positions-chart-panel" id="positionsChartPanel">
+          <div class="advanced-trading-layout" id="advancedTradingLayout">
+            <header class="advanced-market-strip">
+              <div class="advanced-market-summary">
+                <span class="positions-market-logo advanced-market-logo" id="advancedMarketLogo" aria-hidden="true">B</span>
+                <strong id="advancedMarketSymbol">BTC / USD</strong>
+                <span class="advanced-paper-badge">PAPER</span>
+                <strong id="advancedMarketPrice">--</strong>
+                <span class="advanced-market-stat">24h Chg<strong id="advancedMarketChange">--</strong></span>
+                <span class="advanced-market-stat">24h High<strong id="advancedMarketHigh">--</strong></span>
+                <span class="advanced-market-stat">24h Low<strong id="advancedMarketLow">--</strong></span>
+                <span class="advanced-market-stat">24h Vol (BTC)<strong id="advancedMarketVolumeBtc">--</strong></span>
+                <span class="advanced-market-stat">24h Vol (USDT)<strong id="advancedMarketVolumeUsdt">--</strong></span>
+                <span class="advanced-market-links">
+                  <a id="advancedNetworksLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Networks</a>
+                  <a id="advancedTokenTagsLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Token Tags</a>
+                </span>
+              </div>
+              <button class="advanced-exit-button" id="positionsAdvancedCloseButton" type="button">Exit advanced view</button>
+            </header>
+
+            <aside class="advanced-orderbook" aria-label="Order book">
+              <div class="advanced-rail-heading"><h4>Order Book</h4><span>Unavailable</span></div>
+              <div class="advanced-orderbook-columns"><span>Price (USDT)</span><span>Amount</span><span>Total</span></div>
+              <div class="advanced-data-unavailable">
+                <strong>Live order-book data is not connected</strong>
+                <span>Prices shown in this view are market references, not executable exchange depth.</span>
+              </div>
+            </aside>
+
+            <div class="advanced-trading-main">
+              <div class="advanced-chart-tabs" role="tablist" aria-label="Advanced trading panels">
+                <button type="button" role="tab" id="advancedTabChart" aria-selected="true" aria-controls="advancedPanelChart" data-advanced-tab="chart">Chart</button>
+                <button type="button" role="tab" id="advancedTabInfo" aria-selected="false" aria-controls="advancedPanelInfo" data-advanced-tab="info">Info</button>
+                <button type="button" role="tab" id="advancedTabData" aria-selected="false" aria-controls="advancedPanelData" data-advanced-tab="data">Data</button>
+                <button type="button" role="tab" id="advancedTabAnalysis" aria-selected="false" aria-controls="advancedPanelAnalysis" data-advanced-tab="analysis">Trading Analysis</button>
+                <button type="button" role="tab" id="advancedTabSquare" aria-selected="false" aria-controls="advancedPanelSquare" data-advanced-tab="square">Square</button>
+              </div>
+
+              <section id="advancedPanelChart" class="advanced-tab-panel" role="tabpanel" aria-labelledby="advancedTabChart" data-advanced-panel="chart">
+                <div class="positions-chart-header">
+                  <div>
+                    <h3 id="positionsChartTitle">BTC / USD</h3>
+                    <div class="positions-market-row">
+                      <div class="positions-tools-menu">
+                        <button class="positions-tools-button" id="positionsToolsButton" type="button" aria-expanded="false" aria-controls="positionsToolsOptions">Tools</button>
+                        <div class="positions-tools-options" id="positionsToolsOptions" hidden>
+                          <label class="positions-tools-mode">Pointer
+                            <select id="positionsChartMode" aria-label="Choose chart pointer tool">
+                              <option value="crosshair">Crosshair</option>
+                              <option value="ruler">Ruler</option>
+                              <option value="entry">Chart trade price</option>
+                            </select>
+                          </label>
+                          <button type="button" data-chart-tool="import">Import Indicator</button>
+                          <button type="button" data-chart-tool="create">Create Indicator</button>
+                          <button type="button" data-chart-tool="custom-candles">Custom Candlesticks</button>
+                          <button type="button" data-chart-tool="layout">Chart margins</button>
+                        </div>
+                      </div>
+                      <div class="positions-market-selector" role="group" aria-label="Select market">
+                        <div class="positions-market-picker">
+                          <button class="positions-market-picker-button" id="positionsMarketPickerButton" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="positionsMarketOptions">
+                            <span class="positions-market-logo" id="positionsMarketPickerLogo" aria-hidden="true">B</span>
+                            <span id="positionsMarketPickerText">BTC / USD</span>
+                            <span class="positions-market-picker-chevron" aria-hidden="true">▾</span>
+                          </button>
+                          <div class="positions-market-options" id="positionsMarketOptions" role="group" aria-label="Available crypto markets" hidden>
+                            <input id="positionsMarketSearch" type="search" aria-label="Search crypto markets" placeholder="Search coins..." autocomplete="off" />
+                            <div class="positions-market-option-list" id="positionsMarketOptionList"></div>
+                          </div>
+                        </div>
+                        <select id="positionsMarketSelect" class="positions-market-native-select" aria-hidden="true" tabindex="-1">
+                          <option value="BTC" selected>BTC / USD</option>
+                          <option value="XRP">XRP / USD</option>
+                          <option value="BNB">BNB / USD</option>
+                          <option value="ETH">ETH / USD</option>
+                        </select>
+                      </div>
+                      <label class="positions-market-selector positions-time-selector">
+                        <span class="sr-only">Time chart</span>
+                        <select id="positionsTimeSelect" aria-label="Choose chart timeframe">
+                          <option value="1s">1 second</option>
+                          <option value="1m" selected>1 minute</option>
+                          <option value="5m">5 minutes</option>
+                          <option value="15m">15 minutes</option>
+                          <option value="1h">1 hour</option>
+                          <option value="4h">4 hours</option>
+                          <option value="1d">1 day</option>
+                          <option value="1w">1 week</option>
+                        </select>
+                      </label>
                     </div>
                   </div>
-                  <select id="positionsMarketSelect" class="positions-market-native-select" aria-hidden="true" tabindex="-1">
-                    <option value="BTC" selected>BTC / USD</option>
-                    <option value="XRP">XRP / USD</option>
-                    <option value="BNB">BNB / USD</option>
-                    <option value="ETH">ETH / USD</option>
-                  </select>
+                  <div class="positions-chart-header-actions">
+                    <strong id="positionsChartPrice">--</strong>
+                    <button class="positions-advanced-button" id="positionsAdvancedButton" type="button" aria-pressed="false">Advanced Trading</button>
+                    <button class="positions-fullscreen-button" id="positionsFullscreenButton" type="button" aria-pressed="false" aria-label="Open Position Market View full screen">Full screen</button>
+                  </div>
                 </div>
-                <label class="positions-market-selector positions-time-selector">
-                  <span>Time chart</span>
-                  <select id="positionsTimeSelect" aria-label="Choose chart timeframe">
-                    <optgroup label="Seconds"><option value="1s">1 second</option></optgroup>
-                    <optgroup label="Minutes">
-                      <option value="1m" selected>1 minute</option>
-                      <option value="5m">5 minutes</option>
-                      <option value="15m">15 minutes</option>
-                    </optgroup>
-                    <optgroup label="Hours">
-                      <option value="1h">1 hour</option>
-                      <option value="4h">4 hours</option>
-                    </optgroup>
-                  </select>
+
+                <div class="advanced-timebar" aria-label="Chart timeframe">
+                  <span>Time</span>
+                  <button type="button" data-chart-interval="1s">1s</button>
+                  <button type="button" data-chart-interval="15m">15m</button>
+                  <button type="button" data-chart-interval="1h">1H</button>
+                  <button type="button" data-chart-interval="4h">4H</button>
+                  <button type="button" data-chart-interval="1d">1D</button>
+                  <button type="button" data-chart-interval="1w">1W</button>
+                </div>
+
+                <div id="price">Waiting for live data...</div>
+                <div class="positions-chart-wrap">
+                  <canvas id="positionsCandleChart" aria-label="Candlestick chart with timestamps for the selected market" title="Scroll over the chart to zoom in and out"></canvas>
+                  <button class="positions-save-risk-button" id="positionsSaveRiskSetup" type="button" disabled>Set risk levels</button>
+                  <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
+                </div>
+                <p id="positionsChartStatus" role="status" aria-live="polite">Loading market candles...</p>
+                <div class="advanced-chart-orderbar" id="advancedChartOrderbar">
+                  <div class="positions-chart-price-actions" role="group" aria-label="Place a paper trade at the selected chart price">
+                    <button class="btn positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy at chart price</button>
+                    <label class="positions-order-amount" for="positionsOrderQuantity">
+                      <span>Trade amount (USDT)</span>
+                      <input id="positionsOrderQuantity" type="number" min="1" step="0.01" value="0.00" inputmode="decimal" />
+                    </label>
+                    <button class="btn positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell at chart price</button>
+                  </div>
+                  <p id="positionsOrderEstimate" class="positions-order-estimate" role="status" aria-live="polite">Estimated total: --</p>
+                </div>
+                <div class="positions-risk-controls" role="group" aria-label="Set take profit and stop loss chart levels">
+                  <label class="positions-risk-control positions-risk-control-take-profit" for="positionsTakeProfitInput">
+                    <span>Take Profit</span>
+                    <div><input id="positionsTakeProfitInput" type="number" min="0.00000001" step="any" inputmode="decimal" placeholder="Price" /></div>
+                  </label>
+                  <label class="positions-risk-control positions-risk-control-stop-loss" for="positionsStopLossInput">
+                    <span>Stop Loss</span>
+                    <div><input id="positionsStopLossInput" type="number" min="0.00000001" step="any" inputmode="decimal" placeholder="Price" /></div>
+                  </label>
+                </div>
+              </section>
+
+              <section id="advancedPanelInfo" class="advanced-tab-panel" role="tabpanel" aria-labelledby="advancedTabInfo" data-advanced-panel="info" hidden>
+                <h3>Market information</h3>
+                <p>Network and token details open from the selected market’s verified listing.</p>
+                <p id="advancedInfoStatus" class="advanced-data-empty">Select a market to view its available information.</p>
+              </section>
+              <section id="advancedPanelData" class="advanced-tab-panel" role="tabpanel" data-advanced-panel="data" hidden>
+                <h3>Market data</h3>
+                <p>24-hour statistics are shown in the market header. Candlestick history is available in the Chart tab.</p>
+              </section>
+              <section id="advancedPanelAnalysis" class="advanced-tab-panel" role="tabpanel" aria-labelledby="advancedTabAnalysis" data-advanced-panel="analysis" hidden>
+                <h3>Trading Analysis</h3>
+                <p>Analysis indicators are available from the chart tools. No automated trading recommendation is generated here.</p>
+              </section>
+              <section id="advancedPanelSquare" class="advanced-tab-panel" role="tabpanel" aria-labelledby="advancedTabSquare" data-advanced-panel="square" hidden>
+                <h3>Square</h3>
+                <p>BXC Square is not connected to this trading view yet.</p>
+              </section>
+
+            </div>
+            <aside class="advanced-market-rail" aria-label="Markets and paper trades">
+              <section class="advanced-rail-section">
+                <div class="advanced-rail-heading"><h4>Markets</h4><span>Spot</span></div>
+                <div class="advanced-quote-tabs" role="group" aria-label="Filter markets by quote token">
+                  <button type="button" data-market-quote="USDC" aria-pressed="false">USDC</button>
+                  <button type="button" data-market-quote="USDT" aria-pressed="true">USDT</button>
+                  <button type="button" data-market-quote="U" aria-pressed="false">U</button>
+                  <button type="button" data-market-quote="USD1" aria-pressed="false">USD1</button>
+                  <button type="button" data-market-quote="USD" aria-pressed="false">USD</button>
+                  <button type="button" data-market-quote="BNB" aria-pressed="false">BNB</button>
+                  <button type="button" data-market-quote="BTC" aria-pressed="false">BTC</button>
+                </div>
+                <p id="advancedMarketFilterStatus" class="advanced-data-empty" role="status" hidden></p>
+                <label class="advanced-market-search">
+                  <span class="sr-only">Search loaded markets</span>
+                  <input id="advancedMarketSearch" type="search" placeholder="Search markets" autocomplete="off" />
                 </label>
-              </div>
+                <div class="advanced-market-list" id="advancedMarketList" aria-label="Available markets"></div>
+              </section>
+              <section class="advanced-rail-section advanced-paper-trades-section">
+                <div class="advanced-rail-heading"><h4>Market Trades</h4><span class="advanced-paper-badge">PAPER</span></div>
+                <p class="advanced-rail-caption">Recent paper orders from this account</p>
+                <div class="advanced-paper-trades" id="advancedPaperTrades" aria-live="polite">
+                  <p class="advanced-data-empty">Paper orders will appear here.</p>
+                </div>
+              </section>
+            </aside>
             </div>
-            <div class="positions-chart-header-actions">
-              <strong id="positionsChartPrice">--</strong>
-              <button class="positions-fullscreen-button" id="positionsFullscreenButton" type="button" aria-pressed="false" aria-label="Open Position Market View full screen">Full screen</button>
-            </div>
-          </div>
-          <div id="price">Waiting for live data...</div>
-          <div class="positions-chart-wrap">
-            <canvas id="positionsCandleChart" aria-label="Candlestick chart with timestamps for the selected market" title="Scroll over the chart to zoom in and out"></canvas>
-            <button class="positions-save-risk-button" id="positionsSaveRiskSetup" type="button" disabled>Set risk levels</button>
-            <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
-          </div>
-          <p id="positionsChartStatus" role="status" aria-live="polite">Loading market candles...</p>
-          <div class="positions-chart-actions" role="group" aria-label="Set paper trade amount">
-            <label for="positionsOrderQuantity">Trade amount (USDT)</label>
-            <input id="positionsOrderQuantity" type="number" min="1" step="0.01" value="0.00" inputmode="decimal" />
-            <span id="positionsOrderEstimate">Estimated total: --</span>
-          </div>
-          <div class="positions-chart-price-actions" role="group" aria-label="Place a paper trade at the selected chart price">
-            <button class="btn positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy at chart price</button>
-            <button class="btn positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell at chart price</button>
-          </div>
-          <div class="positions-risk-controls" role="group" aria-label="Set take profit and stop loss chart levels">
-            <label class="positions-risk-control positions-risk-control-take-profit" for="positionsTakeProfitInput">
-              <span>Take Profit</span>
-              <div>
-                <input id="positionsTakeProfitInput" type="number" min="0.00000001" step="any" inputmode="decimal" placeholder="Price" />
-              </div>
-            </label>
-            <label class="positions-risk-control positions-risk-control-stop-loss" for="positionsStopLossInput">
-              <span>Stop Loss</span>
-              <div>
-                <input id="positionsStopLossInput" type="number" min="0.00000001" step="any" inputmode="decimal" placeholder="Price" />
-              </div>
-            </label>
-          </div>
-          <dialog class="positions-tool-dialog" id="positionsToolDialog" aria-labelledby="positionsToolDialogTitle">
+            <dialog class="positions-tool-dialog" id="positionsToolDialog" aria-labelledby="positionsToolDialogTitle">
             <form id="positionsToolForm">
               <div class="positions-tool-dialog-head">
                 <h3 id="positionsToolDialogTitle">Chart tool</h3>

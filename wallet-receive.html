@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillionairesXchange | Receive Crypto</title>
+    <meta name="description" content="Receive cryptocurrency with your BXC Wallet." />
+    <link rel="icon" type="image/png" href="BillionairesXchange-Logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="wallet-receive-page">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img src="BillionairesXchange-Logo.png" alt="BillionairesXchange" width="100" />
+        <div>
+          <p class="brand-name">BillionairesXchange</p>
+          <small>Crypto Trading &amp; Investment</small>
+        </div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="trade.html">Trade</a>
+        <a href="shop.html">Shop</a>
+        <a href="treasury.html#wallet">Wallet</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="verification.html">Login</a>
+        <a class="btn btn-primary" href="verification.html">Sign Up</a>
+      </div>
+    </header>
+
+    <main class="wallet-action-page-main">
+      <div class="wallet-action-page-heading">
+        <div>
+          <span class="eyebrow">BXC Wallet</span>
+          <h1>Receive crypto</h1>
+          <p>Choose the network before sharing its address or QR code.</p>
+        </div>
+        <a class="btn btn-secondary" href="treasury.html#wallet">Wallet overview</a>
+      </div>
+      <p id="walletActionPageStatus" role="status" aria-live="polite">Loading wallet controls...</p>
+      <div id="walletActionMount"></div>
+    </main>
+
+    <script type="module" src="wallet-page-runtime.js"></script>
+    <script src="site-header.js"></script>
+  </body>
+</html>

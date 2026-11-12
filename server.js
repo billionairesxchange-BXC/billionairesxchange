@@ -1,14 +1,18 @@
 require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
+const { registerMobileApi } = require('./mobile-api');
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
 const firebaseApiKey = process.env.FIREBASE_WEB_API_KEY;
+const databaseSsl = process.env.NODE_ENV === 'production'
+  ? { rejectUnauthorized: process.env.RENDER !== 'true' }
+  : false;
 const pool = process.env.DATABASE_URL
   ? new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false
+      ssl: databaseSsl
     })
   : null;
 
@@ -21,11 +25,13 @@ app.use((request, response, next) => {
     response.set('Access-Control-Allow-Origin', origin);
     response.set('Vary', 'Origin');
     response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    response.set('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
+    response.set('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
   }
   if (request.method === 'OPTIONS') return response.sendStatus(204);
   next();
 });
+
+registerMobileApi(app);
 
 const persistedKeys = new Set([
   'makingsPositionMarketPositions',
@@ -108,6 +114,57 @@ app.put('/api/paper/state', authenticate, async (request, response, next) => {
     response.json({ saved: true });
   } catch (error) {
     next(error);
+  }
+});
+
+let fishAudioClient;
+const aiVoiceRequests = new Map();
+app.post('/api/ai/voice', authenticate, async (request, response) => {
+  const now = Date.now();
+  const recentRequests = (aiVoiceRequests.get(request.accountUid) || []).filter((time) => now - time < 60000);
+  if (recentRequests.length >= 8) {
+    return response.status(429).json({ error: 'AI voice is limited to 8 requests per minute.' });
+  }
+  recentRequests.push(now);
+  aiVoiceRequests.set(request.accountUid, recentRequests);
+  if (aiVoiceRequests.size > 1000) {
+    for (const [uid, times] of aiVoiceRequests) {
+      if (!times.some((time) => now - time < 60000)) aiVoiceRequests.delete(uid);
+    }
+  }
+
+  const text = typeof request.body?.text === 'string' ? request.body.text.trim() : '';
+  if (!text || text.length > 1200) {
+    return response.status(400).json({ error: 'Provide analysis text up to 1,200 characters.' });
+  }
+  if (!process.env.FISH_API_KEY) {
+    return response.status(503).json({ error: 'Fish Audio is not configured on the server.' });
+  }
+
+  try {
+    if (!fishAudioClient) {
+      const { FishAudioClient } = await import('fish-audio');
+      fishAudioClient = new FishAudioClient({ apiKey: process.env.FISH_API_KEY });
+    }
+    const audioStream = await fishAudioClient.textToSpeech.convert(
+      { text, format: 'mp3', latency: 'balanced' },
+      's1',
+      { timeoutInSeconds: 30, maxRetries: 1 }
+    );
+    const audioChunks = [];
+    let audioSize = 0;
+    for await (const chunk of audioStream) {
+      audioSize += chunk.byteLength;
+      if (audioSize > 8 * 1024 * 1024) {
+        return response.status(502).json({ error: 'Generated voice audio exceeded the size limit.' });
+      }
+      audioChunks.push(Buffer.from(chunk));
+    }
+    response.set({ 'Cache-Control': 'no-store', 'Content-Type': 'audio/mpeg' });
+    response.send(Buffer.concat(audioChunks));
+  } catch (error) {
+    console.error('Fish Audio text-to-speech request failed:', error.message || 'Unknown error.');
+    response.status(502).json({ error: 'AI voice generation failed. Try again.' });
   }
 });
 

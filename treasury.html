@@ -106,11 +106,13 @@
             <a class="btn btn-action btn-deposit" href="deposit.html" id="depositBtn">💰 Deposit</a>
             <a class="btn btn-action btn-withdraw" href="withdraw.html" id="withdrawBtn">💸 Withdraw</a>
             <a class="btn btn-action btn-transfer" href="transfer.html" id="transferBtn">↔️ Transfer</a>
-            <a class="btn btn-action btn-send" href="send.html" id="sendBtn">📤 Send</a>
-            <a class="btn btn-action btn-send wallet-receive-summary" href="#walletReceiveSection" id="walletReceiveShortcut">
-              <svg class="wallet-receive-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" /></svg>
-              <span>Receive</span>
-            </a>
+            <details class="wallet-send-menu">
+              <summary class="btn btn-action btn-send" id="sendBtn">📤 Send</summary>
+              <div class="wallet-send-menu-items" aria-label="BXC Wallet actions">
+                <a class="btn btn-action btn-send" href="wallet-send.html">Send crypto</a>
+                <a class="btn btn-action btn-send" href="wallet-receive.html#walletReceiveSection">Receive crypto</a>
+              </div>
+            </details>
           </nav>
 
           <section class="crypto-wallet card-glass" id="cryptoWallet" aria-labelledby="cryptoWalletTitle">
@@ -248,15 +250,17 @@
               </form>
 
               <div class="crypto-wallet-dashboard" id="walletDashboard" hidden>
-                <section class="wallet-send-panel" id="walletSendSection" aria-labelledby="walletSendHeading">
+                <section class="wallet-send-panel" id="walletSendSection" aria-labelledby="walletSendHeading" hidden>
                   <div class="wallet-send-panel-heading">
                     <span class="eyebrow">BXC Wallet</span>
-                    <h4 id="walletSendHeading">Send and Receive</h4>
-                    <p>Check your balances and share the matching network address and QR code.</p>
+                    <h4 id="walletSendHeading">Receive crypto</h4>
+                    <p>Share the matching network address and QR code.</p>
                   </div>
                   <div class="wallet-send-receive">
-                    <form class="crypto-wallet-form" id="walletSendForm">
-                      <h4>Send</h4>
+                    <details class="wallet-send-disclosure" id="walletSendDisclosure" hidden>
+                      <summary class="btn btn-primary">Send</summary>
+                      <form class="crypto-wallet-form" id="walletSendForm">
+                      <h4>Send crypto</h4>
                       <label class="wallet-ledger-choice" hidden><input id="walletUseLedger" type="checkbox" /> Use connected browser wallet</label>
                       <label class="wallet-ledger-choice" hidden><input id="walletUseHardwareLedger" type="checkbox" /> Sign with connected hardware wallet</label>
                       <label>Network
@@ -270,8 +274,9 @@
                       <label>Amount<input id="walletSendAmount" type="number" min="0.000000001" step="any" required /></label>
                       <p class="wallet-warning">Transactions are irreversible. Verify the network, address, amount, and fee before sending.</p>
                       <button class="btn btn-primary" id="walletSendButton" type="submit">Review and send</button>
-                    </form>
-                    <div class="crypto-wallet-form wallet-receive" id="walletReceiveSection">
+                      </form>
+                    </details>
+                    <div class="crypto-wallet-form wallet-receive" id="walletReceiveSection" hidden>
                       <h4>Receive</h4>
                       <label>Network
                         <select id="walletReceiveNetwork">
@@ -282,7 +287,7 @@
                       <canvas id="walletReceiveQr" aria-label="QR code for selected receive address"></canvas>
                       <button class="btn btn-secondary" type="button" id="walletCopyAddress">Copy address</button>
                     </div>
-                    <form class="crypto-wallet-form wallet-payment-request" id="walletPaymentRequestForm">
+                    <form class="crypto-wallet-form wallet-payment-request" id="walletPaymentRequestForm" hidden>
                       <h4>Request payment</h4>
                       <label>Network
                         <select id="walletRequestNetwork">
@@ -297,7 +302,7 @@
                       <button class="btn btn-secondary" type="button" id="walletCopyPaymentRequest" hidden>Copy payment request</button>
                     </form>
                   </div>
-                  <div class="wallet-addresses">
+                  <div class="wallet-addresses" hidden>
                     <h4>Blockchain addresses</h4>
                     <p>Each supported network has its own address, logo, balance, and receive QR code.</p>
                     <div id="walletAddressList"></div>

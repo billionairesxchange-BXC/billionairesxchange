@@ -167,6 +167,10 @@
           <span>Volatility <strong id="aiVolatility">--</strong></span>
         </div>
         <small id="aiUpdated">Signal accuracy uses prior outcomes for this strategy and signal; it is not a forecast.</small>
+        <div class="ai-voice-controls">
+          <button class="btn btn-ghost" id="aiVoiceButton" type="button">Listen to analysis</button>
+          <span id="aiVoiceStatus" role="status" aria-live="polite"></span>
+        </div>
       </section>
 
       <section class="bot-section section-shell" id="bot-trading">
@@ -564,6 +568,9 @@
       const aiTrend = document.getElementById('aiTrend');
       const aiVolatility = document.getElementById('aiVolatility');
       const aiUpdated = document.getElementById('aiUpdated');
+      const aiVoiceButton = document.getElementById('aiVoiceButton');
+      const aiVoiceStatus = document.getElementById('aiVoiceStatus');
+      let aiVoiceAudio = null;
       const favoriteCoinSelect = document.getElementById('favoriteCoinSelect');
       const addFavoriteBtn = document.getElementById('addFavoriteBtn');
       const favoriteCards = document.getElementById('favoriteCards');
@@ -3281,6 +3288,45 @@
         speakMarketResponse(review, () => {
           if (marketVoiceEnabled) listenForMarketVoiceReply();
         });
+      });
+      aiVoiceButton.addEventListener('click', async () => {
+        const text = `${aiRecommendation.textContent}. ${aiReason.textContent}`.trim();
+        aiVoiceButton.disabled = true;
+        aiVoiceStatus.textContent = 'Generating voice...';
+        try {
+          const token = await window.makingsGetIdToken?.();
+          if (!token) throw new Error('Sign in to use AI voice.');
+          const apiBase = window.MAKINGS_API_BASE_URL || window.location.origin;
+          const response = await fetch(`${apiBase}/api/ai/voice`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ text })
+          });
+          if (!response.ok) {
+            const result = await response.json().catch(() => ({}));
+            throw new Error(result.error || 'AI voice generation failed. Try again.');
+          }
+          const audioUrl = URL.createObjectURL(await response.blob());
+          aiVoiceAudio?.pause();
+          aiVoiceAudio = new Audio(audioUrl);
+          aiVoiceAudio.addEventListener('ended', () => {
+            URL.revokeObjectURL(audioUrl);
+            aiVoiceStatus.textContent = 'Voice playback complete.';
+          }, { once: true });
+          aiVoiceAudio.addEventListener('error', () => {
+            URL.revokeObjectURL(audioUrl);
+            aiVoiceStatus.textContent = 'Audio playback failed. Try again.';
+          }, { once: true });
+          await aiVoiceAudio.play();
+          aiVoiceStatus.textContent = 'Playing AI analysis...';
+        } catch (error) {
+          aiVoiceStatus.textContent = error.message;
+        } finally {
+          aiVoiceButton.disabled = false;
+        }
       });
       pauseMarketDetailsBtn.addEventListener('click', () => {
         if (!window.speechSynthesis.speaking) return;

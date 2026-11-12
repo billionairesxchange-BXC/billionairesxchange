@@ -72,9 +72,12 @@ const walletRoot = document.getElementById('cryptoWallet');
 
 if (walletRoot) {
   const byId = (id) => document.getElementById(id);
-  const scrollToReceiveIfRequested = () => {
-    if (window.location.hash === '#walletReceiveSection') {
-      requestAnimationFrame(() => byId('walletReceiveSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  const scrollToWalletActionIfRequested = () => {
+    const targetId = {
+      '#walletReceiveSection': 'walletReceiveSection'
+    }[window.location.hash];
+    if (targetId) {
+      requestAnimationFrame(() => byId(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
     }
   };
   const state = byId('cryptoWalletState');
@@ -1343,7 +1346,7 @@ if (walletRoot) {
     try {
       if (assetCatalog && marketAssets.length === 0) await loadMarketAssets();
       const unavailableNetworks = await deriveAllAddresses();
-      scrollToReceiveIfRequested();
+      scrollToWalletActionIfRequested();
       setMessage(unavailableNetworks.length
         ? `Wallet unlocked. Balance services unavailable: ${unavailableNetworks.join(', ')}.`
         : 'Wallet unlocked. Public network services can observe your connection and queried addresses.',
@@ -2008,6 +2011,7 @@ if (walletRoot) {
 
   window.addEventListener('hashchange', () => {
     openWalletSetupFromHash();
+    scrollToWalletActionIfRequested();
   });
 
   byId('walletOnboardingNext').addEventListener('click', () => {
