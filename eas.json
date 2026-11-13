@@ -1,0 +1,30 @@
+{
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_UI_PREVIEW": "true",
+        "EXPO_PUBLIC_WEBSITE_URL": "https://billionairesxchange-bxc.github.io/billionairesxchange/"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "testflight-preview": {
+      "distribution": "store",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_UI_PREVIEW": "true",
+        "EXPO_PUBLIC_WEBSITE_URL": "https://billionairesxchange-bxc.github.io/billionairesxchange/"
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "autoIncrement": true
+    }
+  },
+  "submit": {
+    "production": {},
+    "testflight-preview": {}
+  }
+}
