@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "BXC Wallet",
+    "slug": "bxc-wallet",
+    "owner": "bxc-wallet323s-team",
+    "scheme": "bxcwallet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.billionairesxchange.wallet",
+      "infoPlist": {
+        "NSCameraUsageDescription": "BXC Wallet uses the camera to scan a website sign-in QR code."
+      }
+    },
+    "android": {
+      "package": "com.billionairesxchange.wallet",
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow BXC Wallet to scan website sign-in QR codes."
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "95d2d504-dfcc-49cd-977e-e7b9355ae977"
+      }
+    }
+  }
+}
