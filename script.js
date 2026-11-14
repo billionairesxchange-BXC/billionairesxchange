@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const advancedTabButtons = document.querySelectorAll('[data-advanced-tab]');
   const advancedIntervalButtons = document.querySelectorAll('[data-chart-interval]');
   const advancedExternalMarkets = {
+    new: [],
     futures: [
       { name: 'WTI Crude Oil', symbol: 'CL=F', tradingViewSymbol: 'TVC:USOIL', detail: 'Oil market reference', liveTicker: 'CL=F' },
       { name: 'Gold Futures', symbol: 'GC=F', tradingViewSymbol: 'COMEX:GC1!', detail: 'Continuous gold futures', liveTicker: 'GC=F' },
@@ -83,25 +84,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   let advancedExternalMarket = null;
   const advancedExternalMarketQuotes = new Map();
   let advancedCategoryRefreshTimer = null;
+  let advancedCategoryRequestId = 0;
 
   function startAdvancedCategoryAutoRefresh() {
     if (advancedCategoryRefreshTimer) {
       window.clearInterval(advancedCategoryRefreshTimer);
       advancedCategoryRefreshTimer = null;
     }
-    if (advancedSelectedCategory === 'all') return;
+    if (advancedSelectedCategory === 'all' || !advancedExternalMarkets[advancedSelectedCategory]?.length) return;
     advancedCategoryRefreshTimer = window.setInterval(async () => {
-      if (advancedSelectedCategory === 'all') return;
-      await refreshAdvancedCategoryQuotes(advancedSelectedCategory);
-      if (advancedExternalMarket && advancedExternalMarkets[advancedSelectedCategory]) {
-        const currentMarket = advancedExternalMarkets[advancedSelectedCategory].find((market) => market.symbol === advancedExternalMarket.symbol);
-        if (currentMarket) {
-          setAdvancedExternalMarket(currentMarket);
-        } else {
-          const firstMarket = advancedExternalMarkets[advancedSelectedCategory][0];
-          setAdvancedExternalMarket(firstMarket || null);
-        }
-      }
+      const category = advancedSelectedCategory;
+      if (category === 'all') return;
+      await refreshAdvancedCategoryQuotes(category);
+      if (category !== advancedSelectedCategory) return;
       renderAdvancedMarketList();
     }, 30000);
   }
@@ -209,6 +204,81 @@ document.addEventListener('DOMContentLoaded', async () => {
     const value = readStoredJSON(key, fallback);
     return Array.isArray(value) ? value : fallback;
   };
+
+  const advancedMarketFavoritesStorageKey = 'advancedMarketFavorites';
+  const advancedMarketFavorites = new Set(
+    readStoredArray(advancedMarketFavoritesStorageKey, []).filter((key) => typeof key === 'string')
+  );
+
+  function toggleAdvancedMarketFavorite(favoriteKey) {
+    if (advancedMarketFavorites.has(favoriteKey)) {
+      advancedMarketFavorites.delete(favoriteKey);
+    } else {
+      advancedMarketFavorites.add(favoriteKey);
+    }
+    try {
+      localStorage.setItem(advancedMarketFavoritesStorageKey, JSON.stringify([...advancedMarketFavorites]));
+    } catch (error) {
+      console.warn('Unable to save advanced market favorites:', error);
+    }
+    return advancedMarketFavorites.has(favoriteKey);
+  }
+
+  function createAdvancedMarketFavoriteButton(favoriteKey, marketName) {
+    const isFavorite = advancedMarketFavorites.has(favoriteKey);
+    const button = document.createElement('button');
+    button.className = 'advanced-market-favorite';
+    button.type = 'button';
+    button.dataset.favoriteMarketKey = favoriteKey;
+    button.dataset.favoriteMarketName = marketName;
+    button.setAttribute('aria-pressed', String(isFavorite));
+    button.setAttribute('aria-label', `${isFavorite ? 'Remove' : 'Add'} ${marketName} ${isFavorite ? 'from' : 'to'} favorites`);
+    button.title = `${isFavorite ? 'Remove from' : 'Add to'} favorites`;
+    button.textContent = isFavorite ? '★' : '☆';
+    return button;
+  }
+
+  function createAdvancedMarketRow({ favoriteKey, name, symbol, price, change, selected, isLive, marketIndex, externalMarketSymbol }) {
+    const row = document.createElement('div');
+    row.className = 'advanced-market-row';
+
+    const selectButton = document.createElement('button');
+    selectButton.className = 'advanced-market-option';
+    selectButton.type = 'button';
+    selectButton.setAttribute('aria-current', String(Boolean(selected)));
+    if (Number.isInteger(marketIndex)) selectButton.dataset.marketIndex = String(marketIndex);
+    if (externalMarketSymbol) selectButton.dataset.externalMarketSymbol = externalMarketSymbol;
+
+    const label = document.createElement('span');
+    label.className = 'advanced-market-option-name';
+    label.textContent = name;
+    if (isLive) {
+      const liveIndicator = document.createElement('span');
+      liveIndicator.className = 'advanced-market-live-indicator';
+      liveIndicator.textContent = 'LIVE';
+      liveIndicator.title = 'Live market data';
+      label.appendChild(liveIndicator);
+    }
+    selectButton.appendChild(label);
+
+    if (symbol) {
+      const symbolLabel = document.createElement('span');
+      symbolLabel.className = 'advanced-market-option-symbol';
+      symbolLabel.textContent = symbol;
+      selectButton.appendChild(symbolLabel);
+    }
+
+    const priceLabel = document.createElement('span');
+    priceLabel.className = 'advanced-market-option-price';
+    priceLabel.textContent = price || '--';
+    const changeLabel = document.createElement('span');
+    changeLabel.className = `advanced-market-option-change ${change?.className || ''}`.trim();
+    changeLabel.textContent = change?.text || '--';
+    selectButton.append(priceLabel, changeLabel);
+
+    row.append(createAdvancedMarketFavoriteButton(favoriteKey, name), selectButton);
+    return row;
+  }
 
   const tradeQuery = new URLSearchParams(window.location.search);
   const requestedMarketSymbol = (tradeQuery.get('market') || '').toUpperCase();
@@ -729,28 +799,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }));
   }
 
-  async function refreshAdvancedCategoryView() {
-    if (advancedSelectedCategory === 'all') return;
-    await refreshAdvancedCategoryQuotes(advancedSelectedCategory);
-    const markets = advancedExternalMarkets[advancedSelectedCategory] || [];
-    if (!markets.length) {
-      renderAdvancedMarketList();
-      return;
-    }
-    const currentMarket = advancedExternalMarket && markets.some((market) => market.symbol === advancedExternalMarket.symbol)
-      ? advancedExternalMarket
-      : markets[0];
-    if (currentMarket) {
-      if (currentMarket.liveTicker) {
-        const quote = await fetchLiveMarketQuote(currentMarket.liveTicker);
-        if (quote) {
-          currentMarket.livePrice = quote.price;
-          currentMarket.liveChangePct = quote.changePct;
-        }
-      }
-      setAdvancedExternalMarket(currentMarket);
-    }
-    renderAdvancedMarketList();
+  async function refreshAdvancedCategoryView(category = advancedSelectedCategory) {
+    if (category === 'all' || !advancedExternalMarkets[category]?.length) return;
+    await refreshAdvancedCategoryQuotes(category);
   }
 
   function updateAdvancedExternalChart() {
@@ -809,74 +860,63 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderAdvancedMarketList() {
     if (!advancedMarketList || !positionsMarketSelect) return;
     const query = advancedMarketSearch?.value.trim().toLowerCase() || '';
+    advancedMarketList.replaceChildren();
     if (advancedQuoteTabs) advancedQuoteTabs.hidden = advancedSelectedCategory !== 'all';
+
     if (advancedSelectedCategory !== 'all') {
-      const markets = advancedExternalMarkets[advancedSelectedCategory];
+      const markets = advancedExternalMarkets[advancedSelectedCategory] || [];
+      const statusMessage = advancedSelectedCategory === 'new'
+        ? 'New listings are not connected to a verified live feed yet.'
+        : advancedSelectedCategory === 'options'
+          ? 'Underlying charts only. Option chains and contract pricing are not connected.'
+          : 'Live reference prices refresh from Yahoo Finance. These markets are view-only.';
       if (advancedMarketFilterStatus) {
         advancedMarketFilterStatus.hidden = false;
-        advancedMarketFilterStatus.textContent = markets
-          ? advancedSelectedCategory === 'options'
-            ? 'Underlying charts only. Option chains and contract pricing are not connected.'
-            : 'Charts are supplied by TradingView; live prices refresh from Yahoo Finance. View-only markets.'
-          : 'New listings are not currently available in this view.';
+        advancedMarketFilterStatus.textContent = statusMessage;
       }
-      advancedMarketList.replaceChildren();
-      if (!markets) return;
       const matchingMarkets = markets.filter((market) =>
         `${market.name} ${market.symbol} ${market.detail}`.toLowerCase().includes(query)
       );
       if (!matchingMarkets.length) {
         const empty = document.createElement('p');
         empty.className = 'advanced-data-empty';
-        empty.textContent = 'No markets match your search.';
+        empty.textContent = advancedSelectedCategory === 'new'
+          ? 'No new listings are available.'
+          : 'No markets match your search.';
         advancedMarketList.appendChild(empty);
         return;
       }
       matchingMarkets.forEach((market) => {
-        const button = document.createElement('button');
-        button.className = 'advanced-market-option';
-        button.type = 'button';
-        button.dataset.externalMarketSymbol = market.symbol;
-        button.setAttribute('aria-current', String(advancedExternalMarket?.symbol === market.symbol));
-        const label = document.createElement('span');
-        label.textContent = market.name;
-        const liveIndicator = document.createElement('span');
-        liveIndicator.className = 'advanced-market-live-indicator';
-        liveIndicator.textContent = 'LIVE';
-        liveIndicator.title = 'Live market data';
-        label.appendChild(document.createTextNode(' '));
-        label.appendChild(liveIndicator);
-        const symbol = document.createElement('span');
-        symbol.className = 'advanced-market-option-price';
-        symbol.textContent = market.symbol;
-        const liveQuote = market.livePrice != null ? formatCurrency(Number(market.livePrice)) : '--';
-        const price = document.createElement('span');
-        price.className = 'advanced-market-option-price';
-        price.textContent = liveQuote;
-        const change = document.createElement('span');
         const changeValue = Number(market.liveChangePct);
-        change.className = `advanced-market-option-change ${Number.isFinite(changeValue) && changeValue >= 0 ? 'trend-up' : 'trend-down'}`;
-        change.textContent = Number.isFinite(changeValue) ? `${changeValue >= 0 ? '+' : ''}${changeValue.toFixed(2)}%` : 'Live';
-        button.append(label, symbol, price, change);
-        advancedMarketList.appendChild(button);
+        advancedMarketList.appendChild(createAdvancedMarketRow({
+          favoriteKey: `external:${advancedSelectedCategory}:${market.liveTicker || market.symbol}`,
+          name: market.name,
+          symbol: market.symbol,
+          price: market.livePrice != null ? formatCurrency(Number(market.livePrice)) : '--',
+          change: {
+            text: Number.isFinite(changeValue) ? `${changeValue >= 0 ? '+' : ''}${changeValue.toFixed(2)}%` : '--',
+            className: Number.isFinite(changeValue) && changeValue >= 0 ? 'trend-up' : 'trend-down'
+          },
+          selected: advancedExternalMarket?.symbol === market.symbol,
+          isLive: true,
+          externalMarketSymbol: market.symbol
+        }));
       });
       return;
     }
+
     if (advancedMarketFilterStatus) {
       advancedMarketFilterStatus.hidden = advancedSelectedQuote === 'USDT';
       advancedMarketFilterStatus.textContent = advancedSelectedQuote === 'USDT'
         ? ''
         : `${advancedSelectedQuote} quote markets are not connected. Showing USDT markets only.`;
     }
-    if (advancedSelectedQuote !== 'USDT') {
-      advancedMarketList.replaceChildren();
-      return;
-    }
+    if (advancedSelectedQuote !== 'USDT') return;
+
     const options = Array.from(positionsMarketSelect.options);
     const matchingOptions = options.filter((option) =>
       `${option.value} ${option.textContent || ''}`.toLowerCase().includes(query)
     );
-    advancedMarketList.replaceChildren();
     if (!matchingOptions.length) {
       const empty = document.createElement('p');
       empty.className = 'advanced-data-empty';
@@ -884,27 +924,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       advancedMarketList.appendChild(empty);
       return;
     }
+
     matchingOptions.slice(0, 100).forEach((option) => {
-      const button = document.createElement('button');
-      button.className = 'advanced-market-option';
-      button.type = 'button';
-      button.dataset.marketIndex = String(options.indexOf(option));
-      button.setAttribute('aria-current', String(option.selected));
-      const label = document.createElement('span');
-      label.textContent = option.textContent.trim() || option.value;
-      const symbol = document.createElement('span');
-      symbol.className = 'advanced-market-option-price';
       const asset = (option.dataset.coinId && assets.find((item) => item.id === option.dataset.coinId))
         || assets.find((item) => item.symbol.toUpperCase() === option.value.toUpperCase());
-      const price = document.createElement('span');
-      price.className = 'advanced-market-option-price';
-      price.textContent = Number(asset?.current_price) > 0 ? formatCurrency(Number(asset.current_price)) : '--';
-      const change = document.createElement('span');
       const changeValue = Number(asset?.price_change_percentage_24h);
-      change.className = `advanced-market-option-change ${changeValue >= 0 ? 'trend-up' : 'trend-down'}`;
-      change.textContent = Number.isFinite(changeValue) ? `${changeValue >= 0 ? '+' : ''}${changeValue.toFixed(2)}%` : '--';
-      button.append(label, price, change);
-      advancedMarketList.appendChild(button);
+      advancedMarketList.appendChild(createAdvancedMarketRow({
+        favoriteKey: `crypto:${option.dataset.coinId || asset?.id || option.value.toUpperCase()}`,
+        name: option.textContent.trim() || option.value,
+        price: Number(asset?.current_price) > 0 ? formatCurrency(Number(asset.current_price)) : '--',
+        change: {
+          text: Number.isFinite(changeValue) ? `${changeValue >= 0 ? '+' : ''}${changeValue.toFixed(2)}%` : '--',
+          className: Number.isFinite(changeValue) && changeValue >= 0 ? 'trend-up' : 'trend-down'
+        },
+        selected: option.selected,
+        marketIndex: options.indexOf(option)
+      }));
     });
   }
 
@@ -2593,22 +2628,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   advancedCategoryButtons.forEach((button) => {
     button.addEventListener('click', async () => {
-      advancedSelectedCategory = button.dataset.marketCategory || 'all';
+      const category = button.dataset.marketCategory || 'all';
+      const currentCategory = advancedSelectedCategory;
+      const currentMarket = category === currentCategory ? advancedExternalMarket : null;
+      const requestId = ++advancedCategoryRequestId;
+      advancedSelectedCategory = category;
       advancedCategoryButtons.forEach((item) => {
-        item.setAttribute('aria-pressed', String(item === button));
+        item.setAttribute('aria-pressed', String(item.dataset.marketCategory === category));
       });
-      if (advancedSelectedCategory !== 'all') {
-        const markets = advancedExternalMarkets[advancedSelectedCategory];
-        await refreshAdvancedCategoryView();
-        const firstMarket = markets?.[0] || null;
-        setAdvancedExternalMarket(firstMarket || null);
-      } else {
+      if (category === 'all') {
         if (advancedCategoryRefreshTimer) {
           window.clearInterval(advancedCategoryRefreshTimer);
           advancedCategoryRefreshTimer = null;
         }
         setAdvancedExternalMarket(null);
+        renderAdvancedMarketList();
+        return;
       }
+
+      await refreshAdvancedCategoryView(category);
+      if (requestId !== advancedCategoryRequestId || category !== advancedSelectedCategory) return;
+      const markets = advancedExternalMarkets[category] || [];
+      const selectedMarket = currentMarket && markets.includes(currentMarket)
+        ? currentMarket
+        : markets[0] || null;
+      setAdvancedExternalMarket(selectedMarket);
       startAdvancedCategoryAutoRefresh();
       renderAdvancedMarketList();
     });
@@ -2616,12 +2660,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (advancedMarketList && positionsMarketSelect) {
     advancedMarketList.addEventListener('click', async (event) => {
+      const favoriteButton = event.target.closest('[data-favorite-market-key]');
+      if (favoriteButton) {
+        const favoriteKey = favoriteButton.dataset.favoriteMarketKey;
+        const marketName = favoriteButton.dataset.favoriteMarketName || 'market';
+        const isFavorite = toggleAdvancedMarketFavorite(favoriteKey);
+        favoriteButton.textContent = isFavorite ? '★' : '☆';
+        favoriteButton.setAttribute('aria-pressed', String(isFavorite));
+        favoriteButton.setAttribute('aria-label', `${isFavorite ? 'Remove' : 'Add'} ${marketName} ${isFavorite ? 'from' : 'to'} favorites`);
+        favoriteButton.title = `${isFavorite ? 'Remove from' : 'Add to'} favorites`;
+        return;
+      }
+
       const externalMarketButton = event.target.closest('[data-external-market-symbol]');
       if (externalMarketButton) {
-        const selectedMarket = advancedExternalMarkets[advancedSelectedCategory]?.find((market) => market.symbol === externalMarketButton.dataset.externalMarketSymbol);
+        const category = advancedSelectedCategory;
+        const selectedMarket = advancedExternalMarkets[category]?.find((market) => market.symbol === externalMarketButton.dataset.externalMarketSymbol);
         if (!selectedMarket) return;
+        const requestId = ++advancedCategoryRequestId;
         if (selectedMarket.liveTicker) {
           const quote = await fetchLiveMarketQuote(selectedMarket.liveTicker);
+          if (requestId !== advancedCategoryRequestId || category !== advancedSelectedCategory) return;
           if (quote) {
             selectedMarket.livePrice = quote.price;
             selectedMarket.liveChangePct = quote.changePct;
@@ -2632,6 +2691,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderAdvancedMarketList();
         return;
       }
+
       const optionButton = event.target.closest('[data-market-index]');
       if (!optionButton) return;
       const selectedOption = positionsMarketSelect.options[Number(optionButton.dataset.marketIndex)];
