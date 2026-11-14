@@ -1,26 +1,42 @@
 {
-  "name": "bxc-wallet-mobile",
-  "version": "1.0.0",
-  "private": true,
-  "main": "node_modules/expo/AppEntry.js",
-  "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@scure/bip39": "^2.0.0",
-    "expo": "~54.0.0",
-    "expo-camera": "~17.0.0",
-    "expo-crypto": "~15.0.0",
-    "expo-secure-store": "~15.0.0",
-    "expo-status-bar": "~3.0.0",
-    "react": "19.1.0",
-    "react-native": "0.81.4"
-  },
-  "devDependencies": {
-    "@types/react": "~19.1.10",
-    "typescript": "~5.9.2"
-  }
+    "name": "makings-crypto",
+    "private": true,
+    "version": "1.0.0",
+    "scripts": {
+        "prestart": "npm run build:wallet",
+        "start": "node server.js",
+        "build:wallet": "esbuild wallet.js --bundle --format=esm --platform=browser --inject:wallet-buffer-shim.js --outfile=wallet.bundle.js",
+        "build:contracts": "node scripts/compile-contract.js"
+    },
+    "dependencies": {
+        "@ledgerhq/hw-app-eth": "^7.10.0",
+        "@ledgerhq/hw-transport-webhid": "^6.36.0",
+        "@solana/web3.js": "^1.98.4",
+        "axios": "^1.20.0",
+        "bitcoinjs-lib": "^6.1.7",
+        "buffer": "^6.0.3",
+        "chart.js": "^4.5.1",
+        "chartjs-chart-financial": "^0.2.1",
+        "dotenv": "^18.0.3",
+        "ethers": "^6.15.0",
+        "express": "^5.2.1",
+        "fish-audio": "^0.1.0",
+        "jspdf": "^4.2.1",
+        "pdfjs-dist": "^4.10.38",
+        "pg": "^8.23.1",
+        "qrcode": "^1.5.4",
+        "ws": "^8.21.3"
+    },
+    "devDependencies": {
+        "@openzeppelin/contracts": "^5.6.1",
+        "esbuild": "^0.25.5",
+        "solc": "^0.8.37"
+    },
+    "allowScripts": {
+        "bufferutil@4.1.0": true,
+        "core-js@3.50.0": true,
+        "esbuild@0.25.5": true,
+        "keccak@3.0.4": true,
+        "utf-8-validate@6.0.6": true
+    }
 }

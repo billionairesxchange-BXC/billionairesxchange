@@ -84261,6 +84261,7 @@ var WALLET_STORAGE_KEY = "makingsEncryptedWalletV1";
 var WALLET_UNLOCK_ATTEMPTS_KEY = "makingsWalletUnlockAttemptsV1";
 var PAPER_BALANCE_KEY = "makingsPositionMarketBalance";
 var REALIZED_PROFIT_KEY = "makingsTradeRealizedProfit";
+var CREDIT_CARD_BALANCE_KEY = "makingsWalletCreditCardBalance";
 var CONNECTED_WALLET_STORAGE_KEY = "makingsTreasuryWalletAdded";
 var KDF_ITERATIONS = 31e4;
 var WALLET_IDLE_LOCK_MS = 15 * 60 * 1e3;
@@ -84591,6 +84592,7 @@ if (walletRoot) {
   }, renderPaperSummary = function() {
     const balanceElement = byId("walletPaperBalance");
     const profitElement = byId("walletRealizedPnl");
+    const creditCardBalanceElement = byId("walletCreditCardBalance");
     try {
       const rawBalance = localStorage.getItem(PAPER_BALANCE_KEY);
       const paperBalance = rawBalance === null ? 1e4 : Number(rawBalance);
@@ -84600,6 +84602,17 @@ if (walletRoot) {
       } else {
         balanceElement.textContent = formatCurrency(paperBalance);
         balanceElement.classList.remove("negative");
+      }
+      if (creditCardBalanceElement) {
+        const rawCardBalance = localStorage.getItem(CREDIT_CARD_BALANCE_KEY);
+        const cardBalance = rawCardBalance === null ? 0 : Number(rawCardBalance);
+        if (!Number.isFinite(cardBalance) || cardBalance < 0) {
+          creditCardBalanceElement.textContent = "Unavailable";
+          creditCardBalanceElement.classList.add("negative");
+        } else {
+          creditCardBalanceElement.textContent = formatCurrency(cardBalance);
+          creditCardBalanceElement.classList.remove("negative");
+        }
       }
       const rawProfit = localStorage.getItem(REALIZED_PROFIT_KEY);
       const realizedProfit = rawProfit === null ? 0 : Number(rawProfit);
@@ -86546,8 +86559,73 @@ This transaction cannot be reversed.`);
   });
   byId("preferredCurrency").addEventListener("change", renderBalances);
   byId("preferredCurrency").addEventListener("change", renderPaperSummary);
+  const creditCardTransferForm = byId("walletCreditCardTransferForm");
+  if (creditCardTransferForm) {
+    creditCardTransferForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const status = byId("walletCreditCardTransferStatus");
+      const amountInput = byId("walletCreditCardTransferAmount");
+      const amount = Math.round(Number(amountInput.value) * 100);
+      if (!Number.isFinite(amount) || amount < 1) {
+        status.textContent = "Enter a transfer amount of at least $0.01.";
+        return;
+      }
+      const submitButton2 = creditCardTransferForm.querySelector('button[type="submit"]');
+      if (submitButton2.disabled) return;
+      submitButton2.disabled = true;
+      let previousPaperRaw;
+      let previousCardRaw;
+      try {
+        previousPaperRaw = localStorage.getItem(PAPER_BALANCE_KEY);
+        previousCardRaw = localStorage.getItem(CREDIT_CARD_BALANCE_KEY);
+        const paperBalance = previousPaperRaw === null ? 1e4 : Number(previousPaperRaw);
+        const cardBalance = previousCardRaw === null ? 0 : Number(previousCardRaw);
+        const paperCents = Math.round(paperBalance * 100);
+        const cardCents = Math.round(cardBalance * 100);
+        if (!Number.isFinite(paperCents) || paperCents < amount || !Number.isFinite(cardCents) || cardCents < 0) {
+          status.textContent = "The Paper Balance is unavailable or too low for this transfer.";
+          return;
+        }
+        const nextPaperBalance = ((paperCents - amount) / 100).toFixed(2);
+        const nextCardBalance = ((cardCents + amount) / 100).toFixed(2);
+        localStorage.setItem(CREDIT_CARD_BALANCE_KEY, nextCardBalance);
+        localStorage.setItem(PAPER_BALANCE_KEY, nextPaperBalance);
+        const token = await window.makingsGetIdToken?.();
+        const localFileMode = window.location.protocol === "file:";
+        if (token && !localFileMode) {
+          const apiBase = window.MAKINGS_API_BASE_URL || window.location.origin;
+          const response = await fetch(`${apiBase}/api/paper/state`, {
+            method: "PUT",
+            headers: { "content-type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({
+              [PAPER_BALANCE_KEY]: nextPaperBalance,
+              [CREDIT_CARD_BALANCE_KEY]: nextCardBalance
+            })
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.error || "Account balances could not be synced.");
+        }
+        renderPaperSummary();
+        amountInput.value = "";
+        status.textContent = localFileMode && token ? `Transferred ${formatCurrency(amount / 100)} locally. Open the hosted wallet page to sync account balances.` : `Transferred ${formatCurrency(amount / 100)} to the simulated card balance.`;
+      } catch (error) {
+        try {
+          if (previousCardRaw === null) localStorage.removeItem(CREDIT_CARD_BALANCE_KEY);
+          else localStorage.setItem(CREDIT_CARD_BALANCE_KEY, previousCardRaw);
+          if (previousPaperRaw === null) localStorage.removeItem(PAPER_BALANCE_KEY);
+          else localStorage.setItem(PAPER_BALANCE_KEY, previousPaperRaw);
+          renderPaperSummary();
+        } catch (rollbackError) {
+          console.error("Credit card transfer rollback failed:", rollbackError);
+        }
+        status.textContent = `Transfer could not be completed: ${error.message}`;
+      } finally {
+        submitButton2.disabled = false;
+      }
+    });
+  }
   window.addEventListener("storage", (event) => {
-    if (!event.key || event.key === PAPER_BALANCE_KEY || event.key === REALIZED_PROFIT_KEY) {
+    if (!event.key || event.key === PAPER_BALANCE_KEY || event.key === REALIZED_PROFIT_KEY || event.key === CREDIT_CARD_BALANCE_KEY) {
       renderPaperSummary();
     }
   });

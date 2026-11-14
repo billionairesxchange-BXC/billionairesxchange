@@ -13,15 +13,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const marketSearch = document.getElementById('marketSearch');
   const filterButtons = document.querySelectorAll('.filter-chip');
   const positionsCandleChart = document.getElementById('positionsCandleChart');
+  const positionsExternalMarketChart = document.getElementById('positionsExternalMarketChart');
+  const positionMarketCandleChart = document.getElementById('positionMarketCandleChart');
   const positionsChartTitle = document.getElementById('positionsChartTitle');
+  const positionMarketChartTitle = document.getElementById('positionMarketChartTitle');
   const positionsChartPrice = document.getElementById('positionsChartPrice');
+  const positionMarketChartPrice = document.getElementById('positionMarketChartPrice');
   const positionsFullscreenButton = document.getElementById('positionsFullscreenButton');
   const positionsAdvancedButton = document.getElementById('positionsAdvancedButton');
   const positionsAdvancedCloseButton = document.getElementById('positionsAdvancedCloseButton');
-  const positionsChartPanel = document.querySelector('.positions-chart-panel');
-  const positionsChartPanelHome = positionsChartPanel
-    ? { parent: positionsChartPanel.parentNode, nextSibling: positionsChartPanel.nextSibling }
-    : null;
+  const positionMarketChartPanel = document.getElementById('positionMarketChartPanel');
+  const positionsChartPanel = document.getElementById('positionsChartPanel');
   const advancedMarketSymbol = document.getElementById('advancedMarketSymbol');
   const advancedMarketLogo = document.getElementById('advancedMarketLogo');
   const advancedMarketPrice = document.getElementById('advancedMarketPrice');
@@ -38,10 +40,73 @@ document.addEventListener('DOMContentLoaded', async () => {
   const advancedTokenTagsLink = document.getElementById('advancedTokenTagsLink');
   const advancedMarketFilterStatus = document.getElementById('advancedMarketFilterStatus');
   const advancedQuoteButtons = document.querySelectorAll('[data-market-quote]');
+  const advancedCategoryButtons = document.querySelectorAll('[data-market-category]');
+  const advancedQuoteTabs = document.querySelector('.advanced-quote-tabs');
   const advancedTabButtons = document.querySelectorAll('[data-advanced-tab]');
   const advancedIntervalButtons = document.querySelectorAll('[data-chart-interval]');
+  const advancedExternalMarkets = {
+    futures: [
+      { name: 'WTI Crude Oil', symbol: 'CL=F', tradingViewSymbol: 'TVC:USOIL', detail: 'Oil market reference', liveTicker: 'CL=F' },
+      { name: 'Gold Futures', symbol: 'GC=F', tradingViewSymbol: 'COMEX:GC1!', detail: 'Continuous gold futures', liveTicker: 'GC=F' },
+      { name: 'Silver Futures', symbol: 'SI=F', tradingViewSymbol: 'COMEX:SI1!', detail: 'Continuous silver futures', liveTicker: 'SI=F' },
+      { name: 'E-mini S&P 500', symbol: 'ES=F', tradingViewSymbol: 'CME_MINI:ES1!', detail: 'Index futures reference', liveTicker: 'ES=F' },
+      { name: 'E-mini Nasdaq-100', symbol: 'NQ=F', tradingViewSymbol: 'CME_MINI:NQ1!', detail: 'Index futures reference', liveTicker: 'NQ=F' }
+    ],
+    stocks: [
+      { name: 'Apple', symbol: 'AAPL', tradingViewSymbol: 'NASDAQ:AAPL', detail: 'NASDAQ-listed stock', liveTicker: 'AAPL' },
+      { name: 'Tesla', symbol: 'TSLA', tradingViewSymbol: 'NASDAQ:TSLA', detail: 'NASDAQ-listed stock', liveTicker: 'TSLA' },
+      { name: 'Netflix', symbol: 'NFLX', tradingViewSymbol: 'NASDAQ:NFLX', detail: 'NASDAQ-listed stock', liveTicker: 'NFLX' },
+      { name: 'Microsoft', symbol: 'MSFT', tradingViewSymbol: 'NASDAQ:MSFT', detail: 'NASDAQ-listed stock', liveTicker: 'MSFT' },
+      { name: 'NVIDIA', symbol: 'NVDA', tradingViewSymbol: 'NASDAQ:NVDA', detail: 'NASDAQ-listed stock', liveTicker: 'NVDA' }
+    ],
+    options: [
+      { name: 'SPY (underlying)', symbol: 'SPY', tradingViewSymbol: 'AMEX:SPY', detail: 'Underlying only; no option chain', liveTicker: 'SPY' },
+      { name: 'QQQ (underlying)', symbol: 'QQQ', tradingViewSymbol: 'NASDAQ:QQQ', detail: 'Underlying only; no option chain', liveTicker: 'QQQ' },
+      { name: 'Apple (underlying)', symbol: 'AAPL', tradingViewSymbol: 'NASDAQ:AAPL', detail: 'Underlying only; no option chain', liveTicker: 'AAPL' },
+      { name: 'NVIDIA (underlying)', symbol: 'NVDA', tradingViewSymbol: 'NASDAQ:NVDA', detail: 'Underlying only; no option chain', liveTicker: 'NVDA' },
+      { name: 'Tesla (underlying)', symbol: 'TSLA', tradingViewSymbol: 'NASDAQ:TSLA', detail: 'Underlying only; no option chain', liveTicker: 'TSLA' }
+    ],
+    indices: [
+      { name: 'Nasdaq 100', symbol: '^NDX', tradingViewSymbol: 'NASDAQ:NDX', detail: 'US technology index', liveTicker: '^NDX' },
+      { name: 'Dow Jones Industrial Average', symbol: '^DJI', tradingViewSymbol: 'DJ:DJI', detail: 'US large-cap index', liveTicker: '^DJI' },
+      { name: 'CBOE Volatility Index', symbol: '^VIX', tradingViewSymbol: 'CBOE:VIX', detail: 'US volatility index', liveTicker: '^VIX' },
+      { name: 'US Dollar Index', symbol: 'DX=F', tradingViewSymbol: 'TVC:DXY', detail: 'US dollar index', liveTicker: 'DX=F' }
+    ],
+    forex: [
+      { name: 'EUR / USD', symbol: 'EURUSD=X', tradingViewSymbol: 'FX:EURUSD', detail: 'Euro / US dollar', liveTicker: 'EURUSD=X' },
+      { name: 'GBP / USD', symbol: 'GBPUSD=X', tradingViewSymbol: 'FX:GBPUSD', detail: 'British pound / US dollar', liveTicker: 'GBPUSD=X' },
+      { name: 'USD / JPY', symbol: 'USDJPY=X', tradingViewSymbol: 'FX:USDJPY', detail: 'US dollar / Japanese yen', liveTicker: 'USDJPY=X' }
+    ]
+  };
   let advancedSelectedQuote = 'USDT';
+  let advancedSelectedCategory = 'all';
+  let advancedExternalMarket = null;
+  const advancedExternalMarketQuotes = new Map();
+  let advancedCategoryRefreshTimer = null;
+
+  function startAdvancedCategoryAutoRefresh() {
+    if (advancedCategoryRefreshTimer) {
+      window.clearInterval(advancedCategoryRefreshTimer);
+      advancedCategoryRefreshTimer = null;
+    }
+    if (advancedSelectedCategory === 'all') return;
+    advancedCategoryRefreshTimer = window.setInterval(async () => {
+      if (advancedSelectedCategory === 'all') return;
+      await refreshAdvancedCategoryQuotes(advancedSelectedCategory);
+      if (advancedExternalMarket && advancedExternalMarkets[advancedSelectedCategory]) {
+        const currentMarket = advancedExternalMarkets[advancedSelectedCategory].find((market) => market.symbol === advancedExternalMarket.symbol);
+        if (currentMarket) {
+          setAdvancedExternalMarket(currentMarket);
+        } else {
+          const firstMarket = advancedExternalMarkets[advancedSelectedCategory][0];
+          setAdvancedExternalMarket(firstMarket || null);
+        }
+      }
+      renderAdvancedMarketList();
+    }, 30000);
+  }
   const positionsChartStatus = document.getElementById('positionsChartStatus');
+  const advancedChartStatus = document.getElementById('advancedChartStatus');
   if (!window.makingsBackgroundTradingEnabled && positionsChartStatus) {
     positionsChartStatus.textContent = 'Sign in and connect the background paper-trading service to keep paper positions active after closing this page.';
   }
@@ -50,6 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const chartStatusObserver = new MutationObserver(() => {
       if (positionsChartStatusTimer) window.clearTimeout(positionsChartStatusTimer);
       const message = positionsChartStatus.textContent.trim();
+      if (advancedChartStatus) advancedChartStatus.textContent = message;
       if (!message) return;
       positionsChartStatusTimer = window.setTimeout(() => {
         if (positionsChartStatus.textContent.trim() === message) positionsChartStatus.textContent = '';
@@ -623,9 +689,179 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  function getTradingViewInterval(interval) {
+    return ({ '1s': '1', '1m': '1', '5m': '5', '15m': '15', '1h': '60', '4h': '240', '1d': '1D', '1w': '1W' })[interval] || '15';
+  }
+
+  async function fetchLiveMarketQuote(liveTicker) {
+    if (!liveTicker) return null;
+    const cached = advancedExternalMarketQuotes.get(liveTicker);
+    if (cached && Date.now() - cached.fetchedAt < 30000) return cached.quote;
+    try {
+      const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(liveTicker)}?range=5d&interval=1d`, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Yahoo quote request failed (${response.status}).`);
+      const payload = await response.json();
+      const result = payload?.chart?.result?.[0];
+      const meta = result?.meta || {};
+      const price = Number(meta.regularMarketPrice);
+      const previousClose = Number(meta.chartPreviousClose ?? meta.previousClose);
+      const changePct = Number.isFinite(price) && Number.isFinite(previousClose) && previousClose > 0
+        ? ((price - previousClose) / previousClose) * 100
+        : null;
+      const quote = { price: Number.isFinite(price) ? price : null, changePct: Number.isFinite(changePct) ? changePct : null };
+      advancedExternalMarketQuotes.set(liveTicker, { fetchedAt: Date.now(), quote });
+      return quote;
+    } catch (error) {
+      console.warn(`Unable to load live quote for ${liveTicker}:`, error);
+      return null;
+    }
+  }
+
+  async function refreshAdvancedCategoryQuotes(category) {
+    const markets = advancedExternalMarkets[category];
+    if (!Array.isArray(markets)) return;
+    await Promise.all(markets.map(async (market) => {
+      const quote = await fetchLiveMarketQuote(market.liveTicker || market.symbol);
+      if (quote) {
+        market.livePrice = quote.price;
+        market.liveChangePct = quote.changePct;
+      }
+    }));
+  }
+
+  async function refreshAdvancedCategoryView() {
+    if (advancedSelectedCategory === 'all') return;
+    await refreshAdvancedCategoryQuotes(advancedSelectedCategory);
+    const markets = advancedExternalMarkets[advancedSelectedCategory] || [];
+    if (!markets.length) {
+      renderAdvancedMarketList();
+      return;
+    }
+    const currentMarket = advancedExternalMarket && markets.some((market) => market.symbol === advancedExternalMarket.symbol)
+      ? advancedExternalMarket
+      : markets[0];
+    if (currentMarket) {
+      if (currentMarket.liveTicker) {
+        const quote = await fetchLiveMarketQuote(currentMarket.liveTicker);
+        if (quote) {
+          currentMarket.livePrice = quote.price;
+          currentMarket.liveChangePct = quote.changePct;
+        }
+      }
+      setAdvancedExternalMarket(currentMarket);
+    }
+    renderAdvancedMarketList();
+  }
+
+  function updateAdvancedExternalChart() {
+    if (!positionsExternalMarketChart || !advancedExternalMarket) return;
+    const tradingViewSymbol = advancedExternalMarket.tradingViewSymbol || advancedExternalMarket.symbol;
+    const parameters = new URLSearchParams({
+      symbol: tradingViewSymbol,
+      interval: getTradingViewInterval(chartInterval),
+      theme: 'dark',
+      style: '1',
+      locale: 'en',
+      timezone: 'Etc/UTC',
+      hide_top_toolbar: '1',
+      hide_legend: '0',
+      allow_symbol_change: '0',
+      saveimage: '0',
+      withdateranges: '1',
+      hideideas: '1'
+    });
+    positionsExternalMarketChart.src = `https://www.tradingview.com/widgetembed/?${parameters}`;
+  }
+
+  function setAdvancedExternalMarket(market) {
+    advancedExternalMarket = market;
+    const externalMode = advancedSelectedCategory !== 'all';
+    positionsChartPanel?.classList.toggle('has-external-market-chart', externalMode);
+    if (positionsExternalMarketChart) positionsExternalMarketChart.hidden = !market;
+    if (market) {
+      updateAdvancedExternalChart();
+      const label = `${market.name} · ${market.symbol}`;
+      const positionsTitle = document.getElementById('positionsChartTitle');
+      if (positionsTitle) positionsTitle.textContent = label;
+      if (positionsChartStatus) {
+        positionsChartStatus.textContent = advancedSelectedCategory === 'options'
+          ? 'TradingView is showing the underlying asset only. Option chains, contract prices, and option execution are not connected.'
+          : 'TradingView market chart. Data delays depend on the exchange. This view is read-only; paper execution is crypto-only.';
+      }
+      if (positionsChartPrice) positionsChartPrice.textContent = '--';
+      const infoStatus = document.getElementById('advancedInfoStatus');
+      if (infoStatus) infoStatus.textContent = advancedSelectedCategory === 'options'
+        ? `${label}. Underlying chart only; no option contract data is available.`
+        : `${label}. Chart supplied by TradingView; market data may be delayed.`;
+    } else {
+      positionsExternalMarketChart?.removeAttribute('src');
+      const positionsTitle = document.getElementById('positionsChartTitle');
+      const selectedOption = positionsMarketSelect?.selectedOptions[0];
+      const selectedAsset = getSelectedAsset();
+      if (positionsTitle) positionsTitle.textContent = externalMode ? 'No listed markets' : selectedOption?.textContent.trim() || 'Market chart';
+      if (positionsChartPrice) positionsChartPrice.textContent = Number(selectedAsset?.current_price) > 0 ? formatCurrency(Number(selectedAsset.current_price)) : '--';
+      if (positionsChartStatus && externalMode) positionsChartStatus.textContent = 'New listings are not currently available in this view.';
+      if (!externalMode) window.requestAnimationFrame(drawPositionsChart);
+    }
+    syncAdvancedMarketSummary();
+  }
+
   function renderAdvancedMarketList() {
     if (!advancedMarketList || !positionsMarketSelect) return;
     const query = advancedMarketSearch?.value.trim().toLowerCase() || '';
+    if (advancedQuoteTabs) advancedQuoteTabs.hidden = advancedSelectedCategory !== 'all';
+    if (advancedSelectedCategory !== 'all') {
+      const markets = advancedExternalMarkets[advancedSelectedCategory];
+      if (advancedMarketFilterStatus) {
+        advancedMarketFilterStatus.hidden = false;
+        advancedMarketFilterStatus.textContent = markets
+          ? advancedSelectedCategory === 'options'
+            ? 'Underlying charts only. Option chains and contract pricing are not connected.'
+            : 'Charts are supplied by TradingView; live prices refresh from Yahoo Finance. View-only markets.'
+          : 'New listings are not currently available in this view.';
+      }
+      advancedMarketList.replaceChildren();
+      if (!markets) return;
+      const matchingMarkets = markets.filter((market) =>
+        `${market.name} ${market.symbol} ${market.detail}`.toLowerCase().includes(query)
+      );
+      if (!matchingMarkets.length) {
+        const empty = document.createElement('p');
+        empty.className = 'advanced-data-empty';
+        empty.textContent = 'No markets match your search.';
+        advancedMarketList.appendChild(empty);
+        return;
+      }
+      matchingMarkets.forEach((market) => {
+        const button = document.createElement('button');
+        button.className = 'advanced-market-option';
+        button.type = 'button';
+        button.dataset.externalMarketSymbol = market.symbol;
+        button.setAttribute('aria-current', String(advancedExternalMarket?.symbol === market.symbol));
+        const label = document.createElement('span');
+        label.textContent = market.name;
+        const liveIndicator = document.createElement('span');
+        liveIndicator.className = 'advanced-market-live-indicator';
+        liveIndicator.textContent = 'LIVE';
+        liveIndicator.title = 'Live market data';
+        label.appendChild(document.createTextNode(' '));
+        label.appendChild(liveIndicator);
+        const symbol = document.createElement('span');
+        symbol.className = 'advanced-market-option-price';
+        symbol.textContent = market.symbol;
+        const liveQuote = market.livePrice != null ? formatCurrency(Number(market.livePrice)) : '--';
+        const price = document.createElement('span');
+        price.className = 'advanced-market-option-price';
+        price.textContent = liveQuote;
+        const change = document.createElement('span');
+        const changeValue = Number(market.liveChangePct);
+        change.className = `advanced-market-option-change ${Number.isFinite(changeValue) && changeValue >= 0 ? 'trend-up' : 'trend-down'}`;
+        change.textContent = Number.isFinite(changeValue) ? `${changeValue >= 0 ? '+' : ''}${changeValue.toFixed(2)}%` : 'Live';
+        button.append(label, symbol, price, change);
+        advancedMarketList.appendChild(button);
+      });
+      return;
+    }
     if (advancedMarketFilterStatus) {
       advancedMarketFilterStatus.hidden = advancedSelectedQuote === 'USDT';
       advancedMarketFilterStatus.textContent = advancedSelectedQuote === 'USDT'
@@ -673,6 +909,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function syncAdvancedMarketSummary() {
+    if (advancedSelectedCategory !== 'all') {
+      const market = advancedExternalMarket;
+      const logo = document.getElementById('advancedMarketLogo');
+      if (advancedMarketSymbol) advancedMarketSymbol.textContent = market ? `${market.name} · ${market.symbol}` : 'New listings';
+      if (logo) logo.textContent = market?.name.slice(0, 1) || 'M';
+      if (advancedMarketPrice) advancedMarketPrice.textContent = market ? 'See chart' : '--';
+      [advancedMarketChange, advancedMarketHigh, advancedMarketLow, advancedMarketVolumeBtc, advancedMarketVolumeUsdt].forEach((value) => {
+        if (value) value.textContent = '--';
+      });
+      [advancedNetworksLink, advancedTokenTagsLink].forEach((link) => {
+        if (link) link.hidden = true;
+      });
+      return;
+    }
     const selectedOption = positionsMarketSelect?.selectedOptions[0];
     const selectedAsset = (selectedOption?.dataset.coinId && assets.find((asset) => asset.id === selectedOption.dataset.coinId))
       || getSelectedAsset();
@@ -1233,20 +1483,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function drawPositionsChart() {
-    if (!positionsCandleChart) return;
-    const bounds = positionsCandleChart.getBoundingClientRect();
+  function drawPositionsChart(targetCanvas = positionsCandleChart, updateChartGeometry = targetCanvas === positionsCandleChart) {
+    if (typeof targetCanvas?.getBoundingClientRect !== 'function') {
+      targetCanvas = positionsCandleChart;
+      updateChartGeometry = true;
+    }
+    if (!targetCanvas) return;
+    const bounds = targetCanvas.getBoundingClientRect();
     const ratio = window.devicePixelRatio || 1;
     const width = Math.max(320, bounds.width);
-    const height = Math.max(260, positionsCandleChart.clientHeight || 320);
-    positionsCandleChart.width = width * ratio;
-    positionsCandleChart.height = height * ratio;
-    const context = positionsCandleChart.getContext('2d');
+    const height = Math.max(260, targetCanvas.clientHeight || 320);
+    targetCanvas.width = width * ratio;
+    targetCanvas.height = height * ratio;
+    const context = targetCanvas.getContext('2d');
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     context.clearRect(0, 0, width, height);
     context.fillStyle = '#000000';
     context.fillRect(0, 0, width, height);
-    if (!positionCandles.length) return;
+    if (!positionCandles.length) {
+      if (targetCanvas === positionsCandleChart && positionMarketCandleChart) drawPositionsChart(positionMarketCandleChart, false);
+      return;
+    }
     const candles = positionCandles.slice(-positionsVisibleCandleCount);
     const source = candles.map((candle) => candle.close);
     const padding = positionsChartTools.margins;
@@ -1282,12 +1539,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       context.stroke();
       context.fillText(formatPrice(value), width - padding.right + 8, lineY + 4);
     }
-    chartGeometry.min = min;
-    chartGeometry.max = max;
-    chartGeometry.plotWidth = plotWidth;
-    chartGeometry.plotHeight = plotHeight;
-    chartGeometry.candles = candles;
-    chartGeometry.padding = padding;
+    if (updateChartGeometry) {
+      chartGeometry.min = min;
+      chartGeometry.max = max;
+      chartGeometry.plotWidth = plotWidth;
+      chartGeometry.plotHeight = plotHeight;
+      chartGeometry.candles = candles;
+      chartGeometry.padding = padding;
+    }
     const candleWidth = Math.max(4, xStep * (positionsChartTools.candleStyle.bodyWidth / 100));
     candles.forEach((candle, index) => {
       const pointX = padding.left + index * xStep;
@@ -1429,8 +1688,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       context.restore();
     }
     const asset = getSelectedAsset();
-    if (asset) positionsChartTitle.textContent = `${asset.symbol.toUpperCase()} / USD`;
-    positionsChartPrice.textContent = formatPrice(candles[candles.length - 1].close);
+    if (asset) {
+      const title = `${asset.symbol.toUpperCase()} / USD`;
+      if (positionsChartTitle) positionsChartTitle.textContent = title;
+      if (positionMarketChartTitle) positionMarketChartTitle.textContent = title;
+    }
+    const price = formatPrice(candles[candles.length - 1].close);
+    if (positionsChartPrice) positionsChartPrice.textContent = price;
+    if (positionMarketChartPrice) positionMarketChartPrice.textContent = price;
+    if (targetCanvas === positionsCandleChart && positionMarketCandleChart) drawPositionsChart(positionMarketCandleChart, false);
   }
 
   function connectPositionCandleStream(symbol, interval, requestVersion, hostIndex = 0) {
@@ -2143,7 +2409,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       advancedIntervalButtons.forEach((button) => {
         button.setAttribute('aria-pressed', String(button.dataset.chartInterval === chartInterval));
       });
-      loadPositionCandles(marketConfig.selectedSymbol, chartInterval);
+      if (advancedExternalMarket) updateAdvancedExternalChart();
+      else loadPositionCandles(marketConfig.selectedSymbol, chartInterval);
     });
   }
   advancedIntervalButtons.forEach((button) => {
@@ -2238,9 +2505,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  if (positionsFullscreenButton && positionsChartPanel) {
+  if (positionsFullscreenButton && positionMarketChartPanel) {
     const setPositionsFullscreen = (isFullscreen) => {
-      positionsChartPanel.classList.toggle('is-fullscreen', isFullscreen);
+      positionMarketChartPanel.classList.toggle('is-fullscreen', isFullscreen);
       document.body.classList.toggle('positions-market-view-fullscreen-active', isFullscreen);
       positionsFullscreenButton.setAttribute('aria-pressed', String(isFullscreen));
       positionsFullscreenButton.setAttribute(
@@ -2248,19 +2515,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         isFullscreen ? 'Exit full screen Position Market View' : 'Open Position Market View full screen'
       );
       positionsFullscreenButton.textContent = isFullscreen ? 'Exit full screen' : 'Full screen';
-      if (isFullscreen) positionsChartPanel.scrollTop = 0;
+      if (isFullscreen) positionMarketChartPanel.scrollTop = 0;
       drawPositionsChart();
     };
 
     positionsFullscreenButton.addEventListener('click', () => {
-      setPositionsFullscreen(!positionsChartPanel.classList.contains('is-fullscreen'));
+      setPositionsFullscreen(!positionMarketChartPanel.classList.contains('is-fullscreen'));
     });
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && positionsChartPanel.classList.contains('is-advanced')) {
         positionsAdvancedCloseButton?.click();
         return;
       }
-      if (event.key === 'Escape' && positionsChartPanel.classList.contains('is-fullscreen')) {
+      if (event.key === 'Escape' && positionMarketChartPanel.classList.contains('is-fullscreen')) {
         setPositionsFullscreen(false);
       }
     });
@@ -2268,14 +2535,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (positionsAdvancedButton && positionsChartPanel) {
     positionsAdvancedButton.addEventListener('click', () => {
-      document.body.appendChild(positionsChartPanel);
+      if (positionMarketChartPanel) positionMarketChartPanel.hidden = true;
+      positionsChartPanel.hidden = false;
       positionsChartPanel.classList.add('is-advanced', 'is-fullscreen');
       document.body.classList.add('advanced-trading-active', 'positions-market-view-fullscreen-active');
       positionsAdvancedButton.setAttribute('aria-pressed', 'true');
-      if (advancedChartOrderbar && positionsChartWrap && positionsCandleChart) {
-        positionsChartWrap.insertBefore(advancedChartOrderbar, positionsCandleChart);
-      }
       renderAdvancedMarketList();
+      startAdvancedCategoryAutoRefresh();
       renderAdvancedPaperTrades();
       syncAdvancedMarketSummary();
       if (positionsChartPanel) positionsChartPanel.scrollTop = 0;
@@ -2285,19 +2551,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (positionsAdvancedCloseButton && positionsChartPanel) {
     positionsAdvancedCloseButton.addEventListener('click', () => {
+      if (advancedSelectedCategory !== 'all') {
+        advancedSelectedCategory = 'all';
+        advancedCategoryButtons.forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.marketCategory === 'all'));
+        });
+        setAdvancedExternalMarket(null);
+        renderAdvancedMarketList();
+      }
       positionsChartPanel.classList.remove('is-advanced', 'is-fullscreen');
+      positionsChartPanel.hidden = Boolean(positionMarketChartPanel);
+      if (positionMarketChartPanel) positionMarketChartPanel.hidden = false;
+      if (advancedCategoryRefreshTimer) {
+        window.clearInterval(advancedCategoryRefreshTimer);
+        advancedCategoryRefreshTimer = null;
+      }
       document.body.classList.remove('advanced-trading-active', 'positions-market-view-fullscreen-active');
       positionsAdvancedButton?.setAttribute('aria-pressed', 'false');
-      if (positionsChartPanelHome?.parent) {
-        const { parent, nextSibling } = positionsChartPanelHome;
-        parent.insertBefore(
-          positionsChartPanel,
-          nextSibling?.parentNode === parent ? nextSibling : null
-        );
-      }
-      if (advancedChartOrderbar && positionsChartStatus) {
-        positionsChartStatus.after(advancedChartOrderbar);
-      }
       positionsFullscreenButton?.setAttribute('aria-pressed', 'false');
       if (positionsFullscreenButton) {
         positionsFullscreenButton.textContent = 'Full screen';
@@ -2321,8 +2591,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  advancedCategoryButtons.forEach((button) => {
+    button.addEventListener('click', async () => {
+      advancedSelectedCategory = button.dataset.marketCategory || 'all';
+      advancedCategoryButtons.forEach((item) => {
+        item.setAttribute('aria-pressed', String(item === button));
+      });
+      if (advancedSelectedCategory !== 'all') {
+        const markets = advancedExternalMarkets[advancedSelectedCategory];
+        await refreshAdvancedCategoryView();
+        const firstMarket = markets?.[0] || null;
+        setAdvancedExternalMarket(firstMarket || null);
+      } else {
+        if (advancedCategoryRefreshTimer) {
+          window.clearInterval(advancedCategoryRefreshTimer);
+          advancedCategoryRefreshTimer = null;
+        }
+        setAdvancedExternalMarket(null);
+      }
+      startAdvancedCategoryAutoRefresh();
+      renderAdvancedMarketList();
+    });
+  });
+
   if (advancedMarketList && positionsMarketSelect) {
-    advancedMarketList.addEventListener('click', (event) => {
+    advancedMarketList.addEventListener('click', async (event) => {
+      const externalMarketButton = event.target.closest('[data-external-market-symbol]');
+      if (externalMarketButton) {
+        const selectedMarket = advancedExternalMarkets[advancedSelectedCategory]?.find((market) => market.symbol === externalMarketButton.dataset.externalMarketSymbol);
+        if (!selectedMarket) return;
+        if (selectedMarket.liveTicker) {
+          const quote = await fetchLiveMarketQuote(selectedMarket.liveTicker);
+          if (quote) {
+            selectedMarket.livePrice = quote.price;
+            selectedMarket.liveChangePct = quote.changePct;
+          }
+        }
+        setAdvancedExternalMarket(selectedMarket);
+        startAdvancedCategoryAutoRefresh();
+        renderAdvancedMarketList();
+        return;
+      }
       const optionButton = event.target.closest('[data-market-index]');
       if (!optionButton) return;
       const selectedOption = positionsMarketSelect.options[Number(optionButton.dataset.marketIndex)];
@@ -2336,6 +2645,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (positionsMarketSelect) {
     positionsMarketSelect.addEventListener('change', () => {
+      if (advancedSelectedCategory !== 'all') {
+        advancedSelectedCategory = 'all';
+        advancedCategoryButtons.forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.marketCategory === 'all'));
+        });
+      }
+      setAdvancedExternalMarket(null);
       renderAdvancedMarketList();
       syncAdvancedMarketSummary();
     });

@@ -3,6 +3,7 @@
     'makingsPositionMarketPositions',
     'makingsPaperOrders',
     'makingsPositionMarketBalance',
+    'makingsWalletCreditCardBalance',
     'makingsTradePaperBalance',
     'makingsTradePaperAccountBalance',
     'makingsTradeRealizedProfit',

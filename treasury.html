@@ -102,6 +102,29 @@
               </div>
             </div>
           </div>
+          <section class="wallet-credit-card-panel" id="walletCreditCard" aria-labelledby="walletCreditCardTitle">
+            <div class="wallet-credit-card-heading">
+              <div class="wallet-credit-card-identity">
+                <svg class="wallet-credit-card-icon" viewBox="0 0 32 22" aria-hidden="true">
+                  <rect x="1" y="1" width="30" height="20" rx="3" fill="#050505" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M2 7h28M6 13h7M6 17h4" fill="none" stroke="#f3c969" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                <div>
+                  <span class="eyebrow">Credit Card</span>
+                  <h3 id="walletCreditCardTitle">Card balance</h3>
+                </div>
+              </div>
+              <strong class="wallet-credit-card-value" id="walletCreditCardBalance">$0.00</strong>
+            </div>
+            <p class="wallet-credit-card-note">Simulated balance only. Transfers do not move money through a bank or card network.</p>
+            <form class="wallet-credit-card-transfer" id="walletCreditCardTransferForm">
+              <label for="walletCreditCardTransferAmount">Transfer from Paper Balance (USD)
+                <input id="walletCreditCardTransferAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required />
+              </label>
+              <button class="btn btn-primary" type="submit">Transfer to card</button>
+            </form>
+            <p class="wallet-credit-card-status" id="walletCreditCardTransferStatus" role="status" aria-live="polite"></p>
+          </section>
           <nav class="treasury-wallet-actions wallet-primary-actions" aria-label="Wallet actions">
             <a class="btn btn-action btn-deposit" href="deposit.html" id="depositBtn">💰 Deposit</a>
             <a class="btn btn-action btn-withdraw" href="withdraw.html" id="withdrawBtn">💸 Withdraw</a>
@@ -595,11 +618,19 @@
       </section>
     </main>
 
-    <footer class="site-footer">
+    <footer class="site-footer wallet-site-footer">
       <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
+      <a class="wallet-footer-card-link" href="#walletCreditCard" aria-label="Go to credit card balance and transfer" title="Credit card balance">
+        <svg viewBox="0 0 32 22" aria-hidden="true">
+          <rect x="1" y="1" width="30" height="20" rx="3" fill="#050505" stroke="currentColor" stroke-width="1.5" />
+          <path d="M2 7h28M6 13h7M6 17h4" fill="none" stroke="#f3c969" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <span>Credit card</span>
+      </a>
     </footer>
 
     <div id="toast" class="toast" aria-live="polite">Welcome to BillionairesXchange Treasury.</div>
+    <script src="api-config.js"></script>
     <script src="script.js"></script>
     <script type="module" src="auth.js"></script>
     <script>

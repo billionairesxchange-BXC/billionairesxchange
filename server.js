@@ -37,6 +37,7 @@ const persistedKeys = new Set([
   'makingsPositionMarketPositions',
   'makingsPaperOrders',
   'makingsPositionMarketBalance',
+  'makingsWalletCreditCardBalance',
   'makingsTradePaperBalance',
   'makingsTradeRealizedProfit',
   'makingsInvestmentDemoState',
