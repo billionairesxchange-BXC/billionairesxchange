@@ -161,10 +161,6 @@
           <span class="eyebrow">Investment Center companies</span>
           <h2 id="top-investments-heading">Companies Available for Investment</h2>
         </div>
-        <div class="home-company-carousel-controls" role="group" aria-label="Company slides">
-          <button class="btn btn-secondary" id="homeCompanyPrevious" type="button" aria-label="Show previous companies" aria-controls="homeCompanyGrid" disabled>Previous</button>
-          <button class="btn btn-secondary" id="homeCompanyNext" type="button" aria-label="Show next companies" aria-controls="homeCompanyGrid">Next</button>
-        </div>
         <div class="home-company-grid" id="homeCompanyGrid" role="list" aria-label="Companies available for investment"></div>
       </section>
 
@@ -210,8 +206,6 @@
     <script>
       (() => {
         const companyGrid = document.getElementById('homeCompanyGrid');
-        const previousButton = document.getElementById('homeCompanyPrevious');
-        const nextButton = document.getElementById('homeCompanyNext');
         const featuredCompanies = [
           {
             name: 'Caribbean Renewables Ltd',
@@ -329,41 +323,6 @@
           card.append(identity, details, investmentLink);
           companyGrid.appendChild(card);
         });
-
-        const updateCompanyControls = () => {
-          const maxScroll = companyGrid.scrollWidth - companyGrid.clientWidth;
-          previousButton.disabled = companyGrid.scrollLeft <= 1;
-          nextButton.disabled = companyGrid.scrollLeft >= maxScroll - 1;
-          const hasOverflow = maxScroll > 1;
-          previousButton.hidden = !hasOverflow;
-          nextButton.hidden = !hasOverflow;
-        };
-        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-        const scrollCompanies = (direction) => {
-          const firstCard = companyGrid.querySelector('.home-company-card');
-          if (!firstCard) return;
-          const gap = Number.parseFloat(getComputedStyle(companyGrid).columnGap) || 0;
-          companyGrid.scrollBy({
-            left: direction * (firstCard.getBoundingClientRect().width + gap),
-            behavior: reducedMotion.matches ? 'auto' : 'smooth'
-          });
-        };
-        const advanceCompanySlides = () => {
-          const controls = document.querySelector('.home-company-carousel-controls');
-          if (document.hidden || companyGrid.matches(':hover') || companyGrid.contains(document.activeElement)
-            || controls.matches(':hover') || controls.contains(document.activeElement) || reducedMotion.matches) return;
-          if (nextButton.disabled) {
-            companyGrid.scrollTo({ left: 0, behavior: 'smooth' });
-            return;
-          }
-          scrollCompanies(1);
-        };
-        previousButton.addEventListener('click', () => scrollCompanies(-1));
-        nextButton.addEventListener('click', () => scrollCompanies(1));
-        companyGrid.addEventListener('scroll', updateCompanyControls, { passive: true });
-        window.addEventListener('resize', updateCompanyControls);
-        window.setInterval(advanceCompanySlides, 5000);
-        updateCompanyControls();
 
       })();
     </script>

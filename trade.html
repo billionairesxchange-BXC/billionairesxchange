@@ -117,7 +117,7 @@
             <strong id="tradeAccountBalance">$0.00</strong>
             <small>Paper profits transferred out of trading</small>
           </div>
-          <div class="trade-balance-actions">
+          <div class="trade-balance-actions" aria-label="Balance actions">
             <button class="btn btn-primary" id="tradeDepositButton" type="button" aria-expanded="false" aria-controls="tradeBalanceDialog">Deposit from bank</button>
             <button class="btn btn-ghost" id="tradeTransferButton" type="button" aria-expanded="false" aria-controls="tradeBalanceDialog">Transfer profits</button>
           </div>
@@ -197,7 +197,7 @@
                 <div class="positions-chart-header-actions">
                   <strong id="positionsChartPrice">--</strong>
                   <button class="positions-advanced-button" id="positionsAdvancedButton" type="button" aria-pressed="false">Advanced Trading</button>
-                  <button class="positions-fullscreen-button" id="positionsFullscreenButton" type="button" aria-pressed="false" aria-label="Open Position Market View full screen" title="Toggle chart fullscreen">Full screen</button>
+                  <button class="positions-fullscreen-button" id="positionsFullscreenButton" type="button" aria-pressed="false" aria-label="Open Position Market View full screen" title="Toggle chart fullscreen">[ ]</button>
                 </div>
               </div>
 
@@ -224,14 +224,25 @@
                   </select>
                 </label>
 
-                <div class="advanced-timebar" aria-label="Chart timeframe">
-                  <span>Time</span>
-                  <button type="button" data-chart-interval="1s">1s</button>
-                  <button type="button" data-chart-interval="15m">15m</button>
-                  <button type="button" data-chart-interval="1h">1H</button>
-                  <button type="button" data-chart-interval="4h">4H</button>
-                  <button type="button" data-chart-interval="1d">1D</button>
-                  <button type="button" data-chart-interval="1w">1W</button>
+                <div class="advanced-timebar-wrap">
+                  <div class="advanced-timebar" aria-label="Chart timeframe">
+                    <span>Time</span>
+                    <button type="button" data-chart-interval="1s">1s</button>
+                    <button type="button" data-chart-interval="15m">15m</button>
+                    <button type="button" data-chart-interval="1h">1H</button>
+                    <button type="button" data-chart-interval="4h">4H</button>
+                    <button type="button" data-chart-interval="1d">1D</button>
+                    <button type="button" data-chart-interval="1w">1W</button>
+                  </div>
+                  <div class="advanced-chart-toolbar" aria-label="Trade alerts and AI assistant">
+                    <button class="advanced-notification-button" id="advancedTradeNotificationButton" type="button" aria-label="Open trade notifications">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                      <span class="advanced-notification-badge" id="advancedTradeNotificationBadge" hidden>0</span>
+                    </button>
+                    <button class="advanced-ai-button" id="advancedTradeAiButton" type="button" aria-label="Open AI assistant">AI</button>
+                  </div>
                 </div>
 
                 <div id="price">Waiting for live data...</div>
@@ -244,12 +255,12 @@
                 <p id="positionsChartStatus" role="status" aria-live="polite">Loading market candles...</p>
                 <div class="advanced-chart-orderbar" id="advancedChartOrderbar">
                   <div class="positions-chart-price-actions" role="group" aria-label="Place a paper trade at the selected chart price">
-                    <button class="btn positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy at chart price</button>
+                    <button class="btn positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy</button>
                     <label class="positions-order-amount" for="positionsOrderQuantity">
                       <span>Trade amount (USDT)</span>
                       <input id="positionsOrderQuantity" type="number" min="1" step="0.01" value="0.00" inputmode="decimal" />
                     </label>
-                    <button class="btn positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell at chart price</button>
+                    <button class="btn positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell</button>
                   </div>
                   <p id="positionsOrderEstimate" class="positions-order-estimate" role="status" aria-live="polite">Estimated total: --</p>
                 </div>
@@ -262,6 +273,10 @@
                     <span>Stop Loss</span>
                     <div><input id="positionsStopLossInput" type="number" min="0.00000001" step="any" inputmode="decimal" placeholder="Price" /></div>
                   </label>
+                </div>
+                <div class="positions-market-coin-banner" id="positionsMarketCoinBanner" aria-live="polite" title="Selected market quote token">
+                  <span>Market</span>
+                  <strong id="positionsMarketCoinValue">USDT</strong>
                 </div>
               </section>
 

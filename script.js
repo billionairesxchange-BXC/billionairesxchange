@@ -144,6 +144,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const positionsSaveRiskSetup = document.getElementById('positionsSaveRiskSetup');
   const positionsTakeProfitInput = document.getElementById('positionsTakeProfitInput');
   const positionsStopLossInput = document.getElementById('positionsStopLossInput');
+  const positionsMarketCoinValue = document.getElementById('positionsMarketCoinValue');
+  const positionsMarketCoinBanner = document.getElementById('positionsMarketCoinBanner');
   const tradeToast = document.getElementById('toast');
   let tradeToastTimer = null;
   const positionsOrderQuantity = document.getElementById('positionsOrderQuantity');
@@ -188,6 +190,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       tradeToast.classList.remove('show');
     }, 4500);
   }
+
+  function refreshAdvancedTradeNotificationBadge() {
+    const badge = document.getElementById('advancedTradeNotificationBadge');
+    const bellButton = document.getElementById('advancedTradeNotificationButton');
+    if (!badge || !bellButton) return;
+    const siteBell = document.querySelector('.site-notifications-button');
+    const siteBadge = siteBell ? siteBell.querySelector('.site-notifications-count') : null;
+    const unreadCount = siteBadge && !siteBadge.hidden ? Number(siteBadge.textContent || '0') : 0;
+    if (unreadCount > 0) {
+      badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+      badge.hidden = false;
+    } else {
+      badge.textContent = '0';
+      badge.hidden = true;
+    }
+  }
+
+  const advancedTradeNotificationButton = document.getElementById('advancedTradeNotificationButton');
+  if (advancedTradeNotificationButton) {
+    advancedTradeNotificationButton.addEventListener('click', () => {
+      const siteBell = document.querySelector('.site-notifications-button');
+      if (siteBell) {
+        siteBell.click();
+      }
+    });
+  }
+
+  window.addEventListener('bxc-notifications-updated', refreshAdvancedTradeNotificationBadge);
+  document.addEventListener('DOMContentLoaded', refreshAdvancedTradeNotificationBadge);
 
   const readStoredJSON = (key, fallback) => {
     try {
@@ -581,11 +612,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (positionsSellButton) positionsSellButton.disabled = !canPlace('SELL', price);
     if (positionsChartBuyButton) {
       positionsChartBuyButton.disabled = !canPlace('BUY', orderPrice);
-      positionsChartBuyButton.textContent = positionsSelectedPrice ? 'Buy at chart price' : 'Buy at market price';
+      positionsChartBuyButton.textContent = 'Buy';
     }
     if (positionsChartSellButton) {
       positionsChartSellButton.disabled = !canPlace('SELL', orderPrice);
-      positionsChartSellButton.textContent = positionsSelectedPrice ? 'Sell at chart price' : 'Sell at market price';
+      positionsChartSellButton.textContent = 'Sell';
     }
   }
 
@@ -943,7 +974,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  function syncSelectedMarketCoinBanner() {
+    const coinValue = advancedSelectedQuote || 'USDT';
+    if (positionsMarketCoinValue) positionsMarketCoinValue.textContent = coinValue;
+    if (positionsMarketCoinBanner) {
+      positionsMarketCoinBanner.title = `Selected market quote token: ${coinValue}`;
+    }
+  }
+
   function syncAdvancedMarketSummary() {
+    syncSelectedMarketCoinBanner();
     if (advancedSelectedCategory !== 'all') {
       const market = advancedExternalMarket;
       const logo = document.getElementById('advancedMarketLogo');
@@ -1526,8 +1566,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!targetCanvas) return;
     const bounds = targetCanvas.getBoundingClientRect();
     const ratio = window.devicePixelRatio || 1;
-    const width = Math.max(320, bounds.width);
+    const isMobileChart = window.innerWidth <= 760;
+    const desiredWidth = isMobileChart
+      ? Math.max(bounds.width, positionCandles.length ? Math.max(420, positionCandles.length * 12 + 80) : 420)
+      : Math.max(320, bounds.width);
+    const width = Math.max(320, desiredWidth);
     const height = Math.max(260, targetCanvas.clientHeight || 320);
+    targetCanvas.style.width = `${width}px`;
+    targetCanvas.style.minWidth = `${width}px`;
     targetCanvas.width = width * ratio;
     targetCanvas.height = height * ratio;
     const context = targetCanvas.getContext('2d');
@@ -2549,7 +2595,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         'aria-label',
         isFullscreen ? 'Exit full screen Position Market View' : 'Open Position Market View full screen'
       );
-      positionsFullscreenButton.textContent = isFullscreen ? 'Exit full screen' : 'Full screen';
+      positionsFullscreenButton.textContent = '[ ]';
       if (isFullscreen) positionMarketChartPanel.scrollTop = 0;
       drawPositionsChart();
     };
@@ -2605,7 +2651,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       positionsAdvancedButton?.setAttribute('aria-pressed', 'false');
       positionsFullscreenButton?.setAttribute('aria-pressed', 'false');
       if (positionsFullscreenButton) {
-        positionsFullscreenButton.textContent = 'Full screen';
+        positionsFullscreenButton.textContent = '[ ]';
         positionsFullscreenButton.setAttribute('aria-label', 'Open Position Market View full screen');
       }
       window.requestAnimationFrame(drawPositionsChart);
@@ -2622,6 +2668,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       advancedQuoteButtons.forEach((item) => {
         item.setAttribute('aria-pressed', String(item === button));
       });
+      syncSelectedMarketCoinBanner();
       renderAdvancedMarketList();
     });
   });

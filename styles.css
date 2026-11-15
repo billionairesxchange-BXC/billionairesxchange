@@ -2740,15 +2740,22 @@ canvas {
 }
 
 .positions-fullscreen-button {
+  min-width: 2.5rem;
   min-height: 2.25rem;
-  padding: .4rem .7rem;
+  padding: .4rem .55rem;
   border: 1px solid rgba(212, 175, 55, .55);
   border-radius: 4px;
   background: rgba(212, 175, 55, .08);
   color: var(--primary-gold);
   font: inherit;
-  font-size: .8rem;
+  font-size: 0;
+  line-height: 1;
   cursor: pointer;
+}
+
+.positions-fullscreen-button::before {
+  content: '[ ]';
+  font-size: .8rem;
 }
 
 .positions-fullscreen-button:hover,
@@ -3129,7 +3136,18 @@ body.positions-market-view-fullscreen-active {
   margin-top: 1rem;
   border: 1px solid rgba(212, 175, 55, .2);
   background: #000;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+}
+
+.positions-chart-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 320px;
 }
 
 .advanced-trading-layout {
@@ -3152,14 +3170,22 @@ body.positions-market-view-fullscreen-active {
 
 .positions-chart-panel.is-advanced .advanced-trading-layout {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1.6fr) 300px;
-  gap: 1rem;
+  grid-template-columns: minmax(220px, 23%) minmax(0, 1fr) minmax(260px, 24%);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "summary summary markets"
+    "orderbook chart markets";
+  gap: .25rem;
   align-items: stretch;
   min-height: min(780px, calc(100vh - 6rem));
 }
 
 .positions-chart-panel.is-advanced .positions-chart-header {
   display: flex;
+}
+
+.positions-chart-header-actions > #positionsChartPrice {
+  display: none;
 }
 
 .positions-chart-panel.is-advanced .advanced-tab-panel {
@@ -3191,14 +3217,15 @@ body.positions-market-view-fullscreen-active {
 }
 
 .advanced-market-strip {
-  grid-column: 1 / -1;
+  grid-area: summary;
   display: none;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.1rem;
+  gap: .5rem;
+  min-width: 0;
+  padding: .55rem .7rem;
   border: 1px solid rgba(212, 175, 55, .35);
-  border-radius: 10px;
+  border-radius: 3px;
   background: linear-gradient(180deg, rgba(20, 20, 20, 0.96), rgba(12, 12, 12, 0.96));
 }
 
@@ -3295,6 +3322,18 @@ body.positions-market-view-fullscreen-active {
   background: rgba(12, 12, 12, 0.92);
 }
 
+.positions-chart-panel.is-advanced .advanced-orderbook {
+  grid-area: orderbook;
+}
+
+.positions-chart-panel.is-advanced .advanced-trading-main {
+  grid-area: chart;
+}
+
+.positions-chart-panel.is-advanced .advanced-market-rail {
+  grid-area: markets;
+}
+
 .positions-chart-panel.is-advanced .advanced-orderbook,
 .positions-chart-panel.is-advanced .advanced-market-rail {
   display: flex;
@@ -3349,6 +3388,89 @@ body.positions-market-view-fullscreen-active {
   flex-direction: column;
   gap: .75rem;
   min-width: 0;
+}
+
+.advanced-timebar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .65rem;
+  width: 100%;
+}
+
+.advanced-timebar {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.advanced-chart-toolbar {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.advanced-notification-button,
+.advanced-ai-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(212, 175, 55, .32);
+  border-radius: 8px;
+  background: rgba(14, 14, 14, .9);
+  color: var(--primary-gold);
+  cursor: pointer;
+  transition: border-color .2s ease, transform .2s ease, background .2s ease;
+}
+
+.advanced-notification-button {
+  position: relative;
+  width: 2.5rem;
+  height: 2.25rem;
+}
+
+.advanced-notification-button svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.advanced-notification-badge {
+  position: absolute;
+  right: -.2rem;
+  top: -.2rem;
+  min-width: .9rem;
+  height: .9rem;
+  padding: 0 .25rem;
+  border-radius: 999px;
+  background: #ff5d5d;
+  color: #fff;
+  font-size: .58rem;
+  font-weight: 700;
+  line-height: .9rem;
+  text-align: center;
+  box-shadow: 0 0 0 2px rgba(10, 10, 10, .9);
+}
+
+.advanced-ai-button {
+  min-width: 2.5rem;
+  min-height: 2.25rem;
+  padding: .4rem .75rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.advanced-notification-button:hover,
+.advanced-ai-button:hover,
+.advanced-notification-button:focus-visible,
+.advanced-ai-button:focus-visible {
+  border-color: rgba(212, 175, 55, .7);
+  background: rgba(26, 20, 0, .9);
+  transform: translateY(-1px);
+  outline: none;
 }
 
 .trade-page .advanced-timebar button,
@@ -3616,22 +3738,121 @@ body.positions-market-view-fullscreen-active {
 
 @media (max-width: 980px) {
   .positions-chart-panel.is-advanced .advanced-trading-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(200px, .78fr) minmax(0, 1.7fr) minmax(235px, .9fr);
+    gap: .35rem;
   }
 
   .advanced-market-strip {
+    gap: .35rem;
+    padding: .5rem;
+  }
+
+  .advanced-market-summary {
+    gap: .4rem;
+  }
+
+  .advanced-market-stat {
+    min-width: 74px;
+  }
+}
+
+@media (max-width: 760px) {
+  .positions-chart-panel.is-advanced .advanced-trading-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas:
+      "summary"
+      "chart"
+      "orderbook";
+    min-height: 0;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-orderbook,
+  .positions-chart-panel.is-advanced .advanced-trading-main,
+  .positions-chart-panel.is-advanced .advanced-market-rail {
+    min-width: 0;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-market-strip {
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: .55rem;
+    padding: .7rem .75rem;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-market-summary {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: .4rem .7rem;
+    width: 100%;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-market-summary > strong {
+    font-size: 1.45rem;
+    line-height: 1.1;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-market-stat {
+    min-width: 0;
+    text-align: right;
+    font-size: .58rem;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-market-stat strong {
+    font-size: .72rem;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-market-links,
+  .positions-chart-panel.is-advanced .advanced-paper-badge {
+    display: none;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-orderbook {
+    padding: .7rem .75rem;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-market-rail {
+    display: none;
   }
 }
 
 @media (max-width: 640px) {
+  .advanced-timebar-wrap {
+    align-items: flex-start;
+    gap: .45rem;
+  }
+
+  .advanced-timebar {
+    flex-wrap: wrap;
+    row-gap: .25rem;
+  }
+
+  .advanced-chart-toolbar {
+    gap: .35rem;
+  }
+
+  .advanced-notification-button,
+  .advanced-ai-button {
+    min-height: 2rem;
+  }
+
   .advanced-chart-orderbar .positions-chart-price-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .advanced-market-summary {
     gap: .5rem;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-trading-main {
+    gap: .55rem;
+  }
+
+  .positions-chart-panel.is-advanced .positions-chart-wrap {
+    height: 260px !important;
+    min-height: 240px !important;
   }
 }
 
@@ -3779,6 +4000,33 @@ body.positions-market-view-fullscreen-active {
   margin-top: .55rem;
 }
 
+.positions-market-coin-banner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: .35rem;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: .2rem;
+  padding: .22rem .52rem;
+  border: 1px solid rgba(212, 175, 55, .32);
+  border-radius: 999px;
+  background: rgba(16, 16, 16, .92);
+  color: var(--light-gold);
+  font-size: .6rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.positions-market-coin-banner span {
+  opacity: .8;
+}
+
+.positions-market-coin-banner strong {
+  color: var(--primary-gold);
+  letter-spacing: .04em;
+}
+
 .positions-chart-price-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3867,7 +4115,7 @@ body.positions-market-view-fullscreen-active {
 
 .trade-balances {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(220px, 1.2fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
   gap: 1rem;
   margin-top: 1rem;
@@ -3894,6 +4142,7 @@ body.positions-market-view-fullscreen-active {
   flex-wrap: wrap;
   align-items: center;
   gap: .5rem;
+  grid-column: 1 / -1;
 }
 
 .trade-balance-actions > small {
@@ -4060,8 +4309,13 @@ body.positions-market-view-fullscreen-active {
     white-space: nowrap;
   }
 
+  .trade-page .positions-chart-panel {
+    padding: .9rem;
+  }
+
   .trade-page .positions-chart-header {
     flex-direction: column;
+    gap: .45rem;
   }
 
   .trade-page .positions-chart-header > div {
@@ -4069,7 +4323,17 @@ body.positions-market-view-fullscreen-active {
   }
 
   .trade-page .positions-chart-header > strong {
-    font-size: 1.35rem;
+    font-size: 1.2rem;
+  }
+
+  .trade-page .positions-chart-header-actions {
+    gap: .45rem;
+  }
+
+  .trade-page .positions-advanced-button,
+  .trade-page .positions-fullscreen-button {
+    min-height: 34px;
+    padding-block: .35rem;
   }
 
   .trade-page .positions-chart-panel.is-fullscreen .positions-chart-header {
@@ -4110,6 +4374,8 @@ body.positions-market-view-fullscreen-active {
     height: 300px !important;
     min-height: 280px !important;
     width: 100% !important;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .trade-page .positions-chart-panel.is-fullscreen .positions-chart-wrap {
@@ -4171,12 +4437,16 @@ body.positions-market-view-fullscreen-active {
   .trade-page .market-panel,
   .trade-page .watch-panel,
   .trade-page .positions-chart-panel {
-    padding: 1rem;
+    padding: .8rem;
+  }
+
+  .positions-chart-panel.is-advanced {
+    padding: .75rem;
   }
 
   .trade-page .positions-market-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .55rem;
+    gap: .45rem;
   }
 
   .trade-page .positions-market-selector {
@@ -4188,9 +4458,46 @@ body.positions-market-view-fullscreen-active {
     font-size: .78rem;
   }
 
+  .trade-page .positions-market-coin-banner {
+    margin-top: .1rem;
+    padding: .18rem .42rem;
+    font-size: .54rem;
+  }
+
   .trade-page .positions-chart-wrap {
-    height: 280px !important;
-    min-height: 260px !important;
+    height: 260px !important;
+    min-height: 240px !important;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-market-summary {
+    grid-template-columns: auto auto auto;
+    align-items: center;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-market-summary > strong {
+    font-size: 1.15rem;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-market-stat {
+    font-size: .52rem;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-market-stat strong {
+    font-size: .66rem;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-orderbook {
+    padding: .6rem .65rem;
+  }
+
+  .trade-page .positions-risk-controls {
+    grid-template-columns: 1fr;
+    gap: .35rem;
+  }
+
+  .trade-page .positions-chart-price-actions {
+    grid-template-columns: 1fr;
+    gap: .45rem;
   }
 
   .trade-page .positions-save-risk-button {
@@ -4219,6 +4526,7 @@ body.positions-market-view-fullscreen-active {
   }
 
   .trade-page .positions-chart-actions {
+    grid-template-columns: 1fr;
     gap: .5rem;
   }
 
@@ -7812,17 +8120,6 @@ body.treasury-welcome-active {
   scrollbar-width: thin;
 }
 
-.home-company-carousel-controls {
-  display: flex;
-  justify-content: flex-end;
-  gap: .5rem;
-  margin: -.5rem 0 .75rem;
-}
-
-.home-company-carousel-controls [hidden] {
-  display: none;
-}
-
 .home-investment-banner {
   display: flex;
   align-items: center;
@@ -11293,5 +11590,55 @@ body.treasury-welcome-active {
 
   .treasury-phrase-panel ol {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-actions .btn,
+  .trade-balance-actions .btn,
+  .positions-chart-price-actions .btn,
+  .shop-category-button,
+  .bot-chart-toolbar .btn,
+  .bot-actions .btn,
+  .ai-voice-controls .btn,
+  .autopilot-settings-disclosure > summary.btn,
+  .market-scan-actions .btn,
+  .holdings-section > a.btn,
+  .wallet-credit-card-transfer .btn,
+  .wallet-primary-actions .btn,
+  .crypto-wallet-actions .btn,
+  .wallet-onboarding-actions .btn,
+  .wallet-onboarding-footer-actions .btn,
+  .wallet-activity-links .btn {
+    min-width: 0;
+    min-height: 34px;
+    padding: .4rem .6rem;
+    font-size: .75rem;
+    line-height: 1.2;
+  }
+
+  .shop-category-button {
+    gap: .4rem;
+  }
+
+  .shop-category-logo {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .bot-chart-toolbar .positions-tools-button {
+    min-height: 34px;
+    padding: .4rem .6rem;
+    font-size: .75rem;
+  }
+
+  .trade-page .positions-fullscreen-button {
+    min-width: 2rem;
+    min-height: 2rem;
+    padding: .3rem .4rem;
+  }
+
+  .trade-page .positions-fullscreen-button::before {
+    font-size: .7rem;
   }
 }

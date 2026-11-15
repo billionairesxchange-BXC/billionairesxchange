@@ -50,20 +50,6 @@
             <span class="eyebrow">Wallet</span>
             <h2>Your Wallet</h2>
           </div>
-          <div class="treasury-quick-menu" id="treasuryQuickMenu">
-            <button class="treasury-quick-menu-trigger" id="treasuryQuickMenuTrigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="treasuryQuickMenuItems">
-              Menu <span aria-hidden="true">v</span>
-            </button>
-            <div class="treasury-quick-menu-items" id="treasuryQuickMenuItems" role="menu" hidden>
-              <a class="btn btn-action btn-bills" href="pay-bills.html" id="billsBtn" role="menuitem">📋 Pay Bills</a>
-              <a class="btn btn-action btn-vault" href="shop.html" role="menuitem">🛍️ Shop</a>
-              <a class="btn btn-action btn-investment" href="request-card.html" role="menuitem">💳 Request Card</a>
-              <a class="btn btn-action btn-investment" href="investment.html" role="menuitem">📈 Investment</a>
-              <a class="btn btn-action btn-insurance" href="insurance.html" id="insuranceBtn" role="menuitem">🛡️ Insurance</a>
-              <a class="btn btn-action btn-mortgage" href="mortgage.html" id="mortgageBtn" role="menuitem">🏠 Mortgage</a>
-              <a class="btn btn-action btn-vault" href="vault.html" id="vaultBtn" role="menuitem">🔒 Vault</a>
-            </div>
-          </div>
         </div>
 
         <div class="holdings-section card-glass">
@@ -216,6 +202,7 @@
                 <button class="btn btn-secondary" type="button" id="walletUnlockButton" hidden>Unlock wallet</button>
                 <button class="btn btn-ghost" type="button" id="walletLockButton" hidden>Lock wallet</button>
                 <button class="btn btn-secondary wallet-backup-button" type="button" id="walletBackupButton" hidden>View recovery phrase</button>
+                <a class="btn btn-secondary" href="vault.html" id="vaultBtn">🔒 Vault</a>
               </div>
               <p class="crypto-wallet-status" id="walletLedgerStatus" role="status" hidden></p>
               <p class="crypto-wallet-status" id="walletHardwareStatus" role="status" hidden></p>
@@ -694,31 +681,6 @@
         paymentMethodsSection.hidden = false;
         paymentMethodsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-
-      const treasuryQuickMenu = document.getElementById('treasuryQuickMenu');
-      const treasuryQuickMenuTrigger = document.getElementById('treasuryQuickMenuTrigger');
-      const treasuryQuickMenuItems = document.getElementById('treasuryQuickMenuItems');
-      const closeTreasuryQuickMenu = () => {
-        treasuryQuickMenuItems.hidden = true;
-        treasuryQuickMenuTrigger.setAttribute('aria-expanded', 'false');
-      };
-
-      treasuryQuickMenuTrigger.addEventListener('click', () => {
-        const isOpen = treasuryQuickMenuItems.hidden;
-        treasuryQuickMenuItems.hidden = !isOpen;
-        treasuryQuickMenuTrigger.setAttribute('aria-expanded', String(isOpen));
-      });
-      treasuryQuickMenuItems.querySelectorAll('[role="menuitem"]').forEach((button) => {
-        button.addEventListener('click', closeTreasuryQuickMenu);
-      });
-      document.addEventListener('click', (event) => {
-        if (!treasuryQuickMenu.contains(event.target)) closeTreasuryQuickMenu();
-      });
-      document.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape') return;
-        closeTreasuryQuickMenu();
-        treasuryQuickMenuTrigger.focus();
-      });
 
     </script>
     <script type="module" src="wallet.bundle.js"></script>
