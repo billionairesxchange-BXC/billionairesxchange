@@ -12,8 +12,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <linkupgrade
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
+            const savedWatchlist = localStorage.getItem('botFavoriteCoins');
+            const saved = savedWatchlist === null
+              ? ['BTC', 'ETH', 'XRP', 'SOL', 'ADA', 'DOT', 'DOGE', 'USDT']
+              : JSON.parse(savedWatchlist);
+            return Array.isArray(saved) ? saved.filter((symbol) => typeof symbol === 'string' && /^[A-Z0-9]{2,12}$/.test(symbol)) : [];
     />
     <link rel="stylesheet" href="styles.css" />
     <script src="api-config.js"></script>
@@ -72,6 +75,8 @@
               </select>
               <button class="btn btn-primary" type="button" id="addFavoriteBtn">Add</button>
             </div>
+            <button class="btn btn-ghost" id="loadMoreBotMarkets" type="button">Load more market coins</button>
+            <p id="botMarketListStatus" class="favorite-analysis-status" aria-live="polite">Choose from the leading markets or load more coins.</p>
           </div>
         </div>
         <div class="favorite-slider">
@@ -85,9 +90,12 @@
       <section class="bot-chart-section card-glass" id="botChartSection" aria-labelledby="botChartHeading">
         <h3 id="botChartHeading">Market Chart</h3>
         <div class="bot-chart-toolbar">
-          <label class="positions-market-selector">
-            <span>Choose market</span>
-            <select id="botChartMarketSelect" class="bot-chart-market-select">
+          <div class="bot-chart-market-picker">
+            <button class="bot-chart-coin-picker-button" id="botChartCoinPickerButton" type="button" aria-label="Choose market" title="Choose market" aria-haspopup="listbox" aria-expanded="false" aria-controls="botChartCoinPickerOptions">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M14.8 8.3c-.6-.6-1.5-.9-2.7-.9-1.5 0-2.5.7-2.5 1.8 0 2.8 5.3 1 5.3 3.9 0 1.1-1 1.9-2.8 1.9-1.2 0-2.2-.4-3-1.1M12 5.7v12.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+            <div class="bot-chart-watchlist-menu" id="botChartCoinPickerOptions" role="listbox" aria-label="Available market coins" hidden></div>
+            <select id="botChartMarketSelect" class="bot-chart-market-select visually-hidden" aria-hidden="true" tabindex="-1" hidden>
               <option value="">Choose a coin</option>
               <option value="BTC">BTC / USD</option>
               <option value="ETH">ETH / USD</option>
@@ -98,7 +106,7 @@
               <option value="DOGE">DOGE / USD</option>
               <option value="USDT">USDT / USD</option>
             </select>
-          </label>
+          </div>
           <div class="positions-time-menu">
             <button class="positions-tools-button" id="botChartTimeButton" type="button" aria-expanded="false" aria-controls="botChartTimeOptions">Time chart: 1m</button>
             <div class="positions-time-options" id="botChartTimeOptions" hidden>
@@ -113,18 +121,22 @@
               <button type="button" data-bot-chart-interval="4h">4 hours</button>
             </div>
           </div>
-          <button class="btn btn-ghost bot-settings-toggle" id="botSettingsToggle" type="button" aria-expanded="false" aria-controls="botSettingsPanel">Bot Configuration</button>
-          <button class="btn btn-ghost bot-chart-fullscreen" id="botChartFullscreen" type="button" aria-label="Open market chart full screen" aria-pressed="false">Full screen</button>
+          <div class="bot-chart-bot-controls" aria-label="Bot controls">
+            <button class="btn btn-primary" type="button" id="startBotBtn">Start bot</button>
+            <button class="btn btn-ghost" type="button" id="pauseBotBtn" disabled>Pause bot</button>
+          </div>
+          <button class="btn btn-ghost bot-settings-toggle" id="botSettingsToggle" type="button" aria-label="Bot Configuration" title="Bot Configuration" aria-expanded="false" aria-controls="botSettingsPanel">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 4.5h6a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-9a3 3 0 0 1 3-3Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 2v2.5M9 10h.01M15 10h.01M9 14h6m-9-3H4a2 2 0 0 0 0 4h2m12-4h2a2 2 0 0 1 0 4h-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M9 20v2m6-2v2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </button>
         </div>
         <div class="bot-chart-wrap">
           <canvas id="botCanvas" width="600" height="320" aria-label="BillionairesXchange live trading bot candlestick chart"></canvas>
+          <button class="btn btn-ghost bot-chart-fullscreen" id="botChartFullscreen" type="button" aria-label="Open market chart full screen" aria-pressed="false">[ ]</button>
           <button class="bot-chart-resizer" id="botChartResizer" type="button" aria-label="Resize bot chart" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight" aria-describedby="botChartResizeHelp" title="Drag or use arrow keys to resize chart"></button>
         </div>
         <p id="botChartResizeHelp" class="visually-hidden">Drag the resize handle or focus it and use the arrow keys to adjust the chart size.</p>
         <p id="botChartStatus" class="bot-chart-status" aria-live="polite">Choose a market to load chart candles.</p>
         <div class="bot-actions">
-          <button class="btn btn-primary" type="button" id="startBotBtn">Start bot</button>
-          <button class="btn btn-ghost" type="button" id="pauseBotBtn">Pause bot</button>
           <button class="btn btn-ghost" id="botConfigurationSummaryButton" type="button" aria-expanded="false" aria-controls="botConfigurationSummaryDialog">Bot Configuration Summary</button>
         </div>
         <p id="botMarketStatus" class="bot-market-status">Select a coin to connect its market feed. Trades are simulated.</p>
@@ -343,9 +355,6 @@
                     <option value="USDT">Tether (USDT)</option>
                   </select>
                 </label>
-                <button class="btn btn-ghost" id="loadMoreBotMarkets" type="button">Load more market coins</button>
-                <p id="botMarketListStatus" class="favorite-analysis-status" aria-live="polite">Choose from the leading markets or load more coins.</p>
-
                 <label>
                   Trading Duration
                   <select id="tradingDuration" required>
@@ -429,15 +438,14 @@
           <section class="market-scan-panel card-glass" aria-labelledby="marketScanTitle">
             <div>
               <h3 id="marketScanTitle">Market Opportunity Scan</h3>
-              <p id="marketScanStatus" aria-live="polite">Scanning all liquid USDT spot markets for positive 24-hour momentum.</p>
+              <p id="marketScanStatus" aria-live="polite">Hello!! Billionaires which market do you want me to Analysi for you</p>
               <p id="minimumTradeNotice">Minimum paper buy: $20.00 USD equivalent.</p>
               <div id="marketOpportunity" class="market-scan-opportunity" hidden>
                 <p id="marketOpportunityDetails"></p>
                 <p id="marketOpportunityPrompt">Would you like to trade this market, or should I find a different market?</p>
                 <div class="market-scan-actions">
-                  <button class="btn btn-ghost" type="button" id="playMarketDetailsBtn">Play market details</button>
-                  <button class="btn btn-ghost" type="button" id="pauseMarketDetailsBtn" hidden>Pause reading</button>
-                  <button class="btn btn-ghost" type="button" id="enableMarketVoiceBtn" hidden>Retry microphone access</button>
+                  <button class="btn btn-ghost" type="button" id="playMarketDetailsBtn">Play Fish AI voice</button>
+                  <button class="btn btn-ghost" type="button" id="pauseMarketDetailsBtn" hidden>Pause voice</button>
                 </div>
                 <form id="marketOpportunityTradeForm" class="market-scan-trade-form" hidden>
                   <label for="marketTradeAmount">Paper trade amount (USD, minimum $20)</label>
@@ -470,6 +478,7 @@
               </div>
             </div>
           </section>
+          <button class="btn btn-ghost market-voice-enable" type="button" id="enableMarketVoiceBtn" hidden>Enable microphone</button>
         </div>
 
         <section class="bot-positions-panel card-glass" aria-labelledby="positionsHeading">
@@ -524,6 +533,8 @@
       const botChartFullscreen = document.getElementById('botChartFullscreen');
       const botChartResizer = document.getElementById('botChartResizer');
       const botChartMarketSelect = document.getElementById('botChartMarketSelect');
+      const botChartCoinPickerButton = document.getElementById('botChartCoinPickerButton');
+      const botChartCoinPickerOptions = document.getElementById('botChartCoinPickerOptions');
       const botChartTimeButton = document.getElementById('botChartTimeButton');
       const botChartTimeOptions = document.getElementById('botChartTimeOptions');
       const botChartStatus = document.getElementById('botChartStatus');
@@ -617,10 +628,13 @@
       let marketOpportunityPending = false;
       const rejectedMarketPairs = new Set();
       const MarketSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      let marketVoiceEnabled = Boolean(MarketSpeechRecognition && ('speechSynthesis' in window));
+      let marketVoiceEnabled = Boolean(MarketSpeechRecognition);
       let marketSpeechRecognition = null;
       let marketSpeechRequestVersion = 0;
+      let marketSpeechAudio = null;
+      let marketSpeechAudioUrl = null;
       const botMemoryKey = `makingsBotMemory:${localStorage.getItem('makingsCurrentUser') || 'guest'}`;
+      const adaptiveAnalystStorageKey = 'bxcAdaptiveMarketAnalysis';
       let botSettingsStorageKey = `makingsBotSettings:${localStorage.getItem('makingsCurrentUser') || 'guest'}`;
       let botSettings;
       let botCoinSelectionTouched = false;
@@ -951,9 +965,6 @@
               : 'No market currently has positive 24-hour momentum and at least $1M in 24-hour volume. The scan will check again automatically.';
             marketScanStatus.textContent = emptyScanMessage;
             notifyTrade(`Market scan: ${emptyScanMessage}`);
-            if (marketVoiceEnabled) {
-              speakMarketResponse(`${emptyScanMessage} Say “scan markets” whenever you want me to check again.`, () => listenForMarketVoiceReply());
-            }
             return;
           }
 
@@ -986,65 +997,116 @@
           marketOpportunityTradeForm.hidden = true;
           marketOpportunityStatus.textContent = '';
           marketOpportunity.hidden = false;
-          playMarketDetailsBtn.hidden = !('speechSynthesis' in window);
+          playMarketDetailsBtn.hidden = false;
           pauseMarketDetailsBtn.hidden = true;
-          enableMarketVoiceBtn.hidden = !MarketSpeechRecognition || !('speechSynthesis' in window) || marketVoiceEnabled;
-          if (marketVoiceEnabled) startMarketVoiceConversation();
+          enableMarketVoiceBtn.hidden = !MarketSpeechRecognition || marketVoiceEnabled;
           notifyTrade(`Market scan: ${review}`);
         } catch (error) {
           marketScanStatus.textContent = `Market scan failed: ${error.message}. No market recommendation was made.`;
           marketOpportunityPending = false;
           notifyTrade(`Market scan: The all-market scan failed: ${error.message}. No market recommendation was made.`);
-          if (marketVoiceEnabled) {
-            speakMarketResponse(`${marketScanStatus.textContent} Say “scan markets” to try again.`, () => listenForMarketVoiceReply());
-          }
         } finally {
           marketScanInProgress = false;
         }
       }
 
       function speakMarketResponse(message, onEnd = null) {
-        if (!('speechSynthesis' in window)) {
-          if (onEnd) onEnd();
-          return;
-        }
-        try {
-          window.speechSynthesis.cancel();
-          const requestVersion = ++marketSpeechRequestVersion;
-          const utterance = new SpeechSynthesisUtterance(message);
-          utterance.lang = 'en-US';
-          const voices = window.speechSynthesis.getVoices();
-          const maleVoicePattern = /David|Guy|Mark|Eric|Alex|Tony|Daniel|James|Christopher|Ryan|Fred|Matthew|John|George|Brian|Evan/i;
-          const maleVoice = voices.find((voice) => /^en-US$/i.test(voice.lang) && (voice.gender === 'male' || maleVoicePattern.test(voice.name)))
-            || voices.find((voice) => maleVoicePattern.test(voice.name));
-          const americanVoice = maleVoice || voices.find((voice) => /^en-US$/i.test(voice.lang));
-          if (americanVoice) utterance.voice = americanVoice;
-          utterance.rate = 0.96;
-          utterance.pitch = maleVoice ? 0.95 : 0.78;
-          playMarketDetailsBtn.hidden = true;
-          pauseMarketDetailsBtn.hidden = false;
-          const finishSpeech = () => {
-            if (requestVersion !== marketSpeechRequestVersion) return;
-            playMarketDetailsBtn.hidden = false;
-            pauseMarketDetailsBtn.hidden = true;
-            if (onEnd) onEnd();
-          };
-          utterance.onend = finishSpeech;
-          utterance.onerror = () => {
-            finishSpeech();
-          };
-          window.speechSynthesis.speak(utterance);
-        } catch (error) {
+        const requestVersion = ++marketSpeechRequestVersion;
+        let finished = false;
+        let fallbackStarted = false;
+        window.speechSynthesis?.cancel();
+        marketSpeechAudio?.pause();
+        if (marketSpeechAudioUrl) URL.revokeObjectURL(marketSpeechAudioUrl);
+        marketSpeechAudio = null;
+        marketSpeechAudioUrl = null;
+        const voiceStatus = marketOpportunity.hidden ? marketScanStatus : marketOpportunityStatus;
+        const finishSpeech = () => {
+          if (requestVersion !== marketSpeechRequestVersion || finished) return;
+          finished = true;
           playMarketDetailsBtn.hidden = false;
           pauseMarketDetailsBtn.hidden = true;
-          marketOpportunityStatus.textContent = `Spoken response unavailable: ${error.message}. Use the on-screen choices instead.`;
+          marketSpeechAudio = null;
+          if (marketSpeechAudioUrl) URL.revokeObjectURL(marketSpeechAudioUrl);
+          marketSpeechAudioUrl = null;
           if (onEnd) onEnd();
-        }
+        };
+        const speakWithBrowserVoice = (reason) => {
+          if (requestVersion !== marketSpeechRequestVersion || fallbackStarted) return;
+          fallbackStarted = true;
+          if (marketSpeechAudio) {
+            marketSpeechAudio.pause();
+            marketSpeechAudio = null;
+          }
+          if (marketSpeechAudioUrl) URL.revokeObjectURL(marketSpeechAudioUrl);
+          marketSpeechAudioUrl = null;
+          if (!('speechSynthesis' in window)) {
+            voiceStatus.textContent = `Fish AI voice unavailable: ${reason}. Browser voice is not supported.`;
+            finishSpeech();
+            return;
+          }
+          voiceStatus.textContent = `Fish AI voice unavailable (${reason}); using browser voice.`;
+          try {
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.lang = 'en-US';
+            const voices = window.speechSynthesis.getVoices();
+            const maleVoicePattern = /David|Guy|Mark|Eric|Alex|Tony|Daniel|James|Christopher|Ryan|Fred|Matthew|John|George|Brian|Evan/i;
+            const maleVoice = voices.find((voice) => /^en-US$/i.test(voice.lang) && (voice.gender === 'male' || maleVoicePattern.test(voice.name)))
+              || voices.find((voice) => maleVoicePattern.test(voice.name));
+            const americanVoice = maleVoice || voices.find((voice) => /^en-US$/i.test(voice.lang));
+            if (americanVoice) utterance.voice = americanVoice;
+            utterance.rate = 0.96;
+            utterance.pitch = maleVoice ? 0.95 : 0.78;
+            playMarketDetailsBtn.hidden = true;
+            pauseMarketDetailsBtn.hidden = false;
+            utterance.onend = finishSpeech;
+            utterance.onerror = finishSpeech;
+            window.speechSynthesis.speak(utterance);
+          } catch (error) {
+            voiceStatus.textContent = `Spoken response unavailable: ${error.message}. Use the on-screen choices instead.`;
+            finishSpeech();
+          }
+        };
+        const requestFishAudio = async () => {
+          voiceStatus.textContent = 'Generating Fish AI voice...';
+          try {
+            const token = await window.makingsGetIdToken?.();
+            if (!token) throw new Error('Sign in to use Fish AI voice');
+            const apiBase = window.MAKINGS_API_BASE_URL || window.location.origin;
+            const response = await fetch(`${apiBase}/api/ai/voice`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify({ text: message })
+            });
+            if (!response.ok) {
+              const result = await response.json().catch(() => ({}));
+              throw new Error(result.error || 'Fish Audio could not generate speech');
+            }
+            const audioBlob = await response.blob();
+            if (!audioBlob.size) throw new Error('Fish Audio returned an empty audio file');
+            if (requestVersion !== marketSpeechRequestVersion) return;
+            marketSpeechAudioUrl = URL.createObjectURL(audioBlob);
+            marketSpeechAudio = new Audio(marketSpeechAudioUrl);
+            marketSpeechAudio.addEventListener('ended', finishSpeech, { once: true });
+            marketSpeechAudio.addEventListener('error', () => speakWithBrowserVoice('audio playback failed'), { once: true });
+            await marketSpeechAudio.play();
+            if (requestVersion !== marketSpeechRequestVersion) return;
+            playMarketDetailsBtn.hidden = true;
+            pauseMarketDetailsBtn.hidden = false;
+            voiceStatus.textContent = 'Playing Fish AI voice...';
+          } catch (error) {
+            speakWithBrowserVoice(error.message);
+          }
+        };
+        requestFishAudio();
       }
 
       function listenForMarketVoiceReply(mode = 'decision') {
         if (!marketVoiceEnabled || !MarketSpeechRecognition) return;
         const voiceStatus = marketOpportunity.hidden ? marketScanStatus : marketOpportunityStatus;
+        let receivedResult = false;
         try {
           marketSpeechRecognition = new MarketSpeechRecognition();
           marketSpeechRecognition.lang = 'en-US';
@@ -1056,6 +1118,7 @@
               : 'Listening automatically. Say “next market,” “give me a different one,” “start paper trading,” or “trade this market.”';
           }, { once: true });
           marketSpeechRecognition.addEventListener('result', (event) => {
+            receivedResult = true;
             const transcript = event.results[0]?.[0]?.transcript?.trim();
             if (!transcript) {
               voiceStatus.textContent = 'No voice reply was detected. Try again or use the on-screen controls.';
@@ -1085,15 +1148,23 @@
           }, { once: true });
           marketSpeechRecognition.addEventListener('error', (event) => {
             voiceStatus.textContent = `Voice reply unavailable: ${event.error}. Try again or use the on-screen controls.`;
-            marketVoiceEnabled = false;
-            enableMarketVoiceBtn.hidden = !MarketSpeechRecognition || !('speechSynthesis' in window);
-            enableMarketVoiceBtn.disabled = false;
+            if (!['no-speech', 'aborted', 'network'].includes(event.error)) {
+              marketVoiceEnabled = false;
+              enableMarketVoiceBtn.hidden = !MarketSpeechRecognition;
+              enableMarketVoiceBtn.disabled = false;
+            }
+          }, { once: true });
+          marketSpeechRecognition.addEventListener('end', () => {
+            if (marketVoiceEnabled && !receivedResult) {
+              voiceStatus.textContent = 'Microphone on standby. Say a command whenever you are ready.';
+              window.setTimeout(() => listenForMarketVoiceReply(mode), 500);
+            }
           }, { once: true });
           marketSpeechRecognition.start();
         } catch (error) {
           voiceStatus.textContent = `Voice reply could not start: ${error.message}. Use the on-screen controls instead.`;
           marketVoiceEnabled = false;
-          enableMarketVoiceBtn.hidden = !MarketSpeechRecognition || !('speechSynthesis' in window);
+          enableMarketVoiceBtn.hidden = !MarketSpeechRecognition;
           enableMarketVoiceBtn.disabled = false;
         }
       }
@@ -1211,14 +1282,20 @@
         const reply = normalizeMarketVoiceReply(transcript);
         marketOpportunityStatus.textContent = `I heard: “${transcript}”`;
         if (isMarketScanRequest(reply)) {
-          speakMarketResponse('Okay, scanning the markets now.', () => scanMarkets(true));
+          speakMarketResponse('Okay, scanning the markets now.', async () => {
+            await scanMarkets(true);
+            if (marketVoiceEnabled) listenForMarketVoiceReply();
+          });
           return;
         }
         if (isDifferentMarketRequest(reply)) {
           if (bestMarket) {
             speakMarketResponse('Okay, I will scan for a different market.', requestDifferentMarket);
           } else {
-            speakMarketResponse('Okay, scanning for a market now.', () => scanMarkets(true));
+            speakMarketResponse('Okay, scanning for a market now.', async () => {
+              await scanMarkets(true);
+              if (marketVoiceEnabled) listenForMarketVoiceReply();
+            });
           }
           return;
         }
@@ -1256,13 +1333,10 @@
       }
 
       function startMarketVoiceConversation() {
-        if (!marketVoiceEnabled || !MarketSpeechRecognition || !('speechSynthesis' in window)) return;
-        const review = bestMarket
-          ? `${marketOpportunityDetails.textContent} I am listening for your choice.`
-          : `${marketScanStatus.textContent} I will listen when a market is ready.`;
-        speakMarketResponse(`Okay. Voice conversation is ready. ${review}`, () => listenForMarketVoiceReply());
+        if (!marketVoiceEnabled || !MarketSpeechRecognition) return;
+        speakMarketResponse('Hello!! Billionaires which market do you want me to Analysi for you', () => listenForMarketVoiceReply());
         const voiceStatus = marketOpportunity.hidden ? marketScanStatus : marketOpportunityStatus;
-        voiceStatus.textContent = 'The AI is reviewing the market. I will listen for your choice when it finishes.';
+        voiceStatus.textContent = 'Starting microphone. Say a command whenever you are ready.';
       }
 
       function acceptMarketOpportunity() {
@@ -1276,13 +1350,16 @@
         bestMarket = null;
         marketOpportunity.hidden = true;
         marketScanStatus.textContent = 'Scanning again for the next top market…';
-        scanMarkets(true);
+        scanMarkets(true).then(() => {
+          if (marketVoiceEnabled) listenForMarketVoiceReply();
+        });
       }
 
       enableMarketVoiceBtn.addEventListener('click', async () => {
-        if (!bestMarket || !MarketSpeechRecognition || !('speechSynthesis' in window)) return;
+        if (!MarketSpeechRecognition) return;
         enableMarketVoiceBtn.disabled = true;
-        marketOpportunityStatus.textContent = 'Requesting microphone permission for hands-free market conversations…';
+        const voiceStatus = marketOpportunity.hidden ? marketScanStatus : marketOpportunityStatus;
+        voiceStatus.textContent = 'Requesting microphone permission for hands-free market conversations…';
         let audioStream;
         try {
           if (!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone access requires a supported secure browser connection');
@@ -1290,14 +1367,14 @@
           audioStream.getTracks().forEach((track) => track.stop());
           marketVoiceEnabled = true;
           enableMarketVoiceBtn.hidden = true;
-          marketOpportunityStatus.textContent = 'Voice conversation enabled. You will not need to press a reply button for future market scans.';
+          voiceStatus.textContent = 'Voice conversation enabled. Say a command whenever you are ready.';
           startMarketVoiceConversation();
         } catch (error) {
           audioStream?.getTracks().forEach((track) => track.stop());
           console.error('Hands-free market voice could not be enabled:', error);
           marketVoiceEnabled = false;
           enableMarketVoiceBtn.disabled = false;
-          marketOpportunityStatus.textContent = `Hands-free voice could not be enabled: ${error.message}. You can still choose with the buttons or amount field.`;
+          voiceStatus.textContent = `Hands-free voice could not be enabled: ${error.message}. You can still choose with the on-screen controls.`;
         }
       });
 
@@ -1510,6 +1587,11 @@
         }
       }
 
+      function getCoinLogoUrl(image) {
+        const logo = typeof image === 'string' ? image : image?.small || image?.thumb || image?.large;
+        return typeof logo === 'string' && /^https:\/\//i.test(logo) ? logo : '';
+      }
+
       async function loadMoreBotMarkets() {
         if (botMarketListLoading) return;
         botMarketListLoading = true;
@@ -1546,7 +1628,8 @@
             favoriteState.marketData[symbol] = {
               marketCap: Number(market.market_cap) || 0,
               change24h: Number(market.price_change_percentage_24h) || 0,
-              currentPrice: coinPrices[symbol]
+              currentPrice: coinPrices[symbol],
+              logo: getCoinLogoUrl(market.image)
             };
             if (botSpotPairsByBase.has(symbol) && !marketPairs[symbol]) marketPairs[symbol] = botSpotPairsByBase.get(symbol);
             if (!coinSelect.querySelector(`option[value="${symbol}"]`)) {
@@ -1557,6 +1640,7 @@
               favoriteCoinSelect.appendChild(option.cloneNode(true));
               addedCount += 1;
             }
+            ensureBotChartMarketOption(symbol, market.name);
           });
           if (botSettings.coin && !botSavedCoinApplied && !botCoinSelectionTouched
             && coinSelect.querySelector(`option[value="${botSettings.coin}"]`)) {
@@ -1566,6 +1650,8 @@
           }
           nextBotMarketPage += 1;
           loadMoreBotMarketsButton.hidden = markets.length < 250;
+          renderFavoriteCards();
+          renderBotChartCoinPicker();
           botMarketListStatus.textContent = markets.length
             ? `${addedCount} more selectable markets loaded. Spot pairs use live Binance data when available; other coins use CoinGecko snapshots for paper trading.`
             : 'No more market listings were returned.';
@@ -1601,9 +1687,44 @@
         })(),
         marketData: {}
       };
+      function ensureBotChartMarketOption(symbol, name = '') {
+        if (!botChartMarketSelect || !symbol || botChartMarketSelect.querySelector(`option[value="${symbol}"]`)) return;
+        const sourceOption = coinSelect.querySelector(`option[value="${symbol}"]`)
+          || favoriteCoinSelect.querySelector(`option[value="${symbol}"]`);
+        botChartMarketSelect.add(new Option(`${name || sourceOption?.textContent || symbol} / USD`, symbol));
+      }
+
+      function renderBotChartCoinPicker() {
+        if (!botChartCoinPickerOptions || !botChartMarketSelect) return;
+        botChartCoinPickerOptions.replaceChildren();
+        botChartCoinPickerButton.setAttribute('aria-label', favoriteState.favorites.length
+          ? `Choose a chart coin from your ${favoriteState.favorites.length} favorite coins`
+          : 'Choose a chart coin from your market watchlist');
+        if (!favoriteState.favorites.length) {
+          const empty = document.createElement('p');
+          empty.className = 'bot-chart-watchlist-empty';
+          empty.textContent = 'Add coins to your market watchlist first.';
+          botChartCoinPickerOptions.appendChild(empty);
+          return;
+        }
+        favoriteState.favorites.forEach((symbol) => {
+          ensureBotChartMarketOption(symbol);
+          const sourceOption = coinSelect.querySelector(`option[value="${symbol}"]`)
+            || favoriteCoinSelect.querySelector(`option[value="${symbol}"]`);
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.setAttribute('role', 'option');
+          option.dataset.chartWatchlistCoin = symbol;
+          option.setAttribute('aria-selected', String(botChartMarketSelect.value === symbol));
+          option.textContent = sourceOption?.textContent || `${symbol} / USD`;
+          botChartCoinPickerOptions.appendChild(option);
+        });
+      }
+
       favoriteState.favorites.forEach((symbol) => {
         if (!coinSelect.querySelector(`option[value="${symbol}"]`)) coinSelect.add(new Option(symbol, symbol));
         if (!favoriteCoinSelect.querySelector(`option[value="${symbol}"]`)) favoriteCoinSelect.add(new Option(symbol, symbol));
+        ensureBotChartMarketOption(symbol);
       });
 
       getCustomCoins().forEach((coin) => {
@@ -1618,7 +1739,9 @@
         coinSelect.appendChild(option);
         const favoriteOption = option.cloneNode(true);
         favoriteCoinSelect.appendChild(favoriteOption);
+        ensureBotChartMarketOption(coin.symbol, coin.name);
       });
+      renderBotChartCoinPicker();
       persistBotMemory();
 
       function savePositionRecords() {
@@ -1983,10 +2106,16 @@
           const change = Number(market.change24h) || 0;
           const changeClass = change >= 0 ? 'positive' : 'negative';
           const price = coinPrices[symbol] || market.currentPrice || 0;
+          const logo = typeof market.logo === 'string' && /^https:\/\//i.test(market.logo)
+            ? market.logo.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+            : '';
           return `
             <div class="favorite-card${activeSymbol === symbol ? ' is-active' : ''}" data-symbol="${symbol}" role="button" tabindex="0" aria-label="Analyze ${symbol}">
               <div class="favorite-card-top">
-                <strong>${symbol}</strong>
+                <div class="favorite-card-identity">
+                  <span class="favorite-coin-logo" data-symbol="${symbol}">${logo ? `<img src="${logo}" alt="" loading="lazy" />` : symbol.slice(0, 1)}</span>
+                  <strong>${symbol}</strong>
+                </div>
                 <span>${formatMoney(price)}</span>
               </div>
               <div class="favorite-card-value">
@@ -1998,6 +2127,14 @@
             </div>
           `;
         }).join('');
+
+        favoriteCards.querySelectorAll('.favorite-coin-logo img').forEach((image) => {
+          image.addEventListener('error', () => {
+            const logo = image.parentElement;
+            logo.classList.add('is-fallback');
+            logo.textContent = logo.dataset.symbol.slice(0, 1);
+          }, { once: true });
+        });
 
         favoriteCards.querySelectorAll('.favorite-card').forEach((card) => {
           const selectCard = () => selectFavorite(card.dataset.symbol);
@@ -2023,8 +2160,11 @@
               return;
             }
             renderFavoriteCards();
+            renderBotChartCoinPicker();
             if (coinSelect.value === symbol) {
               coinSelect.value = '';
+              botChartMarketSelect.value = '';
+              loadBotChartMarket('');
               botMarketStatus.textContent = 'Select a favorite coin to connect its live spot market.';
               updateSummary();
             }
@@ -2041,8 +2181,9 @@
           return;
         }
         applyAutomaticSettings(symbol);
-        coinSelect.value = symbol;
-        coinSelect.dispatchEvent(new Event('change'));
+        ensureBotChartMarketOption(symbol);
+        botChartMarketSelect.value = symbol;
+        botChartMarketSelect.dispatchEvent(new Event('change', { bubbles: true }));
         renderFavoriteCards();
       }
 
@@ -2083,7 +2224,8 @@
             favoriteState.marketData[symbol] = {
               marketCap: market.market_cap || 0,
               change24h: market.price_change_percentage_24h || 0,
-              currentPrice: market.current_price || coinPrices[symbol]
+              currentPrice: market.current_price || coinPrices[symbol],
+              logo: getCoinLogoUrl(market.image) || favoriteState.marketData[symbol]?.logo || ''
             };
             coinPrices[symbol] = market.current_price || coinPrices[symbol];
           });
@@ -2265,6 +2407,12 @@
           reason,
           price
         };
+        localStorage.setItem(adaptiveAnalystStorageKey, JSON.stringify({
+          symbol,
+          strategy: strategy.value,
+          ...botState.analysis,
+          updatedAt: Date.now()
+        }));
         aiRecommendation.textContent = action === 'HOLD' ? 'WAIT for a stronger signal' : `${action} only`;
         aiRecommendation.className = action === 'BUY' ? 'ai-buy' : 'ai-sell';
         aiConfidence.textContent = signalAccuracy
@@ -2787,6 +2935,8 @@
       function updateStatusLabel() {
         const label = botState.running ? 'Paper bot running' : 'Paper bot paused';
         botStatus.innerHTML = `<span class="dot" style="background:${botState.running ? '#00ff00' : '#ffb000'}"></span>${label}`;
+        document.getElementById('startBotBtn').disabled = botState.running;
+        document.getElementById('pauseBotBtn').disabled = !botState.running;
       }
 
       function pauseBotAtGoal() {
@@ -3045,8 +3195,47 @@
       });
       window.addEventListener('resize', positionBotConfigurationSummary);
       botChartMarketSelect.addEventListener('change', () => {
-        coinSelect.value = botChartMarketSelect.value;
+        const selectedSymbol = botChartMarketSelect.value;
+        if (selectedSymbol && !favoriteState.favorites.includes(selectedSymbol)) {
+          favoriteState.favorites.push(selectedSymbol);
+          if (saveFavorites()) {
+            renderFavoriteCards();
+            favoriteAnalysisStatus.textContent = `${selectedSymbol} added to your watchlist and selected for the Market Chart.`;
+          } else {
+            favoriteState.favorites.pop();
+          }
+        }
+        renderBotChartCoinPicker();
+        coinSelect.value = selectedSymbol;
         coinSelect.dispatchEvent(new Event('change'));
+      });
+      botChartCoinPickerButton.addEventListener('click', () => {
+        const isOpen = botChartCoinPickerOptions.hidden;
+        renderBotChartCoinPicker();
+        botChartCoinPickerOptions.hidden = !isOpen;
+        botChartCoinPickerButton.setAttribute('aria-expanded', String(isOpen));
+        if (isOpen) botChartCoinPickerOptions.querySelector('[role="option"]')?.focus();
+      });
+      botChartCoinPickerOptions.addEventListener('click', (event) => {
+        const option = event.target.closest('[data-chart-watchlist-coin]');
+        if (!option) return;
+        ensureBotChartMarketOption(option.dataset.chartWatchlistCoin);
+        botChartMarketSelect.value = option.dataset.chartWatchlistCoin;
+        botChartCoinPickerOptions.hidden = true;
+        botChartCoinPickerButton.setAttribute('aria-expanded', 'false');
+        botChartMarketSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        botChartCoinPickerButton.focus();
+      });
+      document.addEventListener('click', (event) => {
+        if (event.target.closest('.bot-chart-market-picker')) return;
+        botChartCoinPickerOptions.hidden = true;
+        botChartCoinPickerButton.setAttribute('aria-expanded', 'false');
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || botChartCoinPickerOptions.hidden) return;
+        botChartCoinPickerOptions.hidden = true;
+        botChartCoinPickerButton.setAttribute('aria-expanded', 'false');
+        botChartCoinPickerButton.focus();
       });
       botChartTimeButton.addEventListener('click', () => {
         const isOpen = botChartTimeOptions.hidden;
@@ -3149,11 +3338,47 @@
       });
       document.addEventListener('fullscreenchange', () => {
         const isFullscreen = Boolean(document.fullscreenElement && botChartSection.contains(document.fullscreenElement));
-        botChartFullscreen.textContent = isFullscreen ? 'Exit full screen' : 'Full screen';
+        botChartFullscreen.textContent = '[ ]';
         botChartFullscreen.setAttribute('aria-label', isFullscreen ? 'Exit market chart full screen' : 'Open market chart full screen');
         botChartFullscreen.setAttribute('aria-pressed', String(isFullscreen));
         requestAnimationFrame(renderBotChart);
       });
+      const botFloatingControls = document.getElementById('botFloatingControls');
+      const botFloatingControlsHandle = document.getElementById('botFloatingControlsHandle');
+      const botFloatingControlsClose = document.getElementById('botFloatingControlsClose');
+      const botQuickControlsToggle = document.getElementById('botQuickControlsToggle');
+      botFloatingControlsClose.addEventListener('click', () => {
+        botFloatingControls.hidden = true;
+        botQuickControlsToggle.setAttribute('aria-expanded', 'false');
+      });
+      botQuickControlsToggle.addEventListener('click', () => {
+        botFloatingControls.hidden = false;
+        botQuickControlsToggle.setAttribute('aria-expanded', 'true');
+      });
+      let botControlsDragOffset = null;
+      botFloatingControlsHandle.addEventListener('pointerdown', (event) => {
+        if (event.target.closest('button')) return;
+        const controlsBounds = botFloatingControls.getBoundingClientRect();
+        botControlsDragOffset = {
+          x: event.clientX - controlsBounds.left,
+          y: event.clientY - controlsBounds.top
+        };
+        botFloatingControlsHandle.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      });
+      botFloatingControlsHandle.addEventListener('pointermove', (event) => {
+        if (!botControlsDragOffset) return;
+        const wrapBounds = botChartWrap.getBoundingClientRect();
+        const maxLeft = Math.max(0, botChartWrap.clientWidth - botFloatingControls.offsetWidth);
+        const maxTop = Math.max(0, botChartWrap.clientHeight - botFloatingControls.offsetHeight);
+        const left = event.clientX - wrapBounds.left - botChartWrap.clientLeft - botControlsDragOffset.x;
+        const top = event.clientY - wrapBounds.top - botChartWrap.clientTop - botControlsDragOffset.y;
+        botFloatingControls.style.left = `${Math.max(0, Math.min(maxLeft, left))}px`;
+        botFloatingControls.style.top = `${Math.max(0, Math.min(maxTop, top))}px`;
+      });
+      const finishBotControlsDrag = () => { botControlsDragOffset = null; };
+      botFloatingControlsHandle.addEventListener('pointerup', finishBotControlsDrag);
+      botFloatingControlsHandle.addEventListener('pointercancel', finishBotControlsDrag);
       riskSettingsToggle.addEventListener('click', () => {
         const isOpen = riskSettingsPanel.hidden;
         riskSettingsPanel.hidden = !isOpen;
@@ -3253,9 +3478,15 @@
           favoriteState.favorites.pop();
           return;
         }
+        ensureBotChartMarketOption(symbol);
         favoriteCoinSelect.value = '';
         renderFavoriteCards();
+        renderBotChartCoinPicker();
         favoriteAnalysisStatus.textContent = `${symbol} added to your watchlist. Select its card when you want to analyze it.`;
+        if (favoriteState.favorites.length === 1) {
+          botChartMarketSelect.value = symbol;
+          botChartMarketSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
         refreshFavoriteMarketData();
       });
 
@@ -3272,15 +3503,21 @@
         marketOpportunityStatus.textContent = '';
       });
       playMarketDetailsBtn.addEventListener('click', () => {
-        if (!('speechSynthesis' in window)) {
-          marketOpportunityStatus.textContent = 'Spoken market details are not supported in this browser.';
+        if (marketSpeechAudio?.paused) {
+          marketSpeechAudio.play().then(() => {
+            playMarketDetailsBtn.hidden = true;
+            pauseMarketDetailsBtn.hidden = false;
+            marketOpportunityStatus.textContent = 'Fish AI voice playback resumed.';
+          }).catch((error) => {
+            marketOpportunityStatus.textContent = `Fish AI voice could not resume: ${error.message}`;
+          });
           return;
         }
-        if (window.speechSynthesis.paused) {
+        if (window.speechSynthesis?.paused) {
           window.speechSynthesis.resume();
           playMarketDetailsBtn.hidden = true;
           pauseMarketDetailsBtn.hidden = false;
-          marketOpportunityStatus.textContent = 'Market details reading resumed.';
+          marketOpportunityStatus.textContent = 'Browser voice playback resumed.';
           return;
         }
         if (!bestMarket) return;
@@ -3329,11 +3566,16 @@
         }
       });
       pauseMarketDetailsBtn.addEventListener('click', () => {
-        if (!window.speechSynthesis.speaking) return;
-        window.speechSynthesis.pause();
+        if (marketSpeechAudio && !marketSpeechAudio.paused) {
+          marketSpeechAudio.pause();
+        } else if (window.speechSynthesis?.speaking) {
+          window.speechSynthesis.pause();
+        } else {
+          return;
+        }
         playMarketDetailsBtn.hidden = false;
         pauseMarketDetailsBtn.hidden = true;
-        marketOpportunityStatus.textContent = 'Reading paused. Select Play market details to continue.';
+        marketOpportunityStatus.textContent = 'Voice playback paused. Select Play Fish AI voice to continue.';
       });
       marketOpportunityTradeForm.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -3453,6 +3695,8 @@
       renderFavoriteCards();
       updateMinimumTradeNotice();
       refreshAccountCurrencyRate();
+      enableMarketVoiceBtn.hidden = !MarketSpeechRecognition || marketVoiceEnabled;
+      startMarketVoiceConversation();
       scanMarkets();
       window.setInterval(scanMarkets, 5 * 60 * 1000);
       window.setInterval(refreshAccountCurrencyRate, 60 * 60 * 1000);
@@ -3462,9 +3706,11 @@
           item.classList.toggle('is-active', item.dataset.botChartInterval === botState.chartInterval);
         });
       }
-      if (botChartTools.market && coinSelect.querySelector(`option[value="${botChartTools.market}"]`)) {
-        coinSelect.value = botChartTools.market;
-        botChartMarketSelect.value = botChartTools.market;
+      const initialChartSymbol = favoriteState.favorites[0] || botChartTools.market || coinSelect.value;
+      if (initialChartSymbol && coinSelect.querySelector(`option[value="${initialChartSymbol}"]`)) {
+        ensureBotChartMarketOption(initialChartSymbol);
+        coinSelect.value = initialChartSymbol;
+        botChartMarketSelect.value = initialChartSymbol;
       }
       if (coinSelect.value) {
         if (favoriteState.favorites.includes(coinSelect.value)) applyAutomaticSettings(coinSelect.value);

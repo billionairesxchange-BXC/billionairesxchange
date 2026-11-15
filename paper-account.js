@@ -7,6 +7,8 @@
     'makingsTradePaperBalance',
     'makingsTradePaperAccountBalance',
     'makingsTradeRealizedProfit',
+    'makingsTradeRealizedGains',
+    'makingsTradeRealizedLosses',
     'makingsInvestmentDemoState',
     'makingsBotBackgroundState',
     'makingsBotMemory',

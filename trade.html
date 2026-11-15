@@ -111,6 +111,10 @@
             <span class="eyebrow">Trade paper balance</span>
             <strong id="paperBalanceSummary">$10,000.00</strong>
             <small>Available for paper trades</small>
+            <div class="trade-balance-performance" aria-label="Realized trade results">
+              <span>Gains <strong id="tradeRealizedGains">$0.00</strong></span>
+              <span>Losses <strong id="tradeRealizedLosses">$0.00</strong></span>
+            </div>
           </div>
           <div class="trade-balance-card">
             <span class="eyebrow">Account balance</span>
@@ -196,7 +200,12 @@
                 </div>
                 <div class="positions-chart-header-actions">
                   <strong id="positionsChartPrice">--</strong>
-                  <button class="positions-advanced-button" id="positionsAdvancedButton" type="button" aria-pressed="false">Advanced Trading</button>
+                  <button class="advanced-notification-button" id="advancedTradeNotificationButton" type="button" aria-label="Open trade notifications">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <span class="advanced-notification-badge" id="advancedTradeNotificationBadge" hidden>0</span>
+                  </button>
                   <button class="positions-fullscreen-button" id="positionsFullscreenButton" type="button" aria-pressed="false" aria-label="Open Position Market View full screen" title="Toggle chart fullscreen">[ ]</button>
                 </div>
               </div>
@@ -235,44 +244,119 @@
                     <button type="button" data-chart-interval="1w">1W</button>
                   </div>
                   <div class="advanced-chart-toolbar" aria-label="Trade alerts and AI assistant">
-                    <button class="advanced-notification-button" id="advancedTradeNotificationButton" type="button" aria-label="Open trade notifications">
-                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
-                      </svg>
-                      <span class="advanced-notification-badge" id="advancedTradeNotificationBadge" hidden>0</span>
+                    <button class="positions-advanced-button" id="positionsAdvancedButton" type="button" aria-pressed="false">Advanced Trading</button>
+                    <button class="positions-chart-tool-icon" type="button" aria-label="Compare markets" title="Compare markets">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h12m0 0-3-3m3 3-3 3M20 17H8m0 0 3-3m-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
-                    <button class="advanced-ai-button" id="advancedTradeAiButton" type="button" aria-label="Open AI assistant">AI</button>
+                    <button class="positions-chart-tool-icon" type="button" data-chart-tool="create" aria-label="Technical indicators" title="Technical indicators">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 18h3l3-8 4 5 3-9 2 5h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 21h18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    </button>
+                    <button class="positions-chart-tool-icon" type="button" data-chart-tool="custom-candles" aria-label="Candles" title="Candles and chart styles">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3v4m0 8v6m-2-10h4v4H5zm9-8v6m0 6v6m-2-12h4v6h-4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <button class="advanced-ai-button" id="advancedTradeAiButton" type="button" aria-label="Open Gemini chart assistant" title="Ask Gemini about this chart">AI</button>
                   </div>
                 </div>
 
                 <div id="price">Waiting for live data...</div>
                 <div class="positions-chart-wrap">
+                  <div class="chart-drawing-toolbar is-collapsed" id="chartDrawingToolbar" aria-label="Chart drawing tools">
+                    <button class="chart-drawing-menu-toggle" id="chartDrawingMenuToggle" type="button" aria-label="Open drawing tools" aria-expanded="false" title="Open drawing tools">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <div class="chart-drawing-tool-list" id="chartDrawingToolList" hidden>
+                      <button type="button" data-drawing-tool="cursor" aria-label="Cursor" title="Cursor" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 3 14 10-7 1-3 7L5 3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></button>
+                      <button type="button" data-drawing-tool="cross-cursor" aria-label="Cross Cursor" title="Cross Cursor" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+                      <button type="button" data-drawing-tool="trend-line" aria-label="Trend Line" title="Trend Line" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 18 5-6 4 2 7-9m-5 0h5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                      <button type="button" data-drawing-tool="right-arrow" aria-label="Right Arrow" title="Right Arrow" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                      <button type="button" data-drawing-tool="fibonacci" aria-label="Fibonacci Retracement" title="Fibonacci Retracement" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 9h10M5 13h7M5 17h4M5 21h14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+                      <button type="button" data-drawing-tool="rectangle" aria-label="Rectangle" title="Rectangle" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></button>
+                      <button type="button" data-drawing-tool="measurement" aria-label="Measurement" title="Measurement" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 18 4m-9 0 3 3m0-7 4 4m-1 5 3 3m-7 1 3 3M3 21h18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                      <button type="button" data-drawing-toggle="magnet" aria-label="Magnet Mode: off" title="Magnet Mode: snap to OHLC" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14V8a6 6 0 0 1 12 0v6a6 6 0 0 1-12 0zm0-6h4v5H6m8-5h4v5h-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                      <button type="button" data-drawing-toggle="continuous" aria-label="Continuous Drawing Mode: off" title="Continuous Drawing Mode" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5l2 2m0-5v5h-5M20 12a8 8 0 0 1-14 5l-2-2m0 5v-5h5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                      <button type="button" data-drawing-toggle="lock" aria-label="Lock Drawings: off" title="Lock Drawings" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
+                      <button type="button" data-drawing-action="hide" aria-label="Hide all Drawings" title="Hide all Drawings" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3 21 21M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10.7 10.7 0 0 1 12 5c5.5 0 9 7 9 7a14 14 0 0 1-3.1 3.8M6.2 6.2C4.1 7.6 3 12 3 12s3.5 7 9 7c.8 0 1.6-.2 2.3-.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                      <button type="button" data-drawing-action="delete" aria-label="Delete All Drawings" title="Delete All Drawings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16m-10 4v7m4-7v7M6 7l1 14h10l1-14M9 7V4h6v3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    </div>
+                  </div>
                   <canvas id="positionsCandleChart" aria-label="Candlestick chart with timestamps for the selected market" title="Scroll over the chart to zoom in and out"></canvas>
                   <iframe id="positionsExternalMarketChart" class="positions-external-market-chart" title="Selected external market chart" loading="lazy" allowfullscreen hidden></iframe>
                   <button class="positions-save-risk-button" id="positionsSaveRiskSetup" type="button" disabled>Set risk levels</button>
                   <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
+                  <div class="chart-signal-indicator" id="chartSignalIndicator" data-state="connecting" role="status" aria-live="polite" aria-label="Connecting">
+                    <span class="chart-signal-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+                    <span id="chartSignalText">Connecting</span>
+                  </div>
+                  <div class="chart-trade-ticket" id="chartTradeTicket" aria-label="Quick chart trade controls">
+                    <div class="chart-trade-ticket-head" data-ticket-drag-handle>
+                      <span>Quick Trade</span>
+                      <button type="button" data-ticket-close aria-label="Dock quick trade controls" title="Move below TP/SL">×</button>
+                    </div>
+                    <div class="chart-trade-ticket-actions">
+                      <button class="chart-ticket-buy" type="button" data-ticket-submit="BUY">Buy</button>
+                      <label><span class="sr-only">Trade amount</span><input type="number" min="0" step="any" inputmode="decimal" data-ticket-amount placeholder="Amount" /><small data-ticket-unit>BTC</small></label>
+                      <button class="chart-ticket-sell" type="button" data-ticket-submit="SELL">Sell</button>
+                    </div>
+                    <button class="chart-ticket-undock" type="button" data-ticket-undock hidden>Move to chart</button>
+                    <button class="chart-ticket-resize" type="button" data-ticket-resize aria-label="Resize quick trade controls" title="Drag to resize"></button>
+                  </div>
                 </div>
                 <p id="positionsChartStatus" role="status" aria-live="polite">Loading market candles...</p>
                 <div class="advanced-chart-orderbar" id="advancedChartOrderbar">
-                  <div class="positions-chart-price-actions" role="group" aria-label="Place a paper trade at the selected chart price">
-                    <button class="btn positions-buy-button" id="positionsChartBuyButton" type="button" disabled>Buy</button>
-                    <label class="positions-order-amount" for="positionsOrderQuantity">
-                      <span>Trade amount (USDT)</span>
-                      <input id="positionsOrderQuantity" type="number" min="1" step="0.01" value="0.00" inputmode="decimal" />
-                    </label>
-                    <button class="btn positions-sell-button" id="positionsChartSellButton" type="button" disabled>Sell</button>
+                  <input id="positionsOrderQuantity" type="hidden" value="0.00" />
+                  <p id="positionsOrderEstimate" class="positions-order-estimate" role="status" aria-live="polite" hidden>Estimated total: --</p>
+                  <div class="trade-order-topbar">
+                    <button type="button" disabled title="Recurring orders are not available in paper trading">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h13l-3-3m6 13H7l3 3M5 7a8 8 0 0 0-.5 9M19 17a8 8 0 0 0 .5-9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      Recurring
+                    </button>
+                    <button type="button" disabled title="EUR purchases require a fiat payment integration">Buy with EUR</button>
                   </div>
-                  <p id="positionsOrderEstimate" class="positions-order-estimate" role="status" aria-live="polite">Estimated total: --</p>
-                </div>
-                <div class="positions-risk-controls" role="group" aria-label="Set take profit and stop loss chart levels">
-                  <label class="positions-risk-control positions-risk-control-take-profit" for="positionsTakeProfitInput">
-                    <span>Take Profit</span>
-                    <div><input id="positionsTakeProfitInput" type="number" min="0.00000001" step="any" inputmode="decimal" placeholder="Price" /></div>
-                  </label>
-                  <label class="positions-risk-control positions-risk-control-stop-loss" for="positionsStopLossInput">
-                    <span>Stop Loss</span>
-                    <div><input id="positionsStopLossInput" type="number" min="0.00000001" step="any" inputmode="decimal" placeholder="Price" /></div>
-                  </label>
+                  <div class="trade-order-panels">
+                    <section class="trade-order-panel" data-trade-order-side="BUY" aria-label="Buy order">
+                      <div class="trade-order-type-tabs" role="group" aria-label="Buy order type">
+                        <button type="button" data-order-type="limit" aria-pressed="true">Limit</button>
+                        <button type="button" data-order-type="market" aria-pressed="false">Market</button>
+                        <button type="button" data-order-type="stop-limit" aria-pressed="false">Stop Limit</button>
+                      </div>
+                      <label class="trade-order-input-row"><span data-order-price-label>Price</span><input type="number" min="0" step="any" inputmode="decimal" data-order-price aria-label="Buy price" /><span data-order-quote-unit>USDT</span><button type="button" data-order-bbo> BBO </button></label>
+                      <label class="trade-order-input-row"><span>Amount</span><input type="number" min="0" step="any" inputmode="decimal" data-order-amount aria-label="Buy amount" /><span data-order-base-unit>BTC</span></label>
+                      <div class="trade-order-amount-limit"><span>Max Amount</span><strong data-order-max-amount>--</strong></div>
+                      <div class="trade-order-slider"><input type="range" min="0" max="100" step="1" value="0" data-order-slider aria-label="Buy amount percentage" /><div><button type="button" data-order-percent="0">0%</button><button type="button" data-order-percent="25">25%</button><button type="button" data-order-percent="50">50%</button><button type="button" data-order-percent="75">75%</button><button type="button" data-order-percent="100">100%</button></div></div>
+                      <label class="trade-order-input-row"><span>Total</span><input type="text" readonly data-order-total aria-label="Buy total" /><span data-order-quote-unit>USDT</span></label>
+                      <label class="trade-order-tpsl-toggle"><input type="checkbox" data-order-tpsl-toggle /><span>TP/SL</span></label>
+                      <div class="trade-order-tpsl-fields" data-order-tpsl-fields hidden>
+                        <label>Take Profit<input type="number" min="0" step="any" inputmode="decimal" data-order-take-profit /></label>
+                        <label>Stop Loss<input type="number" min="0" step="any" inputmode="decimal" data-order-stop-loss /></label>
+                      </div>
+                      <div class="trade-order-meta"><span>Available</span><strong data-order-available>--</strong><span>Max Buy</span><button type="button" data-order-max-action data-order-max>--</button><span>Est. Fee</span><strong data-order-fee>--</strong></div>
+                      <button class="btn positions-buy-button trade-order-submit" id="positionsChartBuyButton" type="button" disabled>Buy BTC</button>
+                    </section>
+                    <section class="trade-order-panel" data-trade-order-side="SELL" aria-label="Sell order">
+                      <div class="trade-order-type-tabs" role="group" aria-label="Sell order type">
+                        <button type="button" data-order-type="limit" aria-pressed="true">Limit</button>
+                        <button type="button" data-order-type="market" aria-pressed="false">Market</button>
+                        <button type="button" data-order-type="stop-limit" aria-pressed="false">Stop Limit</button>
+                      </div>
+                      <label class="trade-order-input-row"><span data-order-price-label>Price</span><input type="number" min="0" step="any" inputmode="decimal" data-order-price aria-label="Sell price" /><span data-order-quote-unit>USDT</span><button type="button" data-order-bbo>BBO</button></label>
+                      <label class="trade-order-input-row"><span>Amount</span><input type="number" min="0" step="any" inputmode="decimal" data-order-amount aria-label="Sell amount" /><span data-order-base-unit>BTC</span></label>
+                      <div class="trade-order-amount-limit"><span>Max Amount</span><strong data-order-max-amount>--</strong></div>
+                      <div class="trade-order-slider"><input type="range" min="0" max="100" step="1" value="0" data-order-slider aria-label="Sell amount percentage" /><div><button type="button" data-order-percent="0">0%</button><button type="button" data-order-percent="25">25%</button><button type="button" data-order-percent="50">50%</button><button type="button" data-order-percent="75">75%</button><button type="button" data-order-percent="100">100%</button></div></div>
+                      <label class="trade-order-input-row"><span>Total</span><input type="text" readonly data-order-total aria-label="Sell total" /><span data-order-quote-unit>USDT</span></label>
+                      <label class="trade-order-tpsl-toggle"><input type="checkbox" data-order-tpsl-toggle /><span>TP/SL</span></label>
+                      <div class="trade-order-tpsl-fields" data-order-tpsl-fields hidden>
+                        <label>Take Profit<input type="number" min="0" step="any" inputmode="decimal" data-order-take-profit /></label>
+                        <label>Stop Loss<input type="number" min="0" step="any" inputmode="decimal" data-order-stop-loss /></label>
+                      </div>
+                      <div class="trade-order-meta"><span>Available</span><strong data-order-available>--</strong><span>Max Sell</span><button type="button" data-order-max-action data-order-max>--</button><span>Est. Fee</span><strong data-order-fee>--</strong></div>
+                      <button class="btn positions-sell-button trade-order-submit" id="positionsChartSellButton" type="button" disabled>Sell BTC</button>
+                    </section>
+                  </div>
+                  <div class="chart-trade-ticket-dock" id="chartTradeTicketDock" aria-label="Docked quick trade controls"></div>
+                  <div class="trade-order-legacy-risk" hidden>
+                    <input id="positionsTakeProfitInput" type="number" min="0.00000001" step="any" inputmode="decimal" />
+                    <input id="positionsStopLossInput" type="number" min="0.00000001" step="any" inputmode="decimal" />
+                  </div>
                 </div>
                 <div class="positions-market-coin-banner" id="positionsMarketCoinBanner" aria-live="polite" title="Selected market quote token">
                   <span>Market</span>
@@ -291,7 +375,33 @@
               </section>
               <section id="advancedPanelAnalysis" class="advanced-tab-panel" role="tabpanel" aria-labelledby="advancedTabAnalysis" data-advanced-panel="analysis" hidden>
                 <h3>Trading Analysis</h3>
-                <p>Analysis indicators are available from the chart tools. No automated trading recommendation is generated here.</p>
+                <div aria-live="polite">
+                  <div class="ai-analyst-heading">
+                    <div class="advanced-analyst-identity">
+                      <span class="positions-market-logo" id="advancedAnalystMarketLogo" aria-hidden="true">--</span>
+                      <div>
+                      <span class="eyebrow">Adaptive Market Analyst</span>
+                      <h4 id="advancedAnalystRecommendation">Waiting for analyst data</h4>
+                      </div>
+                    </div>
+                    <span class="ai-confidence" id="advancedAnalystConfidence">--</span>
+                  </div>
+                  <p class="advanced-data-empty" id="advancedAnalystStatus">Waiting for chart candles.</p>
+                  <p id="advancedAnalystReason">The latest Adaptive Market Analyst signal will appear here.</p>
+                  <div class="ai-signal-grid">
+                    <span>Momentum <strong id="advancedAnalystMomentum">--</strong></span>
+                    <span>Trend <strong id="advancedAnalystTrend">--</strong></span>
+                    <span>Volatility <strong id="advancedAnalystVolatility">--</strong></span>
+                  </div>
+                  <small id="advancedAnalystUpdated">Historical results do not predict future performance.</small>
+                  <div class="advanced-analyst-controls">
+                    <button class="btn btn-ghost" id="advancedAnalystPlayButton" type="button" aria-label="Play market analysis" disabled>
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z" fill="currentColor"></path></svg>
+                      <span id="advancedAnalystPlayLabel">Play analysis</span>
+                    </button>
+                    <span id="advancedAnalystPlayStatus" role="status" aria-live="polite"></span>
+                  </div>
+                </div>
               </section>
               <section id="advancedPanelSquare" class="advanced-tab-panel" role="tabpanel" aria-labelledby="advancedTabSquare" data-advanced-panel="square" hidden>
                 <h3>Square</h3>
@@ -305,11 +415,11 @@
                 <div class="advanced-market-categories" role="group" aria-label="Market type">
                   <button type="button" data-market-category="all" aria-pressed="true">All</button>
                   <button type="button" data-market-category="new" aria-pressed="false">New</button>
-                  <button type="button" data-market-category="futures" aria-pressed="false">Futures</button>
-                  <button type="button" data-market-category="stocks" aria-pressed="false">Stocks</button>
-                  <button type="button" data-market-category="options" aria-pressed="false">Options</button>
-                  <button type="button" data-market-category="indices" aria-pressed="false">Indices</button>
-                  <button type="button" data-market-category="forex" aria-pressed="false">Forex</button>
+                  <button type="button" data-market-category="futures" aria-pressed="false"><svg class="advanced-market-category-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19V5m0 14h16M8 15l4-4 3 2 5-6m-4 0h4v4" /></svg>Futures</button>
+                  <button type="button" data-market-category="stocks" aria-pressed="false"><svg class="advanced-market-category-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19h16M6 17v-5h3v5m3 0V7h3v10m3 0v-8h3v8" /></svg>Stocks</button>
+                  <button type="button" data-market-category="options" aria-pressed="false"><svg class="advanced-market-category-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5h5m-5 0v14m0-7h7m0 0 5-5m-5 5 5 5m0-10h2m-2 10h2" /><circle cx="5" cy="5" r="1.5" /><circle cx="5" cy="19" r="1.5" /><circle cx="12" cy="12" r="1.5" /></svg>Options</button>
+                  <button type="button" data-market-category="indices" aria-pressed="false"><svg class="advanced-market-category-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h7M4 12h12M4 18h16" /><circle cx="14" cy="6" r="1.5" /><circle cx="19" cy="12" r="1.5" /></svg>Indices</button>
+                  <button type="button" data-market-category="forex" aria-pressed="false"><svg class="advanced-market-category-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 8h15l-3-3m4 11H5l3 3" /><path d="M10 10v4m-2-2h4m4-2v4m-2-2h4" /></svg>Forex</button>
                 </div>
                 <div class="advanced-quote-tabs" role="group" aria-label="Filter markets by quote token">
                   <button type="button" data-market-quote="USDC" aria-pressed="false">USDC</button>
@@ -335,6 +445,33 @@
                 </div>
               </section>
             </aside>
+            <section class="advanced-orders-footer" id="advancedOrdersFooter" aria-label="Orders and trade history">
+              <div class="advanced-orders-toolbar">
+                <div class="advanced-orders-tabs" role="tablist" aria-label="Orders and account activity">
+                  <button type="button" role="tab" data-orders-view="open" aria-selected="true">Open Orders <span id="advancedOpenOrdersCount">(0)</span></button>
+                  <button type="button" role="tab" data-orders-view="history" aria-selected="false">Order History</button>
+                  <button type="button" role="tab" data-orders-view="trades" aria-selected="false">Trade History</button>
+                  <button type="button" role="tab" data-orders-view="holdings" aria-selected="false">Holdings</button>
+                  <button type="button" role="tab" data-orders-view="bots" aria-selected="false">Bots</button>
+                </div>
+                <div class="advanced-orders-actions">
+                  <label><input id="advancedHideOtherPairs" type="checkbox" /> Hide Other Pairs</label>
+                  <button id="advancedCancelAllOrders" type="button" disabled title="There are no pending paper orders to cancel">Cancel All</button>
+                </div>
+              </div>
+              <div class="advanced-orders-table-wrap">
+                <table class="advanced-orders-table">
+                  <thead><tr>
+                    <th>Date</th><th>Pair</th><th>Type</th><th>Side</th><th>Price</th><th>Amount</th><th>Amount per Iceberg Order</th><th>Filled</th><th>Total</th><th>Trigger Conditions</th><th>SOR</th><th>AOR</th><th>TP/SL</th><th>Cancel All</th>
+                  </tr></thead>
+                  <tbody id="advancedOrdersTableBody"></tbody>
+                </table>
+              </div>
+              <div class="advanced-orders-empty" id="advancedOrdersEmpty" role="status">
+                <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="4" width="29" height="37" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M14 12h17v11H14zM14 29h17M14 34h10" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="38" cy="36" r="8" fill="currentColor"/><path d="M38 31.5v5m0 2v.1" stroke="#171a20" stroke-width="2" stroke-linecap="round"/></svg>
+                <p id="advancedOrdersEmptyText">You have no open orders.</p>
+              </div>
+            </section>
             </div>
             <dialog class="positions-tool-dialog" id="positionsToolDialog" aria-labelledby="positionsToolDialogTitle">
             <form id="positionsToolForm">
@@ -362,8 +499,23 @@
                 <label>Line color<input name="indicatorColor" type="color" value="#f3c969" /></label>
               </fieldset>
               <fieldset data-chart-tool-panel="custom-candles" hidden>
-                <legend>Custom candlesticks</legend>
-                <div class="positions-tool-form-row">
+                <legend>Chart style</legend>
+                <input type="hidden" name="chartType" value="candles" />
+                <div class="chart-style-icon-group" role="group" aria-label="Chart style">
+                  <button class="positions-chart-tool-icon" type="button" data-chart-type="candles" aria-label="Candles" title="Candles" aria-pressed="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v4m0 8v6m-2-10h4v4H5zm9-8v6m0 6v6m-2-12h4v6h-4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <button class="positions-chart-tool-icon" type="button" data-chart-type="bars" aria-label="Bars" title="Bars" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16m-3-11h6m9-5v16m-3-7h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                  </button>
+                  <button class="positions-chart-tool-icon" type="button" data-chart-type="line" aria-label="Line" title="Line" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 5-6 4 3 8-9" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <button class="positions-chart-tool-icon" type="button" data-chart-type="area" aria-label="Area" title="Area" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 5-6 4 3 8-9v14H3z" fill="currentColor" fill-opacity=".2" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+                <div class="positions-tool-form-row" data-candle-style-controls>
                   <label>Body width (% of candle spacing)<input name="candleBodyWidth" type="number" min="10" max="90" step="1" required /></label>
                   <label>Wick width (px)<input name="candleWickWidth" type="number" min="1" max="5" step="1" required /></label>
                 </div>
@@ -411,6 +563,24 @@
       </section>
 
     </main>
+
+    <dialog class="advanced-gemini-dialog" id="advancedGeminiDialog" aria-labelledby="advancedGeminiTitle">
+      <div class="advanced-gemini-header">
+        <div>
+          <span class="eyebrow">Chart assistant</span>
+          <h3 id="advancedGeminiTitle">Gemini Market Analysis</h3>
+        </div>
+        <button class="btn btn-ghost" id="advancedGeminiClose" type="button" aria-label="Close Gemini assistant">×</button>
+      </div>
+      <p class="advanced-gemini-note">Gemini reviews the selected market and recent chart candles. This is informational, not financial advice.</p>
+      <div class="advanced-gemini-messages" id="advancedGeminiMessages" aria-live="polite" aria-label="Gemini conversation"></div>
+      <form class="advanced-gemini-form" id="advancedGeminiForm">
+        <label class="sr-only" for="advancedGeminiInput">Ask Gemini about this chart</label>
+        <textarea id="advancedGeminiInput" rows="2" maxlength="500" placeholder="Ask a follow-up about this market..." required></textarea>
+        <button class="btn btn-primary" id="advancedGeminiSend" type="submit">Send</button>
+      </form>
+      <p class="advanced-gemini-status" id="advancedGeminiStatus" role="status" aria-live="polite"></p>
+    </dialog>
 
     <footer class="site-footer">
       <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>

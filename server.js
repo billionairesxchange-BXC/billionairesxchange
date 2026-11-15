@@ -40,6 +40,8 @@ const persistedKeys = new Set([
   'makingsWalletCreditCardBalance',
   'makingsTradePaperBalance',
   'makingsTradeRealizedProfit',
+  'makingsTradeRealizedGains',
+  'makingsTradeRealizedLosses',
   'makingsInvestmentDemoState',
   'makingsBotBackgroundState',
   'makingsBotMemory',
@@ -169,6 +171,97 @@ app.post('/api/ai/voice', authenticate, async (request, response) => {
   }
 });
 
+const geminiRequests = new Map();
+app.post('/api/ai/gemini', authenticate, async (request, response) => {
+  const now = Date.now();
+  const recentRequests = (geminiRequests.get(request.accountUid) || []).filter((time) => now - time < 60000);
+  if (recentRequests.length >= 8) {
+    return response.status(429).json({ error: 'Gemini chart analysis is limited to 8 requests per minute.' });
+  }
+
+  const question = typeof request.body?.question === 'string' ? request.body.question.trim() : '';
+  const market = request.body?.market;
+  const symbol = typeof market?.symbol === 'string' ? market.symbol.trim().toUpperCase() : '';
+  const name = typeof market?.name === 'string' ? market.name.trim().slice(0, 80) : symbol;
+  const interval = typeof request.body?.interval === 'string' ? request.body.interval.trim().slice(0, 24) : 'unknown';
+  const rawCandles = request.body?.candles;
+  if (!question || question.length > 500 || !/^[A-Z0-9.^=_-]{1,24}$/.test(symbol)
+    || !Array.isArray(rawCandles) || rawCandles.length > 80) {
+    return response.status(400).json({ error: 'Provide a market, a question up to 500 characters, and at most 80 chart candles.' });
+  }
+  const candles = rawCandles.map((candle) => ({
+    time: Number(candle?.time),
+    open: Number(candle?.open),
+    high: Number(candle?.high),
+    low: Number(candle?.low),
+    close: Number(candle?.close),
+    volume: Number(candle?.volume) || 0
+  }));
+  if (candles.some((candle) => !Number.isFinite(candle.time)
+    || [candle.open, candle.high, candle.low, candle.close].some((value) => !Number.isFinite(value) || value <= 0)
+    || !Number.isFinite(candle.volume) || candle.volume < 0)) {
+    return response.status(400).json({ error: 'Chart candle data is invalid.' });
+  }
+  if (!process.env.GEMINI_API_KEY) {
+    return response.status(503).json({ error: 'Gemini is not configured on the server.' });
+  }
+
+  recentRequests.push(now);
+  geminiRequests.set(request.accountUid, recentRequests);
+  if (geminiRequests.size > 1000) {
+    for (const [uid, times] of geminiRequests) {
+      if (!times.some((time) => now - time < 60000)) geminiRequests.delete(uid);
+    }
+  }
+
+  const currentPrice = Number.isFinite(Number(market.price)) && Number(market.price) > 0 ? Number(market.price) : null;
+  const changePct = typeof market.changePct === 'number' && Number.isFinite(market.changePct) ? market.changePct : null;
+  const chartData = candles.length
+    ? JSON.stringify(candles)
+    : 'No OHLC candle history is available for this market.';
+  const prompt = [
+    `Market: ${name} (${symbol})`,
+    `Chart timeframe: ${interval}`,
+    `Latest price: ${currentPrice ?? 'not available'}`,
+    `24-hour change: ${changePct === null ? 'not available' : `${changePct}%`}`,
+    `Recent OHLC candles, oldest first: ${chartData}`,
+    `User question: ${question}`
+  ].join('\n');
+  const model = /^[a-zA-Z0-9._-]{1,80}$/.test(process.env.GEMINI_MODEL || '')
+    ? process.env.GEMINI_MODEL
+    : 'gemini-2.5-flash';
+
+  try {
+    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-goog-api-key': process.env.GEMINI_API_KEY
+      },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: 'You are a concise chart-analysis assistant. Explain only the supplied market data, clearly distinguish observations from uncertainty, and do not promise returns or present your response as personalized financial advice. If chart data is absent or insufficient, say so.' }]
+        },
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 700 }
+      }),
+      signal: AbortSignal.timeout(30000)
+    });
+    const result = await geminiResponse.json().catch(() => ({}));
+    if (!geminiResponse.ok) {
+      console.error(`Gemini chart analysis request failed with HTTP ${geminiResponse.status}.`);
+      return response.status(502).json({ error: 'Gemini could not complete the chart analysis. Try again.' });
+    }
+    const text = result.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('\n').trim();
+    if (!text) return response.status(502).json({ error: 'Gemini returned no chart analysis. Try again.' });
+    response.set('Cache-Control', 'no-store');
+    response.json({ text });
+  } catch (error) {
+    console.error('Gemini chart analysis request failed:', error.message || 'Unknown error.');
+    response.status(502).json({ error: 'Gemini chart analysis failed. Try again.' });
+  }
+});
+
 app.use((error, request, response, next) => {
   console.error('API request failed:', error);
   if (response.headersSent) return next(error);
@@ -198,6 +291,8 @@ function processPaperTrade(state, markets) {
   let balance = Number(state.makingsPositionMarketBalance);
   if (!Number.isFinite(balance) || balance < 0) balance = 10000;
   let realizedProfit = Number(state.makingsTradeRealizedProfit) || 0;
+  let realizedGains = Math.max(0, Number(state.makingsTradeRealizedGains) || 0);
+  let realizedLosses = Math.max(0, Number(state.makingsTradeRealizedLosses) || 0);
   const remaining = [];
   for (const position of positions) {
     const market = markets[position.symbol];
@@ -216,6 +311,8 @@ function processPaperTrade(state, markets) {
       ? Math.max(0, (Number(position.margin) || Number(position.averagePrice) * quantity) + pnl)
       : quantity * exitPrice;
     realizedProfit += pnl;
+    if (pnl > 0) realizedGains += pnl;
+    else realizedLosses += Math.abs(pnl);
     orders.unshift({
       symbol: position.symbol, side: isShort ? 'BUY' : 'SELL', mode: 'spot',
       positionSide: isShort ? 'SHORT' : 'LONG', type: stopHit ? 'STOP_LOSS' : 'TAKE_PROFIT',
@@ -226,6 +323,8 @@ function processPaperTrade(state, markets) {
   state.makingsPaperOrders = JSON.stringify(orders.slice(0, 100));
   state.makingsPositionMarketBalance = String(balance);
   state.makingsTradeRealizedProfit = String(realizedProfit);
+  state.makingsTradeRealizedGains = String(realizedGains);
+  state.makingsTradeRealizedLosses = String(realizedLosses);
 }
 
 function processAutoPilotBots(state, markets) {
@@ -406,8 +505,13 @@ function processClassicBot(state, markets) {
   state.makingsTradePaperBalance = String(balance);
   state.makingsPositionMarketBalance = String(balance);
   if (pnl !== Number(bot.pnl || 0)) {
+    const realizedDelta = pnl - (Number(bot.pnl) || 0);
     const realized = Number(state.makingsTradeRealizedProfit) || 0;
-    state.makingsTradeRealizedProfit = String(realized + pnl - (Number(bot.pnl) || 0));
+    state.makingsTradeRealizedProfit = String(realized + realizedDelta);
+    const realizedGains = Math.max(0, Number(state.makingsTradeRealizedGains) || 0);
+    const realizedLosses = Math.max(0, Number(state.makingsTradeRealizedLosses) || 0);
+    state.makingsTradeRealizedGains = String(realizedGains + (realizedDelta > 0 ? realizedDelta : 0));
+    state.makingsTradeRealizedLosses = String(realizedLosses + (realizedDelta < 0 ? Math.abs(realizedDelta) : 0));
   }
   if (closedTrade) {
     try {
