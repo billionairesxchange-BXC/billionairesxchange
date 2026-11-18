@@ -1063,6 +1063,17 @@ html[data-site-theme="black-yellow"] input[type="reset"]:hover {
   border-color: var(--gold-soft);
 }
 
+html[data-site-theme="black-yellow"] .trade-page .advanced-orders-tabs button,
+html[data-site-theme="black-yellow"] .trade-page .advanced-orders-actions button,
+html[data-site-theme="black-yellow"] .trade-page .advanced-market-categories button,
+html[data-site-theme="black-yellow"] .trade-page .trade-order-type-tabs button,
+html[data-site-theme="black-yellow"] .trade-page .trade-order-input-row button,
+html[data-site-theme="black-yellow"] .trade-page .trade-order-slider button,
+html[data-site-theme="black-yellow"] .trade-page .trade-order-amount-limit,
+html[data-site-theme="black-yellow"] .trade-page .trade-order-amount-limit strong {
+  background-color: transparent !important;
+}
+
 .site-wallet-splash {
   position: fixed;
   inset: 0;

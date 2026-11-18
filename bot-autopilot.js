@@ -579,10 +579,6 @@
   }
 
   async function startBot(bot) {
-    if (!window.makingsBackgroundTradingEnabled) {
-      announce('Sign in and ensure the background paper-trading service is available before starting a bot.', true);
-      return;
-    }
     const activeCount = bots.filter((item) => item.status === 'running' || item.status === 'finishing').length;
     if (activeCount >= maxActiveBots) {
       announce(`Only ${maxActiveBots} bots can run at the same time. Pause another bot before starting this one.`, true);

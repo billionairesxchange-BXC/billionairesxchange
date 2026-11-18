@@ -110,7 +110,10 @@
           <div class="trade-balance-card">
             <span class="eyebrow">Trade paper balance</span>
             <strong id="paperBalanceSummary">$10,000.00</strong>
-            <small>Available for paper trades</small>
+            <small>Demo funds only. Orders are simulated, not sent to an exchange.</small>
+          </div>
+          <div class="trade-balance-card">
+            <span class="eyebrow">Realized trade results</span>
             <div class="trade-balance-performance" aria-label="Realized trade results">
               <span>Gains <strong id="tradeRealizedGains">$0.00</strong></span>
               <span>Losses <strong id="tradeRealizedLosses">$0.00</strong></span>
@@ -144,7 +147,6 @@
                   <a id="advancedTokenTagsLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Token Tags</a>
                 </span>
               </div>
-              <button class="advanced-exit-button" id="positionsAdvancedCloseButton" type="button">Exit</button>
             </header>
 
             <aside class="advanced-orderbook" aria-label="Order book">
@@ -306,13 +308,16 @@
                   <input id="positionsOrderQuantity" type="hidden" value="0.00" />
                   <p id="positionsOrderEstimate" class="positions-order-estimate" role="status" aria-live="polite" hidden>Estimated total: --</p>
                   <div class="trade-order-topbar">
-                    <button type="button" disabled title="Recurring orders are not available in paper trading">
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h13l-3-3m6 13H7l3 3M5 7a8 8 0 0 0-.5 9M19 17a8 8 0 0 0 .5-9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                      Recurring
+                    <button class="positions-chart-tool-icon" type="button" data-order-chart-toggle aria-label="Expand chart" aria-pressed="false" title="Expand chart">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19V5m0 14h16M7 15l4-4 3 2 5-7m-5 0h5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                     <button type="button" disabled title="EUR purchases require a fiat payment integration">Buy with EUR</button>
                   </div>
-                  <div class="trade-order-panels">
+                  <div class="trade-order-side-tabs" role="tablist" aria-label="Order side">
+                    <button type="button" role="tab" aria-selected="true" data-order-side-select="BUY">Buy</button>
+                    <button type="button" role="tab" aria-selected="false" data-order-side-select="SELL">Sell</button>
+                  </div>
+                  <div class="trade-order-panels" data-active-side="BUY">
                     <section class="trade-order-panel" data-trade-order-side="BUY" aria-label="Buy order">
                       <div class="trade-order-type-tabs" role="group" aria-label="Buy order type">
                         <button type="button" data-order-type="limit" aria-pressed="true">Limit</button>
@@ -357,10 +362,6 @@
                     <input id="positionsTakeProfitInput" type="number" min="0.00000001" step="any" inputmode="decimal" />
                     <input id="positionsStopLossInput" type="number" min="0.00000001" step="any" inputmode="decimal" />
                   </div>
-                </div>
-                <div class="positions-market-coin-banner" id="positionsMarketCoinBanner" aria-live="polite" title="Selected market quote token">
-                  <span>Market</span>
-                  <strong id="positionsMarketCoinValue">USDT</strong>
                 </div>
               </section>
 

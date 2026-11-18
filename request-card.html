@@ -170,8 +170,8 @@
       const selectedMetalPreviewStyle = document.getElementById('selectedMetalPreviewStyle');
       const engravingInput = document.getElementById('cardEngraving');
       let signedInUser = null;
-      let selectedMaterial = '';
-      let selectedStyle = null;
+      let selectedMaterial = 'Metal';
+      let selectedStyle = 'black-metal';
       let designImageData = '';
 
       const cardStyles = {
@@ -183,7 +183,11 @@
 
       function setMaterial(material) {
         selectedMaterial = material;
-        selectedStyle = null;
+        if (material === 'Metal') {
+          selectedStyle = selectedStyle && selectedStyle.endsWith('-metal') ? selectedStyle : 'black-metal';
+        } else {
+          selectedStyle = 'white-plastic-regular';
+        }
         submitButton.disabled = !signedInUser;
         document.querySelectorAll('[data-card-material]').forEach((button) => {
           const active = button.dataset.cardMaterial === material;
@@ -192,11 +196,11 @@
           button.setAttribute('aria-pressed', String(active));
         });
         document.querySelectorAll('[data-card-style]').forEach((button) => {
-          button.classList.remove('is-selected');
-          button.setAttribute('aria-pressed', 'false');
+          const active = button.dataset.cardStyle === selectedStyle;
+          button.classList.toggle('is-selected', active);
+          button.setAttribute('aria-pressed', String(active));
         });
-        cardRequestFormPanel.hidden = true;
-        selectedCardPreview.hidden = true;
+        cardRequestFormPanel.hidden = false;
         metalCardOptions.hidden = material !== 'Metal';
         plasticCardOptions.hidden = material !== 'Plastic';
         designImagePreview.hidden = !designImageData || material !== 'Metal';
@@ -206,13 +210,13 @@
           plasticCardArtworkPlaceholder.hidden = true;
         }
         if (material === 'Metal') {
-          materialStatus.textContent = 'Select a metal card design to continue.';
+          materialStatus.textContent = 'Black metal card selected by default. Choose another metal design if needed.';
+          selectedCardPreview.hidden = false;
         } else {
-          selectedStyle = 'white-plastic-regular';
-          cardRequestFormPanel.hidden = false;
           materialStatus.textContent = 'Regular white plastic card selected. Upload a design photo to preview it on the card, or request the blank white card.';
-          updateSelectedCardPreview();
+          selectedCardPreview.hidden = false;
         }
+        updateSelectedCardPreview();
       }
 
       function updateSelectedCardPreview() {
@@ -304,6 +308,8 @@
       document.querySelectorAll('[data-card-material]').forEach((button) => {
         button.addEventListener('click', () => setMaterial(button.dataset.cardMaterial));
       });
+
+      setMaterial('Metal');
 
       document.querySelectorAll('[data-card-style]').forEach((button) => {
         button.addEventListener('click', () => {

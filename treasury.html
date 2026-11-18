@@ -88,29 +88,6 @@
               </div>
             </div>
           </div>
-          <section class="wallet-credit-card-panel" id="walletCreditCard" aria-labelledby="walletCreditCardTitle">
-            <div class="wallet-credit-card-heading">
-              <div class="wallet-credit-card-identity">
-                <svg class="wallet-credit-card-icon" viewBox="0 0 32 22" aria-hidden="true">
-                  <rect x="1" y="1" width="30" height="20" rx="3" fill="#050505" stroke="currentColor" stroke-width="1.5" />
-                  <path d="M2 7h28M6 13h7M6 17h4" fill="none" stroke="#f3c969" stroke-width="1.5" stroke-linecap="round" />
-                </svg>
-                <div>
-                  <span class="eyebrow">Credit Card</span>
-                  <h3 id="walletCreditCardTitle">Card balance</h3>
-                </div>
-              </div>
-              <strong class="wallet-credit-card-value" id="walletCreditCardBalance">$0.00</strong>
-            </div>
-            <p class="wallet-credit-card-note">Simulated balance only. Transfers do not move money through a bank or card network.</p>
-            <form class="wallet-credit-card-transfer" id="walletCreditCardTransferForm">
-              <label for="walletCreditCardTransferAmount">Transfer from Paper Balance (USD)
-                <input id="walletCreditCardTransferAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required />
-              </label>
-              <button class="btn btn-primary" type="submit">Transfer to card</button>
-            </form>
-            <p class="wallet-credit-card-status" id="walletCreditCardTransferStatus" role="status" aria-live="polite"></p>
-          </section>
           <nav class="treasury-wallet-actions wallet-primary-actions" aria-label="Wallet actions">
             <a class="btn btn-action btn-deposit" href="deposit.html" id="depositBtn">💰 Deposit</a>
             <a class="btn btn-action btn-withdraw" href="withdraw.html" id="withdrawBtn">💸 Withdraw</a>
@@ -381,11 +358,10 @@
               <div>
                 <span class="eyebrow">Payment methods</span>
                 <h3>Connect a funding method</h3>
-                <p>Add a bank account or card for deposits and withdrawals.</p>
+                <p>Add a bank account for deposits and withdrawals.</p>
               </div>
               <div class="payment-method-actions">
                 <button class="btn btn-secondary" type="button" id="addBankAccountBtn">+ Add Bank Account</button>
-                <button class="btn btn-secondary" type="button" id="addCardBtn">+ Add Credit or Debit Card</button>
               </div>
             </div>
 
@@ -486,67 +462,6 @@
               </div>
             </form>
 
-            <form class="payment-form" id="cardForm" hidden>
-              <div class="form-heading">
-                <h4>Credit or debit card details</h4>
-                <p>Only use a card in your name. Card details are not displayed after saving.</p>
-              </div>
-              <div class="form-grid">
-                <label>
-                  Card type
-                  <select name="cardType" required>
-                    <option value="">Choose card type</option>
-                    <option>Credit card</option>
-                    <option>Debit card</option>
-                  </select>
-                </label>
-                <label>
-                  Name on card
-                  <input type="text" name="cardHolder" autocomplete="cc-name" required />
-                </label>
-                <label class="form-field-wide">
-                  Card number
-                  <input type="text" name="cardNumber" inputmode="numeric" autocomplete="cc-number" maxlength="19" placeholder="0000 0000 0000 0000" required />
-                </label>
-                <label>
-                  Expiry date
-                  <input type="text" name="cardExpiry" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/YY" required />
-                </label>
-                <label>
-                  CVV
-                  <input type="password" name="cardCvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required />
-                </label>
-              </div>
-              <div class="form-section-divider">
-                <h4>Billing Address</h4>
-              </div>
-              <div class="form-grid">
-                <label class="form-field-wide">
-                  Street Address
-                  <input type="text" name="cardBillingStreet" autocomplete="street-address" required />
-                </label>
-                <label>
-                  City
-                  <input type="text" name="cardBillingCity" autocomplete="address-level2" required />
-                </label>
-                <label>
-                  State/Province
-                  <input type="text" name="cardBillingState" autocomplete="address-level1" required />
-                </label>
-                <label>
-                  Postal Code
-                  <input type="text" name="cardBillingPostal" autocomplete="postal-code" required />
-                </label>
-                <label class="form-field-wide">
-                  Country
-                  <input type="text" name="cardBillingCountry" autocomplete="country-name" required />
-                </label>
-              </div>
-              <div class="form-actions">
-                <button class="btn btn-primary" type="submit">Save Card</button>
-                <button class="btn btn-ghost" type="button" data-close-form="cardForm">Cancel</button>
-              </div>
-            </form>
             <p class="payment-status" id="paymentStatus" role="status" aria-live="polite"></p>
           </div>
 
@@ -607,13 +522,6 @@
 
     <footer class="site-footer wallet-site-footer">
       <p>© 2024 BillionairesXchange | Crypto, investment, and secure digital trading.</p>
-      <a class="wallet-footer-card-link" href="#walletCreditCard" aria-label="Go to credit card balance and transfer" title="Credit card balance">
-        <svg viewBox="0 0 32 22" aria-hidden="true">
-          <rect x="1" y="1" width="30" height="20" rx="3" fill="#050505" stroke="currentColor" stroke-width="1.5" />
-          <path d="M2 7h28M6 13h7M6 17h4" fill="none" stroke="#f3c969" stroke-width="1.5" stroke-linecap="round" />
-        </svg>
-        <span>Credit card</span>
-      </a>
     </footer>
 
     <div id="toast" class="toast" aria-live="polite">Welcome to BillionairesXchange Treasury.</div>
