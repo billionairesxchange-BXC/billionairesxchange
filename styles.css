@@ -2836,6 +2836,14 @@ body.positions-market-view-fullscreen-active {
 
 .positions-chart-header h3 {
   color: var(--primary-gold);
+  margin: 0;
+}
+
+.positions-chart-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .55rem;
   margin-top: .35rem;
 }
 
@@ -3215,10 +3223,8 @@ body.positions-market-view-fullscreen-active {
 
 .chart-signal-indicator {
   --chart-signal-color: #e7a43a;
-  position: absolute;
-  z-index: 5;
-  bottom: .55rem;
-  left: 3.1rem;
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   gap: .4rem;
@@ -3444,18 +3450,18 @@ body.positions-market-view-fullscreen-active {
 }
 
 .chart-drawing-toolbar {
-  position: sticky;
-  z-index: 4;
+  position: absolute;
+  z-index: 8;
   top: .5rem;
   left: .5rem;
   display: grid;
   grid-template-columns: 2.25rem;
   align-content: start;
   gap: .25rem;
-  float: left;
+  float: none;
   width: 2.25rem;
   max-height: calc(100% - 1rem);
-  margin: .5rem -2.25rem 0 .5rem;
+  margin: 0;
   padding: .25rem;
   overflow: visible;
   border: 1px solid rgba(212, 175, 55, .35);
@@ -4704,40 +4710,46 @@ body.positions-market-view-fullscreen-active {
   }
 
   .positions-chart-panel.is-advanced .advanced-trading-layout {
-    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
-    grid-template-rows: auto minmax(0, 1fr) auto 120px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
-      "summary summary"
-      "orderbook chart"
-      "footer footer"
-      "chart-strip chart-strip";
+      "summary"
+      "chart"
+      "orderbook"
+      "footer";
     min-height: 0;
+  }
+
+  .positions-chart-panel.is-advanced .advanced-trading-main {
+    grid-area: chart;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .positions-chart-panel.is-advanced #advancedPanelChart:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
   .positions-chart-panel.is-advanced .advanced-orderbook {
     min-width: 0;
   }
 
-  .positions-chart-panel.is-advanced .advanced-trading-main,
-  .positions-chart-panel.is-advanced #advancedPanelChart {
-    display: contents;
-  }
-
   .positions-chart-panel.is-advanced .advanced-chart-orderbar {
-    grid-area: chart;
     min-width: 0;
   }
 
   .positions-chart-panel.is-advanced .positions-chart-wrap {
-    grid-area: chart-strip;
-    height: 120px !important;
-    min-height: 120px !important;
+    height: 240px !important;
+    min-height: 240px !important;
     margin: 0;
   }
 
   .positions-chart-panel.is-advanced .positions-chart-wrap.is-mobile-expanded {
-    height: 260px !important;
-    min-height: 240px !important;
+    height: 320px !important;
+    min-height: 300px !important;
   }
 
   .positions-chart-panel.is-advanced .positions-chart-header,

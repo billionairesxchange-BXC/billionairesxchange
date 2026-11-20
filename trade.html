@@ -161,7 +161,13 @@
             <div class="advanced-trading-main">
               <div class="positions-chart-header">
                 <div>
-                  <h3 id="positionsChartTitle">BTC / USD</h3>
+                  <div class="positions-chart-title-row">
+                    <h3 id="positionsChartTitle">BTC / USD</h3>
+                    <div class="chart-signal-indicator" id="chartSignalIndicator" data-state="connecting" role="status" aria-live="polite" aria-label="Connecting">
+                      <span class="chart-signal-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+                      <span id="chartSignalText">Connecting</span>
+                    </div>
+                  </div>
                   <div class="positions-market-row">
                     <div class="positions-tools-menu">
                       <button class="positions-tools-button" id="positionsToolsButton" type="button" aria-expanded="false" aria-controls="positionsToolsOptions">Tools</button>
@@ -285,10 +291,6 @@
                   <iframe id="positionsExternalMarketChart" class="positions-external-market-chart" title="Selected external market chart" loading="lazy" allowfullscreen hidden></iframe>
                   <button class="positions-save-risk-button" id="positionsSaveRiskSetup" type="button" disabled>Set risk levels</button>
                   <button class="positions-chart-resizer" id="positionsChartResizer" type="button" aria-label="Resize chart" title="Drag to resize chart"></button>
-                  <div class="chart-signal-indicator" id="chartSignalIndicator" data-state="connecting" role="status" aria-live="polite" aria-label="Connecting">
-                    <span class="chart-signal-bars" aria-hidden="true"><i></i><i></i><i></i></span>
-                    <span id="chartSignalText">Connecting</span>
-                  </div>
                   <div class="chart-trade-ticket" id="chartTradeTicket" aria-label="Quick chart trade controls">
                     <div class="chart-trade-ticket-head" data-ticket-drag-handle>
                       <span>Quick Trade</span>
